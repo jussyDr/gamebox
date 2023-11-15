@@ -1,5 +1,6 @@
 use std::{
-    io::{self, Read, Seek},
+    borrow::BorrowMut,
+    io::{self, Read, Seek, Take},
     iter,
 };
 
@@ -30,6 +31,10 @@ impl IdState {
     }
 }
 
+pub trait IdStateMut: BorrowMut<IdState> {}
+
+impl<T: BorrowMut<IdState>> IdStateMut for T {}
+
 pub struct NodeState {
     num_nodes: u32,
 }
@@ -39,6 +44,10 @@ impl NodeState {
         Self { num_nodes }
     }
 }
+
+pub trait NodeStateMut: BorrowMut<NodeState> {}
+
+impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
 
 pub struct Reader<R, I, N> {
     inner: R,
@@ -58,22 +67,22 @@ impl<R, I, N> Reader<R, I, N> {
 
 impl<R: Read, I, N> Reader<R, I, N> {
     pub fn u8(&mut self) -> Result<u8> {
-        let bytes = self.bytes_array()?;
+        let bytes = self.byte_array()?;
         Ok(u8::from_le_bytes(bytes))
     }
 
     pub fn u16(&mut self) -> Result<u16> {
-        let bytes = self.bytes_array()?;
+        let bytes = self.byte_array()?;
         Ok(u16::from_le_bytes(bytes))
     }
 
     pub fn u32(&mut self) -> Result<u32> {
-        let bytes = self.bytes_array()?;
+        let bytes = self.byte_array()?;
         Ok(u32::from_le_bytes(bytes))
     }
 
     pub fn f32(&mut self) -> Result<f32> {
-        let bytes = self.bytes_array()?;
+        let bytes = self.byte_array()?;
         Ok(f32::from_le_bytes(bytes))
     }
 
@@ -83,7 +92,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(buf)
     }
 
-    pub fn bytes_array<const L: usize>(&mut self) -> Result<[u8; L]> {
+    pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
         self.inner.read_exact(&mut array)?;
         Ok(array)
@@ -108,6 +117,25 @@ impl<R: Read, I, N> Reader<R, I, N> {
     ) -> Result<Vec<T>> {
         iter::repeat_with(|| read_fn(self)).take(n).collect()
     }
+
+    pub fn take<IS, NS>(
+        &mut self,
+        limit: u64,
+        id_state: IS,
+        node_state: NS,
+    ) -> Reader<Take<&mut R>, IS, NS> {
+        let inner = (&mut self.inner).take(limit);
+        Reader::new(inner, id_state, node_state)
+    }
+
+    pub fn end(&mut self) -> Result<()> {
+        let mut buf = [0];
+
+        match self.inner.read(&mut buf) {
+            Ok(0) => Ok(()),
+            _ => todo!(),
+        }
+    }
 }
 
 impl<R: Read + Seek, I, N> Reader<R, I, N> {
@@ -118,7 +146,7 @@ impl<R: Read + Seek, I, N> Reader<R, I, N> {
     }
 }
 
-impl<R: Read, N> Reader<R, IdState, N> {
+impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     pub fn id(&mut self) -> Result<String> {
         match self.id_or_null()? {
             None => todo!(),
@@ -127,12 +155,12 @@ impl<R: Read, N> Reader<R, IdState, N> {
     }
 
     pub fn id_or_null(&mut self) -> Result<Option<String>> {
-        if !self.id_state.seen_id {
+        if !self.id_state.borrow().seen_id {
             if self.u32()? != 3 {
                 todo!()
             }
 
-            self.id_state.seen_id = true;
+            self.id_state.borrow_mut().seen_id = true;
         }
 
         let index = self.u32()?;
@@ -143,7 +171,7 @@ impl<R: Read, N> Reader<R, IdState, N> {
 
         if index == 0x40000000 {
             let id = self.string()?;
-            self.id_state.ids.push(id.clone());
+            self.id_state.borrow_mut().ids.push(id.clone());
             return Ok(Some(id));
         }
 
@@ -151,7 +179,7 @@ impl<R: Read, N> Reader<R, IdState, N> {
     }
 }
 
-impl<R: Read, I> Reader<R, I, NodeState> {
+impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
     pub fn node(
         &mut self,
         class_id: u32,
@@ -159,7 +187,7 @@ impl<R: Read, I> Reader<R, I, NodeState> {
     ) -> Result<()> {
         let index = self.u32()?;
 
-        if index == 0 || index > self.node_state.num_nodes {
+        if index == 0 || index > self.node_state.borrow().num_nodes {
             todo!()
         }
 
