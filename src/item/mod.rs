@@ -3,5 +3,5 @@
 mod read;
 mod write;
 
-/// Type corresponding to `Item.Gbx` files.
+/// Type corresponding to the file extension `Item.Gbx`.
 pub struct Item;

@@ -3,6 +3,7 @@ use std::io::Write;
 use crate::{
     serializer::{IdState, NodeState, Serializer},
     write::Result,
+    MAGIC,
 };
 
 pub fn test(writer: impl Write) -> Result<()> {
@@ -370,7 +371,7 @@ pub fn test(writer: impl Write) -> Result<()> {
 
     let mut s = Serializer::new(writer, (), ());
 
-    s.byte_array([b'G', b'B', b'X'])?;
+    s.byte_array(MAGIC)?;
     s.u16(6)?;
     s.u8(b'B')?;
     s.u8(b'U')?;

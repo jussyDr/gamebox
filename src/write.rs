@@ -18,11 +18,14 @@ impl From<io::Error> for Error {
 /// Result type used when writing GameBox nodes.
 pub type Result<T> = std::result::Result<T, Error>;
 
-trait WriteableInner {}
-
 /// Trait which indicates that a certain class is writable.
-pub trait Writeable: WriteableInner {}
+pub trait Writable: writable::Sealed {}
 
-pub fn write<T: Writeable>(writer: impl Write, node: T) -> Result<()> {
+/// Write the given `node` to the given `writer`.
+pub fn write(writer: impl Write, node: impl Writable) -> Result<()> {
     todo!()
+}
+
+mod writable {
+    pub trait Sealed {}
 }

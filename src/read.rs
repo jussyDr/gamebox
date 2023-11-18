@@ -2,7 +2,10 @@
 
 use std::io::{self, Cursor, Read, Seek};
 
-use crate::deserializer::{Deserializer, IdState, NodeState};
+use crate::{
+    deserializer::{Deserializer, IdState, NodeState},
+    MAGIC,
+};
 
 /// Error while reading a GameBox node.
 #[derive(Debug)]
@@ -21,7 +24,10 @@ impl From<io::Error> for Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Trait which indicates that a certain class is readable.
-pub trait Readable: private::Readable {}
+///
+/// Note that this trait is sealed and can not be implemented
+/// for types outside of `gamebox`.
+pub trait Readable: readable::Sealed {}
 
 /// Read a node of class `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
@@ -29,7 +35,7 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
 
     let mut d = Deserializer::new(reader, (), ());
 
-    if d.byte_array()? != [b'G', b'B', b'X'] {
+    if d.byte_array()? != MAGIC {
         todo!()
     }
 
@@ -129,7 +135,7 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
     Ok(node)
 }
 
-pub(crate) mod private {
+pub(crate) mod readable {
     use std::io::{Read, Take};
 
     use crate::deserializer::{Deserializer, IdState, NodeState};
@@ -151,7 +157,7 @@ pub(crate) mod private {
     type BodyChunkReadFn<T, R> =
         fn(n: &mut T, d: &mut Deserializer<R, IdState, NodeState>) -> Result<()>;
 
-    pub trait Readable {
+    pub trait Sealed {
         const CLASS_ID: u32;
 
         fn default() -> Self;
@@ -165,5 +171,3 @@ pub(crate) mod private {
             Self: Sized;
     }
 }
-
-impl<T: private::Readable> Readable for T {}

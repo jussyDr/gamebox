@@ -6,30 +6,38 @@ use std::{
 
 use crate::read::Result;
 
+/// State of identifiers read in the past.
 #[derive(Default)]
 pub struct IdState {
     seen_id: bool,
     ids: Vec<String>,
 }
 
+/// Trait which should be used as a generic trait bound in
+/// functions that need to access the `IdState`.
 pub trait IdStateMut: BorrowMut<IdState> {}
 
 impl<T: BorrowMut<IdState>> IdStateMut for T {}
 
+/// State of nodes read in the past.
 pub struct NodeState {
     num_nodes: u32,
 }
 
 impl NodeState {
+    /// Create a new `NodeState` with a node limit of `num_nodes`.
     pub fn new(num_nodes: u32) -> Self {
         Self { num_nodes }
     }
 }
 
+/// Trait which should be used as a generic trait bound in
+/// functions that need to access the `NodeState`.
 pub trait NodeStateMut: BorrowMut<NodeState> {}
 
 impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
 
+/// Used for reading binary data in GameBox files.
 pub struct Deserializer<R, I, N> {
     reader: R,
     id_state: I,
@@ -37,6 +45,7 @@ pub struct Deserializer<R, I, N> {
 }
 
 impl<R, I, N> Deserializer<R, I, N> {
+    /// Create a new `Deserializer`.
     pub fn new(reader: R, id_state: I, node_state: N) -> Self {
         Self {
             reader,
@@ -47,38 +56,45 @@ impl<R, I, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N> Deserializer<R, I, N> {
+    /// Deserialize an 8-bit unsigned integer.
     pub fn u8(&mut self) -> Result<u8> {
         let bytes = self.byte_array()?;
         Ok(u8::from_le_bytes(bytes))
     }
 
+    /// Deserialize a 16-bit unsigned integer.
     pub fn u16(&mut self) -> Result<u16> {
         let bytes = self.byte_array()?;
         Ok(u16::from_le_bytes(bytes))
     }
 
+    /// Deserialize a 32-bit unsigned integer.
     pub fn u32(&mut self) -> Result<u32> {
         let bytes = self.byte_array()?;
         Ok(u32::from_le_bytes(bytes))
     }
 
+    /// Deserialize a 32-bit floating point number.
     pub fn f32(&mut self) -> Result<f32> {
         let bytes = self.byte_array()?;
         Ok(f32::from_le_bytes(bytes))
     }
 
+    /// Deserialize `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let mut buf = vec![0; n];
         self.reader.read_exact(&mut buf)?;
         Ok(buf)
     }
 
+    /// Deserialize an array of `L` bytes.
     pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
         self.reader.read_exact(&mut array)?;
         Ok(array)
     }
 
+    /// Deserialize a string.
     pub fn string(&mut self) -> Result<String> {
         let len = self.u32()?;
         let bytes = self.bytes(len as usize)?;
@@ -86,11 +102,13 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(string)
     }
 
+    /// Deserialize a list.
     pub fn list<T>(&mut self, read_fn: impl Fn(&mut Self) -> Result<T>) -> Result<Vec<T>> {
         let len = self.u32()?;
         self.repeat(len as usize, read_fn)
     }
 
+    /// Repeat the `read_fn` a total of `n` times.
     pub fn repeat<T>(
         &mut self,
         n: usize,
@@ -99,6 +117,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         iter::repeat_with(|| read_fn(self)).take(n).collect()
     }
 
+    /// Create an adapter which will read at most `limit` bytes from this deserializer.
     pub fn take<IS, NS>(
         &mut self,
         limit: u64,
@@ -109,6 +128,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Deserializer::new(inner, id_state, node_state)
     }
 
+    /// Check if we are at the end of the reader.
     pub fn end(&mut self) -> Result<()> {
         let mut buf = [0];
 
@@ -120,6 +140,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
+    /// Peek `n` bytes.
     pub fn peek_bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let bytes = self.bytes(n)?;
         self.reader.seek(io::SeekFrom::Current(-(n as i64)))?;
@@ -128,6 +149,7 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
+    /// Deserialize an identifier.
     pub fn id(&mut self) -> Result<String> {
         match self.id_or_null()? {
             None => todo!(),
@@ -135,6 +157,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
         }
     }
 
+    /// Deserialize an identifier which could possibly be `null`.
     pub fn id_or_null(&mut self) -> Result<Option<String>> {
         if !self.id_state.borrow().seen_id {
             if self.u32()? != 3 {
@@ -161,6 +184,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
+    /// Deserialize a node with the given `class_id` using the given `read_fn`.
     pub fn node(
         &mut self,
         class_id: u32,

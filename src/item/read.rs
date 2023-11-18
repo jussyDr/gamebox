@@ -3,14 +3,16 @@ use std::io::Read;
 use crate::{
     deserializer::{Deserializer, IdStateMut, NodeStateMut},
     read::{
-        private::{BodyChunkEntry, HeaderChunkEntry, Readable},
-        Result,
+        readable::{self, BodyChunkEntry, HeaderChunkEntry},
+        Readable, Result,
     },
 };
 
 use super::Item;
 
-impl Readable for Item {
+impl Readable for Item {}
+
+impl readable::Sealed for Item {
     const CLASS_ID: u32 = 0x2e002000;
 
     fn default() -> Self {

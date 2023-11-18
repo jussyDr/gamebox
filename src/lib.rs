@@ -14,3 +14,5 @@ mod serializer;
 pub use read::read;
 #[doc(inline)]
 pub use write::write;
+
+const MAGIC: [u8; 3] = [b'G', b'B', b'X'];
