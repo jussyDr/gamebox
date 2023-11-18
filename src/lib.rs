@@ -1,14 +1,16 @@
-mod read;
-mod reader;
-mod write;
-mod writer;
+#![warn(missing_docs)]
 
-use std::io::{Read, Seek, Write};
+//! GameBox
 
-pub fn test(reader: impl Read + Seek) -> reader::Result<()> {
-    read::test(reader)
-}
+pub mod read;
+pub mod write;
 
-pub fn test2(writer: impl Write) -> writer::Result<()> {
-    write::test(writer)
-}
+pub mod item;
+
+mod deserializer;
+mod serializer;
+
+#[doc(inline)]
+pub use read::read;
+#[doc(inline)]
+pub use write::write;

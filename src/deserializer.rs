@@ -4,31 +4,12 @@ use std::{
     iter,
 };
 
-#[derive(Debug)]
-pub enum Error {
-    Io(io::Error),
-}
+use crate::read::Result;
 
-impl From<io::Error> for Error {
-    fn from(io_error: io::Error) -> Self {
-        Self::Io(io_error)
-    }
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
-
+#[derive(Default)]
 pub struct IdState {
     seen_id: bool,
     ids: Vec<String>,
-}
-
-impl IdState {
-    pub fn new() -> Self {
-        Self {
-            seen_id: false,
-            ids: vec![],
-        }
-    }
 }
 
 pub trait IdStateMut: BorrowMut<IdState> {}
@@ -49,23 +30,23 @@ pub trait NodeStateMut: BorrowMut<NodeState> {}
 
 impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
 
-pub struct Reader<R, I, N> {
-    inner: R,
+pub struct Deserializer<R, I, N> {
+    reader: R,
     id_state: I,
     node_state: N,
 }
 
-impl<R, I, N> Reader<R, I, N> {
-    pub fn new(inner: R, id_state: I, node_state: N) -> Self {
+impl<R, I, N> Deserializer<R, I, N> {
+    pub fn new(reader: R, id_state: I, node_state: N) -> Self {
         Self {
-            inner,
+            reader,
             id_state,
             node_state,
         }
     }
 }
 
-impl<R: Read, I, N> Reader<R, I, N> {
+impl<R: Read, I, N> Deserializer<R, I, N> {
     pub fn u8(&mut self) -> Result<u8> {
         let bytes = self.byte_array()?;
         Ok(u8::from_le_bytes(bytes))
@@ -88,13 +69,13 @@ impl<R: Read, I, N> Reader<R, I, N> {
 
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let mut buf = vec![0; n];
-        self.inner.read_exact(&mut buf)?;
+        self.reader.read_exact(&mut buf)?;
         Ok(buf)
     }
 
     pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
-        self.inner.read_exact(&mut array)?;
+        self.reader.read_exact(&mut array)?;
         Ok(array)
     }
 
@@ -123,30 +104,30 @@ impl<R: Read, I, N> Reader<R, I, N> {
         limit: u64,
         id_state: IS,
         node_state: NS,
-    ) -> Reader<Take<&mut R>, IS, NS> {
-        let inner = (&mut self.inner).take(limit);
-        Reader::new(inner, id_state, node_state)
+    ) -> Deserializer<Take<&mut R>, IS, NS> {
+        let inner = (&mut self.reader).take(limit);
+        Deserializer::new(inner, id_state, node_state)
     }
 
     pub fn end(&mut self) -> Result<()> {
         let mut buf = [0];
 
-        match self.inner.read(&mut buf) {
+        match self.reader.read(&mut buf) {
             Ok(0) => Ok(()),
             _ => todo!(),
         }
     }
 }
 
-impl<R: Read + Seek, I, N> Reader<R, I, N> {
+impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
     pub fn peek_bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let bytes = self.bytes(n)?;
-        self.inner.seek(io::SeekFrom::Current(-(n as i64)))?;
+        self.reader.seek(io::SeekFrom::Current(-(n as i64)))?;
         Ok(bytes)
     }
 }
 
-impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
+impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     pub fn id(&mut self) -> Result<String> {
         match self.id_or_null()? {
             None => todo!(),
@@ -179,7 +160,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     }
 }
 
-impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
+impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn node(
         &mut self,
         class_id: u32,

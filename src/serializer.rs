@@ -1,20 +1,6 @@
-use std::{
-    borrow::BorrowMut,
-    io::{self, Write},
-};
+use std::{borrow::BorrowMut, io::Write};
 
-#[derive(Debug)]
-pub enum Error {
-    Io(io::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(io_error: io::Error) -> Self {
-        Self::Io(io_error)
-    }
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
+use crate::write::Result;
 
 pub struct IdState {
     written_id: bool,
@@ -48,23 +34,23 @@ pub trait NodeStateMut: BorrowMut<NodeState> {}
 
 impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
 
-pub struct Writer<W, I, N> {
-    inner: W,
+pub struct Serializer<W, I, N> {
+    writer: W,
     id_state: I,
     node_state: N,
 }
 
-impl<W, I, N> Writer<W, I, N> {
-    pub fn new(inner: W, id_state: I, node_state: N) -> Self {
+impl<W, I, N> Serializer<W, I, N> {
+    pub fn new(writer: W, id_state: I, node_state: N) -> Self {
         Self {
-            inner,
+            writer,
             id_state,
             node_state,
         }
     }
 }
 
-impl<W: Write, I, N> Writer<W, I, N> {
+impl<W: Write, I, N> Serializer<W, I, N> {
     pub fn u8(&mut self, val: u8) -> Result<()> {
         self.byte_array(val.to_le_bytes())
     }
@@ -82,7 +68,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
     }
 
     pub fn bytes(&mut self, bytes: &[u8]) -> Result<()> {
-        self.inner.write_all(bytes)?;
+        self.writer.write_all(bytes)?;
         Ok(())
     }
 
@@ -96,7 +82,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
     }
 }
 
-impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
+impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
     pub fn id(&mut self, id: &str) -> Result<()> {
         if !self.id_state.borrow().written_id {
             self.u32(3)?;
@@ -119,7 +105,7 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
     }
 }
 
-impl<W: Write, I, N: NodeStateMut> Writer<W, I, N> {
+impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
     pub fn node_index(&mut self) -> Result<()> {
         self.node_state.borrow_mut().num_nodes += 1;
         self.u32(self.node_state.borrow().num_nodes)
