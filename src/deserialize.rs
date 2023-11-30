@@ -4,7 +4,13 @@ use std::{
     iter,
 };
 
-use crate::read::Result;
+use crate::{
+    read::{
+        readable::{BodyChunkReadFn, ReadBody},
+        Result,
+    },
+    NODE_END, SKIP,
+};
 
 /// State of identifiers read in the past.
 #[derive(Default)]
@@ -136,6 +142,13 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
             Ok(0) => Ok(()),
             _ => todo!(),
         }
+    }
+}
+
+impl<R: Seek, I, N> Deserializer<R, I, N> {
+    pub fn skip(&mut self, n: u32) -> Result<()> {
+        self.reader.seek(io::SeekFrom::Current(n as i64))?;
+        Ok(())
     }
 }
 

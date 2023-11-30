@@ -1,11 +1,17 @@
 //! Types for reading GameBox nodes.
 
-use std::io::{self, Cursor, Read, Seek};
+use std::{
+    fs::File,
+    io::{self, BufReader, Cursor, Read, Seek},
+    path::Path,
+};
 
 use crate::{
-    deserializer::{Deserializer, IdState, NodeState},
-    MAGIC,
+    deserialize::{Deserializer, IdState, NodeState},
+    MAGIC, NODE_END, SKIP,
 };
+
+use self::readable::{BodyChunkReadFn, ReadBody};
 
 /// Error while reading a GameBox node.
 #[derive(Debug)]
@@ -23,14 +29,134 @@ impl From<io::Error> for Error {
 /// Result type used when reading GameBox nodes.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Trait which indicates that a certain class is readable.
+/// Types that implement this trait are readable .
 ///
-/// Note that this trait is sealed and can not be implemented
-/// for types outside of `gamebox`.
+/// Note that this trait is sealed and can not be implemented for
+/// types outside of `gamebox`.
 pub trait Readable: readable::Sealed {}
 
-/// Read a node of class `T` from the given `reader`.
+/// Read a node of type `T` from the given `reader`.
+///
+/// It is recommended that the given `reader` is buffered for optimal performance.
+///
+/// # Examples
+///
+/// ``` no_run
+/// # use gamebox::read;
+/// # use gamebox::classes::item::Item;
+/// # |reader: std::io::Cursor<&[u8]>| {
+/// let item: Item = read(reader)?;
+/// # Ok::<(), gamebox::read::Error>(()) };
+/// ```
 pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
+    Reader::new().read(reader)
+}
+
+/// Read a node of type `T` from a file at the given `path`.
+///
+/// # Examples
+///
+/// ``` no_run
+/// # use gamebox::read_file;
+/// # use gamebox::classes::item::Item;
+/// # || {
+/// let item: Item = read_file("MyItem.Item.Gbx")?;
+/// # Ok::<(), gamebox::read::Error>(()) };
+/// ```
+pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T> {
+    Reader::new().read_file(path)
+}
+
+/// A GameBox node reader.
+#[derive(Default)]
+pub struct Reader {
+    skip_header: bool,
+    skip_body: bool,
+}
+
+impl Reader {
+    /// Create a new GameBox node reader.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use gamebox::read::Reader;
+    /// let reader = Reader::new();
+    /// ```
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set whether or not to skip reading the header.
+    ///
+    /// Set to `false` by default.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use gamebox::read::Reader;
+    /// let reader = Reader::new().skip_header(true);
+    /// ```
+    pub fn skip_header(mut self, skip_header: bool) -> Self {
+        self.skip_header = skip_header;
+        self
+    }
+
+    /// Set whether or not to skip reading the body.
+    ///
+    /// Set to `false` by default.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use gamebox::read::Reader;
+    /// let reader = Reader::new().skip_body(true);
+    /// ```
+    pub fn skip_body(mut self, skip_body: bool) -> Self {
+        self.skip_body = skip_body;
+        self
+    }
+
+    /// Read a node of type `T` from the given `reader`.
+    ///
+    /// It is recommended that the given `reader` is buffered for optimal performance.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// # use gamebox::read::Reader;
+    /// # use gamebox::classes::item::Item;
+    /// # |reader: std::io::Cursor<&[u8]>| {
+    /// let item: Item = Reader::new().read(reader)?;
+    /// # Ok::<(), gamebox::read::Error>(()) };
+    /// ```
+    pub fn read<T: Readable>(&self, reader: impl Read + Seek) -> Result<T> {
+        read_node(reader, self.skip_header, self.skip_body)
+    }
+
+    /// Read a node of type `T` from a file at the given `path`.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// # use gamebox::read::Reader;
+    /// # use gamebox::classes::item::Item;
+    /// # || {
+    /// let item: Item = Reader::new().read_file("MyItem.Item.Gbx")?;
+    /// # Ok::<(), gamebox::read::Error>(()) };
+    /// ```
+    pub fn read_file<T: Readable>(&self, path: impl AsRef<Path>) -> Result<T> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        self.read(reader)
+    }
+}
+
+fn read_node<T: Readable>(
+    reader: impl Read + Seek,
+    skip_header: bool,
+    skip_body: bool,
+) -> Result<T> {
     let mut node = T::default();
 
     let mut d = Deserializer::new(reader, (), ());
@@ -67,33 +193,10 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
 
     let user_data_size = d.u32()?;
 
-    {
-        let mut d = d.take(user_data_size as u64, (), ());
-
-        let header_chunks = d.list(|d| {
-            let chunk_id = d.u32()?;
-            let chunk_size = d.u32()?;
-
-            Ok((chunk_id, chunk_size))
-        })?;
-
-        let mut id_state = IdState::default();
-
-        let mut header_chunk_entries = T::header_chunk_table().into_iter();
-
-        for (chunk_id, chunk_size) in header_chunks {
-            let mut d = d.take(chunk_size as u64, &mut id_state, ());
-
-            let header_chunk_entry = header_chunk_entries
-                .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
-                .unwrap();
-
-            (header_chunk_entry.read_fn)(&mut node, &mut d)?;
-
-            d.end()?;
-        }
-
-        d.end()?;
+    if skip_header {
+        d.skip(user_data_size)?;
+    } else {
+        read_header(&mut node, d.take(user_data_size as u64, (), ()))?;
     }
 
     let num_nodes = d.u32()?;
@@ -106,28 +209,21 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
 
     let body_size = d.u32()?;
     let compressed_body_size = d.u32()?;
-    let compressed_body = d.bytes(compressed_body_size as usize)?;
-    let mut buf = vec![0; body_size as usize];
 
-    let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
-    let reader = Cursor::new(body);
+    if skip_body {
+        d.skip(compressed_body_size)?;
+    } else {
+        let compressed_body = d.bytes(compressed_body_size as usize)?;
+        let mut buf = vec![0; body_size as usize];
 
-    let mut d = Deserializer::new(reader, IdState::default(), NodeState::new(num_nodes));
+        let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
+        let reader = Cursor::new(body);
 
-    let mut body_chunk_entries = T::body_chunk_table().into_iter();
+        let mut d = Deserializer::new(reader, IdState::default(), NodeState::new(num_nodes));
 
-    loop {
-        let chunk_id = d.u32()?;
+        read_body(&mut node, &mut d)?;
 
-        if chunk_id == 0xfacade01 {
-            break;
-        }
-
-        let body_chunk_entry = body_chunk_entries
-            .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
-            .unwrap();
-
-        (body_chunk_entry.read_fn)(&mut node, &mut d)?;
+        d.end()?;
     }
 
     d.end()?;
@@ -135,10 +231,85 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
     Ok(node)
 }
 
+fn read_header<T: Readable, R: Read, I, N>(
+    node: &mut T,
+    mut d: Deserializer<R, I, N>,
+) -> Result<()> {
+    let header_chunks = d.list(|d| {
+        let chunk_id = d.u32()?;
+        let chunk_size = d.u32()?;
+
+        Ok((chunk_id, chunk_size))
+    })?;
+
+    let mut id_state = IdState::default();
+
+    let mut header_chunk_entries = T::header_chunk_table().iter();
+
+    for (chunk_id, chunk_size) in header_chunks {
+        let mut d = d.take(chunk_size as u64, &mut id_state, ());
+
+        let header_chunk_entry = header_chunk_entries
+            .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
+            .unwrap();
+
+        (header_chunk_entry.read_fn)(node, &mut d)?;
+
+        d.end()?;
+    }
+
+    d.end()?;
+
+    Ok(())
+}
+
+pub(crate) fn read_body<T: ReadBody, R: Read>(
+    node: &mut T,
+    d: &mut Deserializer<R, IdState, NodeState>,
+) -> Result<()> {
+    let mut body_chunk_entries = T::body_chunk_table().iter();
+
+    loop {
+        let chunk_id = d.u32()?;
+
+        if chunk_id == NODE_END {
+            break;
+        }
+
+        let body_chunk_entry = body_chunk_entries
+            .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
+            .unwrap();
+
+        match body_chunk_entry.read_fn {
+            BodyChunkReadFn::Normal(read_fn) => {
+                read_fn(node, d)?;
+            }
+            BodyChunkReadFn::Skippable(read_fn) => {
+                if d.u32()? != SKIP {
+                    todo!()
+                }
+
+                let chunk_size = d.u32()?;
+
+                let mut d = d.take(chunk_size as u64, (), ());
+
+                read_fn(node, &mut d)?;
+
+                d.end()?;
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub(crate) mod readable {
     use std::io::{Read, Take};
 
-    use crate::deserializer::{Deserializer, IdState, NodeState};
+    use crate::{
+        class::Class,
+        deserialize::{Deserializer, IdState, NodeState},
+    };
 
     use super::Result;
 
@@ -146,6 +317,7 @@ pub(crate) mod readable {
         pub id: u32,
         pub read_fn: HeaderChunkReadFn<T, R>,
     }
+
     type HeaderChunkReadFn<T, R> =
         fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut IdState, ()>) -> Result<()>;
 
@@ -154,19 +326,27 @@ pub(crate) mod readable {
         pub read_fn: BodyChunkReadFn<T, R>,
     }
 
-    type BodyChunkReadFn<T, R> =
+    pub enum BodyChunkReadFn<T, R> {
+        Normal(NormalBodyChunkReadFn<T, R>),
+        Skippable(SkippableBodyChunkReadFn<T, R>),
+    }
+
+    pub type NormalBodyChunkReadFn<T, R> =
         fn(n: &mut T, d: &mut Deserializer<R, IdState, NodeState>) -> Result<()>;
 
-    pub trait Sealed {
-        const CLASS_ID: u32;
+    pub type SkippableBodyChunkReadFn<T, R> =
+        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, (), ()>) -> Result<()>;
 
-        fn default() -> Self;
-
-        fn header_chunk_table<R: Read>() -> Vec<HeaderChunkEntry<Self, R>>
+    pub trait Sealed: ReadBody {
+        fn header_chunk_table<'a, R: Read>() -> &'a [HeaderChunkEntry<Self, R>]
         where
             Self: Sized;
+    }
 
-        fn body_chunk_table<R: Read>() -> Vec<BodyChunkEntry<Self, R>>
+    pub trait ReadBody: Class {
+        fn default() -> Self;
+
+        fn body_chunk_table<'a, R: Read>() -> &'a [BodyChunkEntry<Self, R>]
         where
             Self: Sized;
     }

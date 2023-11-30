@@ -24,10 +24,6 @@ impl NodeState {
     pub fn new() -> Self {
         Self { num_nodes: 0 }
     }
-
-    pub fn num_nodes(&self) -> u32 {
-        self.num_nodes
-    }
 }
 
 pub trait NodeStateMut: BorrowMut<NodeState> {}
@@ -109,5 +105,11 @@ impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
     pub fn node_index(&mut self) -> Result<()> {
         self.node_state.borrow_mut().num_nodes += 1;
         self.u32(self.node_state.borrow().num_nodes)
+    }
+}
+
+impl<W, I, N: NodeStateMut> Serializer<W, I, N> {
+    pub fn num_nodes(&self) -> u32 {
+        self.node_state.borrow().num_nodes
     }
 }

@@ -1,10 +1,16 @@
 use std::io::Write;
 
 use crate::{
-    serializer::{IdState, NodeState, Serializer},
-    write::Result,
+    serialize::{IdState, NodeState, Serializer},
+    write::{writable::Sealed, Result, Writable},
     MAGIC,
 };
+
+use super::Item;
+
+impl Sealed for Item {}
+
+impl Writable for Item {}
 
 pub fn test(writer: impl Write) -> Result<()> {
     let mut id_state = IdState::new();
@@ -380,7 +386,7 @@ pub fn test(writer: impl Write) -> Result<()> {
     s.u32(0x2e002000)?;
     s.u32(user_data.len() as u32)?;
     s.bytes(&user_data)?;
-    s.u32(node_state.num_nodes())?;
+    s.u32(0)?;
 
     s.u32(0)?;
 
