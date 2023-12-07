@@ -1,16 +1,11 @@
 use std::{
     borrow::BorrowMut,
-    io::{self, Read, Seek, Take},
+    cmp,
+    io::{self, Read, Seek, SeekFrom},
     iter,
 };
 
-use crate::{
-    read::{
-        readable::{BodyChunkReadFn, ReadBody},
-        Result,
-    },
-    NODE_END, SKIP,
-};
+use crate::read::Result;
 
 /// State of identifiers read in the past.
 #[derive(Default)]
@@ -42,6 +37,32 @@ impl NodeState {
 pub trait NodeStateMut: BorrowMut<NodeState> {}
 
 impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
+
+pub struct Take<R> {
+    reader: R,
+    limit: u64,
+}
+
+impl<R: Read> Read for Take<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if self.limit == 0 {
+            return Ok(0);
+        }
+
+        let max = cmp::min(buf.len() as u64, self.limit) as usize;
+        let n = self.reader.read(&mut buf[..max])?;
+        assert!(n as u64 <= self.limit, "number of read bytes exceeds limit");
+        self.limit -= n as u64;
+
+        Ok(n)
+    }
+}
+
+impl<R: Seek> Seek for Take<R> {
+    fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
+        todo!();
+    }
+}
 
 /// Used for reading binary data in GameBox files.
 pub struct Deserializer<R, I, N> {
@@ -80,10 +101,24 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(u32::from_le_bytes(bytes))
     }
 
+    /// Deserialize a 16-bit signed integer.
+    pub fn i16(&mut self) -> Result<i16> {
+        let bytes = self.byte_array()?;
+        Ok(i16::from_le_bytes(bytes))
+    }
+
     /// Deserialize a 32-bit floating point number.
     pub fn f32(&mut self) -> Result<f32> {
         let bytes = self.byte_array()?;
         Ok(f32::from_le_bytes(bytes))
+    }
+
+    pub fn bool8(&mut self) -> Result<bool> {
+        match self.u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => todo!(),
+        }
     }
 
     /// Deserialize `n` bytes.
@@ -130,7 +165,11 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         id_state: IS,
         node_state: NS,
     ) -> Deserializer<Take<&mut R>, IS, NS> {
-        let inner = (&mut self.reader).take(limit);
+        let inner = Take {
+            reader: &mut self.reader,
+            limit,
+        };
+
         Deserializer::new(inner, id_state, node_state)
     }
 
@@ -197,13 +236,28 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
-    /// Deserialize a node with the given `class_id` using the given `read_fn`.
     pub fn node(
         &mut self,
         class_id: u32,
         read_fn: impl FnOnce(&mut Self) -> Result<()>,
     ) -> Result<()> {
+        match self.node_or_null(class_id, read_fn)? {
+            None => todo!(),
+            Some(id) => Ok(id),
+        }
+    }
+
+    /// Deserialize a node with the given `class_id` using the given `read_fn`.
+    pub fn node_or_null(
+        &mut self,
+        class_id: u32,
+        read_fn: impl FnOnce(&mut Self) -> Result<()>,
+    ) -> Result<Option<()>> {
         let index = self.u32()?;
+
+        if index == 0xFFFFFFFF {
+            return Ok(None);
+        }
 
         if index == 0 || index > self.node_state.borrow().num_nodes {
             todo!()
@@ -215,6 +269,6 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 
         read_fn(self)?;
 
-        Ok(())
+        Ok(Some(()))
     }
 }

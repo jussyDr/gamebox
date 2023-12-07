@@ -21,6 +21,10 @@ impl readable::Sealed for Item {
                 read_fn: |_, d| Collector::read_chunk_2e001003(&mut Collector, d),
             },
             HeaderChunkEntry {
+                id: 0x2e001004,
+                read_fn: |_, d| Collector::read_chunk_2e001004(&mut Collector, d),
+            },
+            HeaderChunkEntry {
                 id: 0x2e001006,
                 read_fn: |_, d| Collector::read_chunk_2e001006(&mut Collector, d),
             },
@@ -66,6 +70,12 @@ impl ReadBody for Item {
                 id: 0x2e00100d,
                 read_fn: BodyChunkReadFn::Normal(|_, d| {
                     Collector::read_chunk_2e00100d(&mut Collector, d)
+                }),
+            },
+            BodyChunkEntry {
+                id: 0x2e00100e,
+                read_fn: BodyChunkReadFn::Normal(|_, d| {
+                    Collector::read_chunk_2e00100e(&mut Collector, d)
                 }),
             },
             BodyChunkEntry {
@@ -129,6 +139,18 @@ impl ReadBody for Item {
             BodyChunkEntry {
                 id: 0x2e002020,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e002020(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e002021,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e002021(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e002023,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e002023(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e002024,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e002024(n, d)),
             },
             BodyChunkEntry {
                 id: 0x2e002025,
@@ -207,13 +229,13 @@ impl Item {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 15
+        d.u32()?; // 13 | 15
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
-        d.node(0x2e026000, |d| {
+        d.node_or_null(0x2e026000, |d| {
             loop {
                 let chunk_id = d.u32()?;
 
@@ -227,7 +249,19 @@ impl Item {
 
             Ok(())
         })?;
-        d.u32()?; // 0xffffffff
+        d.node_or_null(0x2e027000, |d| {
+            loop {
+                let chunk_id = d.u32()?;
+
+                match chunk_id {
+                    0x2e027000 => ItemEntityModel::read_chunk_2e027000(d)?,
+                    0xfacade01 => break,
+                    _ => todo!(),
+                }
+            }
+
+            Ok(())
+        })?;
         d.u32()?; // 0xffffffff
 
         Ok(())
@@ -251,6 +285,7 @@ impl Item {
                 match chunk_id {
                     0x2e020000 => ItemPlacementParam::read_chunk_2e020000(d)?,
                     0x2e020001 => ItemPlacementParam::read_chunk_2e020001(d)?,
+                    0x2e020003 => ItemPlacementParam::read_chunk_2e020003(d)?,
                     0x2e020004 => ItemPlacementParam::read_chunk_2e020004(d)?,
                     0x2e020005 => ItemPlacementParam::read_chunk_2e020005(d)?,
                     0xfacade01 => break,
@@ -265,23 +300,29 @@ impl Item {
     }
 
     fn read_chunk_2e00201e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 7
+        let version = d.u32()?; // 6 | 7
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
-        d.u32()?; // 0xffffffff
+
+        if version >= 7 {
+            d.u32()?; // 0xffffffff
+        }
 
         Ok(())
     }
 
     fn read_chunk_2e00201f<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 12
+        let version = d.u32()?; // 11 | 12
         d.u32()?; // 3
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u8()?; // 0
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
+
+        if version >= 12 {
+            d.u32()?; // 0xffffffff
+            d.u32()?; // 0xffffffff
+        }
 
         Ok(())
     }
@@ -290,6 +331,28 @@ impl Item {
         d.u32()?; // 3
         d.u32()?; // 0
         d.u8()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_2e002021<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_2e002023<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u8()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_2e002024<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
 
         Ok(())
     }
@@ -337,6 +400,14 @@ impl Collector {
         Ok(())
     }
 
+    fn read_chunk_2e001004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        let icon_width = d.u16()?; // 64
+        let icon_height = d.u16()?; // 64
+        d.bytes(icon_width as usize * icon_height as usize * 4)?;
+
+        Ok(())
+    }
+
     fn read_chunk_2e001006<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
@@ -374,6 +445,13 @@ impl Collector {
 
     fn read_chunk_2e00100d<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.string()?; // "No Description"
+
+        Ok(())
+    }
+
+    fn read_chunk_2e00100e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        d.u32()?; // 0
 
         Ok(())
     }
@@ -439,6 +517,21 @@ impl ItemPlacementParam {
         Ok(())
     }
 
+    fn read_chunk_2e020003<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // "piks"
+        d.u32()?; // 32
+        d.u32()?; // 3
+        d.u32()?; // 6
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 1
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
     fn read_chunk_2e020004<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // "piks"
         d.u32()?; // 8
@@ -463,6 +556,72 @@ impl ItemPlacementParam {
             d.u32()?; // 0
             d.u32()?; // 0
             d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
+struct ItemEntityModel;
+
+impl ItemEntityModel {
+    fn read_chunk_2e027000<R: Read, I: IdStateMut, N: NodeStateMut>(
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 4
+        d.node(0x09159000, |d| {
+            d.u32()?; // 3
+            d.node(0x090bb000, |d| {
+                loop {
+                    let chunk_id = d.u32()?;
+
+                    match chunk_id {
+                        0x090bb000 => Solid2Model::read_chunk_090bb000(d)?,
+                        0x090bb002 => Solid2Model::read_chunk_090bb002(d)?,
+                        0xfacade01 => break,
+                        _ => todo!(),
+                    }
+                }
+
+                Ok(())
+            })?;
+            d.u8()?; // 1
+            d.u32()?; // 0xffffffff
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0xffffffff
+            d.u32()?; // 0
+            d.u32()?; // 0xffffffff
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0
 
@@ -549,7 +708,7 @@ impl ItemEntityModelEdition {
 struct Crystal;
 
 impl Crystal {
-    fn read_chunk_09003003<R: Read, I, N: NodeStateMut>(
+    fn read_chunk_09003003<R: Read, I: IdStateMut, N: NodeStateMut>(
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 2
@@ -708,16 +867,30 @@ impl Crystal {
 struct MaterialUserInst;
 
 impl MaterialUserInst {
-    fn read_chunk_090fd000<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 11
-        d.u8()?; // 1
-        d.u32()?; // 0xffffffff
+        let uses_game_material = d.bool8()?;
+        d.id_or_null()?; // "TM_wiuehrfsd"
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u16()?; // 4 | 22
-        d.string()?; // "Stadium\Media\Material\TechnicsTrims" | "Stadium\Media\Material\TrackWallClips"
-        d.u32()?; // 0
-        d.u32()?; // 0
+        if uses_game_material {
+            d.string()?; // "Stadium\Media\Material\TechnicsTrims" | "Stadium\Media\Material\TrackWallClips"
+        } else {
+            d.id()?; // "CustomConcrete"
+        }
+        d.list(|d| {
+            d.id()?; // "TargetColor"
+            d.id()?; // "Real"
+            d.u32()?; // 3
+
+            Ok(())
+        })?;
+        d.list(|d| {
+            d.u32()?;
+
+            Ok(())
+        })?;
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
@@ -741,6 +914,303 @@ impl MaterialUserInst {
     fn read_chunk_090fd002<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+struct Solid2Model;
+
+impl Solid2Model {
+    fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 30
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 2
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 1
+        d.u32()?; // 10
+        d.list(|d| {
+            d.node(0x0901e000, |d| {
+                loop {
+                    let chunk_id = d.u32()?;
+
+                    match chunk_id {
+                        0x09006001 => Visual::read_chunk_09006001(d)?,
+                        0x09006005 => Visual::read_chunk_09006005(d)?,
+                        0x09006009 => Visual::read_chunk_09006009(d)?,
+                        0x0900600b => Visual::read_chunk_0900600b(d)?,
+                        0x0900600f => Visual::read_chunk_0900600f(d)?,
+                        0x09006010 => Visual::read_chunk_09006010(d)?,
+                        0x0902c002 => Visual3D::read_chunk_0902c002(d)?,
+                        0x0902c004 => Visual3D::read_chunk_0902c004(d)?,
+                        0x0906a001 => VisualIndexed::read_chunk_0906a001(d)?,
+                        0xfacade01 => break,
+                        _ => todo!(),
+                    }
+                }
+
+                Ok(())
+            })?;
+
+            Ok(())
+        })?;
+        d.u32()?; // 0
+        let num_materials = d.u32()?; // 2
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.f32()?; // 73.47571
+        d.u32()?; // 1
+        d.f32()?; // 0.011813663
+        d.f32()?; // 0.12343697
+        d.f32()?; // 0.99153054
+        d.f32()?; // 0.98973596
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xd05ebb50
+        d.u32()?; // 0x01d74f56
+        d.u32()?; // 0
+        d.string()?; // "Stadium\Media\Material\"
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 1
+        d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
+        d.u32()?; // 1
+        d.u32()?; // 0
+        d.repeat(num_materials as usize, |d| {
+            d.node(0x090fd000, |d| {
+                loop {
+                    let chunk_id = d.u32()?;
+
+                    match chunk_id {
+                        0x090fd000 => MaterialUserInst::read_chunk_090fd000(d)?,
+                        0x090fd001 => MaterialUserInst::read_chunk_090fd001(d)?,
+                        0x090fd002 => MaterialUserInst::read_chunk_090fd002(d)?,
+                        0xfacade01 => break,
+                        _ => todo!(),
+                    }
+                }
+
+                Ok(())
+            })?;
+            d.u32()?; // 0
+
+            Ok(())
+        })?;
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.f32()?; // 1.0
+        d.f32()?; // 1.0
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_090bb002<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // "piks"
+        d.u32()?; // 8
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+struct Visual;
+
+impl Visual {
+    fn read_chunk_09006001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_09006005<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_09006009<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_0900600b<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_0900600f<R: Read, I, N: NodeStateMut>(
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 6
+        d.u32()?; // 56
+        d.u32()?; // 0
+        d.u32()?; // 180
+        d.u32()?; // 1
+        d.node(0x09056000, |d| {
+            loop {
+                let chunk_id = d.u32()?;
+
+                match chunk_id {
+                    0x09056000 => VertexStream::read_chunk_09056000(d)?,
+                    0xfacade01 => break,
+                    _ => todo!(),
+                }
+            }
+
+            Ok(())
+        })?;
+        d.u32()?; // 0
+        d.f32()?; // 12.703503
+        d.f32()?; // 15.202776
+        d.f32()?; // 1.7036213
+        d.f32()?; // 14.653503
+        d.f32()?; // 17.410307
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_09006010<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+struct Visual3D;
+
+impl Visual3D {
+    fn read_chunk_0902c002<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_0902c004<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+struct VisualIndexed;
+
+impl VisualIndexed {
+    fn read_chunk_0906a001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+
+        loop {
+            let chunk_id = d.u32()?;
+
+            match chunk_id {
+                0x09057001 => IndexBuffer::read_chunk_09057001(d)?,
+                0xfacade01 => break,
+                _ => todo!(),
+            }
+        }
+
+        Ok(())
+    }
+}
+
+struct IndexBuffer;
+
+impl IndexBuffer {
+    fn read_chunk_09057001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 2
+        let num_indices = d.u32()?;
+        d.repeat(num_indices as usize, |d| {
+            d.i16()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
+struct VertexStream;
+
+impl VertexStream {
+    fn read_chunk_09056000<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        let vertex_count = d.u32()?; // 180
+        d.u32()?; // 3
+        d.u32()?; // 0xffffffff
+        let vertex_attributes = d.list(|d| {
+            let flags = d.u32()?;
+            let offset = d.u32()?; // 0 | 0x30 | 0x40
+
+            if offset != 0 {
+                d.u32()?;
+            }
+
+            Ok((flags >> 9) & 0x1FF)
+        })?;
+        d.u32()?; // 1
+        for vertex_attribute in vertex_attributes {
+            match vertex_attribute {
+                1 => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.f32()?;
+                        d.f32()?;
+
+                        Ok(())
+                    })?;
+                }
+                2 => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+
+                        Ok(())
+                    })?;
+                }
+                14 => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
+                }
+                _ => todo!(),
+            }
+        }
 
         Ok(())
     }

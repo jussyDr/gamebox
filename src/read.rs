@@ -231,7 +231,7 @@ fn read_node<T: Readable>(
     Ok(node)
 }
 
-fn read_header<T: Readable, R: Read, I, N>(
+fn read_header<T: Readable, R: Read + Seek, I, N>(
     node: &mut T,
     mut d: Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -247,15 +247,23 @@ fn read_header<T: Readable, R: Read, I, N>(
     let mut header_chunk_entries = T::header_chunk_table().iter();
 
     for (chunk_id, chunk_size) in header_chunks {
-        let mut d = d.take(chunk_size as u64, &mut id_state, ());
+        let is_heavy_chunk = chunk_size & 0x80000000 != 0;
+        let chunk_size = chunk_size & 0x7FFFFFFF;
+        let skip_heavy_chunks = false;
 
-        let header_chunk_entry = header_chunk_entries
-            .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
-            .unwrap();
+        if is_heavy_chunk && skip_heavy_chunks {
+            d.skip(chunk_size)?;
+        } else {
+            let mut d = d.take(chunk_size as u64, &mut id_state, ());
 
-        (header_chunk_entry.read_fn)(node, &mut d)?;
+            let header_chunk_entry = header_chunk_entries
+                .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
+                .unwrap();
 
-        d.end()?;
+            (header_chunk_entry.read_fn)(node, &mut d)?;
+
+            d.end()?;
+        }
     }
 
     d.end()?;
@@ -275,6 +283,8 @@ pub(crate) fn read_body<T: ReadBody, R: Read>(
         if chunk_id == NODE_END {
             break;
         }
+
+        println!("{chunk_id:08X?}");
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
@@ -304,11 +314,11 @@ pub(crate) fn read_body<T: ReadBody, R: Read>(
 }
 
 pub(crate) mod readable {
-    use std::io::{Read, Take};
+    use std::io::Read;
 
     use crate::{
         class::Class,
-        deserialize::{Deserializer, IdState, NodeState},
+        deserialize::{Deserializer, IdState, NodeState, Take},
     };
 
     use super::Result;
