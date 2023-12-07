@@ -8,7 +8,7 @@
 //!
 //! ``` no_run
 //! use gamebox::{read, read_file};
-//! use gamebox::classes::item::Item;
+//! use gamebox::classes::Item;
 //!
 //! # |reader: std::io::Cursor<&[u8]>| {
 //! let item1: Item = read(reader)?;
@@ -21,7 +21,7 @@
 //! ``` no_run
 //! use gamebox::{write, write_file};
 //!
-//! # |item: gamebox::classes::item::Item, writer: std::io::Cursor<&mut [u8]>| {
+//! # |item: gamebox::classes::Item, writer: std::io::Cursor<&mut [u8]>| {
 //! write(&item, writer)?;
 //! write_file(&item, "MyItem.Item.Gbx")?;
 //! # Ok::<(), gamebox::write::Error>(()) };
@@ -34,6 +34,9 @@ pub mod classes {
     //! GameBox classes that can be read or written.
 
     pub mod item;
+
+    #[doc(inline)]
+    pub use item::Item;
 }
 
 mod deserialize;

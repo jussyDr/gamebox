@@ -34,9 +34,30 @@ impl NodeState {
 
 /// Trait which should be used as a generic trait bound in
 /// functions that need to access the `NodeState`.
-pub trait NodeStateMut: BorrowMut<NodeState> {}
+pub trait NodeStateMut {
+    fn borrow(&self) -> &NodeState;
+    fn borrow_mut(&mut self) -> &mut NodeState;
+}
 
-impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
+impl NodeStateMut for NodeState {
+    fn borrow(&self) -> &NodeState {
+        self
+    }
+
+    fn borrow_mut(&mut self) -> &mut NodeState {
+        self
+    }
+}
+
+impl<T: NodeStateMut> NodeStateMut for &mut T {
+    fn borrow(&self) -> &NodeState {
+        (**self).borrow()
+    }
+
+    fn borrow_mut(&mut self) -> &mut NodeState {
+        (**self).borrow_mut()
+    }
+}
 
 pub struct Take<R> {
     reader: R,
@@ -171,6 +192,19 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         };
 
         Deserializer::new(inner, id_state, node_state)
+    }
+
+    pub fn take2<IS>(
+        &mut self,
+        limit: u64,
+        id_state: IS,
+    ) -> Deserializer<Take<&mut R>, IS, &mut N> {
+        let inner = Take {
+            reader: &mut self.reader,
+            limit,
+        };
+
+        Deserializer::new(inner, id_state, &mut self.node_state)
     }
 
     /// Check if we are at the end of the reader.

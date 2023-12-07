@@ -1,8 +1,10 @@
 use std::io::Read;
 
 use crate::{
+    class::Class,
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
+        read_body,
         readable::{self, BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody},
         Readable, Result,
     },
@@ -46,7 +48,8 @@ impl ReadBody for Item {
     }
 
     #[allow(clippy::redundant_closure)]
-    fn body_chunk_table<'a, R: Read>() -> &'a [BodyChunkEntry<Self, R>] {
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
         &[
             BodyChunkEntry {
                 id: 0x2e001009,
@@ -236,29 +239,14 @@ impl Item {
         d.u32()?; // 0
         d.u32()?; // 0
         d.node_or_null(0x2e026000, |d| {
-            loop {
-                let chunk_id = d.u32()?;
-
-                match chunk_id {
-                    0x2e026000 => ItemEntityModelEdition::read_chunk_2e026000(d)?,
-                    0x2e026001 => ItemEntityModelEdition::read_chunk_2e026001(d)?,
-                    0xfacade01 => break,
-                    _ => todo!(),
-                }
-            }
+            let mut node = ItemEntityModelEdition::default();
+            read_body(&mut node, d)?;
 
             Ok(())
         })?;
         d.node_or_null(0x2e027000, |d| {
-            loop {
-                let chunk_id = d.u32()?;
-
-                match chunk_id {
-                    0x2e027000 => ItemEntityModel::read_chunk_2e027000(d)?,
-                    0xfacade01 => break,
-                    _ => todo!(),
-                }
-            }
+            let mut node = ItemEntityModel::default();
+            read_body(&mut node, d)?;
 
             Ok(())
         })?;
@@ -273,25 +261,14 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e00201c<R: Read, I, N: NodeStateMut>(
+    fn read_chunk_2e00201c<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 5
         d.node(0x2e020000, |d| {
-            loop {
-                let chunk_id = d.u32()?;
-
-                match chunk_id {
-                    0x2e020000 => ItemPlacementParam::read_chunk_2e020000(d)?,
-                    0x2e020001 => ItemPlacementParam::read_chunk_2e020001(d)?,
-                    0x2e020003 => ItemPlacementParam::read_chunk_2e020003(d)?,
-                    0x2e020004 => ItemPlacementParam::read_chunk_2e020004(d)?,
-                    0x2e020005 => ItemPlacementParam::read_chunk_2e020005(d)?,
-                    0xfacade01 => break,
-                    _ => todo!(),
-                }
-            }
+            let mut node = ItemPlacementParam::default();
+            read_body(&mut node, d)?;
 
             Ok(())
         })?;
@@ -487,10 +464,45 @@ impl Collector {
 
 struct ItemPlacementParam;
 
+impl Class for ItemPlacementParam {
+    const CLASS_ID: u32 = 0x2e020000;
+}
+
+impl ReadBody for ItemPlacementParam {
+    fn default() -> Self {
+        Self
+    }
+
+    #[allow(clippy::redundant_closure)]
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[
+            BodyChunkEntry {
+                id: 0x2e020000,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020000(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e020001,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020001(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e020003,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020003(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e020004,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020004(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e020005,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020005(n, d)),
+            },
+        ]
+    }
+}
+
 impl ItemPlacementParam {
-    fn read_chunk_2e020000<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 50
+    fn read_chunk_2e020000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 1
         d.u32()?; // 0
@@ -508,18 +520,14 @@ impl ItemPlacementParam {
         Ok(())
     }
 
-    fn read_chunk_2e020001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 8
+    fn read_chunk_2e020001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_2e020003<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 32
+    fn read_chunk_2e020003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 3
         d.u32()?; // 6
         d.u32()?; // 0xffffffff
@@ -532,9 +540,7 @@ impl ItemPlacementParam {
         Ok(())
     }
 
-    fn read_chunk_2e020004<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 8
+    fn read_chunk_2e020004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
@@ -542,10 +548,9 @@ impl ItemPlacementParam {
     }
 
     fn read_chunk_2e020005<R: Read, I, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 52
         d.node(0x09187000, |d| {
             d.u32()?; // 10
             d.u32()?; // 0xffffffff
@@ -568,24 +573,35 @@ impl ItemPlacementParam {
 
 struct ItemEntityModel;
 
+impl Class for ItemEntityModel {
+    const CLASS_ID: u32 = 0x2e027000;
+}
+
+impl ReadBody for ItemEntityModel {
+    fn default() -> Self {
+        Self
+    }
+
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[BodyChunkEntry {
+            id: 0x2e027000,
+            read_fn: BodyChunkReadFn::Normal(Self::read_chunk_2e027000),
+        }]
+    }
+}
+
 impl ItemEntityModel {
     fn read_chunk_2e027000<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
         d.node(0x09159000, |d| {
             d.u32()?; // 3
             d.node(0x090bb000, |d| {
-                loop {
-                    let chunk_id = d.u32()?;
-
-                    match chunk_id {
-                        0x090bb000 => Solid2Model::read_chunk_090bb000(d)?,
-                        0x090bb002 => Solid2Model::read_chunk_090bb002(d)?,
-                        0xfacade01 => break,
-                        _ => todo!(),
-                    }
-                }
+                let mut node = Solid2Model::default();
+                read_body(&mut node, d)?;
 
                 Ok(())
             })?;
@@ -634,26 +650,41 @@ impl ItemEntityModel {
 
 struct ItemEntityModelEdition;
 
+impl Class for ItemEntityModelEdition {
+    const CLASS_ID: u32 = 0x2e026000;
+}
+
+impl ReadBody for ItemEntityModelEdition {
+    fn default() -> Self {
+        Self
+    }
+
+    #[allow(clippy::redundant_closure)]
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[
+            BodyChunkEntry {
+                id: 0x2e026000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e026000(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e026001,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e026001(n, d)),
+            },
+        ]
+    }
+}
+
 impl ItemEntityModelEdition {
     fn read_chunk_2e026000<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 7
         d.u32()?; // 1
         d.node(0x09003000, |d| {
-            loop {
-                let chunk_id = d.u32()?;
-
-                match chunk_id {
-                    0x09003003 => Crystal::read_chunk_09003003(d)?,
-                    0x09003004 => Crystal::read_chunk_09003004(d)?,
-                    0x09003005 => Crystal::read_chunk_09003005(d)?,
-                    0x09003006 => Crystal::read_chunk_09003006(d)?,
-                    0x09003007 => Crystal::read_chunk_09003007(d)?,
-                    0xfacade01 => break,
-                    _ => todo!(),
-                }
-            }
+            let mut node = Crystal::default();
+            read_body(&mut node, d)?;
 
             Ok(())
         })?;
@@ -695,9 +726,7 @@ impl ItemEntityModelEdition {
         Ok(())
     }
 
-    fn read_chunk_2e026001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 8
+    fn read_chunk_2e026001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
@@ -707,25 +736,54 @@ impl ItemEntityModelEdition {
 
 struct Crystal;
 
+impl Class for Crystal {
+    const CLASS_ID: u32 = 0x09003000;
+}
+
+impl ReadBody for Crystal {
+    fn default() -> Self {
+        Self
+    }
+
+    #[allow(clippy::redundant_closure)]
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[
+            BodyChunkEntry {
+                id: 0x09003003,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003003(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x09003004,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_09003004(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x09003005,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003005(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x09003006,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003006(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x09003007,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003007(n, d)),
+            },
+        ]
+    }
+}
+
 impl Crystal {
     fn read_chunk_09003003<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 2
         d.list(|d| {
             d.u32()?; // 0
             d.node(0x090fd000, |d| {
-                loop {
-                    let chunk_id = d.u32()?;
-
-                    match chunk_id {
-                        0x090fd000 => MaterialUserInst::read_chunk_090fd000(d)?,
-                        0x090fd001 => MaterialUserInst::read_chunk_090fd001(d)?,
-                        0x090fd002 => MaterialUserInst::read_chunk_090fd002(d)?,
-                        0xfacade01 => break,
-                        _ => todo!(),
-                    }
-                }
+                let mut node = MaterialUserInst::default();
+                read_body(&mut node, d)?;
 
                 Ok(())
             })?;
@@ -736,9 +794,7 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003004<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 12
+    fn read_chunk_09003004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 0
         d.u32()?; // 1
@@ -746,7 +802,10 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003005<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09003005<R: Read, I: IdStateMut, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 1
         d.u32()?; // 0
@@ -831,7 +890,7 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003006<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09003006<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 2
         d.list(|d| {
             d.u32()?;
@@ -848,7 +907,7 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003007<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09003007<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 3
         d.u32()?; // 0
@@ -866,8 +925,39 @@ impl Crystal {
 
 struct MaterialUserInst;
 
+impl Class for MaterialUserInst {
+    const CLASS_ID: u32 = 0x090fd000;
+}
+
+impl ReadBody for MaterialUserInst {
+    fn default() -> Self {
+        Self
+    }
+
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[
+            BodyChunkEntry {
+                id: 0x090fd000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd000(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x090fd001,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd001(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x090fd002,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd002(n, d)),
+            },
+        ]
+    }
+}
+
 impl MaterialUserInst {
-    fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 11
         let uses_game_material = d.bool8()?;
         d.id_or_null()?; // "TM_wiuehrfsd"
@@ -899,7 +989,7 @@ impl MaterialUserInst {
         Ok(())
     }
 
-    fn read_chunk_090fd001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_090fd001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 5
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
@@ -911,7 +1001,7 @@ impl MaterialUserInst {
         Ok(())
     }
 
-    fn read_chunk_090fd002<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_090fd002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
@@ -921,8 +1011,34 @@ impl MaterialUserInst {
 
 struct Solid2Model;
 
+impl Class for Solid2Model {
+    const CLASS_ID: u32 = 0x090bb000;
+}
+
+impl ReadBody for Solid2Model {
+    fn default() -> Self {
+        Self
+    }
+
+    #[allow(clippy::redundant_closure)]
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[
+            BodyChunkEntry {
+                id: 0x090bb000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090bb000(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x090bb002,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_090bb002(n, d)),
+            },
+        ]
+    }
+}
+
 impl Solid2Model {
     fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 30
@@ -939,23 +1055,8 @@ impl Solid2Model {
         d.u32()?; // 10
         d.list(|d| {
             d.node(0x0901e000, |d| {
-                loop {
-                    let chunk_id = d.u32()?;
-
-                    match chunk_id {
-                        0x09006001 => Visual::read_chunk_09006001(d)?,
-                        0x09006005 => Visual::read_chunk_09006005(d)?,
-                        0x09006009 => Visual::read_chunk_09006009(d)?,
-                        0x0900600b => Visual::read_chunk_0900600b(d)?,
-                        0x0900600f => Visual::read_chunk_0900600f(d)?,
-                        0x09006010 => Visual::read_chunk_09006010(d)?,
-                        0x0902c002 => Visual3D::read_chunk_0902c002(d)?,
-                        0x0902c004 => Visual3D::read_chunk_0902c004(d)?,
-                        0x0906a001 => VisualIndexed::read_chunk_0906a001(d)?,
-                        0xfacade01 => break,
-                        _ => todo!(),
-                    }
-                }
+                let mut node = VisualIndexedTriangles::default();
+                read_body(&mut node, d)?;
 
                 Ok(())
             })?;
@@ -1000,17 +1101,8 @@ impl Solid2Model {
         d.u32()?; // 0
         d.repeat(num_materials as usize, |d| {
             d.node(0x090fd000, |d| {
-                loop {
-                    let chunk_id = d.u32()?;
-
-                    match chunk_id {
-                        0x090fd000 => MaterialUserInst::read_chunk_090fd000(d)?,
-                        0x090fd001 => MaterialUserInst::read_chunk_090fd001(d)?,
-                        0x090fd002 => MaterialUserInst::read_chunk_090fd002(d)?,
-                        0xfacade01 => break,
-                        _ => todo!(),
-                    }
-                }
+                let mut node = MaterialUserInst::default();
+                read_body(&mut node, d)?;
 
                 Ok(())
             })?;
@@ -1030,13 +1122,65 @@ impl Solid2Model {
         Ok(())
     }
 
-    fn read_chunk_090bb002<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // "piks"
-        d.u32()?; // 8
+    fn read_chunk_090bb002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
         Ok(())
+    }
+}
+
+struct VisualIndexedTriangles;
+
+impl Class for VisualIndexedTriangles {
+    const CLASS_ID: u32 = 0x0901e000;
+}
+
+impl ReadBody for VisualIndexedTriangles {
+    fn default() -> Self {
+        Self
+    }
+
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[
+            BodyChunkEntry {
+                id: 0x09006001,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006001(d)),
+            },
+            BodyChunkEntry {
+                id: 0x09006005,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006005(d)),
+            },
+            BodyChunkEntry {
+                id: 0x09006009,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006009(d)),
+            },
+            BodyChunkEntry {
+                id: 0x0900600b,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_0900600b(d)),
+            },
+            BodyChunkEntry {
+                id: 0x0900600f,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_0900600f(d)),
+            },
+            BodyChunkEntry {
+                id: 0x09006010,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006010(d)),
+            },
+            BodyChunkEntry {
+                id: 0x0902c002,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual3D::read_chunk_0902c002(d)),
+            },
+            BodyChunkEntry {
+                id: 0x0902c004,
+                read_fn: BodyChunkReadFn::Normal(|_, d| Visual3D::read_chunk_0902c004(d)),
+            },
+            BodyChunkEntry {
+                id: 0x0906a001,
+                read_fn: BodyChunkReadFn::Normal(|_, d| VisualIndexed::read_chunk_0906a001(d)),
+            },
+        ]
     }
 }
 
@@ -1067,7 +1211,7 @@ impl Visual {
         Ok(())
     }
 
-    fn read_chunk_0900600f<R: Read, I, N: NodeStateMut>(
+    fn read_chunk_0900600f<R: Read, I: IdStateMut, N: NodeStateMut>(
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 6
@@ -1076,15 +1220,8 @@ impl Visual {
         d.u32()?; // 180
         d.u32()?; // 1
         d.node(0x09056000, |d| {
-            loop {
-                let chunk_id = d.u32()?;
-
-                match chunk_id {
-                    0x09056000 => VertexStream::read_chunk_09056000(d)?,
-                    0xfacade01 => break,
-                    _ => todo!(),
-                }
-            }
+            let mut node = VertexStream::default();
+            read_body(&mut node, d)?;
 
             Ok(())
         })?;
@@ -1130,18 +1267,13 @@ impl Visual3D {
 struct VisualIndexed;
 
 impl VisualIndexed {
-    fn read_chunk_0906a001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_0906a001<R: Read, I: IdStateMut, N: NodeStateMut>(
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 1
 
-        loop {
-            let chunk_id = d.u32()?;
-
-            match chunk_id {
-                0x09057001 => IndexBuffer::read_chunk_09057001(d)?,
-                0xfacade01 => break,
-                _ => todo!(),
-            }
-        }
+        let mut node = IndexBuffer::default();
+        read_body(&mut node, d)?;
 
         Ok(())
     }
@@ -1149,8 +1281,26 @@ impl VisualIndexed {
 
 struct IndexBuffer;
 
+impl Class for IndexBuffer {
+    const CLASS_ID: u32 = 0x09057000;
+}
+
+impl ReadBody for IndexBuffer {
+    fn default() -> Self {
+        Self
+    }
+
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[BodyChunkEntry {
+            id: 0x09057001,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09057001(n, d)),
+        }]
+    }
+}
+
 impl IndexBuffer {
-    fn read_chunk_09057001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09057001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 2
         let num_indices = d.u32()?;
         d.repeat(num_indices as usize, |d| {
@@ -1165,8 +1315,26 @@ impl IndexBuffer {
 
 struct VertexStream;
 
+impl Class for VertexStream {
+    const CLASS_ID: u32 = 0x09056000;
+}
+
+impl ReadBody for VertexStream {
+    fn default() -> Self {
+        Self
+    }
+
+    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
+        &[BodyChunkEntry {
+            id: 0x09056000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09056000(n, d)),
+        }]
+    }
+}
+
 impl VertexStream {
-    fn read_chunk_09056000<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09056000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         let vertex_count = d.u32()?; // 180
         d.u32()?; // 3
