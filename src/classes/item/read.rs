@@ -6,8 +6,7 @@ use crate::{
     read::{
         read_body,
         readable::{
-            BodyChunkEntry, BodyChunkReadFn, Default, HeaderChunkEntry, ReadBody, ReadHeader,
-            Sealed,
+            BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,
         },
         Readable, Result,
     },
@@ -21,7 +20,7 @@ impl Sealed for Item {}
 
 impl Default for Item {
     fn default() -> Self {
-        Self
+        Self { parent: Collector }
     }
 }
 
@@ -31,15 +30,15 @@ impl ReadHeader for Item {
         [
             HeaderChunkEntry {
                 id: 0x2e001003,
-                read_fn: |_, d| Collector::read_chunk_2e001003(&mut Collector, d),
+                read_fn: |n: &mut Self, d| Collector::read_chunk_2e001003(&mut n.parent, d),
             },
             HeaderChunkEntry {
                 id: 0x2e001004,
-                read_fn: |_, d| Collector::read_chunk_2e001004(&mut Collector, d),
+                read_fn: |n: &mut Self, d| Collector::read_chunk_2e001004(&mut n.parent, d),
             },
             HeaderChunkEntry {
                 id: 0x2e001006,
-                read_fn: |_, d| Collector::read_chunk_2e001006(&mut Collector, d),
+                read_fn: |n: &mut Self, d| Collector::read_chunk_2e001006(&mut n.parent, d),
             },
             HeaderChunkEntry {
                 id: 0x2e002000,
@@ -61,50 +60,50 @@ impl ReadBody for Item {
         [
             BodyChunkEntry {
                 id: 0x2e001009,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e001009(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e001009(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e00100b,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e00100b(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e00100b(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e00100c,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e00100c(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e00100c(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e00100d,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e00100d(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e00100d(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e00100e,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e00100e(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e00100e(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e001010,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e001010(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e001010(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e001011,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e001011(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e001011(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
                 id: 0x2e001012,
-                read_fn: BodyChunkReadFn::Normal(|_, d| {
-                    Collector::read_chunk_2e001012(&mut Collector, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Collector::read_chunk_2e001012(&mut n.parent, d)
                 }),
             },
             BodyChunkEntry {
@@ -365,7 +364,7 @@ impl Item {
     }
 }
 
-struct Collector;
+pub(crate) struct Collector;
 
 impl Collector {
     fn read_chunk_2e001003<R: Read, I: IdStateMut, N>(
@@ -1157,7 +1156,9 @@ impl Solid2Model {
     }
 }
 
-struct VisualIndexedTriangles;
+struct VisualIndexedTriangles {
+    parent: VisualIndexed,
+}
 
 impl Class for VisualIndexedTriangles {
     const CLASS_ID: u32 = 0x0901e000;
@@ -1165,7 +1166,11 @@ impl Class for VisualIndexedTriangles {
 
 impl Default for VisualIndexedTriangles {
     fn default() -> Self {
-        Self
+        Self {
+            parent: VisualIndexed {
+                parent: Visual3D { parent: Visual },
+            },
+        }
     }
 }
 
@@ -1175,39 +1180,57 @@ impl ReadBody for VisualIndexedTriangles {
         [
             BodyChunkEntry {
                 id: 0x09006001,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006001(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual::read_chunk_09006001(&mut n.parent.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x09006005,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006005(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual::read_chunk_09006005(&mut n.parent.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x09006009,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006009(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual::read_chunk_09006009(&mut n.parent.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x0900600b,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_0900600b(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual::read_chunk_0900600b(&mut n.parent.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x0900600f,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_0900600f(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual::read_chunk_0900600f(&mut n.parent.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x09006010,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006010(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual::read_chunk_09006010(&mut n.parent.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x0902c002,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual3D::read_chunk_0902c002(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual3D::read_chunk_0902c002(&mut n.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x0902c004,
-                read_fn: BodyChunkReadFn::Normal(|_, d| Visual3D::read_chunk_0902c004(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    Visual3D::read_chunk_0902c004(&mut n.parent.parent, d)
+                }),
             },
             BodyChunkEntry {
                 id: 0x0906a001,
-                read_fn: BodyChunkReadFn::Normal(|_, d| VisualIndexed::read_chunk_0906a001(d)),
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    VisualIndexed::read_chunk_0906a001(&mut n.parent, d)
+                }),
             },
         ]
         .into_iter()
@@ -1217,31 +1240,32 @@ impl ReadBody for VisualIndexedTriangles {
 struct Visual;
 
 impl Visual {
-    fn read_chunk_09006001<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09006001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0xffffffff
 
         Ok(())
     }
 
-    fn read_chunk_09006005<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09006005<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_09006009<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09006009<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_0900600b<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_0900600b<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
 
         Ok(())
     }
 
     fn read_chunk_0900600f<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 6
@@ -1269,7 +1293,7 @@ impl Visual {
         Ok(())
     }
 
-    fn read_chunk_09006010<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09006010<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
@@ -1277,16 +1301,18 @@ impl Visual {
     }
 }
 
-struct Visual3D;
+struct Visual3D {
+    parent: Visual,
+}
 
 impl Visual3D {
-    fn read_chunk_0902c002<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_0902c002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0xffffffff
 
         Ok(())
     }
 
-    fn read_chunk_0902c004<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_0902c004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
@@ -1294,10 +1320,13 @@ impl Visual3D {
     }
 }
 
-struct VisualIndexed;
+struct VisualIndexed {
+    parent: Visual3D,
+}
 
 impl VisualIndexed {
     fn read_chunk_0906a001<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 1

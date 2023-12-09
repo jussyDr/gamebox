@@ -347,10 +347,6 @@ pub(crate) mod readable {
 
     pub trait Sealed: Class + Default + ReadHeader + ReadBody {}
 
-    pub trait Default {
-        fn default() -> Self;
-    }
-
     pub trait ReadHeader {
         fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>>
         where
