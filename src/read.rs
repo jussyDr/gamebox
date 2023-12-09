@@ -244,7 +244,7 @@ fn read_header<T: Readable, R: Read + Seek, I, N>(
 
     let mut id_state = IdState::default();
 
-    let mut header_chunk_entries = T::header_chunk_table().iter();
+    let mut header_chunk_entries = T::header_chunks();
 
     for (chunk_id, chunk_size) in header_chunks {
         let is_heavy_chunk = chunk_size & 0x80000000 != 0;
@@ -275,7 +275,7 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
-    let mut body_chunk_entries = T::body_chunk_table().iter();
+    let mut body_chunk_entries = T::body_chunks();
 
     loop {
         let chunk_id = d.u32()?;
@@ -345,17 +345,21 @@ pub(crate) mod readable {
     pub type SkippableBodyChunkReadFn<T, R, N> =
         fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, (), &mut N>) -> Result<()>;
 
-    pub trait Sealed: ReadBody {
-        fn header_chunk_table<'a, R: Read>() -> &'a [HeaderChunkEntry<Self, R>]
+    pub trait Sealed: Class + Default + ReadHeader + ReadBody {}
+
+    pub trait Default {
+        fn default() -> Self;
+    }
+
+    pub trait ReadHeader {
+        fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>>
         where
             Self: Sized;
     }
 
-    pub trait ReadBody: Class {
-        fn default() -> Self;
-
-        fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-        ) -> &'a [BodyChunkEntry<Self, R, I, N>]
+    pub trait ReadBody {
+        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
         where
             Self: Sized;
     }

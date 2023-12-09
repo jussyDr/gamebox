@@ -5,7 +5,10 @@ use crate::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         read_body,
-        readable::{self, BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody},
+        readable::{
+            BodyChunkEntry, BodyChunkReadFn, Default, HeaderChunkEntry, ReadBody, ReadHeader,
+            Sealed,
+        },
         Readable, Result,
     },
 };
@@ -14,10 +17,18 @@ use super::Item;
 
 impl Readable for Item {}
 
-impl readable::Sealed for Item {
+impl Sealed for Item {}
+
+impl Default for Item {
+    fn default() -> Self {
+        Self
+    }
+}
+
+impl ReadHeader for Item {
     #[allow(clippy::redundant_closure)]
-    fn header_chunk_table<'a, R: Read>() -> &'a [HeaderChunkEntry<Self, R>] {
-        &[
+    fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>> {
+        [
             HeaderChunkEntry {
                 id: 0x2e001003,
                 read_fn: |_, d| Collector::read_chunk_2e001003(&mut Collector, d),
@@ -39,18 +50,15 @@ impl readable::Sealed for Item {
                 read_fn: |n, d| Self::read_chunk_2e002001(n, d),
             },
         ]
+        .into_iter()
     }
 }
 
 impl ReadBody for Item {
-    fn default() -> Self {
-        Self
-    }
-
     #[allow(clippy::redundant_closure)]
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x2e001009,
                 read_fn: BodyChunkReadFn::Normal(|_, d| {
@@ -168,6 +176,7 @@ impl ReadBody for Item {
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e002027(n, d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -468,15 +477,17 @@ impl Class for ItemPlacementParam {
     const CLASS_ID: u32 = 0x2e020000;
 }
 
-impl ReadBody for ItemPlacementParam {
+impl Default for ItemPlacementParam {
     fn default() -> Self {
         Self
     }
+}
 
+impl ReadBody for ItemPlacementParam {
     #[allow(clippy::redundant_closure)]
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x2e020000,
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020000(n, d)),
@@ -498,6 +509,7 @@ impl ReadBody for ItemPlacementParam {
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e020005(n, d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -577,17 +589,20 @@ impl Class for ItemEntityModel {
     const CLASS_ID: u32 = 0x2e027000;
 }
 
-impl ReadBody for ItemEntityModel {
+impl Default for ItemEntityModel {
     fn default() -> Self {
         Self
     }
+}
 
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[BodyChunkEntry {
+impl ReadBody for ItemEntityModel {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
             id: 0x2e027000,
             read_fn: BodyChunkReadFn::Normal(Self::read_chunk_2e027000),
         }]
+        .into_iter()
     }
 }
 
@@ -654,15 +669,17 @@ impl Class for ItemEntityModelEdition {
     const CLASS_ID: u32 = 0x2e026000;
 }
 
-impl ReadBody for ItemEntityModelEdition {
+impl Default for ItemEntityModelEdition {
     fn default() -> Self {
         Self
     }
+}
 
+impl ReadBody for ItemEntityModelEdition {
     #[allow(clippy::redundant_closure)]
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x2e026000,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e026000(n, d)),
@@ -672,6 +689,7 @@ impl ReadBody for ItemEntityModelEdition {
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e026001(n, d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -740,15 +758,17 @@ impl Class for Crystal {
     const CLASS_ID: u32 = 0x09003000;
 }
 
-impl ReadBody for Crystal {
+impl Default for Crystal {
     fn default() -> Self {
         Self
     }
+}
 
+impl ReadBody for Crystal {
     #[allow(clippy::redundant_closure)]
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x09003003,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003003(n, d)),
@@ -770,6 +790,7 @@ impl ReadBody for Crystal {
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003007(n, d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -929,14 +950,16 @@ impl Class for MaterialUserInst {
     const CLASS_ID: u32 = 0x090fd000;
 }
 
-impl ReadBody for MaterialUserInst {
+impl Default for MaterialUserInst {
     fn default() -> Self {
         Self
     }
+}
 
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+impl ReadBody for MaterialUserInst {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x090fd000,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd000(n, d)),
@@ -950,6 +973,7 @@ impl ReadBody for MaterialUserInst {
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd002(n, d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -1015,15 +1039,17 @@ impl Class for Solid2Model {
     const CLASS_ID: u32 = 0x090bb000;
 }
 
-impl ReadBody for Solid2Model {
+impl Default for Solid2Model {
     fn default() -> Self {
         Self
     }
+}
 
+impl ReadBody for Solid2Model {
     #[allow(clippy::redundant_closure)]
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x090bb000,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090bb000(n, d)),
@@ -1033,6 +1059,7 @@ impl ReadBody for Solid2Model {
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_090bb002(n, d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -1136,14 +1163,16 @@ impl Class for VisualIndexedTriangles {
     const CLASS_ID: u32 = 0x0901e000;
 }
 
-impl ReadBody for VisualIndexedTriangles {
+impl Default for VisualIndexedTriangles {
     fn default() -> Self {
         Self
     }
+}
 
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[
+impl ReadBody for VisualIndexedTriangles {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
             BodyChunkEntry {
                 id: 0x09006001,
                 read_fn: BodyChunkReadFn::Normal(|_, d| Visual::read_chunk_09006001(d)),
@@ -1181,6 +1210,7 @@ impl ReadBody for VisualIndexedTriangles {
                 read_fn: BodyChunkReadFn::Normal(|_, d| VisualIndexed::read_chunk_0906a001(d)),
             },
         ]
+        .into_iter()
     }
 }
 
@@ -1285,17 +1315,20 @@ impl Class for IndexBuffer {
     const CLASS_ID: u32 = 0x09057000;
 }
 
-impl ReadBody for IndexBuffer {
+impl Default for IndexBuffer {
     fn default() -> Self {
         Self
     }
+}
 
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[BodyChunkEntry {
+impl ReadBody for IndexBuffer {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
             id: 0x09057001,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09057001(n, d)),
         }]
+        .into_iter()
     }
 }
 
@@ -1319,17 +1352,20 @@ impl Class for VertexStream {
     const CLASS_ID: u32 = 0x09056000;
 }
 
-impl ReadBody for VertexStream {
+impl Default for VertexStream {
     fn default() -> Self {
         Self
     }
+}
 
-    fn body_chunk_table<'a, R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> &'a [BodyChunkEntry<Self, R, I, N>] {
-        &[BodyChunkEntry {
+impl ReadBody for VertexStream {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
             id: 0x09056000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09056000(n, d)),
         }]
+        .into_iter()
     }
 }
 
