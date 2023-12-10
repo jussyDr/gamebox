@@ -33,6 +33,7 @@ pub mod write;
 pub mod classes {
     //! GameBox classes that can be read or written.
 
+    pub mod collector;
     pub mod item;
 
     #[doc(inline)]
