@@ -270,23 +270,23 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn node(
+    pub fn node<T>(
         &mut self,
         class_id: u32,
-        read_fn: impl FnOnce(&mut Self) -> Result<()>,
-    ) -> Result<()> {
+        read_fn: impl FnOnce(&mut Self) -> Result<T>,
+    ) -> Result<T> {
         match self.node_or_null(class_id, read_fn)? {
             None => todo!(),
-            Some(id) => Ok(id),
+            Some(node) => Ok(node),
         }
     }
 
     /// Deserialize a node with the given `class_id` using the given `read_fn`.
-    pub fn node_or_null(
+    pub fn node_or_null<T>(
         &mut self,
         class_id: u32,
-        read_fn: impl FnOnce(&mut Self) -> Result<()>,
-    ) -> Result<Option<()>> {
+        read_fn: impl FnOnce(&mut Self) -> Result<T>,
+    ) -> Result<Option<T>> {
         let index = self.u32()?;
 
         if index == 0xFFFFFFFF {
@@ -301,8 +301,8 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
             todo!()
         }
 
-        read_fn(self)?;
+        let node = read_fn(self)?;
 
-        Ok(Some(()))
+        Ok(Some(node))
     }
 }

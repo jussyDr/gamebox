@@ -13,17 +13,14 @@ use crate::{
     },
 };
 
-use super::Item;
+use super::{
+    IndexBuffer, Item, ItemEntityModel, MaterialUserInst, Solid2Model, VertexStream, Visual,
+    Visual3D, VisualIndexed, VisualIndexedTriangles,
+};
 
 impl Readable for Item {}
 
 impl Sealed for Item {}
-
-impl Default for Item {
-    fn default() -> Self {
-        Self { parent: Collector }
-    }
-}
 
 impl ReadHeader for Item {
     #[allow(clippy::redundant_closure)]
@@ -257,6 +254,8 @@ impl Item {
             let mut node = ItemEntityModel::default();
             read_body(&mut node, d)?;
 
+            self.entity_model = Some(node);
+
             Ok(())
         })?;
         d.u32()?; // 0xffffffff
@@ -477,18 +476,6 @@ impl ItemPlacementParam {
     }
 }
 
-struct ItemEntityModel;
-
-impl Class for ItemEntityModel {
-    const CLASS_ID: u32 = 0x2e027000;
-}
-
-impl Default for ItemEntityModel {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl ReadBody for ItemEntityModel {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -506,13 +493,13 @@ impl ItemEntityModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
-        d.node(0x09159000, |d| {
+        self.solid_to_model = Some(d.node(0x09159000, |d| {
             d.u32()?; // 3
-            d.node(0x090bb000, |d| {
+            let solid_to_model = d.node(0x090bb000, |d| {
                 let mut node = Solid2Model::default();
                 read_body(&mut node, d)?;
 
-                Ok(())
+                Ok(node)
             })?;
             d.u8()?; // 1
             d.u32()?; // 0xffffffff
@@ -550,8 +537,8 @@ impl ItemEntityModel {
             d.u32()?; // 0
             d.u32()?; // 0
 
-            Ok(())
-        })?;
+            Ok(solid_to_model)
+        })?);
 
         Ok(())
     }
@@ -838,18 +825,6 @@ impl Crystal {
     }
 }
 
-struct MaterialUserInst;
-
-impl Class for MaterialUserInst {
-    const CLASS_ID: u32 = 0x090fd000;
-}
-
-impl Default for MaterialUserInst {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl ReadBody for MaterialUserInst {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -927,18 +902,6 @@ impl MaterialUserInst {
     }
 }
 
-struct Solid2Model;
-
-impl Class for Solid2Model {
-    const CLASS_ID: u32 = 0x090bb000;
-}
-
-impl Default for Solid2Model {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl ReadBody for Solid2Model {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
@@ -974,15 +937,15 @@ impl Solid2Model {
         d.u32()?; // 0xffffffff
         d.u32()?; // 1
         d.u32()?; // 10
-        d.list(|d| {
-            d.node(0x0901e000, |d| {
+        self.meshes = d.list(|d| {
+            let mesh = d.node(0x0901e000, |d| {
                 let mut node = VisualIndexedTriangles::default();
                 read_body(&mut node, d)?;
 
-                Ok(())
+                Ok(node)
             })?;
 
-            Ok(())
+            Ok(mesh)
         })?;
         d.u32()?; // 0
         let num_materials = d.u32()?; // 2
@@ -1020,16 +983,16 @@ impl Solid2Model {
         d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
         d.u32()?; // 1
         d.u32()?; // 0
-        d.repeat(num_materials as usize, |d| {
-            d.node(0x090fd000, |d| {
+        self.materials = d.repeat(num_materials as usize, |d| {
+            let material = d.node(0x090fd000, |d| {
                 let mut node = MaterialUserInst::default();
                 read_body(&mut node, d)?;
 
-                Ok(())
+                Ok(node)
             })?;
             d.u32()?; // 0
 
-            Ok(())
+            Ok(material)
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -1048,24 +1011,6 @@ impl Solid2Model {
         d.u32()?; // 0
 
         Ok(())
-    }
-}
-
-struct VisualIndexedTriangles {
-    parent: VisualIndexed,
-}
-
-impl Class for VisualIndexedTriangles {
-    const CLASS_ID: u32 = 0x0901e000;
-}
-
-impl Default for VisualIndexedTriangles {
-    fn default() -> Self {
-        Self {
-            parent: VisualIndexed {
-                parent: Visual3D { parent: Visual },
-            },
-        }
     }
 }
 
@@ -1132,8 +1077,6 @@ impl ReadBody for VisualIndexedTriangles {
     }
 }
 
-struct Visual;
-
 impl Visual {
     fn read_chunk_09006001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0xffffffff
@@ -1168,11 +1111,11 @@ impl Visual {
         d.u32()?; // 0
         d.u32()?; // 180
         d.u32()?; // 1
-        d.node(0x09056000, |d| {
+        self.vertices = d.node(0x09056000, |d| {
             let mut node = VertexStream::default();
             read_body(&mut node, d)?;
 
-            Ok(())
+            Ok(node)
         })?;
         d.u32()?; // 0
         d.f32()?; // 12.703503
@@ -1196,10 +1139,6 @@ impl Visual {
     }
 }
 
-struct Visual3D {
-    parent: Visual,
-}
-
 impl Visual3D {
     fn read_chunk_0902c002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0xffffffff
@@ -1215,10 +1154,6 @@ impl Visual3D {
     }
 }
 
-struct VisualIndexed {
-    parent: Visual3D,
-}
-
 impl VisualIndexed {
     fn read_chunk_0906a001<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -1229,19 +1164,9 @@ impl VisualIndexed {
         let mut node = IndexBuffer::default();
         read_body(&mut node, d)?;
 
+        self.indices = node;
+
         Ok(())
-    }
-}
-
-struct IndexBuffer;
-
-impl Class for IndexBuffer {
-    const CLASS_ID: u32 = 0x09057000;
-}
-
-impl Default for IndexBuffer {
-    fn default() -> Self {
-        Self
     }
 }
 
@@ -1267,18 +1192,6 @@ impl IndexBuffer {
         })?;
 
         Ok(())
-    }
-}
-
-struct VertexStream;
-
-impl Class for VertexStream {
-    const CLASS_ID: u32 = 0x09056000;
-}
-
-impl Default for VertexStream {
-    fn default() -> Self {
-        Self
     }
 }
 
