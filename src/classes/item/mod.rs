@@ -13,8 +13,32 @@ use super::collector::Collector;
 #[derive(Default)]
 pub struct Item {
     parent: Collector,
-    entity_model: Option<ItemEntityModel>,
+    layers: Vec<Mesh>,
+    materials: Vec<Material>,
 }
+
+impl Item {
+    pub fn layers(&self) -> &[Mesh] {
+        &self.layers
+    }
+
+    pub fn materials(&self) -> &[Material] {
+        &self.materials
+    }
+}
+
+pub struct Mesh {
+    positions: Vec<Vec3f>,
+    indices: Vec<()>,
+}
+
+impl Mesh {
+    pub fn positions(&self) -> &[Vec3f] {
+        &self.positions
+    }
+}
+
+pub struct Material;
 
 impl Class for Item {
     const CLASS_ID: u32 = 0x2e002000;
@@ -36,7 +60,7 @@ impl DerefMut for Item {
 
 #[derive(Default)]
 struct ItemEntityModel {
-    solid_to_model: Option<Solid2Model>,
+    solid_to_model: Solid2Model,
 }
 
 impl Class for ItemEntityModel {
@@ -45,8 +69,8 @@ impl Class for ItemEntityModel {
 
 #[derive(Default)]
 struct Solid2Model {
-    meshes: Vec<VisualIndexedTriangles>,
-    materials: Vec<MaterialUserInst>,
+    layers: Vec<Mesh>,
+    materials: Vec<Material>,
 }
 
 impl Class for Solid2Model {
@@ -128,15 +152,27 @@ struct Visual {
 }
 
 #[derive(Default)]
-struct VertexStream;
+struct VertexStream {
+    positions: Vec<Vec3f>,
+    texcoords: Vec<()>,
+}
 
 impl Class for VertexStream {
     const CLASS_ID: u32 = 0x09056000;
 }
 
 #[derive(Default)]
-struct IndexBuffer;
+struct IndexBuffer {
+    indices: Vec<()>,
+}
 
 impl Class for IndexBuffer {
     const CLASS_ID: u32 = 0x09057000;
+}
+
+#[derive(Clone)]
+pub struct Vec3f {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }

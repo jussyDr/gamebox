@@ -14,8 +14,8 @@ use crate::{
 };
 
 use super::{
-    IndexBuffer, Item, ItemEntityModel, MaterialUserInst, Solid2Model, VertexStream, Visual,
-    Visual3D, VisualIndexed, VisualIndexedTriangles,
+    IndexBuffer, Item, ItemEntityModel, Material, MaterialUserInst, Mesh, Solid2Model, Vec3f,
+    VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
 };
 
 impl Readable for Item {}
@@ -250,15 +250,18 @@ impl Item {
 
             Ok(())
         })?;
-        d.node_or_null(0x2e027000, |d| {
+        let entity_model = d.node_or_null(0x2e027000, |d| {
             let mut node = ItemEntityModel::default();
             read_body(&mut node, d)?;
 
-            self.entity_model = Some(node);
-
-            Ok(())
+            Ok(node)
         })?;
         d.u32()?; // 0xffffffff
+
+        if let Some(entity_model) = entity_model {
+            self.layers = entity_model.solid_to_model.layers;
+            self.materials = entity_model.solid_to_model.materials;
+        }
 
         Ok(())
     }
@@ -493,7 +496,7 @@ impl ItemEntityModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
-        self.solid_to_model = Some(d.node(0x09159000, |d| {
+        self.solid_to_model = d.node(0x09159000, |d| {
             d.u32()?; // 3
             let solid_to_model = d.node(0x090bb000, |d| {
                 let mut node = Solid2Model::default();
@@ -538,7 +541,7 @@ impl ItemEntityModel {
             d.u32()?; // 0
 
             Ok(solid_to_model)
-        })?);
+        })?;
 
         Ok(())
     }
@@ -937,15 +940,18 @@ impl Solid2Model {
         d.u32()?; // 0xffffffff
         d.u32()?; // 1
         d.u32()?; // 10
-        self.meshes = d.list(|d| {
-            let mesh = d.node(0x0901e000, |d| {
+        self.layers = d.list(|d| {
+            let visual_indexed_triangles = d.node(0x0901e000, |d| {
                 let mut node = VisualIndexedTriangles::default();
                 read_body(&mut node, d)?;
 
                 Ok(node)
             })?;
 
-            Ok(mesh)
+            Ok(Mesh {
+                positions: visual_indexed_triangles.vertices.positions.clone(),
+                indices: visual_indexed_triangles.indices.indices.clone(),
+            })
         })?;
         d.u32()?; // 0
         let num_materials = d.u32()?; // 2
@@ -992,7 +998,7 @@ impl Solid2Model {
             })?;
             d.u32()?; // 0
 
-            Ok(material)
+            Ok(Material)
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -1220,12 +1226,38 @@ impl VertexStream {
                 d.u32()?;
             }
 
-            Ok((flags >> 9) & 0x1FF)
+            Ok(VertexAttribute {
+                kind: (flags & 0x1FF) as u16,
+                format: ((flags >> 9) & 0x1FF) as u16,
+            })
         })?;
         d.u32()?; // 1
         for vertex_attribute in vertex_attributes {
             match vertex_attribute {
-                1 => {
+                VertexAttribute { kind: 0, format: 2 } => {
+                    self.positions = d.repeat(vertex_count as usize, |d| {
+                        let x = d.f32()?;
+                        let y = d.f32()?;
+                        let z = d.f32()?;
+
+                        Ok(Vec3f { x, y, z })
+                    })?;
+                }
+                VertexAttribute {
+                    kind: 10,
+                    format: 1,
+                } => {
+                    self.texcoords = d.repeat(vertex_count as usize, |d| {
+                        d.f32()?;
+                        d.f32()?;
+
+                        Ok(())
+                    })?;
+                }
+                VertexAttribute {
+                    kind: 11,
+                    format: 1,
+                } => {
                     d.repeat(vertex_count as usize, |d| {
                         d.f32()?;
                         d.f32()?;
@@ -1233,16 +1265,30 @@ impl VertexStream {
                         Ok(())
                     })?;
                 }
-                2 => {
+                VertexAttribute {
+                    kind: 5,
+                    format: 14,
+                } => {
                     d.repeat(vertex_count as usize, |d| {
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
+                        d.u32()?;
 
                         Ok(())
                     })?;
                 }
-                14 => {
+                VertexAttribute {
+                    kind: 18,
+                    format: 14,
+                } => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
+                }
+                VertexAttribute {
+                    kind: 20,
+                    format: 14,
+                } => {
                     d.repeat(vertex_count as usize, |d| {
                         d.u32()?;
 
@@ -1267,4 +1313,9 @@ fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_items: u
     } else {
         d.u32()
     }
+}
+
+struct VertexAttribute {
+    kind: u16,
+    format: u16,
 }
