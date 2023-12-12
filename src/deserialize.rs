@@ -104,6 +104,10 @@ impl<R, I, N> Deserializer<R, I, N> {
             node_state,
         }
     }
+
+    pub fn into_reader(self) -> R {
+        self.reader
+    }
 }
 
 impl<R: Read, I, N> Deserializer<R, I, N> {
@@ -265,6 +269,12 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
         if index == 0x40000000 {
             let id = self.string()?;
             self.id_state.borrow_mut().ids.push(id.clone());
+            return Ok(Some(id));
+        }
+
+        if index & 0xffffc000 == 0x40000000 {
+            let index = (index & 0x3fff) as u16 - 1;
+            let id = self.id_state.borrow().ids[index as usize].clone();
             return Ok(Some(id));
         }
 

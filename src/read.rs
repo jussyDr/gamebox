@@ -70,6 +70,7 @@ pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T> {
 /// A GameBox node reader.
 #[derive(Default)]
 pub struct Reader {
+    assume_header_size_zero: bool,
     skip_header: bool,
     skip_body: bool,
 }
@@ -85,6 +86,11 @@ impl Reader {
     /// ```
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn assume_header_size_zero(mut self, assume_header_size_zero: bool) -> Self {
+        self.assume_header_size_zero = assume_header_size_zero;
+        self
     }
 
     /// Set whether or not to skip reading the header.
@@ -131,7 +137,12 @@ impl Reader {
     /// # Ok::<(), gamebox::read::Error>(()) };
     /// ```
     pub fn read<T: Readable>(&self, reader: impl Read + Seek) -> Result<T> {
-        read_node(reader, self.skip_header, self.skip_body)
+        read_node(
+            reader,
+            self.assume_header_size_zero,
+            self.skip_header,
+            self.skip_body,
+        )
     }
 
     /// Read a node of type `T` from a file at the given `path`.
@@ -154,6 +165,7 @@ impl Reader {
 
 fn read_node<T: Readable>(
     reader: impl Read + Seek,
+    assume_header_size_zero: bool,
     skip_header: bool,
     skip_body: bool,
 ) -> Result<T> {
@@ -177,9 +189,11 @@ fn read_node<T: Readable>(
         todo!()
     }
 
-    if d.u8()? != b'C' {
-        todo!()
-    }
+    let is_body_compressed = match d.u8()? {
+        b'C' => true,
+        b'U' => false,
+        _ => todo!(),
+    };
 
     if d.u8()? != b'R' {
         todo!()
@@ -191,12 +205,19 @@ fn read_node<T: Readable>(
         todo!()
     }
 
-    let user_data_size = d.u32()?;
-
-    if skip_header {
-        d.skip(user_data_size)?;
+    let user_data_size = if assume_header_size_zero {
+        d.skip(4)?;
+        0
     } else {
-        read_header(&mut node, d.take(user_data_size as u64, (), ()))?;
+        d.u32()?
+    };
+
+    if user_data_size != 0 {
+        if skip_header {
+            d.skip(user_data_size)?;
+        } else {
+            read_header(&mut node, d.take(user_data_size as u64, (), ()))?;
+        }
     }
 
     let num_nodes = d.u32()?;
@@ -204,20 +225,46 @@ fn read_node<T: Readable>(
     let num_node_refs = d.u32()?;
 
     if num_node_refs > 0 {
-        todo!()
+        d.u32()?;
+        read_folders(&mut d)?;
+        d.repeat(num_node_refs as usize, |d| {
+            d.u32()?;
+            d.string()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
     }
 
-    let body_size = d.u32()?;
-    let compressed_body_size = d.u32()?;
+    if is_body_compressed {
+        let body_size = d.u32()?;
+        let compressed_body_size = d.u32()?;
 
-    if skip_body {
-        d.skip(compressed_body_size)?;
+        if skip_body {
+            d.skip(compressed_body_size)?;
+        } else {
+            let compressed_body = d.bytes(compressed_body_size as usize)?;
+            let mut buf = vec![0; body_size as usize];
+
+            let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
+            let reader = Cursor::new(body);
+
+            let mut d = Deserializer::new(
+                reader,
+                IdState::default(),
+                NodeState::new(num_nodes as usize),
+            );
+
+            read_body(&mut node, &mut d)?;
+
+            d.end()?;
+        }
+
+        d.end()?;
     } else {
-        let compressed_body = d.bytes(compressed_body_size as usize)?;
-        let mut buf = vec![0; body_size as usize];
-
-        let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
-        let reader = Cursor::new(body);
+        let reader = d.into_reader();
 
         let mut d = Deserializer::new(
             reader,
@@ -229,8 +276,6 @@ fn read_node<T: Readable>(
 
         d.end()?;
     }
-
-    d.end()?;
 
     Ok(node)
 }
@@ -275,6 +320,17 @@ fn read_header<T: Readable, R: Read + Seek, I, N>(
     Ok(())
 }
 
+fn read_folders<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    d.list(|d| {
+        d.string()?;
+        read_folders(d)?;
+
+        Ok(())
+    })?;
+
+    Ok(())
+}
+
 pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
@@ -287,6 +343,8 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
         if chunk_id == NODE_END {
             break;
         }
+
+        println!("{:08X?}", chunk_id);
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)

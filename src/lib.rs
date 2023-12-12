@@ -35,6 +35,7 @@ pub mod classes {
 
     pub mod collector;
     pub mod item;
+    pub mod material;
 
     #[doc(inline)]
     pub use item::Item;
