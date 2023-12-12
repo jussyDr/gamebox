@@ -3,7 +3,10 @@
 mod read;
 mod write;
 
-use std::ops::{Deref, DerefMut};
+use std::{
+    default,
+    ops::{Deref, DerefMut},
+};
 
 use crate::class::Class;
 
@@ -29,12 +32,27 @@ impl Item {
 
 pub struct Mesh {
     positions: Vec<Vec3f>,
-    indices: Vec<()>,
+    indices: Indices,
+}
+
+#[derive(Clone)]
+pub enum Indices {
+    U16(Vec<u16>),
+}
+
+impl Default for Indices {
+    fn default() -> Self {
+        Self::U16(Vec::default())
+    }
 }
 
 impl Mesh {
     pub fn positions(&self) -> &[Vec3f] {
         &self.positions
+    }
+
+    pub fn indices(&self) -> &Indices {
+        &self.indices
     }
 }
 
@@ -110,7 +128,7 @@ impl DerefMut for VisualIndexedTriangles {
 #[derive(Default)]
 struct VisualIndexed {
     parent: Visual3D,
-    indices: IndexBuffer,
+    indices: Indices,
 }
 
 impl Deref for VisualIndexed {
@@ -163,7 +181,7 @@ impl Class for VertexStream {
 
 #[derive(Default)]
 struct IndexBuffer {
-    indices: Vec<()>,
+    indices: Indices,
 }
 
 impl Class for IndexBuffer {

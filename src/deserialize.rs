@@ -174,7 +174,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     pub fn repeat<T>(
         &mut self,
         n: usize,
-        read_fn: impl Fn(&mut Self) -> Result<T>,
+        mut read_fn: impl FnMut(&mut Self) -> Result<T>,
     ) -> Result<Vec<T>> {
         iter::repeat_with(|| read_fn(self)).take(n).collect()
     }

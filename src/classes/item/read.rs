@@ -14,8 +14,8 @@ use crate::{
 };
 
 use super::{
-    IndexBuffer, Item, ItemEntityModel, Material, MaterialUserInst, Mesh, Solid2Model, Vec3f,
-    VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
+    IndexBuffer, Indices, Item, ItemEntityModel, Material, MaterialUserInst, Mesh, Solid2Model,
+    Vec3f, VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
 };
 
 impl Readable for Item {}
@@ -950,7 +950,7 @@ impl Solid2Model {
 
             Ok(Mesh {
                 positions: visual_indexed_triangles.vertices.positions.clone(),
-                indices: visual_indexed_triangles.indices.indices.clone(),
+                indices: visual_indexed_triangles.indices.clone(),
             })
         })?;
         d.u32()?; // 0
@@ -1170,7 +1170,7 @@ impl VisualIndexed {
         let mut node = IndexBuffer::default();
         read_body(&mut node, d)?;
 
-        self.indices = node;
+        self.indices = node.indices;
 
         Ok(())
     }
@@ -1191,11 +1191,13 @@ impl IndexBuffer {
     fn read_chunk_09057001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 2
         let num_indices = d.u32()?;
-        d.repeat(num_indices as usize, |d| {
-            d.i16()?;
+        let mut current_index = 0;
+        self.indices = Indices::U16(d.repeat(num_indices as usize, |d| {
+            let offset = d.i16()?;
+            current_index = (current_index as i32 + offset as i32) as u16;
 
-            Ok(())
-        })?;
+            Ok(current_index)
+        })?);
 
         Ok(())
     }
