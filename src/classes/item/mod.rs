@@ -31,7 +31,7 @@ impl Item {
 }
 
 pub struct Mesh {
-    positions: Vec<Vec3f>,
+    positions: Vec<[f32; 3]>,
     indices: Indices,
 }
 
@@ -47,7 +47,7 @@ impl Default for Indices {
 }
 
 impl Mesh {
-    pub fn positions(&self) -> &[Vec3f] {
+    pub fn positions(&self) -> &[[f32; 3]] {
         &self.positions
     }
 
@@ -171,7 +171,7 @@ struct Visual {
 
 #[derive(Default)]
 struct VertexStream {
-    positions: Vec<Vec3f>,
+    positions: Vec<[f32; 3]>,
     texcoords: Vec<()>,
 }
 
@@ -186,11 +186,4 @@ struct IndexBuffer {
 
 impl Class for IndexBuffer {
     const CLASS_ID: u32 = 0x09057000;
-}
-
-#[derive(Clone)]
-pub struct Vec3f {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
 }

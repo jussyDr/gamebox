@@ -15,7 +15,7 @@ use crate::{
 
 use super::{
     IndexBuffer, Indices, Item, ItemEntityModel, Material, MaterialUserInst, Mesh, Solid2Model,
-    Vec3f, VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
+    VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
 };
 
 impl Readable for Item {}
@@ -1242,7 +1242,7 @@ impl VertexStream {
                         let y = d.f32()?;
                         let z = d.f32()?;
 
-                        Ok(Vec3f { x, y, z })
+                        Ok([x, y, z])
                     })?;
                 }
                 VertexAttribute {
