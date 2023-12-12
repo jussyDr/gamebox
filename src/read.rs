@@ -219,7 +219,11 @@ fn read_node<T: Readable>(
         let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
         let reader = Cursor::new(body);
 
-        let mut d = Deserializer::new(reader, IdState::default(), NodeState::new(num_nodes));
+        let mut d = Deserializer::new(
+            reader,
+            IdState::default(),
+            NodeState::new(num_nodes as usize),
+        );
 
         read_body(&mut node, &mut d)?;
 

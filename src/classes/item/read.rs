@@ -250,17 +250,19 @@ impl Item {
 
             Ok(())
         })?;
-        let entity_model = d.node_or_null(0x2e027000, |d| {
-            let mut node = ItemEntityModel::default();
-            read_body(&mut node, d)?;
+        let entity_model = d
+            .node_or_null(0x2e027000, |d| {
+                let mut node = ItemEntityModel::default();
+                read_body(&mut node, d)?;
 
-            Ok(node)
-        })?;
+                Ok(node)
+            })?
+            .cloned();
         d.u32()?; // 0xffffffff
 
         if let Some(entity_model) = entity_model {
-            self.layers = entity_model.solid_to_model.layers;
-            self.materials = entity_model.solid_to_model.materials;
+            self.layers = entity_model.solid_to_model.layers.clone();
+            self.materials = entity_model.solid_to_model.materials.clone();
         }
 
         Ok(())
@@ -496,52 +498,56 @@ impl ItemEntityModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
-        self.solid_to_model = d.node(0x09159000, |d| {
-            d.u32()?; // 3
-            let solid_to_model = d.node(0x090bb000, |d| {
-                let mut node = Solid2Model::default();
-                read_body(&mut node, d)?;
+        self.solid_to_model = d
+            .node(0x09159000, |d| {
+                d.u32()?; // 3
+                let solid_to_model = d
+                    .node(0x090bb000, |d| {
+                        let mut node = Solid2Model::default();
+                        read_body(&mut node, d)?;
 
-                Ok(node)
-            })?;
-            d.u8()?; // 1
-            d.u32()?; // 0xffffffff
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
+                        Ok(node)
+                    })?
+                    .clone();
+                d.u8()?; // 1
+                d.u32()?; // 0xffffffff
+                d.f32()?; // 1.0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.f32()?; // 1.0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.f32()?; // 1.0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0xffffffff
+                d.u32()?; // 0
+                d.u32()?; // 0xffffffff
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.f32()?; // 1.0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.f32()?; // 1.0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.f32()?; // 1.0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
+                d.u32()?; // 0
 
-            Ok(solid_to_model)
-        })?;
+                Ok(solid_to_model)
+            })?
+            .clone();
 
         Ok(())
     }
@@ -990,15 +996,17 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 0
         self.materials = d.repeat(num_materials as usize, |d| {
-            let material = d.node(0x090fd000, |d| {
-                let mut node = MaterialUserInst::default();
-                read_body(&mut node, d)?;
+            let material = d
+                .node(0x090fd000, |d| {
+                    let mut node = MaterialUserInst::default();
+                    read_body(&mut node, d)?;
 
-                Ok(node)
-            })?;
+                    Ok(node)
+                })?
+                .clone();
             d.u32()?; // 0
 
-            Ok(Material)
+            Ok(material.material.clone())
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -1117,12 +1125,14 @@ impl Visual {
         d.u32()?; // 0
         d.u32()?; // 180
         d.u32()?; // 1
-        self.vertices = d.node(0x09056000, |d| {
-            let mut node = VertexStream::default();
-            read_body(&mut node, d)?;
+        self.vertices = d
+            .node(0x09056000, |d| {
+                let mut node = VertexStream::default();
+                read_body(&mut node, d)?;
 
-            Ok(node)
-        })?;
+                Ok(node)
+            })?
+            .clone();
         d.u32()?; // 0
         d.f32()?; // 12.703503
         d.f32()?; // 15.202776

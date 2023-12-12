@@ -30,6 +30,7 @@ impl Item {
     }
 }
 
+#[derive(Clone)]
 pub struct Mesh {
     positions: Vec<[f32; 3]>,
     indices: Indices,
@@ -56,7 +57,18 @@ impl Mesh {
     }
 }
 
-pub struct Material;
+#[derive(Clone)]
+pub enum Material {
+    Game { path: String },
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Self::Game {
+            path: String::default(),
+        }
+    }
+}
 
 impl Class for Item {
     const CLASS_ID: u32 = 0x2e002000;
@@ -76,7 +88,7 @@ impl DerefMut for Item {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct ItemEntityModel {
     solid_to_model: Solid2Model,
 }
@@ -85,7 +97,7 @@ impl Class for ItemEntityModel {
     const CLASS_ID: u32 = 0x2e027000;
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct Solid2Model {
     layers: Vec<Mesh>,
     materials: Vec<Material>,
@@ -95,8 +107,10 @@ impl Class for Solid2Model {
     const CLASS_ID: u32 = 0x090bb000;
 }
 
-#[derive(Default)]
-struct MaterialUserInst;
+#[derive(Default, Clone)]
+struct MaterialUserInst {
+    material: Material,
+}
 
 impl Class for MaterialUserInst {
     const CLASS_ID: u32 = 0x090fd000;
@@ -169,7 +183,7 @@ struct Visual {
     vertices: VertexStream,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct VertexStream {
     positions: Vec<[f32; 3]>,
     texcoords: Vec<()>,

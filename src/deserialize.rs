@@ -1,4 +1,5 @@
 use std::{
+    any::Any,
     borrow::BorrowMut,
     cmp,
     io::{self, Read, Seek, SeekFrom},
@@ -22,13 +23,15 @@ impl<T: BorrowMut<IdState>> IdStateMut for T {}
 
 /// State of nodes read in the past.
 pub struct NodeState {
-    num_nodes: u32,
+    nodes: Vec<Option<Box<dyn Any>>>,
 }
 
 impl NodeState {
     /// Create a new `NodeState` with a node limit of `num_nodes`.
-    pub fn new(num_nodes: u32) -> Self {
-        Self { num_nodes }
+    pub fn new(num_nodes: usize) -> Self {
+        Self {
+            nodes: iter::repeat_with(|| None).take(num_nodes).collect(),
+        }
     }
 }
 
@@ -270,11 +273,11 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn node<T>(
+    pub fn node<T: 'static>(
         &mut self,
         class_id: u32,
         read_fn: impl FnOnce(&mut Self) -> Result<T>,
-    ) -> Result<T> {
+    ) -> Result<&T> {
         match self.node_or_null(class_id, read_fn)? {
             None => todo!(),
             Some(node) => Ok(node),
@@ -282,18 +285,18 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Deserialize a node with the given `class_id` using the given `read_fn`.
-    pub fn node_or_null<T>(
+    pub fn node_or_null<T: 'static>(
         &mut self,
         class_id: u32,
         read_fn: impl FnOnce(&mut Self) -> Result<T>,
-    ) -> Result<Option<T>> {
+    ) -> Result<Option<&T>> {
         let index = self.u32()?;
 
         if index == 0xFFFFFFFF {
             return Ok(None);
         }
 
-        if index == 0 || index > self.node_state.borrow().num_nodes {
+        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
             todo!()
         }
 
@@ -302,7 +305,16 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         }
 
         let node = read_fn(self)?;
+        let b = Box::new(node);
 
-        Ok(Some(node))
+        self.node_state.borrow_mut().nodes[index as usize - 1] = Some(b);
+
+        let r = self.node_state.borrow().nodes[index as usize - 1]
+            .as_ref()
+            .unwrap()
+            .downcast_ref()
+            .unwrap();
+
+        Ok(Some(r))
     }
 }
