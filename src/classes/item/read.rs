@@ -867,9 +867,11 @@ impl MaterialUserInst {
         d.u32()?; // 0
         d.u16()?; // 4 | 22
         if uses_game_material {
-            d.string()?; // "Stadium\Media\Material\TechnicsTrims" | "Stadium\Media\Material\TrackWallClips"
+            let path = d.string()?;
+            self.material = Material::Game { path };
         } else {
-            d.id()?; // "CustomConcrete"
+            let id = d.id()?;
+            self.material = Material::Custom { id };
         }
         d.list(|d| {
             d.id()?; // "TargetColor"

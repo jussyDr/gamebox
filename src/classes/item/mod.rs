@@ -60,6 +60,7 @@ impl Mesh {
 #[derive(Clone)]
 pub enum Material {
     Game { path: String },
+    Custom { id: String },
 }
 
 impl Default for Material {
