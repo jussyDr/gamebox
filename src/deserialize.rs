@@ -36,6 +36,10 @@ impl NodeState {
             nodes: iter::repeat_with(|| None).take(num_nodes).collect(),
         }
     }
+
+    pub fn set_ref(&mut self, index: usize, path: String) {
+        self.nodes[index] = Some(Node::Ref(path));
+    }
 }
 
 pub enum Node {
@@ -180,7 +184,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     }
 
     /// Deserialize a list.
-    pub fn list<T>(&mut self, read_fn: impl Fn(&mut Self) -> Result<T>) -> Result<Vec<T>> {
+    pub fn list<T>(&mut self, read_fn: impl FnMut(&mut Self) -> Result<T>) -> Result<Vec<T>> {
         let len = self.u32()?;
         self.repeat(len as usize, read_fn)
     }

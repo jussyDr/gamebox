@@ -3,7 +3,7 @@
 use std::{
     fs::File,
     io::{self, BufReader, Cursor, Read, Seek},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use crate::{
@@ -235,19 +235,28 @@ fn read_node<T: Readable>(
 
     let num_nodes = d.u32()?;
 
-    let node_state = NodeState::new(num_nodes as usize);
+    let mut node_state = NodeState::new(num_nodes as usize);
 
     let num_node_refs = d.u32()?;
 
     if num_node_refs > 0 {
         d.u32()?;
-        read_folders(&mut d)?;
+        let mut folders = vec![];
+        read_folders(&mut d, PathBuf::new(), &mut folders)?;
         d.repeat(num_node_refs as usize, |d| {
             d.u32()?;
-            d.string()?;
+            let file_name = d.string()?;
+            let node_index = d.u32()?;
             d.u32()?;
-            d.u32()?;
-            d.u32()?;
+            let folder_index = d.u32()?;
+
+            let mut file_path = folders[folder_index as usize].clone();
+            file_path.push(file_name);
+
+            node_state.set_ref(
+                node_index as usize,
+                file_path.to_string_lossy().into_owned(),
+            );
 
             Ok(())
         })?;
@@ -327,12 +336,20 @@ fn read_header<T: Readable, R: Read + Seek, I, N>(
     Ok(())
 }
 
-fn read_folders<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-    d.list(|d| {
-        d.string()?;
-        read_folders(d)?;
+fn read_folders<R: Read, I, N>(
+    d: &mut Deserializer<R, I, N>,
+    path: PathBuf,
+    folders: &mut Vec<PathBuf>,
+) -> Result<()> {
+    folders.push(path.clone());
 
-        Ok(())
+    d.list(|d| {
+        let folder_name = d.string()?;
+
+        let mut path = path.clone();
+        path.push(folder_name);
+
+        read_folders(d, path, folders)
     })?;
 
     Ok(())
