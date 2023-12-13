@@ -70,10 +70,14 @@ pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T> {
 /// A GameBox node reader.
 #[derive(Default)]
 pub struct Reader {
-    assume_header_size_zero: bool,
-    skip_header: bool,
+    read_header: HeaderOptions,
     skip_body: bool,
 }
+
+// read header
+// read header, skip heavy,
+// dont read header, ignore size
+// dont read header
 
 impl Reader {
     /// Create a new GameBox node reader.
@@ -88,36 +92,8 @@ impl Reader {
         Self::default()
     }
 
-    /// Set whether or not to ignore the header size field and always assume it is zero.
-    ///
-    /// This is particularly useful when reading nodes extracted using Openplanet
-    /// with the hook extract feature enabled, as this sets the header size incorrectly.
-    ///
-    /// Set to `false` by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use gamebox::read::Reader;
-    /// let reader = Reader::new().skip_header(true);
-    /// ```
-    pub fn assume_header_size_zero(mut self, assume_header_size_zero: bool) -> Self {
-        self.assume_header_size_zero = assume_header_size_zero;
-        self
-    }
-
-    /// Set whether or not to skip reading the header.
-    ///
-    /// Set to `false` by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use gamebox::read::Reader;
-    /// let reader = Reader::new().skip_header(true);
-    /// ```
-    pub fn skip_header(mut self, skip_header: bool) -> Self {
-        self.skip_header = skip_header;
+    pub fn read_header(mut self, read_header: HeaderOptions) -> Self {
+        self.read_header = read_header;
         self
     }
 
@@ -150,12 +126,7 @@ impl Reader {
     /// # Ok::<(), gamebox::read::Error>(()) };
     /// ```
     pub fn read<T: Readable>(&self, reader: impl Read + Seek) -> Result<T> {
-        read_node(
-            reader,
-            self.assume_header_size_zero,
-            self.skip_header,
-            self.skip_body,
-        )
+        read_node(reader, self.read_header, self.skip_body)
     }
 
     /// Read a node of type `T` from a file at the given `path`.
@@ -176,10 +147,23 @@ impl Reader {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum HeaderOptions {
+    Read { skip_heavy_chunks: bool },
+    Skip { assume_size_zero: bool },
+}
+
+impl Default for HeaderOptions {
+    fn default() -> Self {
+        Self::Read {
+            skip_heavy_chunks: false,
+        }
+    }
+}
+
 fn read_node<T: Readable>(
     reader: impl Read + Seek,
-    assume_header_size_zero: bool,
-    skip_header: bool,
+    header_options: HeaderOptions,
     skip_body: bool,
 ) -> Result<T> {
     let mut node = T::default();
@@ -218,18 +202,20 @@ fn read_node<T: Readable>(
         todo!("{class_id:08X?}")
     }
 
-    let user_data_size = if assume_header_size_zero {
-        d.skip(4)?;
-        0
-    } else {
-        d.u32()?
-    };
+    let user_data_size = d.u32()?;
 
-    if user_data_size != 0 {
-        if skip_header {
-            d.skip(user_data_size)?;
-        } else {
-            read_header(&mut node, d.take(user_data_size as u64, (), ()))?;
+    match header_options {
+        HeaderOptions::Read { skip_heavy_chunks } => {
+            read_header(
+                &mut node,
+                d.take(user_data_size as u64, (), ()),
+                skip_heavy_chunks,
+            )?;
+        }
+        HeaderOptions::Skip { assume_size_zero } => {
+            if !assume_size_zero {
+                d.skip(user_data_size)?;
+            }
         }
     }
 
@@ -299,6 +285,7 @@ fn read_node<T: Readable>(
 fn read_header<T: Readable, R: Read + Seek, I, N>(
     node: &mut T,
     mut d: Deserializer<R, I, N>,
+    skip_heavy_chunks: bool,
 ) -> Result<()> {
     let header_chunks = d.list(|d| {
         let chunk_id = d.u32()?;
@@ -314,7 +301,6 @@ fn read_header<T: Readable, R: Read + Seek, I, N>(
     for (chunk_id, chunk_size) in header_chunks {
         let is_heavy_chunk = chunk_size & 0x80000000 != 0;
         let chunk_size = chunk_size & 0x7FFFFFFF;
-        let skip_heavy_chunks = false;
 
         if is_heavy_chunk && skip_heavy_chunks {
             d.skip(chunk_size)?;

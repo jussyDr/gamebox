@@ -1,6 +1,9 @@
 use std::fs::File;
 
-use gamebox::classes::{item::Item, material::Material, texture::Texture};
+use gamebox::{
+    classes::{item::Item, material::Material, texture::Texture},
+    read::HeaderOptions,
+};
 
 #[test]
 fn read_item() {
@@ -13,7 +16,9 @@ fn read_material() {
     let file = File::open("tests/TrackWallClips.Material.Gbx").unwrap();
 
     let _material: Material = gamebox::read::Reader::new()
-        .assume_header_size_zero(true)
+        .read_header(HeaderOptions::Skip {
+            assume_size_zero: true,
+        })
         .read(file)
         .unwrap();
 }
@@ -23,7 +28,9 @@ fn read_texture() {
     let file = File::open("tests/TrackWallClips_D.Texture.Gbx").unwrap();
 
     let _texture: Texture = gamebox::read::Reader::new()
-        .assume_header_size_zero(true)
+        .read_header(HeaderOptions::Skip {
+            assume_size_zero: true,
+        })
         .read(file)
         .unwrap();
 }
