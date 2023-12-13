@@ -85,12 +85,7 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.node(|d| {
-            let mut node = MaterialCustom;
-            read_body(&mut node, d)?;
-
-            Ok(node)
-        })?;
+        d.node::<MaterialCustom>()?;
 
         Ok(())
     }
@@ -166,6 +161,7 @@ impl Material {
     }
 }
 
+#[derive(Default)]
 struct MaterialCustom;
 
 impl Class for MaterialCustom {

@@ -244,20 +244,8 @@ impl Item {
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
-        d.node_or_null(|d| {
-            let mut node = ItemEntityModelEdition;
-            read_body(&mut node, d)?;
-
-            Ok(node)
-        })?;
-        let entity_model = d
-            .node_or_null(|d| {
-                let mut node = ItemEntityModel::default();
-                read_body(&mut node, d)?;
-
-                Ok(node)
-            })?
-            .cloned();
+        d.node_or_null::<ItemEntityModelEdition>()?;
+        let entity_model = d.node_or_null::<ItemEntityModel>()?.cloned();
         d.u32()?; // 0xffffffff
 
         if let Some(entity_model) = entity_model {
@@ -279,12 +267,7 @@ impl Item {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 5
-        d.node(|d| {
-            let mut node = ItemPlacementParam;
-            read_body(&mut node, d)?;
-
-            Ok(node)
-        })?;
+        d.node::<ItemPlacementParam>()?;
 
         Ok(())
     }
@@ -501,14 +484,7 @@ impl ItemEntityModel {
         self.solid_to_model = d
             .flat_node(0x09159000, |d| {
                 d.u32()?; // 3
-                let solid_to_model = d
-                    .node(|d| {
-                        let mut node = Solid2Model::default();
-                        read_body(&mut node, d)?;
-
-                        Ok(node)
-                    })?
-                    .clone();
+                let solid_to_model = d.node::<Solid2Model>()?.clone();
                 d.u8()?; // 1
                 d.u32()?; // 0xffffffff
                 d.f32()?; // 1.0
@@ -590,12 +566,7 @@ impl ItemEntityModelEdition {
     ) -> Result<()> {
         d.u32()?; // 7
         d.u32()?; // 1
-        d.node(|d| {
-            let mut node = Crystal;
-            read_body(&mut node, d)?;
-
-            Ok(node)
-        })?;
+        d.node::<Crystal>()?;
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
@@ -692,12 +663,7 @@ impl Crystal {
         d.u32()?; // 2
         d.list(|d| {
             d.u32()?; // 0
-            d.node(|d| {
-                let mut node = MaterialUserInst::default();
-                read_body(&mut node, d)?;
-
-                Ok(node)
-            })?;
+            d.node::<MaterialUserInst>()?;
 
             Ok(())
         })?;
@@ -949,12 +915,7 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 10
         self.layers = d.list(|d| {
-            let visual_indexed_triangles = d.node(|d| {
-                let mut node = VisualIndexedTriangles::default();
-                read_body(&mut node, d)?;
-
-                Ok(node)
-            })?;
+            let visual_indexed_triangles = d.node::<VisualIndexedTriangles>()?;
 
             Ok(Mesh {
                 positions: visual_indexed_triangles.vertices.positions.clone(),
@@ -998,14 +959,7 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 0
         self.materials = d.repeat(num_materials as usize, |d| {
-            let material = d
-                .node(|d| {
-                    let mut node = MaterialUserInst::default();
-                    read_body(&mut node, d)?;
-
-                    Ok(node)
-                })?
-                .clone();
+            let material = d.node::<MaterialUserInst>()?.clone();
             d.u32()?; // 0
 
             Ok(material.material.clone())
@@ -1127,14 +1081,7 @@ impl Visual {
         d.u32()?; // 0
         d.u32()?; // 180
         d.u32()?; // 1
-        self.vertices = d
-            .node(|d| {
-                let mut node = VertexStream::default();
-                read_body(&mut node, d)?;
-
-                Ok(node)
-            })?
-            .clone();
+        self.vertices = d.node::<VertexStream>()?.clone();
         d.u32()?; // 0
         d.f32()?; // 12.703503
         d.f32()?; // 15.202776

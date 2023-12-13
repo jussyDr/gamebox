@@ -6,7 +6,10 @@ use std::{
     iter,
 };
 
-use crate::{class::Class, read::Result};
+use crate::{
+    class::Class,
+    read::{read_body, readable::ReadBody, Result},
+};
 
 /// State of identifiers read in the past.
 #[derive(Default)]
@@ -288,59 +291,6 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn node<T: 'static + Class>(
-        &mut self,
-        read_fn: impl FnOnce(&mut Self) -> Result<T>,
-    ) -> Result<&T> {
-        match self.node_or_null(read_fn)? {
-            None => todo!(),
-            Some(node) => Ok(node),
-        }
-    }
-
-    /// Deserialize a node with the given `class_id` using the given `read_fn`.
-    pub fn node_or_null<T: 'static + Class>(
-        &mut self,
-        read_fn: impl FnOnce(&mut Self) -> Result<T>,
-    ) -> Result<Option<&T>> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            return Ok(None);
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        if self.u32()? != T::CLASS_ID {
-            todo!()
-        }
-
-        let node = read_fn(self)?;
-
-        self.node_state.borrow_mut().nodes[index as usize - 1] = Some(Node::Inline(Box::new(node)));
-
-        let r = self.node_state.borrow().nodes[index as usize - 1]
-            .as_ref()
-            .unwrap();
-
-        match r {
-            Node::Inline(q) => Ok(Some(q.downcast_ref().unwrap())),
-            _ => todo!(),
-        }
-    }
-
-    pub fn node_ref(&mut self) -> Result<()> {
-        let index = self.u32()?;
-
-        if index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        Ok(())
-    }
-
     pub fn flat_node<T>(
         &mut self,
         class_id: u32,
@@ -363,5 +313,45 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let node = read_fn(self)?;
 
         Ok(node)
+    }
+}
+
+impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
+    pub fn node<T: 'static + Class + Default + ReadBody>(&mut self) -> Result<&T> {
+        match self.node_or_null()? {
+            None => todo!(),
+            Some(node) => Ok(node),
+        }
+    }
+
+    /// Deserialize a node with the given `class_id` using the given `read_fn`.
+    pub fn node_or_null<T: 'static + Class + Default + ReadBody>(&mut self) -> Result<Option<&T>> {
+        let index = self.u32()?;
+
+        if index == 0xFFFFFFFF {
+            return Ok(None);
+        }
+
+        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
+            todo!()
+        }
+
+        if self.u32()? != T::CLASS_ID {
+            todo!()
+        }
+
+        let mut node = T::default();
+        read_body(&mut node, self)?;
+
+        self.node_state.borrow_mut().nodes[index as usize - 1] = Some(Node::Inline(Box::new(node)));
+
+        let r = self.node_state.borrow().nodes[index as usize - 1]
+            .as_ref()
+            .unwrap();
+
+        match r {
+            Node::Inline(q) => Ok(Some(q.downcast_ref().unwrap())),
+            _ => todo!(),
+        }
     }
 }
