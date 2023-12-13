@@ -215,7 +215,7 @@ fn read_node<T: Readable>(
     let class_id = d.u32()?;
 
     if class_id != T::CLASS_ID {
-        todo!()
+        todo!("{class_id:08X?}")
     }
 
     let user_data_size = if assume_header_size_zero {
@@ -367,6 +367,8 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
         if chunk_id == NODE_END {
             break;
         }
+
+        println!("{chunk_id:08X?}");
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
