@@ -3,10 +3,7 @@
 mod read;
 mod write;
 
-use std::{
-    default,
-    ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
 
 use crate::class::Class;
 

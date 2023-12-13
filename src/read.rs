@@ -88,6 +88,19 @@ impl Reader {
         Self::default()
     }
 
+    /// Set whether or not to ignore the header size field and always assume it is zero.
+    ///
+    /// This is particularly useful when reading nodes extracted using Openplanet
+    /// with the hook extract feature enabled, as this sets the header size incorrectly.
+    ///
+    /// Set to `false` by default.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use gamebox::read::Reader;
+    /// let reader = Reader::new().skip_header(true);
+    /// ```
     pub fn assume_header_size_zero(mut self, assume_header_size_zero: bool) -> Self {
         self.assume_header_size_zero = assume_header_size_zero;
         self
@@ -222,6 +235,8 @@ fn read_node<T: Readable>(
 
     let num_nodes = d.u32()?;
 
+    let node_state = NodeState::new(num_nodes as usize);
+
     let num_node_refs = d.u32()?;
 
     if num_node_refs > 0 {
@@ -251,11 +266,7 @@ fn read_node<T: Readable>(
             let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
             let reader = Cursor::new(body);
 
-            let mut d = Deserializer::new(
-                reader,
-                IdState::default(),
-                NodeState::new(num_nodes as usize),
-            );
+            let mut d = Deserializer::new(reader, IdState::default(), node_state);
 
             read_body(&mut node, &mut d)?;
 
@@ -266,11 +277,7 @@ fn read_node<T: Readable>(
     } else {
         let reader = d.into_reader();
 
-        let mut d = Deserializer::new(
-            reader,
-            IdState::default(),
-            NodeState::new(num_nodes as usize),
-        );
+        let mut d = Deserializer::new(reader, IdState::default(), node_state);
 
         read_body(&mut node, &mut d)?;
 
@@ -343,8 +350,6 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
         if chunk_id == NODE_END {
             break;
         }
-
-        println!("{:08X?}", chunk_id);
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)

@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use crate::{
+    class::Class,
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         read_body,
@@ -24,6 +25,7 @@ impl ReadHeader for Material {
 }
 
 impl ReadBody for Material {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -83,11 +85,11 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.node(0x0903a000, |d| {
+        d.node(|d| {
             let mut node = MaterialCustom;
             read_body(&mut node, d)?;
 
-            Ok(())
+            Ok(node)
         })?;
 
         Ok(())
@@ -166,7 +168,12 @@ impl Material {
 
 struct MaterialCustom;
 
+impl Class for MaterialCustom {
+    const CLASS_ID: u32 = 0x0903a000;
+}
+
 impl ReadBody for MaterialCustom {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [

@@ -3,6 +3,7 @@ use crate::class::Class;
 mod read;
 mod write;
 
+/// Corresponds to Material.Gbx.
 #[derive(Default)]
 pub struct Material;
 

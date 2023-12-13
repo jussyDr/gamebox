@@ -244,14 +244,14 @@ impl Item {
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
-        d.node_or_null(0x2e026000, |d| {
-            let mut node = ItemEntityModelEdition::default();
+        d.node_or_null(|d| {
+            let mut node = ItemEntityModelEdition;
             read_body(&mut node, d)?;
 
-            Ok(())
+            Ok(node)
         })?;
         let entity_model = d
-            .node_or_null(0x2e027000, |d| {
+            .node_or_null(|d| {
                 let mut node = ItemEntityModel::default();
                 read_body(&mut node, d)?;
 
@@ -279,11 +279,11 @@ impl Item {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 5
-        d.node(0x2e020000, |d| {
-            let mut node = ItemPlacementParam::default();
+        d.node(|d| {
+            let mut node = ItemPlacementParam;
             read_body(&mut node, d)?;
 
-            Ok(())
+            Ok(node)
         })?;
 
         Ok(())
@@ -461,7 +461,7 @@ impl ItemPlacementParam {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.node(0x09187000, |d| {
+        d.flat_node(0x09187000, |d| {
             d.u32()?; // 10
             d.u32()?; // 0xffffffff
             d.u32()?; // 0
@@ -499,10 +499,10 @@ impl ItemEntityModel {
     ) -> Result<()> {
         d.u32()?; // 4
         self.solid_to_model = d
-            .node(0x09159000, |d| {
+            .flat_node(0x09159000, |d| {
                 d.u32()?; // 3
                 let solid_to_model = d
-                    .node(0x090bb000, |d| {
+                    .node(|d| {
                         let mut node = Solid2Model::default();
                         read_body(&mut node, d)?;
 
@@ -590,11 +590,11 @@ impl ItemEntityModelEdition {
     ) -> Result<()> {
         d.u32()?; // 7
         d.u32()?; // 1
-        d.node(0x09003000, |d| {
-            let mut node = Crystal::default();
+        d.node(|d| {
+            let mut node = Crystal;
             read_body(&mut node, d)?;
 
-            Ok(())
+            Ok(node)
         })?;
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
@@ -692,11 +692,11 @@ impl Crystal {
         d.u32()?; // 2
         d.list(|d| {
             d.u32()?; // 0
-            d.node(0x090fd000, |d| {
+            d.node(|d| {
                 let mut node = MaterialUserInst::default();
                 read_body(&mut node, d)?;
 
-                Ok(())
+                Ok(node)
             })?;
 
             Ok(())
@@ -949,7 +949,7 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 10
         self.layers = d.list(|d| {
-            let visual_indexed_triangles = d.node(0x0901e000, |d| {
+            let visual_indexed_triangles = d.node(|d| {
                 let mut node = VisualIndexedTriangles::default();
                 read_body(&mut node, d)?;
 
@@ -999,7 +999,7 @@ impl Solid2Model {
         d.u32()?; // 0
         self.materials = d.repeat(num_materials as usize, |d| {
             let material = d
-                .node(0x090fd000, |d| {
+                .node(|d| {
                     let mut node = MaterialUserInst::default();
                     read_body(&mut node, d)?;
 
@@ -1128,7 +1128,7 @@ impl Visual {
         d.u32()?; // 180
         d.u32()?; // 1
         self.vertices = d
-            .node(0x09056000, |d| {
+            .node(|d| {
                 let mut node = VertexStream::default();
                 read_body(&mut node, d)?;
 
