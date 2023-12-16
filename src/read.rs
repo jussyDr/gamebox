@@ -71,7 +71,7 @@ pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T> {
 #[derive(Default)]
 pub struct Reader {
     read_header: HeaderOptions,
-    skip_body: bool,
+    skip_body: BodyOptions,
 }
 
 // read header
@@ -97,17 +97,7 @@ impl Reader {
         self
     }
 
-    /// Set whether or not to skip reading the body.
-    ///
-    /// Set to `false` by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use gamebox::read::Reader;
-    /// let reader = Reader::new().skip_body(true);
-    /// ```
-    pub fn skip_body(mut self, skip_body: bool) -> Self {
+    pub fn read_body(mut self, skip_body: BodyOptions) -> Self {
         self.skip_body = skip_body;
         self
     }
@@ -153,6 +143,20 @@ pub enum HeaderOptions {
     Skip { assume_size_zero: bool },
 }
 
+#[derive(Clone, Copy)]
+pub enum BodyOptions {
+    Read { skip_skippable_chunks: bool },
+    Skip,
+}
+
+impl Default for BodyOptions {
+    fn default() -> Self {
+        Self::Read {
+            skip_skippable_chunks: false,
+        }
+    }
+}
+
 impl Default for HeaderOptions {
     fn default() -> Self {
         Self::Read {
@@ -164,7 +168,7 @@ impl Default for HeaderOptions {
 fn read_node<T: Readable>(
     reader: impl Read + Seek,
     header_options: HeaderOptions,
-    skip_body: bool,
+    body_options: BodyOptions,
 ) -> Result<T> {
     let mut node = T::default();
 
@@ -239,10 +243,7 @@ fn read_node<T: Readable>(
             let mut file_path = folders[folder_index as usize].clone();
             file_path.push(file_name);
 
-            node_state.set_ref(
-                node_index as usize,
-                file_path.to_string_lossy().into_owned(),
-            );
+            node_state.set_ref(node_index as usize, file_path);
 
             Ok(())
         })?;
@@ -252,31 +253,39 @@ fn read_node<T: Readable>(
         let body_size = d.u32()?;
         let compressed_body_size = d.u32()?;
 
-        if skip_body {
-            d.skip(compressed_body_size)?;
-        } else {
-            let compressed_body = d.bytes(compressed_body_size as usize)?;
-            let mut buf = vec![0; body_size as usize];
+        match body_options {
+            BodyOptions::Read { .. } => {
+                let compressed_body = d.bytes(compressed_body_size as usize)?;
+                let mut buf = vec![0; body_size as usize];
 
-            let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
-            let reader = Cursor::new(body);
+                let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
+                let reader = Cursor::new(body);
 
-            let mut d = Deserializer::new(reader, IdState::default(), node_state);
+                let mut d = Deserializer::new(reader, IdState::default(), node_state);
 
-            read_body(&mut node, &mut d)?;
+                read_body(&mut node, &mut d)?;
 
-            d.end()?;
+                d.end()?;
+            }
+            BodyOptions::Skip => {
+                d.skip(compressed_body_size)?;
+            }
         }
 
         d.end()?;
     } else {
-        let reader = d.into_reader();
+        match body_options {
+            BodyOptions::Read { .. } => {
+                let reader = d.into_reader();
 
-        let mut d = Deserializer::new(reader, IdState::default(), node_state);
+                let mut d = Deserializer::new(reader, IdState::default(), node_state);
 
-        read_body(&mut node, &mut d)?;
+                read_body(&mut node, &mut d)?;
 
-        d.end()?;
+                d.end()?;
+            }
+            BodyOptions::Skip => {}
+        }
     }
 
     Ok(node)
@@ -353,8 +362,6 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
         if chunk_id == NODE_END {
             break;
         }
-
-        println!("{chunk_id:08X?}");
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)

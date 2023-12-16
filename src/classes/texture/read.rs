@@ -151,9 +151,12 @@ impl Texture {
         Ok(())
     }
 
-    fn read_chunk_09011030<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_09011030<R: Read, I, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 5
-        d.u32()?; // 1
+        self.image_path = d.node_ref()?.to_owned(); // 1
         d.u32()?; // 0x2c0000
         d.u32()?; // 0x10004e12
         d.u32()?; // 0x08003680

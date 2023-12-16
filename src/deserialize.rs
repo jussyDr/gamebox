@@ -4,6 +4,7 @@ use std::{
     cmp,
     io::{self, Read, Seek, SeekFrom},
     iter,
+    path::{Path, PathBuf},
 };
 
 use crate::{
@@ -37,14 +38,14 @@ impl NodeState {
         }
     }
 
-    pub fn set_ref(&mut self, index: usize, path: String) {
+    pub fn set_ref(&mut self, index: usize, path: PathBuf) {
         self.nodes[index] = Some(Node::Ref(path));
     }
 }
 
 pub enum Node {
     Inline(Box<dyn Any>),
-    Ref(String),
+    Ref(PathBuf),
 }
 
 /// Trait which should be used as a generic trait bound in
@@ -295,6 +296,23 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
+    pub fn node_ref(&mut self) -> Result<&Path> {
+        let index = self.u32()?;
+
+        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
+            todo!()
+        }
+
+        let r = self.node_state.borrow().nodes[index as usize - 1]
+            .as_ref()
+            .unwrap();
+
+        match r {
+            Node::Ref(q) => Ok(q),
+            _ => todo!(),
+        }
+    }
+
     pub fn flat_node<T>(
         &mut self,
         class_id: u32,
