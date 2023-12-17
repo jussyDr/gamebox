@@ -1,20 +1,27 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use crate::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
+        read_gbx,
         readable::{
             BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,
         },
-        Readable, Result,
+        BodyOptions, HeaderOptions, Result,
     },
 };
 
 use super::{Material, MaterialCustom};
 
-impl Readable for Material {}
-
-impl Sealed for Material {}
+impl Sealed for Material {
+    fn read(
+        reader: impl Read + Seek,
+        header_options: HeaderOptions,
+        body_options: BodyOptions,
+    ) -> Result<Self> {
+        read_gbx(reader, header_options, body_options)
+    }
+}
 
 impl ReadHeader for Material {
     fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>> {

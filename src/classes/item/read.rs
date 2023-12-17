@@ -1,15 +1,18 @@
-use std::{io::Read, path::PathBuf};
+use std::{
+    io::{Read, Seek},
+    path::PathBuf,
+};
 
 use crate::{
     class::Class,
     classes::collector::Collector,
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
-        read_body,
+        read_body, read_gbx,
         readable::{
             BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,
         },
-        Readable, Result,
+        BodyOptions, HeaderOptions, Result,
     },
 };
 
@@ -19,9 +22,15 @@ use super::{
     VisualIndexedTriangles,
 };
 
-impl Readable for Item {}
-
-impl Sealed for Item {}
+impl Sealed for Item {
+    fn read(
+        reader: impl Read + Seek,
+        header_options: HeaderOptions,
+        body_options: BodyOptions,
+    ) -> Result<Self> {
+        read_gbx(reader, header_options, body_options)
+    }
+}
 
 impl ReadHeader for Item {
     #[allow(clippy::redundant_closure)]

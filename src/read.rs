@@ -6,12 +6,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use serde_jsonrc::Value;
+
 use crate::{
+    class::Class,
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
     MAGIC, NODE_END, SKIP,
 };
 
-use self::readable::{BodyChunkReadFn, ReadBody};
+use self::readable::{BodyChunkReadFn, ReadBody, ReadHeader, Sealed};
 
 /// Error that occured while reading a GameBox node.
 #[derive(Debug)]
@@ -117,7 +120,7 @@ impl Reader {
     /// # Ok::<(), gamebox::read::Error>(()) };
     /// ```
     pub fn read<T: Readable>(&self, reader: impl Read + Seek) -> Result<T> {
-        read_node(reader, self.read_header, self.skip_body)
+        T::read(reader, self.read_header, self.skip_body)
     }
 
     /// Read a node of type `T` from a file at the given `path`.
@@ -166,7 +169,7 @@ impl Default for HeaderOptions {
     }
 }
 
-fn read_node<T: Readable>(
+pub(crate) fn read_gbx<T: Default + Class + ReadHeader + ReadBody>(
     reader: impl Read + Seek,
     header_options: HeaderOptions,
     body_options: BodyOptions,
@@ -292,7 +295,7 @@ fn read_node<T: Readable>(
     Ok(node)
 }
 
-fn read_header<T: Readable, R: Read + Seek, I, N>(
+fn read_header<T: ReadHeader, R: Read + Seek, I, N>(
     node: &mut T,
     mut d: Deserializer<R, I, N>,
     skip_heavy_chunks: bool,
@@ -391,15 +394,14 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
     Ok(())
 }
 
+impl<T: Sealed> Readable for T {}
+
 pub(crate) mod readable {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
-    use crate::{
-        class::Class,
-        deserialize::{Deserializer, IdState, IdStateMut, NodeStateMut, Take},
-    };
+    use crate::deserialize::{Deserializer, IdState, IdStateMut, NodeStateMut, Take};
 
-    use super::Result;
+    use super::{BodyOptions, HeaderOptions, Result};
 
     pub struct HeaderChunkEntry<T, R> {
         pub id: u32,
@@ -425,7 +427,15 @@ pub(crate) mod readable {
     pub type SkippableBodyChunkReadFn<T, R, N> =
         fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, (), &mut N>) -> Result<()>;
 
-    pub trait Sealed: Class + Default + ReadHeader + ReadBody {}
+    pub trait Sealed {
+        fn read(
+            reader: impl Read + Seek,
+            header_options: HeaderOptions,
+            body_options: BodyOptions,
+        ) -> Result<Self>
+        where
+            Self: Sized;
+    }
 
     pub trait ReadHeader {
         fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>>
@@ -439,4 +449,26 @@ pub(crate) mod readable {
         where
             Self: Sized;
     }
+}
+
+pub(crate) trait ReadJson {
+    const CLASS_NAME: &'static str;
+
+    fn read(json: Value) -> Result<Self>
+    where
+        Self: Sized;
+}
+
+pub(crate) fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
+    let mut value: Value = serde_jsonrc::from_reader(reader).unwrap();
+    let object = value.as_object_mut().unwrap();
+    let class_name = object.get("ClassId").unwrap();
+
+    if class_name != T::CLASS_NAME {
+        todo!()
+    }
+
+    object.remove("ClassId");
+
+    T::read(value)
 }
