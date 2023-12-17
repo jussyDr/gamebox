@@ -55,7 +55,6 @@ const SKIP: u32 = 0x534b4950;
 const NODE_END: u32 = 0xfacade01;
 
 mod class {
-
     pub trait Class {
         const ENGINE: u8;
         const CLASS: u16;
@@ -64,4 +63,11 @@ mod class {
             ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
         }
     }
+}
+
+/// Color representation using red, green, and blue components.
+pub struct Rgb {
+    r: u8,
+    g: u8,
+    b: u8,
 }
