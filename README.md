@@ -1,3 +1,3 @@
 # gamebox
 
-A (incomplete) GameBox (.Gbx) reader and writer.
+A (incomplete) GameBox (.Gbx) file reader and writer.

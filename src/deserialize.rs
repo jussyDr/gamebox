@@ -39,7 +39,7 @@ impl NodeState {
     }
 
     pub fn set_ref(&mut self, index: usize, path: PathBuf) {
-        self.nodes[index] = Some(Node::Ref(path));
+        self.nodes[index - 1] = Some(Node::Ref(path));
     }
 }
 

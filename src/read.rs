@@ -1,4 +1,4 @@
-//! Types for reading GameBox nodes.
+//! Reading GameBox nodes.
 
 use std::{
     fs::File,
@@ -13,9 +13,10 @@ use crate::{
 
 use self::readable::{BodyChunkReadFn, ReadBody};
 
-/// Error while reading a GameBox node.
+/// Error that occured while reading a GameBox node.
 #[derive(Debug)]
 pub enum Error {
+    Generic(()),
     /// An I/O error.
     Io(io::Error),
 }
@@ -29,7 +30,7 @@ impl From<io::Error> for Error {
 /// Result type used when reading GameBox nodes.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Types that implement this trait are readable .
+/// Implemented by node types that can be read.
 ///
 /// Note that this trait is sealed and can not be implemented for
 /// types outside of `gamebox`.
@@ -175,35 +176,35 @@ fn read_node<T: Readable>(
     let mut d = Deserializer::new(reader, (), ());
 
     if d.byte_array()? != MAGIC {
-        todo!()
+        return Err(Error::Generic(()));
     }
 
     if d.u16()? != 6 {
-        todo!()
+        return Err(Error::Generic(()));
     }
 
     if d.u8()? != b'B' {
-        todo!()
+        return Err(Error::Generic(()));
     }
 
     if d.u8()? != b'U' {
-        todo!()
+        return Err(Error::Generic(()));
     }
 
     let is_body_compressed = match d.u8()? {
         b'C' => true,
         b'U' => false,
-        _ => todo!(),
+        _ => return Err(Error::Generic(())),
     };
 
     if d.u8()? != b'R' {
-        todo!()
+        return Err(Error::Generic(()));
     }
 
     let class_id = d.u32()?;
 
     if class_id != T::CLASS_ID {
-        todo!("{class_id:08X?}")
+        return Err(Error::Generic(()));
     }
 
     let user_data_size = d.u32()?;
@@ -318,7 +319,7 @@ fn read_header<T: Readable, R: Read + Seek, I, N>(
 
             let header_chunk_entry = header_chunk_entries
                 .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
-                .unwrap();
+                .ok_or(Error::Generic(()))?;
 
             (header_chunk_entry.read_fn)(node, &mut d)?;
 
@@ -365,7 +366,7 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
-            .unwrap();
+            .ok_or(Error::Generic(()))?;
 
         match body_chunk_entry.read_fn {
             BodyChunkReadFn::Normal(read_fn) => {
@@ -373,7 +374,7 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
             }
             BodyChunkReadFn::Skippable(read_fn) => {
                 if d.u32()? != SKIP {
-                    todo!()
+                    return Err(Error::Generic(()));
                 }
 
                 let chunk_size = d.u32()?;

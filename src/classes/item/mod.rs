@@ -1,4 +1,4 @@
-//! Types for `Item`.
+//! Types used for reading and writing [Item] nodes.
 
 mod read;
 mod write;
@@ -9,7 +9,7 @@ use crate::class::Class;
 
 use super::collector::Collector;
 
-/// Type corresponding to the file extension `Item.Gbx`.
+/// Node type corresponding to GameBox files with the extension `Item.Gbx`.
 #[derive(Default)]
 pub struct Item {
     parent: Collector,

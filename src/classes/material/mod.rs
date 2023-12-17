@@ -1,8 +1,10 @@
+//! Types used for reading [Material] nodes.
+
 use crate::class::Class;
 
 mod read;
 
-/// Corresponds to Material.Gbx.
+/// Node type corresponding to GameBox files with the extension `Material.Gbx`.
 #[derive(Default)]
 pub struct Material;
 

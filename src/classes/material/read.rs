@@ -4,7 +4,6 @@ use crate::{
     class::Class,
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
-        read_body,
         readable::{
             BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,
         },

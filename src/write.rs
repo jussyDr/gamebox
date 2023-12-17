@@ -1,4 +1,4 @@
-//! Types for writing GameBox nodes.
+//! Writing GameBox nodes.
 
 use std::{
     fs::File,

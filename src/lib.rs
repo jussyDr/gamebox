@@ -1,6 +1,6 @@
-#![warn(missing_docs)]
+#![warn(missing_docs, clippy::unwrap_in_result)]
 
-//! A (incomplete) GameBox (.Gbx) reader and writer.
+//! A (incomplete) GameBox (.Gbx) file reader and writer.
 //!
 //! # Examples
 //!
@@ -31,7 +31,7 @@ pub mod read;
 pub mod write;
 
 pub mod classes {
-    //! GameBox classes that can be read or written.
+    //! GameBox classes that can be read and written.
 
     pub mod collector;
     pub mod item;
