@@ -6,8 +6,8 @@ use std::{
 use crate::{
     class::Class,
     classes::collector::Collector,
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_body, read_gbx,
         readable::{
             BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,

@@ -1,5 +1,7 @@
 //! Reading GameBox nodes.
 
+pub(crate) mod deserialize;
+
 use std::{
     fs::File,
     io::{self, BufReader, Cursor, Read, Seek},
@@ -8,13 +10,12 @@ use std::{
 
 use serde_jsonrc::Value;
 
-use crate::{
-    class::Class,
-    deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
-    MAGIC, NODE_END, SKIP,
-};
+use crate::{class::Class, MAGIC, NODE_END, SKIP};
 
-use self::readable::{BodyChunkReadFn, ReadBody, ReadHeader, Sealed};
+use self::{
+    deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
+    readable::{BodyChunkReadFn, ReadBody, ReadHeader, Sealed},
+};
 
 /// Error that occured while reading a GameBox node.
 #[derive(Debug)]
@@ -399,9 +400,10 @@ impl<T: Sealed> Readable for T {}
 pub(crate) mod readable {
     use std::io::{Read, Seek};
 
-    use crate::deserialize::{Deserializer, IdState, IdStateMut, NodeStateMut, Take};
-
-    use super::{BodyOptions, HeaderOptions, Result};
+    use super::{
+        deserialize::{Deserializer, IdState, IdStateMut, NodeStateMut, Take},
+        BodyOptions, HeaderOptions, Result,
+    };
 
     pub struct HeaderChunkEntry<T, R> {
         pub id: u32,

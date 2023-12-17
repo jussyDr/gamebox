@@ -1,14 +1,10 @@
 use std::io::{Read, Seek};
 
-use crate::{
+use crate::read::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    read::{
-        read_gbx,
-        readable::{
-            BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,
-        },
-        BodyOptions, HeaderOptions, Result,
-    },
+    read_gbx,
+    readable::{BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed},
+    BodyOptions, HeaderOptions, Result,
 };
 
 use super::{Material, MaterialCustom};

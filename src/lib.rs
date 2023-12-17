@@ -43,9 +43,6 @@ pub mod classes {
     pub use item::Item;
 }
 
-mod deserialize;
-mod serialize;
-
 #[doc(inline)]
 pub use read::{read, read_file};
 #[doc(inline)]

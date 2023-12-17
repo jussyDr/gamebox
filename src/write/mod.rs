@@ -1,15 +1,16 @@
 //! Writing GameBox nodes.
 
+pub(crate) mod serialize;
+
 use std::{
     fs::File,
     io::{self, BufWriter, Write},
     path::Path,
 };
 
-use crate::{
-    serialize::{NodeState, Serializer},
-    MAGIC,
-};
+use crate::{write::serialize::NodeState, MAGIC};
+
+use self::serialize::Serializer;
 
 /// Error while writing a GameBox node.
 #[derive(Debug)]

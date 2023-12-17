@@ -1,8 +1,11 @@
 use std::io::Write;
 
 use crate::{
-    serialize::{IdState, NodeState, Serializer},
-    write::{writable::Sealed, Result, Writable},
+    write::{
+        serialize::{IdState, NodeState, Serializer},
+        writable::Sealed,
+        Result, Writable,
+    },
     MAGIC,
 };
 
