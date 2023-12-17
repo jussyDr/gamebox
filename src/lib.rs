@@ -34,6 +34,7 @@ pub mod classes {
     //! GameBox classes that can be read and written.
 
     pub mod collector;
+    pub mod color_table;
     pub mod item;
     pub mod material;
     pub mod texture;
