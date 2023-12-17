@@ -1,7 +1,6 @@
 use std::io::Read;
 
 use crate::{
-    class::Class,
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{
@@ -11,7 +10,7 @@ use crate::{
     },
 };
 
-use super::Material;
+use super::{Material, MaterialCustom};
 
 impl Readable for Material {}
 
@@ -84,7 +83,8 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.node::<MaterialCustom>()?;
+        let material_custom = d.node::<MaterialCustom>()?;
+        self.texture_refs = material_custom.texture_refs.clone();
 
         Ok(())
     }
@@ -158,14 +158,6 @@ impl Material {
 
         Ok(())
     }
-}
-
-#[derive(Default)]
-struct MaterialCustom;
-
-impl Class for MaterialCustom {
-    const ENGINE: u8 = 0x09;
-    const CLASS: u16 = 0x03a;
 }
 
 impl ReadBody for MaterialCustom {
@@ -278,19 +270,19 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a013<R: Read, I: IdStateMut, N>(
+    fn read_chunk_0903a013<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 0
-        d.list(|d| {
+        self.texture_refs = d.list(|d| {
             d.id()?; // "BaseColor" | "RoughMetal" | "Normal" | "BaseColorHueMask"
             d.u32()?; // 0
-            d.u32()?; // 2 | 3 | 4 | 5
+            let texture_ref = d.node_ref()?.to_owned();
             d.u32()?; // 4
             d.u32()?; // 4
 
-            Ok(())
+            Ok(texture_ref)
         })?;
 
         Ok(())
