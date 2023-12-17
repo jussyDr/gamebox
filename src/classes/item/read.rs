@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{io::Read, path::PathBuf};
 
 use crate::{
     class::Class,
@@ -14,8 +14,9 @@ use crate::{
 };
 
 use super::{
-    IndexBuffer, Indices, Item, ItemEntityModel, Material, MaterialUserInst, Mesh, Solid2Model,
-    VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
+    IndexBuffer, Indices, Item, ItemEntityModel, ItemMaterial, ItemMaterialCustom,
+    MaterialUserInst, Mesh, Solid2Model, VertexStream, Visual, Visual3D, VisualIndexed,
+    VisualIndexedTriangles,
 };
 
 impl Readable for Item {}
@@ -250,7 +251,6 @@ impl Item {
 
         if let Some(entity_model) = entity_model {
             self.layers = entity_model.solid_to_model.layers.clone();
-            self.materials = entity_model.solid_to_model.materials.clone();
         }
 
         Ok(())
@@ -836,11 +836,14 @@ impl MaterialUserInst {
         d.u32()?; // 0
         d.u16()?; // 4 | 22
         if uses_game_material {
-            let path = d.string()?;
-            self.material = Material::Game { path };
+            let material_ref = PathBuf::from(d.string()?);
+            self.material = ItemMaterial::Game { material_ref };
         } else {
             let id = d.id()?;
-            self.material = Material::Custom { id };
+            self.material = ItemMaterial::Custom(ItemMaterialCustom {
+                id,
+                color: [0, 0, 0],
+            });
         }
         d.list(|d| {
             d.id()?; // "TargetColor"
@@ -849,11 +852,10 @@ impl MaterialUserInst {
 
             Ok(())
         })?;
-        d.list(|d| {
-            d.u32()?;
-
-            Ok(())
-        })?;
+        let color = d.list(|d| d.u32())?;
+        if let ItemMaterial::Custom(ref mut material) = self.material {
+            material.color = [color[0] as u8, color[1] as u8, color[2] as u8];
+        }
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
@@ -907,17 +909,16 @@ impl Solid2Model {
     ) -> Result<()> {
         d.u32()?; // 30
         d.u32()?; // 0xffffffff
-        d.u32()?; // 2
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 1
+        let layers = d.list(|d| {
+            let mesh_index = d.u32()?;
+            let material_index = d.u32()?;
+            d.u32()?; // 0xffffffff
+            d.u32()?; // 1
+
+            Ok((mesh_index, material_index))
+        })?;
         d.u32()?; // 10
-        self.layers = d.list(|d| {
+        let meshes = d.list(|d| {
             let visual_indexed_triangles = d.node::<VisualIndexedTriangles>()?;
 
             Ok(Mesh {
@@ -961,7 +962,7 @@ impl Solid2Model {
         d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
         d.u32()?; // 1
         d.u32()?; // 0
-        self.materials = d.repeat(num_materials as usize, |d| {
+        let materials = d.repeat(num_materials as usize, |d| {
             let material = d.node::<MaterialUserInst>()?.clone();
             d.u32()?; // 0
 
@@ -975,6 +976,16 @@ impl Solid2Model {
         d.f32()?; // 1.0
         d.f32()?; // 1.0
         d.u32()?; // 0xffffffff
+
+        self.layers = layers
+            .into_iter()
+            .map(|(mesh_index, material_index)| {
+                (
+                    meshes[mesh_index as usize].clone(),
+                    materials[material_index as usize].clone(),
+                )
+            })
+            .collect();
 
         Ok(())
     }

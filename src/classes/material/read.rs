@@ -284,7 +284,10 @@ impl MaterialCustom {
 
             match texture_kind.as_str() {
                 "BaseColor" => self.diffuse_texture_ref = texture_ref,
-                _ => {}
+                "BaseColorHueMask" => {}
+                "Normal" => {}
+                "RoughMetal" => {}
+                _ => todo!(),
             }
 
             Ok(())

@@ -3,7 +3,10 @@
 mod read;
 mod write;
 
-use std::ops::{Deref, DerefMut};
+use std::{
+    ops::{Deref, DerefMut},
+    path::PathBuf,
+};
 
 use crate::class::Class;
 
@@ -13,17 +16,12 @@ use super::collector::Collector;
 #[derive(Default)]
 pub struct Item {
     parent: Collector,
-    layers: Vec<Mesh>,
-    materials: Vec<Material>,
+    layers: Vec<(Mesh, ItemMaterial)>,
 }
 
 impl Item {
-    pub fn layers(&self) -> &[Mesh] {
+    pub fn layers(&self) -> &[(Mesh, ItemMaterial)] {
         &self.layers
-    }
-
-    pub fn materials(&self) -> &[Material] {
-        &self.materials
     }
 }
 
@@ -55,15 +53,21 @@ impl Mesh {
 }
 
 #[derive(Clone)]
-pub enum Material {
-    Game { path: String },
-    Custom { id: String },
+pub enum ItemMaterial {
+    Game { material_ref: PathBuf },
+    Custom(ItemMaterialCustom),
 }
 
-impl Default for Material {
+#[derive(Clone)]
+pub struct ItemMaterialCustom {
+    id: String,
+    color: [u8; 3],
+}
+
+impl Default for ItemMaterial {
     fn default() -> Self {
         Self::Game {
-            path: String::default(),
+            material_ref: PathBuf::default(),
         }
     }
 }
@@ -99,8 +103,7 @@ impl Class for ItemEntityModel {
 
 #[derive(Default, Clone)]
 struct Solid2Model {
-    layers: Vec<Mesh>,
-    materials: Vec<Material>,
+    layers: Vec<(Mesh, ItemMaterial)>,
 }
 
 impl Class for Solid2Model {
@@ -110,7 +113,7 @@ impl Class for Solid2Model {
 
 #[derive(Default, Clone)]
 struct MaterialUserInst {
-    material: Material,
+    material: ItemMaterial,
 }
 
 impl Class for MaterialUserInst {
