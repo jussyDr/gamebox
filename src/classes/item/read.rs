@@ -355,7 +355,8 @@ impl Item {
 struct ItemPlacementParam;
 
 impl Class for ItemPlacementParam {
-    const CLASS_ID: u32 = 0x2e020000;
+    const ENGINE: u8 = 0x2e;
+    const CLASS: u16 = 0x020;
 }
 
 impl Default for ItemPlacementParam {
@@ -532,7 +533,8 @@ impl ItemEntityModel {
 struct ItemEntityModelEdition;
 
 impl Class for ItemEntityModelEdition {
-    const CLASS_ID: u32 = 0x2e026000;
+    const ENGINE: u8 = 0x2e;
+    const CLASS: u16 = 0x026;
 }
 
 impl Default for ItemEntityModelEdition {
@@ -616,7 +618,8 @@ impl ItemEntityModelEdition {
 struct Crystal;
 
 impl Class for Crystal {
-    const CLASS_ID: u32 = 0x09003000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x003;
 }
 
 impl Default for Crystal {

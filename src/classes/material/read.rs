@@ -164,7 +164,8 @@ impl Material {
 struct MaterialCustom;
 
 impl Class for MaterialCustom {
-    const CLASS_ID: u32 = 0x0903a000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x03a;
 }
 
 impl ReadBody for MaterialCustom {

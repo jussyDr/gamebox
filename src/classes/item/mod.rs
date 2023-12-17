@@ -69,7 +69,8 @@ impl Default for Material {
 }
 
 impl Class for Item {
-    const CLASS_ID: u32 = 0x2e002000;
+    const ENGINE: u8 = 0x2e;
+    const CLASS: u16 = 0x002;
 }
 
 impl Deref for Item {
@@ -92,7 +93,8 @@ struct ItemEntityModel {
 }
 
 impl Class for ItemEntityModel {
-    const CLASS_ID: u32 = 0x2e027000;
+    const ENGINE: u8 = 0x2e;
+    const CLASS: u16 = 0x027;
 }
 
 #[derive(Default, Clone)]
@@ -102,7 +104,8 @@ struct Solid2Model {
 }
 
 impl Class for Solid2Model {
-    const CLASS_ID: u32 = 0x090bb000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x0bb;
 }
 
 #[derive(Default, Clone)]
@@ -111,7 +114,8 @@ struct MaterialUserInst {
 }
 
 impl Class for MaterialUserInst {
-    const CLASS_ID: u32 = 0x090fd000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x0fd;
 }
 
 #[derive(Default)]
@@ -120,7 +124,8 @@ struct VisualIndexedTriangles {
 }
 
 impl Class for VisualIndexedTriangles {
-    const CLASS_ID: u32 = 0x0901e000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x01e;
 }
 
 impl Deref for VisualIndexedTriangles {
@@ -188,7 +193,8 @@ struct VertexStream {
 }
 
 impl Class for VertexStream {
-    const CLASS_ID: u32 = 0x09056000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x056;
 }
 
 #[derive(Default)]
@@ -197,5 +203,6 @@ struct IndexBuffer {
 }
 
 impl Class for IndexBuffer {
-    const CLASS_ID: u32 = 0x09057000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x057;
 }

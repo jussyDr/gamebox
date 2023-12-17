@@ -155,7 +155,7 @@ fn write_node<T: Writable>(node: &T, writer: impl Write, compress_body: bool) ->
     }
 
     s.u8(b'R')?;
-    s.u32(T::CLASS_ID)?;
+    s.u32(T::class_id())?;
     s.u32(user_data.len() as u32)?;
     s.bytes(&user_data)?;
     s.u32(num_nodes)?;

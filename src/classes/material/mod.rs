@@ -9,5 +9,6 @@ mod read;
 pub struct Material;
 
 impl Class for Material {
-    const CLASS_ID: u32 = 0x09079000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x079;
 }

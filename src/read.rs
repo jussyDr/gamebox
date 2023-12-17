@@ -203,7 +203,7 @@ fn read_node<T: Readable>(
 
     let class_id = d.u32()?;
 
-    if class_id != T::CLASS_ID {
+    if class_id != T::class_id() {
         return Err(Error::Generic(()));
     }
 

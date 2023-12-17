@@ -13,5 +13,6 @@ pub struct Texture {
 }
 
 impl Class for Texture {
-    const CLASS_ID: u32 = 0x09011000;
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x011;
 }

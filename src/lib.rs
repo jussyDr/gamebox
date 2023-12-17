@@ -57,7 +57,13 @@ const SKIP: u32 = 0x534b4950;
 const NODE_END: u32 = 0xfacade01;
 
 mod class {
+
     pub trait Class {
-        const CLASS_ID: u32;
+        const ENGINE: u8;
+        const CLASS: u16;
+
+        fn class_id() -> u32 {
+            ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
+        }
     }
 }

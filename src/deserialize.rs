@@ -358,7 +358,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
             todo!()
         }
 
-        if self.u32()? != T::CLASS_ID {
+        if self.u32()? != T::class_id() {
             todo!()
         }
 
