@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::class::Class;
+use crate::{class::Class, Rgb};
 
 use super::collector::Collector;
 
@@ -52,16 +52,22 @@ impl Mesh {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ItemMaterial {
     Game { material_ref: PathBuf },
     Custom(ItemMaterialCustom),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ItemMaterialCustom {
     id: String,
-    color: [u8; 3],
+    color: Rgb,
+}
+
+impl ItemMaterialCustom {
+    pub fn color(&self) -> Rgb {
+        self.color
+    }
 }
 
 impl Default for ItemMaterial {

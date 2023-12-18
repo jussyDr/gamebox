@@ -14,6 +14,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Result,
     },
+    Rgb,
 };
 
 use super::{
@@ -851,7 +852,7 @@ impl MaterialUserInst {
             let id = d.id()?;
             self.material = ItemMaterial::Custom(ItemMaterialCustom {
                 id,
-                color: [0, 0, 0],
+                color: Rgb { r: 0, g: 0, b: 0 },
             });
         }
         d.list(|d| {
@@ -863,7 +864,11 @@ impl MaterialUserInst {
         })?;
         let color = d.list(|d| d.u32())?;
         if let ItemMaterial::Custom(ref mut material) = self.material {
-            material.color = [color[0] as u8, color[1] as u8, color[2] as u8];
+            material.color = Rgb {
+                r: color[0] as u8,
+                g: color[1] as u8,
+                b: color[2] as u8,
+            };
         }
         d.u32()?; // 0
         d.u32()?; // 0

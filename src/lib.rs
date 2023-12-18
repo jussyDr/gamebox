@@ -66,8 +66,15 @@ mod class {
 }
 
 /// Color representation using red, green, and blue components.
+#[derive(Clone, Copy, Debug)]
 pub struct Rgb {
     r: u8,
     g: u8,
     b: u8,
+}
+
+impl Rgb {
+    pub fn into_array(self) -> [u8; 3] {
+        [self.r, self.g, self.b]
+    }
 }
