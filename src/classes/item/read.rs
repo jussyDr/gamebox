@@ -937,6 +937,7 @@ impl Solid2Model {
 
             Ok(Mesh {
                 positions: visual_indexed_triangles.vertices.positions.clone(),
+                texcoords: visual_indexed_triangles.vertices.texcoords.clone(),
                 indices: visual_indexed_triangles.indices.clone(),
             })
         })?;
@@ -1237,10 +1238,10 @@ impl VertexStream {
                     format: 1,
                 } => {
                     self.texcoords = d.repeat(vertex_count as usize, |d| {
-                        d.f32()?;
-                        d.f32()?;
+                        let u = d.f32()?;
+                        let v = d.f32()?;
 
-                        Ok(())
+                        Ok([u, v])
                     })?;
                 }
                 VertexAttribute {

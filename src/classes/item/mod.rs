@@ -28,6 +28,7 @@ impl Item {
 #[derive(Clone)]
 pub struct Mesh {
     positions: Vec<[f32; 3]>,
+    texcoords: Vec<[f32; 2]>,
     indices: Indices,
 }
 
@@ -45,6 +46,10 @@ impl Default for Indices {
 impl Mesh {
     pub fn positions(&self) -> &[[f32; 3]] {
         &self.positions
+    }
+
+    pub fn texcoords(&self) -> &[[f32; 2]] {
+        &self.texcoords
     }
 
     pub fn indices(&self) -> &Indices {
@@ -198,7 +203,7 @@ struct Visual {
 #[derive(Default, Clone)]
 struct VertexStream {
     positions: Vec<[f32; 3]>,
-    texcoords: Vec<()>,
+    texcoords: Vec<[f32; 2]>,
 }
 
 impl Class for VertexStream {
