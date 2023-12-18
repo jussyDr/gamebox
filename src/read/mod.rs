@@ -368,6 +368,8 @@ pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
             break;
         }
 
+        println!("{:08X?}", chunk_id);
+
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
             .ok_or(Error::Generic(()))?;

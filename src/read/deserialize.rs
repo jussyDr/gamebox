@@ -162,6 +162,14 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         }
     }
 
+    pub fn bool32(&mut self) -> Result<bool> {
+        match self.u32()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => todo!(),
+        }
+    }
+
     /// Deserialize `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let mut buf = vec![0; n];

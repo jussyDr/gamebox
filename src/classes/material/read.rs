@@ -130,9 +130,10 @@ impl Material {
 
     fn read_chunk_09079015<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 7
-        d.u32()?; // 6
-        d.u32()?; // 1
-        d.u32()?; // 7
+        d.u32()?; // 5 | 6
+        if d.bool32()? {
+            d.u32()?; // 7
+        }
         d.u32()?; // 0xffffffff
 
         Ok(())
@@ -224,14 +225,16 @@ impl MaterialCustom {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 1
-        d.id()?; // "BaseColorTarget"
-        d.u32()?; // 3
-        d.u32()?; // 1
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.f32()?; // 1.0
-        d.u32()?; // 0
+        if d.bool32()? {
+            d.id()?; // "BaseColorTarget"
+            d.u32()?; // 3
+            d.u32()?; // 1
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+        }
+
         d.u32()?; // 0
 
         Ok(())
