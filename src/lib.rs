@@ -40,6 +40,7 @@ pub mod classes {
     pub mod prefab;
     pub mod texture;
     pub mod veget_tree_model;
+    pub mod visual_indexed_triangles;
 
     #[doc(inline)]
     pub use item::Item;
@@ -49,6 +50,10 @@ pub mod classes {
 pub use read::{read, read_file};
 #[doc(inline)]
 pub use write::{write, write_file};
+
+use std::io::Read;
+
+use read::{deserialize::Deserializer, Result};
 
 const MAGIC: [u8; 3] = [b'G', b'B', b'X'];
 
@@ -78,5 +83,17 @@ pub struct Rgb {
 impl Rgb {
     pub fn into_array(self) -> [u8; 3] {
         [self.r, self.g, self.b]
+    }
+}
+
+fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_items: u32) -> Result<u32> {
+    if num_items < u8::MAX as u32 {
+        let index = d.u8()?;
+        Ok(index as u32)
+    } else if num_items < u16::MAX as u32 {
+        let index = d.u16()?;
+        Ok(index as u32)
+    } else {
+        d.u32()
     }
 }
