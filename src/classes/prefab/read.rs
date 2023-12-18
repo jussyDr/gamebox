@@ -2,8 +2,8 @@ use std::io::{Read, Seek};
 
 use crate::read::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    read_body_chunks, read_gbx,
-    readable::{BodyChunkEntry, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed},
+    read_gbx,
+    readable::{HeaderChunkEntry, HeaderChunks, Sealed},
     BodyOptions, HeaderOptions, ReadBody, Result,
 };
 
@@ -30,13 +30,27 @@ impl ReadBody for Prefab {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        read_body_chunks(self, d)
-    }
-}
+        d.u32()?; // 11
+        d.u32()?;
+        d.u32()?;
+        d.string()?; // "\\storage.nadeo.org\graphical_data\Stadium\3D\Items\VTM.max:Fall-------------------------------EXPORT"
+        d.u32()?;
+        d.list(|d| {
+            d.u32()?; // 0
+            d.u32()?; // 1
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?;
+            d.u32()?; // 0
+            d.u32()?;
+            d.u32()?; // 0xffffffff
 
-impl BodyChunks for Prefab {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [].into_iter()
+            Ok(())
+        })?;
+        d.u32()?; // 0
+
+        Ok(())
     }
 }

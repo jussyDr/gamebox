@@ -232,6 +232,30 @@ impl VertexStream {
                     })?;
                 }
                 VertexAttribute {
+                    kind: 5,
+                    format: 14,
+                } => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
+                }
+                VertexAttribute { kind: 8, format: 4 } => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
+                }
+                VertexAttribute { kind: 9, format: 4 } => {
+                    d.repeat(vertex_count as usize, |d| {
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
+                }
+                VertexAttribute {
                     kind: 10,
                     format: 1,
                 } => {
@@ -254,11 +278,12 @@ impl VertexStream {
                     })?;
                 }
                 VertexAttribute {
-                    kind: 5,
-                    format: 14,
+                    kind: 12,
+                    format: 1,
                 } => {
                     d.repeat(vertex_count as usize, |d| {
-                        d.u32()?;
+                        d.f32()?;
+                        d.f32()?;
 
                         Ok(())
                     })?;
