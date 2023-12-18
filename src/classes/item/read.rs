@@ -8,11 +8,11 @@ use crate::{
     classes::collector::Collector,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
-        read_body, read_gbx,
+        read_body_chunks, read_gbx,
         readable::{
-            BodyChunkEntry, BodyChunkReadFn, HeaderChunkEntry, ReadBody, ReadHeader, Sealed,
+            BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
         },
-        BodyOptions, HeaderOptions, Result,
+        BodyOptions, HeaderOptions, ReadBody, Result,
     },
     Rgb,
 };
@@ -33,7 +33,7 @@ impl Sealed for Item {
     }
 }
 
-impl ReadHeader for Item {
+impl HeaderChunks for Item {
     #[allow(clippy::redundant_closure)]
     fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>> {
         [
@@ -63,6 +63,15 @@ impl ReadHeader for Item {
 }
 
 impl ReadBody for Item {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for Item {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -249,18 +258,43 @@ impl Item {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 13 | 15
+        let version = d.u32()?; // 13 | 15
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
         d.node_or_null::<ItemEntityModelEdition>()?;
-        let entity_model = d.node_or_null::<ItemEntityModel>()?.cloned();
+        d.any_node_or_null(|d, class_id| match class_id {
+            0x2e027000 => {
+                let mut node = ItemEntityModel::default();
+                read_body_chunks(&mut node, d)?;
+
+                Ok(())
+            }
+            0x2f0bc000 => {
+                d.u32()?; // 1
+                d.list(|d| {
+                    d.list(|d| {
+                        d.string()?; // "Type" | "Size" | "Placement" | "MatModifier"
+                        d.string()?; // "SpringTree" | "Medium" | "Wild" | "Grass"
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 2
+                    d.u32()?; // 1
+
+                    Ok(())
+                })?;
+
+                Ok(())
+            }
+            _ => todo!(),
+        })?;
         d.u32()?; // 0xffffffff
 
-        if let Some(entity_model) = entity_model {
-            self.layers = entity_model.solid_to_model.layers.clone();
+        if version >= 15 {
+            d.u32()?; // 0xffffffff
         }
 
         Ok(())
@@ -312,8 +346,8 @@ impl Item {
 
     fn read_chunk_2e002020<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 3
-        d.u32()?; // 0
-        d.u8()?; // 0
+        d.string()?; // "" | "\Items\IconFall.dds"
+        d.u8()?; // 0 | 1
 
         Ok(())
     }
@@ -375,7 +409,7 @@ impl Default for ItemPlacementParam {
     }
 }
 
-impl ReadBody for ItemPlacementParam {
+impl BodyChunks for ItemPlacementParam {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -475,7 +509,7 @@ impl ItemPlacementParam {
     }
 }
 
-impl ReadBody for ItemEntityModel {
+impl BodyChunks for ItemEntityModel {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
@@ -553,7 +587,7 @@ impl Default for ItemEntityModelEdition {
     }
 }
 
-impl ReadBody for ItemEntityModelEdition {
+impl BodyChunks for ItemEntityModelEdition {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -638,7 +672,7 @@ impl Default for Crystal {
     }
 }
 
-impl ReadBody for Crystal {
+impl BodyChunks for Crystal {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -813,7 +847,7 @@ impl Crystal {
     }
 }
 
-impl ReadBody for MaterialUserInst {
+impl BodyChunks for MaterialUserInst {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -898,7 +932,7 @@ impl MaterialUserInst {
     }
 }
 
-impl ReadBody for Solid2Model {
+impl BodyChunks for Solid2Model {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
@@ -1013,7 +1047,7 @@ impl Solid2Model {
     }
 }
 
-impl ReadBody for VisualIndexedTriangles {
+impl BodyChunks for VisualIndexedTriangles {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1156,7 +1190,7 @@ impl VisualIndexed {
         d.u32()?; // 1
 
         let mut node = IndexBuffer::default();
-        read_body(&mut node, d)?;
+        read_body_chunks(&mut node, d)?;
 
         self.indices = node.indices;
 
@@ -1164,7 +1198,7 @@ impl VisualIndexed {
     }
 }
 
-impl ReadBody for IndexBuffer {
+impl BodyChunks for IndexBuffer {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
@@ -1191,7 +1225,7 @@ impl IndexBuffer {
     }
 }
 
-impl ReadBody for VertexStream {
+impl BodyChunks for VertexStream {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {

@@ -14,7 +14,7 @@ use crate::{class::Class, MAGIC, NODE_END, SKIP};
 
 use self::{
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
-    readable::{BodyChunkReadFn, ReadBody, ReadHeader, Sealed},
+    readable::{BodyChunkReadFn, BodyChunks, HeaderChunks, Sealed},
 };
 
 /// Error that occured while reading a GameBox node.
@@ -170,7 +170,7 @@ impl Default for HeaderOptions {
     }
 }
 
-pub(crate) fn read_gbx<T: Default + Class + ReadHeader + ReadBody>(
+pub(crate) fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
     reader: impl Read + Seek,
     header_options: HeaderOptions,
     body_options: BodyOptions,
@@ -238,6 +238,7 @@ pub(crate) fn read_gbx<T: Default + Class + ReadHeader + ReadBody>(
         d.u32()?;
         let mut folders = vec![];
         read_folders(&mut d, PathBuf::new(), &mut folders)?;
+
         d.repeat(num_node_refs as usize, |d| {
             d.u32()?;
             let file_name = d.string()?;
@@ -268,7 +269,7 @@ pub(crate) fn read_gbx<T: Default + Class + ReadHeader + ReadBody>(
 
                 let mut d = Deserializer::new(reader, IdState::default(), node_state);
 
-                read_body(&mut node, &mut d)?;
+                T::read_body(&mut node, &mut d)?;
 
                 d.end()?;
             }
@@ -285,7 +286,7 @@ pub(crate) fn read_gbx<T: Default + Class + ReadHeader + ReadBody>(
 
                 let mut d = Deserializer::new(reader, IdState::default(), node_state);
 
-                read_body(&mut node, &mut d)?;
+                T::read_body(&mut node, &mut d)?;
 
                 d.end()?;
             }
@@ -296,7 +297,7 @@ pub(crate) fn read_gbx<T: Default + Class + ReadHeader + ReadBody>(
     Ok(node)
 }
 
-fn read_header<T: ReadHeader, R: Read + Seek, I, N>(
+fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
     node: &mut T,
     mut d: Deserializer<R, I, N>,
     skip_heavy_chunks: bool,
@@ -355,7 +356,7 @@ fn read_folders<R: Read, I, N>(
     Ok(())
 }
 
-pub(crate) fn read_body<T: ReadBody, R: Read, I: IdStateMut, N: NodeStateMut>(
+pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeStateMut>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -439,18 +440,24 @@ pub(crate) mod readable {
             Self: Sized;
     }
 
-    pub trait ReadHeader {
+    pub trait HeaderChunks {
         fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>>
         where
             Self: Sized;
     }
 
-    pub trait ReadBody {
+    pub trait BodyChunks {
         fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
         where
             Self: Sized;
     }
+}
+pub(crate) trait ReadBody {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()>;
 }
 
 pub(crate) trait ReadJson {

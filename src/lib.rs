@@ -37,7 +37,9 @@ pub mod classes {
     pub mod color_table;
     pub mod item;
     pub mod material;
+    pub mod prefab;
     pub mod texture;
+    pub mod veget_tree_model;
 
     #[doc(inline)]
     pub use item::Item;

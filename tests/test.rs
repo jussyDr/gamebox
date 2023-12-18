@@ -1,60 +1,67 @@
-use std::fs::File;
+use std::{fs::File, io::BufReader, path::Path};
 
 use gamebox::{
-    classes::{color_table::ColorTable, item::Item, material::Material, texture::Texture},
-    read::HeaderOptions,
+    classes::{
+        color_table::ColorTable, item::Item, material::Material, prefab::Prefab, texture::Texture,
+        veget_tree_model::VegetTreeModel,
+    },
+    read::{HeaderOptions, Readable},
 };
 
 #[test]
 fn read_item() {
-    let file = File::open("tests/files/big_palm_tree_low.Item.Gbx").unwrap();
-    let _item: Item = gamebox::read(file).unwrap();
+    test_read_file::<Item>("tests/files/big_palm_tree_low.Item.Gbx");
+}
+
+#[test]
+fn read_item_2() {
+    test_read_extracted_file::<Item>("tests/files/Fall.Item.Gbx");
 }
 
 #[test]
 fn read_material() {
-    let file = File::open("tests/files/TrackWallClips.Material.Gbx").unwrap();
-
-    let _material: Material = gamebox::read::Reader::new()
-        .read_header(HeaderOptions::Skip {
-            assume_size_zero: true,
-        })
-        .read(file)
-        .unwrap();
+    test_read_extracted_file::<Material>("tests/files/TrackWallClips.Material.Gbx");
 }
 
 #[test]
 fn read_material_2() {
-    let file = File::open("tests/files/PlatformTech.Material.Gbx").unwrap();
-
-    let _material: Material = gamebox::read::Reader::new()
-        .read_header(HeaderOptions::Skip {
-            assume_size_zero: true,
-        })
-        .read(file)
-        .unwrap();
+    test_read_extracted_file::<Material>("tests/files/PlatformTech.Material.Gbx");
 }
 
 #[test]
 fn read_texture() {
-    let file = File::open("tests/files/TrackWallClips_D.Texture.gbx").unwrap();
-
-    let _texture: Texture = gamebox::read::Reader::new()
-        .read_header(HeaderOptions::Skip {
-            assume_size_zero: true,
-        })
-        .read(file)
-        .unwrap();
+    test_read_extracted_file::<Texture>("tests/files/TrackWallClips_D.Texture.gbx");
 }
 
 #[test]
 fn read_color_table() {
-    let file = File::open("tests/files/Sport.ColorTable.gbx.json").unwrap();
+    test_read_file::<ColorTable>("tests/files/Sport.ColorTable.gbx.json");
+}
 
-    let _color_table: ColorTable = gamebox::read::Reader::new()
+#[test]
+fn read_veget_tree_model() {
+    test_read_extracted_file::<VegetTreeModel>("tests/files/FallTreeMedium.VegetTreeModel.gbx");
+}
+
+#[test]
+fn read_prefab() {
+    test_read_extracted_file::<Prefab>("tests/files/Fall.Prefab.gbx");
+}
+
+fn test_read_file<T: Readable>(path: impl AsRef<Path>) {
+    let file = File::open(path).unwrap();
+    let reader = BufReader::new(file);
+    gamebox::read::<T>(reader).unwrap();
+}
+
+fn test_read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
+    let file = File::open(path).unwrap();
+    let reader = BufReader::new(file);
+
+    gamebox::read::Reader::new()
         .read_header(HeaderOptions::Skip {
             assume_size_zero: true,
         })
-        .read(file)
+        .read::<T>(reader)
         .unwrap();
 }

@@ -12,9 +12,9 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.id_or_null()?; // null
+        let _collection = d.id_or_null()?; // null
         d.u32()?; // 26
-        d.id()?; // "r-brwiQCRnOZ2PIHcM0Q8A"
+        let _author = d.id()?; // "r-brwiQCRnOZ2PIHcM0Q8A"
         d.u32()?; // 8
         d.string()?; // "Items"
         d.u32()?; // 0xffffffff
@@ -62,9 +62,9 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 0xffffffff
+        let _collection = d.id_or_null()?; // "Fall"
         d.u32()?; // 26
-        d.id()?; // "r-brwiQCRnOZ2PIHcM0Q8A"
+        let _author = d.id()?; // "Nadeo" | "r-brwiQCRnOZ2PIHcM0Q8A"
 
         Ok(())
     }
