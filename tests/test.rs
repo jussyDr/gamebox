@@ -20,6 +20,11 @@ fn read_item_2() {
 }
 
 #[test]
+fn read_item_3() {
+    test_read_extracted_file::<Item>("tests/files/GateCheckpointCenter16m.Item.Gbx");
+}
+
+#[test]
 fn read_material() {
     test_read_extracted_file::<Material>("tests/files/TrackWallClips.Material.Gbx");
 }

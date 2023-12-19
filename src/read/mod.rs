@@ -386,7 +386,7 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeSta
 
                 let chunk_size = d.u32()?;
 
-                let mut d = d.take2(chunk_size as u64, ());
+                let mut d = d.take2(chunk_size as u64);
 
                 read_fn(node, &mut d)?;
 
@@ -423,14 +423,14 @@ pub(crate) mod readable {
 
     pub enum BodyChunkReadFn<T, R, I, N> {
         Normal(NormalBodyChunkReadFn<T, R, I, N>),
-        Skippable(SkippableBodyChunkReadFn<T, R, N>),
+        Skippable(SkippableBodyChunkReadFn<T, R, I, N>),
     }
 
     pub type NormalBodyChunkReadFn<T, R, I, N> =
         fn(n: &mut T, d: &mut Deserializer<R, I, N>) -> Result<()>;
 
-    pub type SkippableBodyChunkReadFn<T, R, N> =
-        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, (), &mut N>) -> Result<()>;
+    pub type SkippableBodyChunkReadFn<T, R, I, N> =
+        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut I, &mut N>) -> Result<()>;
 
     pub trait Sealed {
         fn read(

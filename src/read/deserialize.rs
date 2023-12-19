@@ -21,9 +21,30 @@ pub struct IdState {
 
 /// Trait which should be used as a generic trait bound in
 /// functions that need to access the `IdState`.
-pub trait IdStateMut: BorrowMut<IdState> {}
+pub trait IdStateMut {
+    fn borrow(&self) -> &IdState;
+    fn borrow_mut(&mut self) -> &mut IdState;
+}
 
-impl<T: BorrowMut<IdState>> IdStateMut for T {}
+impl IdStateMut for IdState {
+    fn borrow(&self) -> &IdState {
+        self
+    }
+
+    fn borrow_mut(&mut self) -> &mut IdState {
+        self
+    }
+}
+
+impl<T: IdStateMut> IdStateMut for &mut T {
+    fn borrow(&self) -> &IdState {
+        (**self).borrow()
+    }
+
+    fn borrow_mut(&mut self) -> &mut IdState {
+        (**self).borrow_mut()
+    }
+}
 
 /// State of nodes read in the past.
 pub struct NodeState {
@@ -222,17 +243,13 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Deserializer::new(inner, id_state, node_state)
     }
 
-    pub fn take2<IS>(
-        &mut self,
-        limit: u64,
-        id_state: IS,
-    ) -> Deserializer<Take<&mut R>, IS, &mut N> {
+    pub fn take2(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
         let inner = Take {
             reader: &mut self.reader,
             limit,
         };
 
-        Deserializer::new(inner, id_state, &mut self.node_state)
+        Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
     }
 
     /// Check if we are at the end of the reader.
@@ -347,6 +364,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
+    /// An inline node of type `T`.
     pub fn inline_node<T: 'static + Default + Class + BodyChunks>(&mut self) -> Result<&T> {
         match self.inline_node_or_null()? {
             Some(node) => Ok(node),
@@ -354,6 +372,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
+    /// Either an inline node of type `T` or null.
     pub fn inline_node_or_null<T: 'static + Default + Class + BodyChunks>(
         &mut self,
     ) -> Result<Option<&T>> {
@@ -364,6 +383,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
+    /// Either an inline node of type `T` or a node reference.
     pub fn node<T: 'static + Default + Class + BodyChunks>(&mut self) -> Result<Node<&T>> {
         match self.node_or_null()? {
             None => todo!(),
@@ -371,6 +391,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
+    /// Either an inline node of type `T`, a node reference, or null.
     pub fn node_or_null<T: 'static + Default + Class + BodyChunks>(
         &mut self,
     ) -> Result<Option<Node<&T>>> {
@@ -415,6 +436,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
+    /// Either any inline node or null.
     pub fn any_inline_node_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
@@ -434,5 +456,39 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         let node = read_fn(self, class_id)?;
 
         Ok(Some(node))
+    }
+
+    /// Either any inline node, a node reference, or null.
+    pub fn any_node_or_null<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
+    ) -> Result<Option<Node<()>>> {
+        let index = self.u32()?;
+
+        if index == 0xFFFFFFFF {
+            return Ok(None);
+        }
+
+        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
+            todo!()
+        }
+
+        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
+            let r = self.node_state.borrow().nodes[index as usize - 1]
+                .as_ref()
+                .unwrap();
+
+            match r {
+                Node::Inline(q) => return Ok(Some(Node::Inline(()))),
+                Node::Ref(q) => return Ok(Some(Node::Ref(q.to_path_buf()))),
+                _ => todo!(),
+            }
+        }
+
+        let class_id = self.u32()?;
+
+        let node = read_fn(self, class_id)?;
+
+        Ok(Some(Node::Inline(())))
     }
 }

@@ -264,7 +264,7 @@ impl Item {
         d.u32()?; // 0
         d.u32()?; // 0
         d.node_or_null::<ItemEntityModelEdition>()?;
-        d.any_inline_node_or_null(|d, class_id| match class_id {
+        d.any_node_or_null(|d, class_id| match class_id {
             0x2e027000 => {
                 let mut node = ItemEntityModel::default();
                 read_body_chunks(&mut node, d)?;
@@ -458,7 +458,13 @@ impl ItemPlacementParam {
     }
 
     fn read_chunk_2e020001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
         d.u32()?; // 0
 
         Ok(())
@@ -479,27 +485,40 @@ impl ItemPlacementParam {
 
     fn read_chunk_2e020004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        d.u32()?; // 0
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
 
         Ok(())
     }
 
-    fn read_chunk_2e020005<R: Read, I, N: NodeStateMut>(
+    fn read_chunk_2e020005<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.flat_node(0x09187000, |d| {
             d.u32()?; // 10
-            d.u32()?; // 0xffffffff
+            d.id_or_null()?; // "1x1"
             d.u32()?; // 0
             d.u32()?; // 0
-            d.u32()?; // 1
+            d.u32()?; // 0 | 1
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0
             d.f32()?; // 1.0
             d.u32()?; // 0
-            d.u32()?; // 0
+            d.list(|d| {
+                d.u32()?;
+
+                Ok(())
+            })?;
 
             Ok(())
         })?;
