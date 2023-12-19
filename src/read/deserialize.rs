@@ -27,7 +27,7 @@ impl<T: BorrowMut<IdState>> IdStateMut for T {}
 
 /// State of nodes read in the past.
 pub struct NodeState {
-    nodes: Vec<Option<Node>>,
+    nodes: Vec<Option<Node<Box<dyn Any>>>>,
 }
 
 impl NodeState {
@@ -43,8 +43,8 @@ impl NodeState {
     }
 }
 
-pub enum Node {
-    Inline(Box<dyn Any>),
+pub enum Node<T> {
+    Inline(T),
     Ref(PathBuf),
 }
 
@@ -347,17 +347,33 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn node<T: 'static + Class + Default + BodyChunks>(&mut self) -> Result<&T> {
+    pub fn inline_node<T: 'static + Default + Class + BodyChunks>(&mut self) -> Result<&T> {
+        match self.inline_node_or_null()? {
+            Some(node) => Ok(node),
+            _ => todo!(),
+        }
+    }
+
+    pub fn inline_node_or_null<T: 'static + Default + Class + BodyChunks>(
+        &mut self,
+    ) -> Result<Option<&T>> {
+        match self.node_or_null()? {
+            None => Ok(None),
+            Some(Node::Inline(node)) => Ok(Some(node)),
+            _ => todo!(),
+        }
+    }
+
+    pub fn node<T: 'static + Default + Class + BodyChunks>(&mut self) -> Result<Node<&T>> {
         match self.node_or_null()? {
             None => todo!(),
             Some(node) => Ok(node),
         }
     }
 
-    /// Deserialize a node with the given `class_id` using the given `read_fn`.
-    pub fn node_or_null<T: 'static + Class + Default + BodyChunks>(
+    pub fn node_or_null<T: 'static + Default + Class + BodyChunks>(
         &mut self,
-    ) -> Result<Option<&T>> {
+    ) -> Result<Option<Node<&T>>> {
         let index = self.u32()?;
 
         if index == 0xFFFFFFFF {
@@ -366,6 +382,18 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
 
         if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
             todo!()
+        }
+
+        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
+            let r = self.node_state.borrow().nodes[index as usize - 1]
+                .as_ref()
+                .unwrap();
+
+            match r {
+                Node::Inline(q) => return Ok(Some(Node::Inline(q.downcast_ref().unwrap()))),
+                Node::Ref(q) => return Ok(Some(Node::Ref(q.to_path_buf()))),
+                _ => todo!(),
+            }
         }
 
         if self.u32()? != T::class_id() {
@@ -382,12 +410,12 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
             .unwrap();
 
         match r {
-            Node::Inline(q) => Ok(Some(q.downcast_ref().unwrap())),
+            Node::Inline(q) => Ok(Some(Node::Inline(q.downcast_ref().unwrap()))),
             _ => todo!(),
         }
     }
 
-    pub fn any_node_or_null<T>(
+    pub fn any_inline_node_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
     ) -> Result<Option<T>> {

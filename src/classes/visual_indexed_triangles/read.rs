@@ -108,7 +108,7 @@ impl Visual {
         d.u32()?; // 0
         d.u32()?; // 180
         d.u32()?; // 1
-        self.vertices = d.node::<VertexStream>()?.clone();
+        self.vertices = d.inline_node::<VertexStream>()?.clone();
         d.u32()?; // 0
         d.f32()?; // 12.703503
         d.f32()?; // 15.202776

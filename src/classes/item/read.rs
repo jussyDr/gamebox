@@ -264,7 +264,7 @@ impl Item {
         d.u32()?; // 0
         d.u32()?; // 0
         d.node_or_null::<ItemEntityModelEdition>()?;
-        d.any_node_or_null(|d, class_id| match class_id {
+        d.any_inline_node_or_null(|d, class_id| match class_id {
             0x2e027000 => {
                 let mut node = ItemEntityModel::default();
                 read_body_chunks(&mut node, d)?;
@@ -528,7 +528,7 @@ impl ItemEntityModel {
         self.solid_to_model = d
             .flat_node(0x09159000, |d| {
                 d.u32()?; // 3
-                let solid_to_model = d.node::<Solid2Model>()?.clone();
+                let solid_to_model = d.inline_node::<Solid2Model>()?.clone();
                 d.u8()?; // 1
                 d.u32()?; // 0xffffffff
                 d.f32()?; // 1.0
@@ -611,7 +611,7 @@ impl ItemEntityModelEdition {
     ) -> Result<()> {
         d.u32()?; // 7
         d.u32()?; // 1
-        d.node::<Crystal>()?;
+        d.inline_node::<Crystal>()?;
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
@@ -709,7 +709,7 @@ impl Crystal {
         d.u32()?; // 2
         d.list(|d| {
             d.u32()?; // 0
-            d.node::<MaterialUserInst>()?;
+            d.inline_node::<MaterialUserInst>()?;
 
             Ok(())
         })?;
@@ -966,7 +966,7 @@ impl Solid2Model {
         })?;
         d.u32()?; // 10
         let meshes = d.list(|d| {
-            let visual_indexed_triangles = d.node::<VisualIndexedTriangles>()?;
+            let visual_indexed_triangles = d.inline_node::<VisualIndexedTriangles>()?;
 
             Ok(Mesh {
                 positions: visual_indexed_triangles.vertices.positions.clone(),
@@ -1011,7 +1011,7 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 0
         let materials = d.repeat(num_materials as usize, |d| {
-            let material = d.node::<MaterialUserInst>()?.clone();
+            let material = d.inline_node::<MaterialUserInst>()?.clone();
             d.u32()?; // 0
 
             Ok(material.material.clone())

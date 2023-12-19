@@ -7,6 +7,7 @@ use gamebox::{
     },
     read::{HeaderOptions, Readable},
 };
+use walkdir::WalkDir;
 
 #[test]
 fn read_item() {
@@ -64,4 +65,54 @@ fn test_read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
         })
         .read::<T>(reader)
         .unwrap();
+}
+
+#[test]
+fn read_game_data() {
+    for entry in WalkDir::new("C:/Users/Justin/Projects/tm-files") {
+        let entry = entry.unwrap();
+
+        if entry.file_type().is_dir() {
+            continue;
+        }
+
+        let path = entry.path().to_str().unwrap();
+        let (_, extension) = path.split_once('.').unwrap();
+
+        println!("{path}");
+
+        match extension.to_lowercase().as_str() {
+            "colortable.gbx.json" => {
+                test_read_extracted_file::<ColorTable>(path);
+            }
+            "item.gbx" => {
+                test_read_extracted_file::<Item>(path);
+            }
+            "material.gbx" | "material.gbx_476" | "material.gbx_498" | "material.gbx_511"
+            | "material.gbx_520" | "material.gbx_531" | "material.gbx_537" | "material.gbx_542" => {
+                test_read_extracted_file::<Material>(path);
+            }
+            "prefab.gbx" => {
+                test_read_extracted_file::<Prefab>(path);
+            }
+            "texture.gbx" => {
+                test_read_extracted_file::<Texture>(path);
+            }
+            "vegettreemodel.gbx" => {
+                test_read_extracted_file::<VegetTreeModel>(path);
+            }
+            "light.gbx" => {}
+            "shape.gbx" => {}
+            "imagegen.gbx" => {}
+
+            "fxsys.gbx" => {}
+            "terrainmodifier.gbx" | "terrainmodifier .gbx" => {}
+            "dds" => {}
+            "tga" => {}
+            "gbx" => {}
+            "gameskin.gbx" => {}
+            "kinematicconstraint.gbx" => {}
+            _ => panic!("{extension}"),
+        }
+    }
 }

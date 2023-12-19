@@ -97,7 +97,7 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let material_custom = d.node::<MaterialCustom>()?;
+        let material_custom = d.inline_node::<MaterialCustom>()?;
         self.diffuse_texture_ref = material_custom.diffuse_texture_ref.clone();
 
         Ok(())

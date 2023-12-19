@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 lzo1x-1 = "0.1.0"
 serde_jsonrc = "0.1.0"
+
+[dev-dependencies]
+walkdir = "2.4.0"
