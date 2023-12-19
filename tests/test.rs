@@ -1,6 +1,10 @@
+#![feature(test)]
+
+extern crate test;
+
 use std::{
-    fs::{self, File},
-    io::{self, BufReader},
+    env, fs,
+    path::{Path, PathBuf},
 };
 
 use gamebox::{
@@ -10,119 +14,80 @@ use gamebox::{
     },
     read::{HeaderOptions, Readable},
 };
-use libtest_mimic::{Arguments, Trial};
+use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
-fn main() -> io::Result<()> {
-    let args = Arguments::from_args();
+fn main() {
+    let args = env::args().collect::<Vec<_>>();
 
     let mut tests = vec![];
 
-    test_read_extracted_folder::<ColorTable>(&mut tests, "tests/files/color_table")?;
-    test_read_folder::<Item>(&mut tests, "tests/files/item/custom")?;
-    test_read_extracted_folder::<Item>(&mut tests, "tests/files/item/game")?;
-    test_read_extracted_folder::<Material>(&mut tests, "tests/files/material")?;
-    test_read_extracted_folder::<Prefab>(&mut tests, "tests/files/prefab")?;
-    test_read_extracted_folder::<Texture>(&mut tests, "tests/files/texture")?;
-    test_read_extracted_folder::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model")?;
+    read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
+    read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
+    read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
+    read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
+    read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");
+    read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
+    read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
 
-    libtest_mimic::run(&args, tests).exit();
+    test_main(&args, tests, None);
 }
 
-fn test_read_folder<T: Readable>(tests: &mut Vec<Trial>, folder_path: &str) -> io::Result<()> {
-    for entry in fs::read_dir(folder_path)? {
-        let file_path = entry?.path();
+fn read_file_tests<T: Readable>(tests: &mut Vec<TestDescAndFn>, dir_path: impl AsRef<Path>) {
+    read_file_tests_inner(tests, dir_path, read_file::<T>)
+}
 
-        let file_name = file_path.file_name().unwrap().to_str().unwrap().to_owned();
+fn read_extracted_file_tests<T: Readable>(
+    tests: &mut Vec<TestDescAndFn>,
+    dir_path: impl AsRef<Path>,
+) {
+    read_file_tests_inner(tests, dir_path, read_extracted_file::<T>)
+}
 
-        let test = Trial::test(format!("read {file_name}"), || {
-            let file = File::open(file_path).unwrap();
-            let reader = BufReader::new(file);
-            gamebox::read::<T>(reader).unwrap();
+fn read_file_tests_inner(
+    tests: &mut Vec<TestDescAndFn>,
+    dir_path: impl AsRef<Path>,
+    read_fn: fn(PathBuf),
+) {
+    for entry in fs::read_dir(dir_path).unwrap() {
+        let entry = entry.unwrap();
 
-            Ok(())
-        });
+        let file_name = entry.file_name().to_str().unwrap().to_owned();
 
-        tests.push(test)
+        let test = TestDescAndFn {
+            desc: TestDesc {
+                name: TestName::DynTestName(file_name),
+                ignore: false,
+                ignore_message: None,
+                source_file: "",
+                start_line: 0,
+                start_col: 0,
+                end_line: 0,
+                end_col: 0,
+                should_panic: ShouldPanic::No,
+                compile_fail: false,
+                no_run: false,
+                test_type: TestType::IntegrationTest,
+            },
+            testfn: TestFn::DynTestFn(Box::new(move || {
+                read_fn(entry.path());
+
+                Ok(())
+            })),
+        };
+
+        tests.push(test);
     }
-
-    Ok(())
 }
 
-fn test_read_extracted_folder<T: Readable>(
-    tests: &mut Vec<Trial>,
-    folder_path: &str,
-) -> io::Result<()> {
-    for entry in fs::read_dir(folder_path)? {
-        let file_path = entry?.path();
-
-        let file_name = file_path.file_name().unwrap().to_str().unwrap().to_owned();
-
-        let test = Trial::test(format!("read {file_name}"), || {
-            let file = File::open(file_path).unwrap();
-            let reader = BufReader::new(file);
-
-            gamebox::read::Reader::new()
-                .read_header(HeaderOptions::Skip {
-                    assume_size_zero: true,
-                })
-                .read::<T>(reader)
-                .unwrap();
-
-            Ok(())
-        });
-
-        tests.push(test)
-    }
-
-    Ok(())
+fn read_file<T: Readable>(path: impl AsRef<Path>) {
+    gamebox::read_file::<T>(path).unwrap();
 }
 
-// #[test]
-// fn read_game_data() {
-//     for entry in WalkDir::new("C:/Users/Justin/Projects/tm-files") {
-//         let entry = entry.unwrap();
-
-//         if entry.file_type().is_dir() {
-//             continue;
-//         }
-
-//         let path = entry.path().to_str().unwrap();
-//         let (_, extension) = path.split_once('.').unwrap();
-
-//         println!("{path}");
-
-//         match extension.to_lowercase().as_str() {
-//             "colortable.gbx.json" => {
-//                 test_read_extracted_file::<ColorTable>(path);
-//             }
-//             "item.gbx" => {
-//                 test_read_extracted_file::<Item>(path);
-//             }
-//             "material.gbx" | "material.gbx_476" | "material.gbx_498" | "material.gbx_511"
-//             | "material.gbx_520" | "material.gbx_531" | "material.gbx_537" | "material.gbx_542" => {
-//                 test_read_extracted_file::<Material>(path);
-//             }
-//             "prefab.gbx" => {
-//                 test_read_extracted_file::<Prefab>(path);
-//             }
-//             "texture.gbx" => {
-//                 test_read_extracted_file::<Texture>(path);
-//             }
-//             "vegettreemodel.gbx" => {
-//                 test_read_extracted_file::<VegetTreeModel>(path);
-//             }
-//             "light.gbx" => {}
-//             "shape.gbx" => {}
-//             "imagegen.gbx" => {}
-
-//             "fxsys.gbx" => {}
-//             "terrainmodifier.gbx" | "terrainmodifier .gbx" => {}
-//             "dds" => {}
-//             "tga" => {}
-//             "gbx" => {}
-//             "gameskin.gbx" => {}
-//             "kinematicconstraint.gbx" => {}
-//             _ => panic!("{extension}"),
-//         }
-//     }
-// }
+fn read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
+    gamebox::read::Reader::new()
+        .read_header(HeaderOptions::Skip {
+            assume_size_zero: true,
+        })
+        .read_file::<T>(path)
+        .unwrap();
+}

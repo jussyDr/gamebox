@@ -10,7 +10,3 @@ harness = false
 [dependencies]
 lzo1x-1 = "0.1.0"
 serde_jsonrc = "0.1.0"
-
-[dev-dependencies]
-libtest-mimic = "0.6.1"
-walkdir = "2.4.0"
