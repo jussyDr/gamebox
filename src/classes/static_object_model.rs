@@ -1,3 +1,4 @@
+use core::num;
 use std::io::Read;
 
 use crate::{
@@ -29,9 +30,9 @@ impl ReadBody for StaticObjectModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 3
-        let solid_to_model = d.inline_node::<Solid2Model>()?.clone();
+        let _solid_to_model = d.inline_node::<Solid2Model>()?.clone();
         d.u8()?; // 1
-        d.u32()?; // 0xffffffff
+        d.inline_node_or_null::<Surface>()?;
         d.f32()?; // 1.0
         d.u32()?; // 0
         d.u32()?; // 0
@@ -112,26 +113,43 @@ impl Solid2Model {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 30
-        d.u32()?; // 0xffffffff
-        let layers = d.list(|d| {
+        let version = d.u32()?; // 30 | 34
+        d.null_id()?;
+        let _layers = d.list(|d| {
             let mesh_index = d.u32()?;
             let material_index = d.u32()?;
             d.u32()?; // 0xffffffff
             d.u32()?; // 1
 
+            if version >= 32 {
+                d.u32()?; // 0
+            }
+
             Ok((mesh_index, material_index))
         })?;
+
         d.u32()?; // 10
-        let meshes = d.list(|d| {
-            let visual_indexed_triangles = d.inline_node::<VisualIndexedTriangles>()?;
+        let _meshes = d.list(|d| {
+            let _visual_indexed_triangles = d.inline_node::<VisualIndexedTriangles>()?;
 
             Ok(())
         })?;
         d.u32()?; // 0
         let num_materials = d.u32()?; // 2
+        if num_materials == 0 {
+            d.u32()?; // 10
+            d.list(|d| {
+                d.node_ref()?;
+
+                Ok(())
+            })?;
+        }
         d.u32()?; // 0xffffffff
-        d.u32()?; // 0
+        d.list(|d| {
+            d.f32()?;
+
+            Ok(())
+        })?;
         d.u32()?; // 1
         d.u32()?; // 1
         d.u32()?; // 1
@@ -152,10 +170,38 @@ impl Solid2Model {
         d.u32()?; // 0
         d.u32()?; // 0xd05ebb50
         d.u32()?; // 0x01d74f56
+
         d.u32()?; // 0
         d.string()?; // "Stadium\Media\Material\"
         d.u32()?; // 0
-        d.u32()?; // 0
+        d.list(|d| {
+            d.id()?; // "?Screen16x9SpotSmall"
+            d.u32()?; // 1
+            d.u32()?; // 31
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+            d.u32()?; // 0xffffffff
+            d.u32()?;
+            d.u32()?;
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+
+            Ok(())
+        })?;
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
@@ -164,7 +210,7 @@ impl Solid2Model {
         d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
         d.u32()?; // 1
         d.u32()?; // 0
-        let materials = d.repeat(num_materials as usize, |d| {
+        let _materials = d.repeat(num_materials as usize, |d| {
             let material = d.inline_node::<MaterialUserInst>()?.clone();
             d.u32()?; // 0
 
@@ -277,6 +323,47 @@ impl MaterialUserInst {
     fn read_chunk_090fd002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct Surface;
+
+impl Class for Surface {
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x00c;
+}
+
+impl ReadBody for Surface {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for Surface {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x0900C003,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0900c003(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl Surface {
+    fn read_chunk_0900c003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 4
+        d.u32()?; // 2
+        d.u32()?; // 7
+        d.u32()?; // 7
+
+        println!("{:02X?}", d.bytes(48)?);
 
         Ok(())
     }

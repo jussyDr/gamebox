@@ -1,10 +1,13 @@
 use std::io::{Read, Seek};
 
-use crate::read::{
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    read_gbx,
-    readable::{HeaderChunkEntry, HeaderChunks, Sealed},
-    BodyOptions, HeaderOptions, ReadBody, Result,
+use crate::{
+    classes::static_object_model::StaticObjectModel,
+    read::{
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
+        read_gbx,
+        readable::{HeaderChunkEntry, HeaderChunks, Sealed},
+        BodyOptions, HeaderOptions, ReadBody, Result,
+    },
 };
 
 use super::Prefab;
@@ -37,7 +40,7 @@ impl ReadBody for Prefab {
         d.u32()?;
         d.list(|d| {
             d.u32()?; // 0
-            d.u32()?; // 1
+            d.node::<StaticObjectModel>()?;
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0

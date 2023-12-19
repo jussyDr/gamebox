@@ -283,6 +283,25 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
 
 impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     /// Deserialize an identifier.
+    pub fn null_id(&mut self) -> Result<()> {
+        if !self.id_state.borrow().seen_id {
+            if self.u32()? != 3 {
+                todo!()
+            }
+
+            self.id_state.borrow_mut().seen_id = true;
+        }
+
+        let index = self.u32()?;
+
+        if index != 0xffffffff {
+            todo!()
+        }
+
+        Ok(())
+    }
+
+    /// Deserialize an identifier.
     pub fn id(&mut self) -> Result<String> {
         match self.id_or_null()? {
             None => todo!(),
