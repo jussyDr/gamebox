@@ -10,7 +10,9 @@ use std::{
 
 use crate::{class::Class, Rgb};
 
-use super::{collector::Collector, visual_indexed_triangles::Indices};
+use super::{
+    collector::Collector, static_object_model::Solid2Model, visual_indexed_triangles::Indices,
+};
 
 /// Node type corresponding to GameBox files with the extension `Item.Gbx`.
 #[derive(Default)]
@@ -99,24 +101,4 @@ struct ItemEntityModel {
 impl Class for ItemEntityModel {
     const ENGINE: u8 = 0x2e;
     const CLASS: u16 = 0x027;
-}
-
-#[derive(Default, Clone)]
-struct Solid2Model {
-    layers: Vec<(Mesh, ItemMaterial)>,
-}
-
-impl Class for Solid2Model {
-    const ENGINE: u8 = 0x09;
-    const CLASS: u16 = 0x0bb;
-}
-
-#[derive(Default, Clone)]
-struct MaterialUserInst {
-    material: ItemMaterial,
-}
-
-impl Class for MaterialUserInst {
-    const ENGINE: u8 = 0x09;
-    const CLASS: u16 = 0x0fd;
 }

@@ -5,7 +5,10 @@ use std::{
 
 use crate::{
     class::Class,
-    classes::{collector::Collector, visual_indexed_triangles::VisualIndexedTriangles},
+    classes::{
+        collector::Collector,
+        static_object_model::{MaterialUserInst, StaticObjectModel},
+    },
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_body_chunks, read_gbx,
@@ -17,9 +20,7 @@ use crate::{
     read_compact_index, Rgb,
 };
 
-use super::{
-    Item, ItemEntityModel, ItemMaterial, ItemMaterialCustom, MaterialUserInst, Mesh, Solid2Model,
-};
+use super::{Item, ItemEntityModel, ItemMaterial, ItemMaterialCustom};
 
 impl Sealed for Item {
     fn read(
@@ -410,6 +411,15 @@ impl Default for ItemPlacementParam {
     }
 }
 
+impl ReadBody for ItemPlacementParam {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
 impl BodyChunks for ItemPlacementParam {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
@@ -566,49 +576,7 @@ impl ItemEntityModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
-        self.solid_to_model = d
-            .flat_inline_node(0x09159000, |d| {
-                d.u32()?; // 3
-                let solid_to_model = d.inline_node::<Solid2Model>()?.clone();
-                d.u8()?; // 1
-                d.u32()?; // 0xffffffff
-                d.f32()?; // 1.0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.f32()?; // 1.0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.f32()?; // 1.0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0xffffffff
-                d.u32()?; // 0
-                d.u32()?; // 0xffffffff
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.f32()?; // 1.0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.f32()?; // 1.0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.f32()?; // 1.0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-                d.u32()?; // 0
-
-                Ok(solid_to_model)
-            })?
-            .clone();
+        d.inline_node::<StaticObjectModel>()?;
 
         Ok(())
     }
@@ -624,6 +592,15 @@ impl Class for ItemEntityModelEdition {
 impl Default for ItemEntityModelEdition {
     fn default() -> Self {
         Self
+    }
+}
+
+impl ReadBody for ItemEntityModelEdition {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
     }
 }
 
@@ -709,6 +686,15 @@ impl Class for Crystal {
 impl Default for Crystal {
     fn default() -> Self {
         Self
+    }
+}
+
+impl ReadBody for Crystal {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
     }
 }
 
@@ -882,206 +868,6 @@ impl Crystal {
 
             Ok(())
         })?;
-
-        Ok(())
-    }
-}
-
-impl BodyChunks for MaterialUserInst {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [
-            BodyChunkEntry {
-                id: 0x090fd000,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd000(n, d)),
-            },
-            BodyChunkEntry {
-                id: 0x090fd001,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd001(n, d)),
-            },
-            BodyChunkEntry {
-                id: 0x090fd002,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd002(n, d)),
-            },
-        ]
-        .into_iter()
-    }
-}
-
-impl MaterialUserInst {
-    fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
-        d.u32()?; // 11
-        let uses_game_material = d.bool8()?;
-        d.id_or_null()?; // "TM_wiuehrfsd"
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0
-        d.u16()?; // 4 | 22
-        if uses_game_material {
-            let material_ref = PathBuf::from(d.string()?);
-            self.material = ItemMaterial::Game { material_ref };
-        } else {
-            let id = d.id()?;
-            self.material = ItemMaterial::Custom(ItemMaterialCustom {
-                id,
-                color: Rgb { r: 0, g: 0, b: 0 },
-            });
-        }
-        d.list(|d| {
-            d.id()?; // "TargetColor"
-            d.id()?; // "Real"
-            d.u32()?; // 3
-
-            Ok(())
-        })?;
-        let color = d.list(|d| d.u32())?;
-        if let ItemMaterial::Custom(ref mut material) = self.material {
-            material.color = Rgb {
-                r: color[0] as u8,
-                g: color[1] as u8,
-                b: color[2] as u8,
-            };
-        }
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0xffffffff
-
-        Ok(())
-    }
-
-    fn read_chunk_090fd001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 5
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.f32()?; // 1.0
-        d.u32()?; // 0
-        d.u32()?; // 0
-
-        Ok(())
-    }
-
-    fn read_chunk_090fd002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
-
-        Ok(())
-    }
-}
-
-impl BodyChunks for Solid2Model {
-    #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [
-            BodyChunkEntry {
-                id: 0x090bb000,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090bb000(n, d)),
-            },
-            BodyChunkEntry {
-                id: 0x090bb002,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_090bb002(n, d)),
-            },
-        ]
-        .into_iter()
-    }
-}
-
-impl Solid2Model {
-    fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
-        d.u32()?; // 30
-        d.u32()?; // 0xffffffff
-        let layers = d.list(|d| {
-            let mesh_index = d.u32()?;
-            let material_index = d.u32()?;
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 1
-
-            Ok((mesh_index, material_index))
-        })?;
-        d.u32()?; // 10
-        let meshes = d.list(|d| {
-            let visual_indexed_triangles = d.inline_node::<VisualIndexedTriangles>()?;
-
-            Ok(Mesh {
-                positions: visual_indexed_triangles.vertices.positions.clone(),
-                texcoords: visual_indexed_triangles.vertices.texcoords.clone(),
-                indices: visual_indexed_triangles.indices.clone(),
-            })
-        })?;
-        d.u32()?; // 0
-        let num_materials = d.u32()?; // 2
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.f32()?; // 73.47571
-        d.u32()?; // 1
-        d.f32()?; // 0.011813663
-        d.f32()?; // 0.12343697
-        d.f32()?; // 0.99153054
-        d.f32()?; // 0.98973596
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0xd05ebb50
-        d.u32()?; // 0x01d74f56
-        d.u32()?; // 0
-        d.string()?; // "Stadium\Media\Material\"
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 1
-        d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
-        d.u32()?; // 1
-        d.u32()?; // 0
-        let materials = d.repeat(num_materials as usize, |d| {
-            let material = d.inline_node::<MaterialUserInst>()?.clone();
-            d.u32()?; // 0
-
-            Ok(material.material.clone())
-        })?;
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0xffffffff
-        d.f32()?; // 1.0
-        d.f32()?; // 1.0
-        d.u32()?; // 0xffffffff
-
-        self.layers = layers
-            .into_iter()
-            .map(|(mesh_index, material_index)| {
-                (
-                    meshes[mesh_index as usize].clone(),
-                    materials[material_index as usize].clone(),
-                )
-            })
-            .collect();
-
-        Ok(())
-    }
-
-    fn read_chunk_090bb002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
 
         Ok(())
     }

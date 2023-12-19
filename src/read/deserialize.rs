@@ -12,6 +12,8 @@ use crate::{
     read::{read_body_chunks, readable::BodyChunks, Result},
 };
 
+use super::ReadBody;
+
 /// State of identifiers read in the past.
 #[derive(Default)]
 pub struct IdState {
@@ -401,7 +403,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     /// An inline node of type `T`.
-    pub fn inline_node<T: 'static + Default + Class + BodyChunks>(&mut self) -> Result<&T> {
+    pub fn inline_node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<&T> {
         match self.inline_node_or_null()? {
             Some(node) => Ok(node),
             _ => todo!(),
@@ -409,7 +411,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Either an inline node of type `T` or null.
-    pub fn inline_node_or_null<T: 'static + Default + Class + BodyChunks>(
+    pub fn inline_node_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<&T>> {
         match self.node_or_null()? {
@@ -420,7 +422,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Either an inline node of type `T` or a node reference.
-    pub fn node<T: 'static + Default + Class + BodyChunks>(&mut self) -> Result<Node<&T>> {
+    pub fn node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Node<&T>> {
         match self.node_or_null()? {
             None => todo!(),
             Some(node) => Ok(node),
@@ -428,7 +430,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Either an inline node of type `T`, a node reference, or null.
-    pub fn node_or_null<T: 'static + Default + Class + BodyChunks>(
+    pub fn node_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<Node<&T>>> {
         let index = self.u32()?;
@@ -458,7 +460,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
 
         let mut node = T::default();
-        read_body_chunks(&mut node, self)?;
+        T::read_body(&mut node, self)?;
 
         self.node_state.borrow_mut().nodes[index as usize - 1] = Some(Node::Inline(Box::new(node)));
 

@@ -4,12 +4,21 @@ use crate::read::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read_body_chunks,
     readable::{BodyChunkEntry, BodyChunkReadFn, BodyChunks},
-    Result,
+    ReadBody, Result,
 };
 
 use super::{
     IndexBuffer, Indices, VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
 };
+
+impl ReadBody for VisualIndexedTriangles {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
 
 impl BodyChunks for VisualIndexedTriangles {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
@@ -186,6 +195,15 @@ impl IndexBuffer {
         })?);
 
         Ok(())
+    }
+}
+
+impl ReadBody for VertexStream {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
     }
 }
 

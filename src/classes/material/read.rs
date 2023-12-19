@@ -175,6 +175,15 @@ impl Material {
     }
 }
 
+impl ReadBody for MaterialCustom {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
 impl BodyChunks for MaterialCustom {
     #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(

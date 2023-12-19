@@ -30,7 +30,7 @@ fn main() {
     read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
     read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
 
-    read_extracted_file_tests_recursive(&mut tests, "C:/Users/Justin/Projects/tm-files");
+    // read_extracted_file_tests_recursive(&mut tests, "C:/Users/Justin/Projects/tm-files");
 
     test_main(&args, tests, None);
 }

@@ -38,6 +38,7 @@ pub mod classes {
     pub mod item;
     pub mod material;
     pub mod prefab;
+    pub mod static_object_model;
     pub mod texture;
     pub mod veget_tree_model;
     pub mod visual_indexed_triangles;

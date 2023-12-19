@@ -1,0 +1,283 @@
+use std::io::Read;
+
+use crate::{
+    class::Class,
+    read::{
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
+        read_body_chunks,
+        readable::{BodyChunkEntry, BodyChunkReadFn, BodyChunks},
+        ReadBody, Result,
+    },
+};
+
+use super::{
+    item::{ItemMaterial, Mesh},
+    visual_indexed_triangles::VisualIndexedTriangles,
+};
+
+#[derive(Default)]
+pub struct StaticObjectModel;
+
+impl Class for StaticObjectModel {
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x159;
+}
+
+impl ReadBody for StaticObjectModel {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 3
+        let solid_to_model = d.inline_node::<Solid2Model>()?.clone();
+        d.u8()?; // 1
+        d.u32()?; // 0xffffffff
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct Solid2Model {
+    layers: Vec<(Mesh, ItemMaterial)>,
+}
+
+impl Class for Solid2Model {
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x0bb;
+}
+
+impl ReadBody for Solid2Model {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for Solid2Model {
+    #[allow(clippy::redundant_closure)]
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
+            BodyChunkEntry {
+                id: 0x090bb000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090bb000(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x090bb002,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_090bb002(n, d)),
+            },
+        ]
+        .into_iter()
+    }
+}
+
+impl Solid2Model {
+    fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 30
+        d.u32()?; // 0xffffffff
+        let layers = d.list(|d| {
+            let mesh_index = d.u32()?;
+            let material_index = d.u32()?;
+            d.u32()?; // 0xffffffff
+            d.u32()?; // 1
+
+            Ok((mesh_index, material_index))
+        })?;
+        d.u32()?; // 10
+        let meshes = d.list(|d| {
+            let visual_indexed_triangles = d.inline_node::<VisualIndexedTriangles>()?;
+
+            Ok(())
+        })?;
+        d.u32()?; // 0
+        let num_materials = d.u32()?; // 2
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.u32()?; // 1
+        d.f32()?; // 73.47571
+        d.u32()?; // 1
+        d.f32()?; // 0.011813663
+        d.f32()?; // 0.12343697
+        d.f32()?; // 0.99153054
+        d.f32()?; // 0.98973596
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0xffff7f7f
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xd05ebb50
+        d.u32()?; // 0x01d74f56
+        d.u32()?; // 0
+        d.string()?; // "Stadium\Media\Material\"
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 1
+        d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
+        d.u32()?; // 1
+        d.u32()?; // 0
+        let materials = d.repeat(num_materials as usize, |d| {
+            let material = d.inline_node::<MaterialUserInst>()?.clone();
+            d.u32()?; // 0
+
+            Ok(material.material.clone())
+        })?;
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.f32()?; // 1.0
+        d.f32()?; // 1.0
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_090bb002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct MaterialUserInst {
+    material: ItemMaterial,
+}
+
+impl Class for MaterialUserInst {
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x0fd;
+}
+
+impl ReadBody for MaterialUserInst {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MaterialUserInst {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
+            BodyChunkEntry {
+                id: 0x090fd000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd000(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x090fd001,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd001(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x090fd002,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd002(n, d)),
+            },
+        ]
+        .into_iter()
+    }
+}
+
+impl MaterialUserInst {
+    fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 11
+        let uses_game_material = d.bool8()?;
+        d.id_or_null()?; // "TM_wiuehrfsd"
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u16()?; // 4 | 22
+        if uses_game_material {
+            let _material_ref = d.string()?;
+        } else {
+            let _id = d.id()?;
+        }
+        d.list(|d| {
+            d.id()?; // "TargetColor"
+            d.id()?; // "Real"
+            d.u32()?; // 3
+
+            Ok(())
+        })?;
+        let _color = d.list(|d| d.u32())?;
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_090fd001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 5
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_090fd002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+}
