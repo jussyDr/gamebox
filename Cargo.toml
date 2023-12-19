@@ -3,10 +3,14 @@ name = "gamebox"
 version = "0.1.0"
 edition = "2021"
 
+[[test]]
+name = "test"
+harness = false
+
 [dependencies]
 lzo1x-1 = "0.1.0"
 serde_jsonrc = "0.1.0"
 
 [dev-dependencies]
-test-generator = "0.3.1"
+libtest-mimic = "0.6.1"
 walkdir = "2.4.0"
