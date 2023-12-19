@@ -338,7 +338,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
-    pub fn flat_node<T>(
+    pub fn flat_inline_node<T>(
         &mut self,
         class_id: u32,
         read_fn: impl Fn(&mut Self) -> Result<T>,
@@ -360,6 +360,42 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let node = read_fn(self)?;
 
         Ok(node)
+    }
+
+    pub fn flat_node<T>(
+        &mut self,
+        class_id: u32,
+        read_fn: impl Fn(&mut Self) -> Result<T>,
+    ) -> Result<Node<()>> {
+        let index = self.u32()?;
+
+        if index == 0xFFFFFFFF {
+            todo!()
+        }
+
+        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
+            todo!()
+        }
+
+        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
+            let r = self.node_state.borrow().nodes[index as usize - 1]
+                .as_ref()
+                .unwrap();
+
+            match r {
+                Node::Inline(q) => return Ok(Node::Inline(())),
+                Node::Ref(q) => return Ok(Node::Ref(q.to_path_buf())),
+                _ => todo!(),
+            }
+        }
+
+        if self.u32()? != class_id {
+            todo!()
+        }
+
+        let node = read_fn(self)?;
+
+        Ok(Node::Inline(()))
     }
 }
 

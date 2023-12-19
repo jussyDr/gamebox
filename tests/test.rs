@@ -7,31 +7,22 @@ use gamebox::{
     },
     read::{HeaderOptions, Readable},
 };
+use test_generator::test_resources;
 use walkdir::WalkDir;
 
-#[test]
-fn read_item() {
-    test_read_file::<Item>("tests/files/big_palm_tree_low.Item.Gbx");
+#[test_resources("tests/files/item/custom/*")]
+fn read_item_custom(path: &str) {
+    test_read_file::<Item>(path);
 }
 
-#[test]
-fn read_item_2() {
-    test_read_extracted_file::<Item>("tests/files/Fall.Item.Gbx");
+#[test_resources("tests/files/item/game/*")]
+fn read_item_game(path: &str) {
+    test_read_extracted_file::<Item>(path);
 }
 
-#[test]
-fn read_item_3() {
-    test_read_extracted_file::<Item>("tests/files/GateCheckpointCenter16m.Item.Gbx");
-}
-
-#[test]
-fn read_material() {
-    test_read_extracted_file::<Material>("tests/files/TrackWallClips.Material.Gbx");
-}
-
-#[test]
-fn read_material_2() {
-    test_read_extracted_file::<Material>("tests/files/PlatformTech.Material.Gbx");
+#[test_resources("tests/files/material/*")]
+fn read_material(path: &str) {
+    test_read_extracted_file::<Material>(path);
 }
 
 #[test]

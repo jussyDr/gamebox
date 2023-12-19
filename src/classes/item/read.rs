@@ -18,8 +18,7 @@ use crate::{
 };
 
 use super::{
-    Indices, Item, ItemEntityModel, ItemMaterial, ItemMaterialCustom, MaterialUserInst, Mesh,
-    Solid2Model,
+    Item, ItemEntityModel, ItemMaterial, ItemMaterialCustom, MaterialUserInst, Mesh, Solid2Model,
 };
 
 impl Sealed for Item {
@@ -506,14 +505,31 @@ impl ItemPlacementParam {
         d.flat_node(0x09187000, |d| {
             d.u32()?; // 10
             d.id_or_null()?; // "1x1"
-            d.u32()?; // 0
-            d.u32()?; // 0
+            d.list(|d| {
+                d.id()?;
+
+                Ok(())
+            })?;
+            d.u32()?; // 0 | 1
             d.u32()?; // 0 | 1
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0
             d.f32()?; // 1.0
-            d.u32()?; // 0
+            d.list(|d| {
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+
+                Ok(())
+            })?;
             d.list(|d| {
                 d.u32()?;
 
@@ -545,7 +561,7 @@ impl ItemEntityModel {
     ) -> Result<()> {
         d.u32()?; // 4
         self.solid_to_model = d
-            .flat_node(0x09159000, |d| {
+            .flat_inline_node(0x09159000, |d| {
                 d.u32()?; // 3
                 let solid_to_model = d.inline_node::<Solid2Model>()?.clone();
                 d.u8()?; // 1
