@@ -327,7 +327,10 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e00201f<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_2e00201f<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         let version = d.u32()?; // 11 | 12
         d.u32()?; // 3
         d.u32()?; // 0
@@ -335,7 +338,7 @@ impl Item {
         d.u8()?; // 0
 
         if version >= 12 {
-            d.u32()?; // 0xffffffff
+            d.inline_node_or_null::<MediaClipList>()?;
             d.u32()?; // 0xffffffff
         }
 
@@ -523,8 +526,11 @@ impl ItemPlacementParam {
                 d.u32()?;
                 d.u32()?;
                 d.u32()?;
-                d.u32()?;
-                d.u32()?;
+                d.list(|d| {
+                    d.id()?;
+
+                    Ok(())
+                })?;
                 d.u32()?;
                 d.u32()?;
 
@@ -1076,6 +1082,47 @@ impl Solid2Model {
     fn read_chunk_090bb002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
+
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct MediaClipList;
+
+impl Class for MediaClipList {
+    const ENGINE: u8 = 0x09;
+    const CLASS: u16 = 0x189;
+}
+
+impl ReadBody for MediaClipList {
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaClipList {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x09189000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0x09189000(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaClipList {
+    fn read_chunk_0x09189000<R: Read, I, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 1
+        d.u32()?; // 6
 
         Ok(())
     }
