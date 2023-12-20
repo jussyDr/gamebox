@@ -6,7 +6,7 @@ use crate::{
         writable::Sealed,
         Result, Writable,
     },
-    MAGIC,
+    FILE_SIGNATURE,
 };
 
 use super::Item;
@@ -380,7 +380,7 @@ pub fn test(writer: impl Write) -> Result<()> {
 
     let mut s = Serializer::new(writer, (), ());
 
-    s.byte_array(MAGIC)?;
+    s.byte_array(FILE_SIGNATURE)?;
     s.u16(6)?;
     s.u8(b'B')?;
     s.u8(b'U')?;

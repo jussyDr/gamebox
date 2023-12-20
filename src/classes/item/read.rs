@@ -895,17 +895,14 @@ impl BodyChunks for MediaClipList {
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09189000,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0x09189000(n, d)),
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09189000(n, d)),
         }]
         .into_iter()
     }
 }
 
 impl MediaClipList {
-    fn read_chunk_0x09189000<R: Read, I, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+    fn read_chunk_09189000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 1
         d.u32()?; // 6

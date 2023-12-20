@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{write::serialize::NodeState, MAGIC};
+use crate::{write::serialize::NodeState, FILE_SIGNATURE};
 
 use self::serialize::Serializer;
 
@@ -144,7 +144,7 @@ fn write_node<T: Writable>(node: &T, writer: impl Write, compress_body: bool) ->
     let user_data = write_header(node);
     let (num_nodes, body) = write_body(node);
 
-    s.byte_array(MAGIC)?;
+    s.byte_array(FILE_SIGNATURE)?;
     s.u16(6)?;
     s.u8(b'B')?;
     s.u8(b'U')?;

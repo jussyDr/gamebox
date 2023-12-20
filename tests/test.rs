@@ -9,7 +9,7 @@ use std::{
 
 use gamebox::{
     classes::{
-        color_table::ColorTable, material::Material, prefab::Prefab, texture::Texture,
+        color_table::ColorTable, map::Map, material::Material, prefab::Prefab, texture::Texture,
         veget_tree_model::VegetTreeModel, Item,
     },
     read::{HeaderOptions, Readable},
@@ -25,6 +25,7 @@ fn main() {
     read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
     read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
     read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
+    read_file_tests::<Map>(&mut tests, "tests/files/map");
     read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
     read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");
     read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");

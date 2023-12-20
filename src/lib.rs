@@ -36,6 +36,7 @@ pub mod classes {
     pub mod collector;
     pub mod color_table;
     pub mod item;
+    pub mod map;
     pub mod material;
     pub mod prefab;
     pub mod static_object_model;
@@ -56,7 +57,7 @@ use std::io::Read;
 
 use read::{deserialize::Deserializer, Result};
 
-const MAGIC: [u8; 3] = [b'G', b'B', b'X'];
+const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 
 const SKIP: u32 = 0x534b4950;
 

@@ -4,13 +4,13 @@ pub(crate) mod deserialize;
 
 use std::{
     fs::File,
-    io::{self, BufReader, Cursor, Read, Seek},
+    io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
 };
 
 use serde_jsonrc::Value;
 
-use crate::{class::Class, MAGIC, NODE_END, SKIP};
+use crate::{class::Class, FILE_SIGNATURE, NODE_END, SKIP};
 
 use self::{
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
@@ -18,18 +18,7 @@ use self::{
 };
 
 /// Error that occured while reading a GameBox node.
-#[derive(Debug)]
-pub enum Error {
-    Generic(()),
-    /// An I/O error.
-    Io(io::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(io_err: io::Error) -> Self {
-        Self::Io(io_err)
-    }
-}
+pub type Error = Box<dyn std::error::Error>;
 
 /// Result type used when reading GameBox nodes.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -179,36 +168,36 @@ pub(crate) fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
 
     let mut d = Deserializer::new(reader, (), ());
 
-    if d.byte_array()? != MAGIC {
-        return Err(Error::Generic(()));
+    if d.byte_array()? != FILE_SIGNATURE {
+        return Err("invalid file signature".into());
     }
 
     if d.u16()? != 6 {
-        return Err(Error::Generic(()));
+        return Err("unsupported gbx version".into());
     }
 
     if d.u8()? != b'B' {
-        return Err(Error::Generic(()));
+        return Err("unsupported gbx format".into());
     }
 
     if d.u8()? != b'U' {
-        return Err(Error::Generic(()));
+        return Err("unsupported reference table compression".into());
     }
 
     let is_body_compressed = match d.u8()? {
         b'C' => true,
         b'U' => false,
-        _ => return Err(Error::Generic(())),
+        _ => return Err("invalid body compression".into()),
     };
 
     if d.u8()? != b'R' {
-        return Err(Error::Generic(()));
+        return Err("invalid unknown byte".into());
     }
 
     let class_id = d.u32()?;
 
     if class_id != T::class_id() {
-        return Err(Error::Generic(()));
+        return Err("class id does not match".into());
     }
 
     let user_data_size = d.u32()?;
@@ -324,7 +313,7 @@ fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
 
             let header_chunk_entry = header_chunk_entries
                 .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
-                .ok_or(Error::Generic(()))?;
+                .ok_or("unknown header chunk")?;
 
             (header_chunk_entry.read_fn)(node, &mut d)?;
 
@@ -373,7 +362,7 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeSta
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
-            .ok_or(Error::Generic(()))?;
+            .ok_or("unknown body chunk")?;
 
         match body_chunk_entry.read_fn {
             BodyChunkReadFn::Normal(read_fn) => {
@@ -381,7 +370,7 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeSta
             }
             BodyChunkReadFn::Skippable(read_fn) => {
                 if d.u32()? != SKIP {
-                    return Err(Error::Generic(()));
+                    return Err("expected skippable chunk".into());
                 }
 
                 let chunk_size = d.u32()?;
