@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-use super::Map;
+use super::{Block, Map};
 
 impl Sealed for Map {
     fn read(
@@ -225,6 +225,46 @@ impl BodyChunks for Map {
                 id: 0x0304305f,
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_0304305f(n, d)),
             },
+            BodyChunkEntry {
+                id: 0x03043060,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043060(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043061,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043061(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043062,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043062(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043063,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043063(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043064,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043064(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043065,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043065(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043067,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043067(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043068,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043068(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03043069,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_03043069(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x0304306b,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_0304306b(n, d)),
+            },
         ]
         .into_iter()
     }
@@ -371,7 +411,7 @@ impl Map {
         d.u32()?; // 120
         d.u32()?; // 0
         d.u32()?; // 6
-        d.list(|d| {
+        self.blocks = d.list(|d| {
             d.id()?;
             d.u32()?;
             let flags = d.u32()?;
@@ -385,7 +425,9 @@ impl Map {
                 d.inline_node::<WaypointSpecialProperty>()?;
             }
 
-            Ok(())
+            let is_free = flags & 0x20000000 != 0;
+
+            Ok(Block { is_free })
         })?;
 
         Ok(())
@@ -490,7 +532,7 @@ impl Map {
             let mut d = d.take(size as u64, IdState::default(), NodeState::new(0));
 
             d.u32()?; // 10
-            d.list(|d| {
+            self.anchored_objects = d.list(|d| {
                 d.inline_node_no_index::<AnchoredObject>()?;
 
                 Ok(())
@@ -579,12 +621,14 @@ impl Map {
     ) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 6
-        d.list(|d| {
+        self.baked_blocks = d.list(|d| {
             d.id()?;
             d.u32()?;
-            d.u32()?;
+            let flags = d.u32()?;
 
-            Ok(())
+            let is_free = flags & 0x20000000 != 0;
+
+            Ok(Block { is_free })
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -773,8 +817,137 @@ impl Map {
 
     fn read_chunk_0304305f<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
+        for block in &self.blocks {
+            if block.is_free {
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+            }
+        }
+        for block in &self.baked_blocks {
+            if block.is_free {
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+            }
+        }
 
-        println!("{:02X?}", d.bytes(144)?);
+        Ok(())
+    }
+
+    fn read_chunk_03043060<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_03043061<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_03043062<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        for _ in &self.blocks {
+            d.u8()?;
+        }
+        for _ in &self.baked_blocks {
+            d.u8()?;
+        }
+        for _ in &self.anchored_objects {
+            d.u8()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_03043063<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        for _ in &self.anchored_objects {
+            d.u8()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_03043064<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 4
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_03043065<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        for _ in &self.anchored_objects {
+            d.u8()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_03043067<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 4
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_03043068<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        for _ in &self.blocks {
+            d.u8()?;
+        }
+        for _ in &self.baked_blocks {
+            d.u8()?;
+        }
+        for _ in &self.anchored_objects {
+            d.u8()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_03043069<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        for _ in &self.blocks {
+            d.u32()?;
+        }
+        for _ in &self.anchored_objects {
+            d.u32()?;
+        }
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn read_chunk_0304306b<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?;
 
         Ok(())
     }
