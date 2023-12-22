@@ -1,7 +1,7 @@
 use std::io::{Read, Seek};
 
 use crate::read::{
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    deserialize::{Deserializer, IdStateRef, NodeStateMut},
     read_body_chunks, read_gbx,
     readable::{
         BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
@@ -30,7 +30,7 @@ impl HeaderChunks for Material {
 }
 
 impl ReadBody for Material {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -40,7 +40,7 @@ impl ReadBody for Material {
 
 impl BodyChunks for Material {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -95,7 +95,7 @@ impl Material {
         Ok(())
     }
 
-    fn read_chunk_09079007<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_09079007<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -178,7 +178,7 @@ impl Material {
 }
 
 impl ReadBody for MaterialCustom {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -188,7 +188,7 @@ impl ReadBody for MaterialCustom {
 
 impl BodyChunks for MaterialCustom {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -243,7 +243,7 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a00a<R: Read, I: IdStateMut, N>(
+    fn read_chunk_0903a00a<'a, R: Read, I: IdStateRef<'a>, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -262,7 +262,7 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a00c<R: Read, I: IdStateMut, N>(
+    fn read_chunk_0903a00c<'a, R: Read, I: IdStateRef<'a>, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -298,7 +298,7 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a013<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0903a013<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -310,7 +310,7 @@ impl MaterialCustom {
             d.u32()?; // 4
             d.u32()?; // 4
 
-            match texture_kind.as_str() {
+            match texture_kind {
                 "BaseColor" => self.diffuse_texture_ref = texture_ref,
                 "BaseColorHueMask" => {}
                 "Normal" => {}

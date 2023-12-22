@@ -1,50 +1,46 @@
 use std::{
     any::Any,
-    borrow::BorrowMut,
+    cell::Cell,
     cmp,
     io::{self, Read, Seek, SeekFrom},
     iter,
     path::{Path, PathBuf},
 };
 
-use crate::{
-    class::Class,
-    read::{read_body_chunks, readable::BodyChunks, Result},
-};
+use elsa::FrozenVec;
+
+use crate::{class::Class, read::Result};
 
 use super::ReadBody;
 
 /// State of identifiers read in the past.
-#[derive(Default)]
 pub struct IdState {
-    seen_id: bool,
-    ids: Vec<String>,
+    seen_id: Cell<bool>,
+    ids: FrozenVec<String>,
 }
 
-/// Trait which should be used as a generic trait bound in
-/// functions that need to access the `IdState`.
-pub trait IdStateMut {
-    fn borrow(&self) -> &IdState;
-    fn borrow_mut(&mut self) -> &mut IdState;
+impl IdState {
+    pub fn new() -> Self {
+        Self {
+            seen_id: Cell::new(false),
+            ids: FrozenVec::new(),
+        }
+    }
 }
 
-impl IdStateMut for IdState {
-    fn borrow(&self) -> &IdState {
+pub trait IdStateRef<'a> {
+    fn borrow(&self) -> &'a IdState;
+}
+
+impl<'a> IdStateRef<'a> for &'a IdState {
+    fn borrow(&self) -> &'a IdState {
         self
     }
-
-    fn borrow_mut(&mut self) -> &mut IdState {
-        self
-    }
 }
 
-impl<T: IdStateMut> IdStateMut for &mut T {
-    fn borrow(&self) -> &IdState {
-        (**self).borrow()
-    }
-
-    fn borrow_mut(&mut self) -> &mut IdState {
-        (**self).borrow_mut()
+impl<'a, T: IdStateRef<'a>> IdStateRef<'a> for &T {
+    fn borrow(&self) -> &'a IdState {
+        (*self).borrow()
     }
 }
 
@@ -251,13 +247,13 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Deserializer::new(inner, id_state, node_state)
     }
 
-    pub fn take2(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
+    pub fn take2(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &I, &mut N> {
         let inner = Take {
             reader: &mut self.reader,
             limit,
         };
 
-        Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
+        Deserializer::new(inner, &self.id_state, &mut self.node_state)
     }
 
     /// Check if we are at the end of the reader.
@@ -287,15 +283,15 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
     }
 }
 
-impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
+impl<'a, R: Read, I: IdStateRef<'a>, N> Deserializer<R, I, N> {
     /// Deserialize an identifier.
     pub fn null_id(&mut self) -> Result<()> {
-        if !self.id_state.borrow().seen_id {
+        if !self.id_state.borrow().seen_id.get() {
             if self.u32()? != 3 {
                 todo!()
             }
 
-            self.id_state.borrow_mut().seen_id = true;
+            self.id_state.borrow().seen_id.set(true);
         }
 
         let index = self.u32()?;
@@ -308,7 +304,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     }
 
     /// Deserialize an identifier.
-    pub fn id(&mut self) -> Result<String> {
+    pub fn id(&mut self) -> Result<&'a str> {
         match self.id_or_null()? {
             None => todo!(),
             Some(id) => Ok(id),
@@ -316,13 +312,13 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     }
 
     /// Deserialize an identifier which could possibly be `null`.
-    pub fn id_or_null(&mut self) -> Result<Option<String>> {
-        if !self.id_state.borrow().seen_id {
+    pub fn id_or_null(&mut self) -> Result<Option<&'a str>> {
+        if !self.id_state.borrow().seen_id.get() {
             if self.u32()? != 3 {
                 todo!()
             }
 
-            self.id_state.borrow_mut().seen_id = true;
+            self.id_state.borrow().seen_id.set(true);
         }
 
         let index = self.u32()?;
@@ -333,14 +329,14 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 
         if index == 0x40000000 {
             let id = self.string()?;
-            self.id_state.borrow_mut().ids.push(id.clone());
-            return Ok(Some(id));
+            let id_ref = self.id_state.borrow().ids.push_get(id);
+            return Ok(Some(id_ref));
         }
 
         if index & 0xffffc000 == 0x40000000 {
             let index = (index & 0x3fff) as u16 - 1;
-            let id = self.id_state.borrow().ids[index as usize].clone();
-            return Ok(Some(id));
+            let id_ref = self.id_state.borrow().ids.get(index as usize).unwrap();
+            return Ok(Some(id_ref));
         }
 
         todo!()
@@ -426,7 +422,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     }
 }
 
-impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
+impl<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut> Deserializer<R, I, N> {
     /// An inline node of type `T`.
     pub fn inline_node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<&T> {
         match self.inline_node_or_null()? {
