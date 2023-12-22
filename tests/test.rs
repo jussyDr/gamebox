@@ -88,7 +88,7 @@ fn read_file<T: Readable>(path: impl AsRef<Path>) {
 }
 
 fn read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
-    gamebox::read::Reader::new()
+    gamebox::Reader::new()
         .read_header(HeaderOptions::Skip {
             assume_size_zero: true,
         })

@@ -14,7 +14,7 @@ use crate::{class::Class, FILE_SIGNATURE, NODE_END, SKIP};
 
 use self::{
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
-    readable::{BodyChunkReadFn, BodyChunks, HeaderChunks, Sealed},
+    readable::{BodyChunkReadFn, BodyChunks, HeaderChunks},
 };
 
 /// Error that occured while reading a GameBox node.
@@ -86,11 +86,13 @@ impl Reader {
         Self::default()
     }
 
+    /// Set options for reading the header.
     pub fn read_header(mut self, read_header: HeaderOptions) -> Self {
         self.read_header = read_header;
         self
     }
 
+    /// Set options for reading the body.
     pub fn read_body(mut self, skip_body: BodyOptions) -> Self {
         self.skip_body = skip_body;
         self
@@ -131,30 +133,53 @@ impl Reader {
     }
 }
 
+/// Options for reading the header.
 #[derive(Clone, Copy)]
 pub enum HeaderOptions {
-    Read { skip_heavy_chunks: bool },
-    Skip { assume_size_zero: bool },
+    /// Should read the body.
+    Read {
+        /// Set whether or not read heavy chunks.
+        ///
+        /// Set to `true` by default.
+        read_heavy_chunks: bool,
+    },
+    /// Should skip reading the header.
+    Skip {
+        /// Assume that the header size field is zero.
+        ///
+        /// This option exists for reading nodes extracted with
+        /// the hook extract option using OpenPlanet, which sets
+        /// the header size field to an incorrect value.
+        assume_size_zero: bool,
+    },
 }
 
+impl Default for HeaderOptions {
+    fn default() -> Self {
+        Self::Read {
+            read_heavy_chunks: true,
+        }
+    }
+}
+
+/// Options for reading the body.
 #[derive(Clone, Copy)]
 pub enum BodyOptions {
-    Read { skip_skippable_chunks: bool },
+    /// Should read the body.
+    Read {
+        /// Set whether or not to read skippable chunks.
+        ///
+        /// Set to `true` by default.
+        read_skippable_chunks: bool,
+    },
+    /// Should skip reading the body.
     Skip,
 }
 
 impl Default for BodyOptions {
     fn default() -> Self {
         Self::Read {
-            skip_skippable_chunks: false,
-        }
-    }
-}
-
-impl Default for HeaderOptions {
-    fn default() -> Self {
-        Self::Read {
-            skip_heavy_chunks: false,
+            read_skippable_chunks: true,
         }
     }
 }
@@ -203,11 +228,11 @@ pub(crate) fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
     let user_data_size = d.u32()?;
 
     match header_options {
-        HeaderOptions::Read { skip_heavy_chunks } => {
+        HeaderOptions::Read { read_heavy_chunks } => {
             read_header(
                 &mut node,
                 d.take(user_data_size as u64, (), ()),
-                skip_heavy_chunks,
+                read_heavy_chunks,
             )?;
         }
         HeaderOptions::Skip { assume_size_zero } => {
@@ -289,7 +314,7 @@ pub(crate) fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
 fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
     node: &mut T,
     mut d: Deserializer<R, I, N>,
-    skip_heavy_chunks: bool,
+    read_heavy_chunks: bool,
 ) -> Result<()> {
     let header_chunks = d.list(|d| {
         let chunk_id = d.u32()?;
@@ -306,7 +331,7 @@ fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
         let is_heavy_chunk = chunk_size & 0x80000000 != 0;
         let chunk_size = chunk_size & 0x7FFFFFFF;
 
-        if is_heavy_chunk && skip_heavy_chunks {
+        if is_heavy_chunk && !read_heavy_chunks {
             d.skip(chunk_size)?;
         } else {
             let mut d = d.take(chunk_size as u64, &mut id_state, ());

@@ -31,7 +31,7 @@ pub mod read;
 pub mod write;
 
 pub mod classes {
-    //! GameBox classes that can be read and written.
+    //! GameBox classes that can be read and (optionally) written.
 
     pub mod collector;
     pub mod color_table;
@@ -57,55 +57,3 @@ pub use common::*;
 pub use read::{read, read_file, Reader};
 #[doc(inline)]
 pub use write::{write, write_file, Writer};
-
-use std::io::Read;
-
-use read::{deserialize::Deserializer, Result};
-
-const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
-
-const SKIP: u32 = 0x534b4950;
-
-const NODE_END: u32 = 0xfacade01;
-
-mod class {
-    pub trait Class {
-        const ENGINE: u8;
-        const CLASS: u16;
-
-        fn class_id() -> u32 {
-            ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
-        }
-    }
-}
-
-fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_items: u32) -> Result<u32> {
-    if num_items < u8::MAX as u32 {
-        let index = d.u8()?;
-        Ok(index as u32)
-    } else if num_items < u16::MAX as u32 {
-        let index = d.u16()?;
-        Ok(index as u32)
-    } else {
-        d.u32()
-    }
-}
-
-struct EngineId(u8);
-
-impl EngineId {
-    pub const GAME: u8 = 0x03;
-    pub const PLUG: u8 = 0x09;
-    pub const GAME_DATA: u8 = 0x2e;
-    pub const META: u8 = 0x2f;
-}
-
-struct ClassId {
-    engine: EngineId,
-    class: u16,
-}
-
-struct ChunkId {
-    class: ClassId,
-    chunk: u16,
-}
