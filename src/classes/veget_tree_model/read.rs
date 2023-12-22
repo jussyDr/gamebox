@@ -6,11 +6,13 @@ use crate::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_gbx,
         readable::{HeaderChunkEntry, HeaderChunks, Sealed},
-        BodyOptions, HeaderOptions, ReadBody, Result,
+        BodyOptions, HeaderOptions, ReadBody, Readable, Result,
     },
 };
 
 use super::VegetTreeModel;
+
+impl Readable for VegetTreeModel {}
 
 impl Sealed for VegetTreeModel {
     fn read(

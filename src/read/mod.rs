@@ -387,8 +387,6 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeSta
     Ok(())
 }
 
-impl<T: Sealed> Readable for T {}
-
 pub(crate) mod readable {
     use std::io::{Read, Seek};
 

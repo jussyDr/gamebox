@@ -1,4 +1,4 @@
-use crate::class::Class;
+use crate::{class::Class, EngineId};
 
 mod read;
 
@@ -6,6 +6,6 @@ mod read;
 pub struct Prefab;
 
 impl Class for Prefab {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x145;
 }

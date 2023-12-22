@@ -9,6 +9,7 @@ use crate::{
         readable::{BodyChunkEntry, BodyChunkReadFn, BodyChunks},
         ReadBody, Result,
     },
+    EngineId,
 };
 
 use super::{
@@ -20,7 +21,7 @@ use super::{
 pub struct StaticObjectModel;
 
 impl Class for StaticObjectModel {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x159;
 }
 
@@ -79,7 +80,7 @@ pub struct Solid2Model {
 }
 
 impl Class for Solid2Model {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x0bb;
 }
 
@@ -244,7 +245,7 @@ pub struct MaterialUserInst {
 }
 
 impl Class for MaterialUserInst {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x0fd;
 }
 
@@ -334,7 +335,7 @@ impl MaterialUserInst {
 struct Surface;
 
 impl Class for Surface {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x00c;
 }
 

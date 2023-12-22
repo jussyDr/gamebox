@@ -1,7 +1,4 @@
-use std::{
-    io::{Read, Seek},
-    path::PathBuf,
-};
+use std::io::{Read, Seek};
 
 use crate::{
     class::Class,
@@ -15,12 +12,14 @@ use crate::{
         readable::{
             BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
         },
-        BodyOptions, HeaderOptions, ReadBody, Result,
+        BodyOptions, HeaderOptions, ReadBody, Readable, Result,
     },
-    read_compact_index, Rgb,
+    read_compact_index, EngineId,
 };
 
-use super::{Item, ItemEntityModel, ItemMaterial, ItemMaterialCustom};
+use super::{Item, ItemEntityModel};
+
+impl Readable for Item {}
 
 impl Sealed for Item {
     fn read(
@@ -401,7 +400,7 @@ impl Item {
 struct ItemPlacementParam;
 
 impl Class for ItemPlacementParam {
-    const ENGINE: u8 = 0x2e;
+    const ENGINE: u8 = EngineId::GAME_DATA;
     const CLASS: u16 = 0x020;
 }
 
@@ -585,7 +584,7 @@ impl ItemEntityModel {
 struct ItemEntityModelEdition;
 
 impl Class for ItemEntityModelEdition {
-    const ENGINE: u8 = 0x2e;
+    const ENGINE: u8 = EngineId::GAME_DATA;
     const CLASS: u16 = 0x026;
 }
 
@@ -679,7 +678,7 @@ impl ItemEntityModelEdition {
 struct Crystal;
 
 impl Class for Crystal {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x003;
 }
 
@@ -877,7 +876,7 @@ impl Crystal {
 struct MediaClipList;
 
 impl Class for MediaClipList {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x189;
 }
 

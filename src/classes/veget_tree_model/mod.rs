@@ -1,4 +1,4 @@
-use crate::class::Class;
+use crate::{class::Class, EngineId};
 
 mod read;
 
@@ -6,6 +6,6 @@ mod read;
 pub struct VegetTreeModel;
 
 impl Class for VegetTreeModel {
-    const ENGINE: u8 = 0x2f;
+    const ENGINE: u8 = EngineId::META;
     const CLASS: u16 = 0x086;
 }

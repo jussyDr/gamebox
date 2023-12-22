@@ -5,7 +5,7 @@ use std::io::{Read, Seek};
 use serde_jsonrc::Value;
 
 use crate::{
-    read::{read_json, readable::Sealed, BodyOptions, HeaderOptions, ReadJson, Result},
+    read::{read_json, readable::Sealed, BodyOptions, HeaderOptions, ReadJson, Readable, Result},
     Rgb,
 };
 
@@ -13,6 +13,8 @@ use crate::{
 pub struct ColorTable {
     colors: Vec<Rgb>,
 }
+
+impl Readable for ColorTable {}
 
 impl Sealed for ColorTable {
     fn read(

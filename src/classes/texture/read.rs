@@ -6,10 +6,12 @@ use crate::read::{
     readable::{
         BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
     },
-    BodyOptions, HeaderOptions, ReadBody, Result,
+    BodyOptions, HeaderOptions, ReadBody, Readable, Result,
 };
 
 use super::Texture;
+
+impl Readable for Texture {}
 
 impl Sealed for Texture {
     fn read(

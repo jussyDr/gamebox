@@ -8,11 +8,14 @@ use crate::{
         readable::{
             BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
         },
-        BodyOptions, HeaderOptions, ReadBody, Result,
+        BodyOptions, HeaderOptions, ReadBody, Readable, Result,
     },
+    EngineId,
 };
 
-use super::{Block, Map};
+use super::{Block, Item, Map};
+
+impl Readable for Map {}
 
 impl Sealed for Map {
     fn read(
@@ -532,10 +535,10 @@ impl Map {
             let mut d = d.take(size as u64, IdState::default(), NodeState::new(0));
 
             d.u32()?; // 10
-            self.anchored_objects = d.list(|d| {
+            self.items = d.list(|d| {
                 d.inline_node_no_index::<AnchoredObject>()?;
 
-                Ok(())
+                Ok(Item)
             })?;
             d.u32()?; // 0
             d.list(|d| {
@@ -866,7 +869,7 @@ impl Map {
         for _ in &self.baked_blocks {
             d.u8()?;
         }
-        for _ in &self.anchored_objects {
+        for _ in &self.items {
             d.u8()?;
         }
 
@@ -875,7 +878,7 @@ impl Map {
 
     fn read_chunk_03043063<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for _ in &self.anchored_objects {
+        for _ in &self.items {
             d.u8()?;
         }
 
@@ -893,7 +896,7 @@ impl Map {
 
     fn read_chunk_03043065<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for _ in &self.anchored_objects {
+        for _ in &self.items {
             d.u8()?;
         }
 
@@ -917,7 +920,7 @@ impl Map {
         for _ in &self.baked_blocks {
             d.u8()?;
         }
-        for _ in &self.anchored_objects {
+        for _ in &self.items {
             d.u8()?;
         }
 
@@ -929,7 +932,7 @@ impl Map {
         for _ in &self.blocks {
             d.u32()?;
         }
-        for _ in &self.anchored_objects {
+        for _ in &self.items {
             d.u32()?;
         }
         d.list(|d| {
@@ -957,7 +960,7 @@ impl Map {
 struct CollectorList;
 
 impl Class for CollectorList {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x01b;
 }
 
@@ -993,7 +996,7 @@ impl CollectorList {
 struct ChallengeParameters;
 
 impl Class for ChallengeParameters {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x05b;
 }
 
@@ -1160,7 +1163,7 @@ impl WaypointSpecialProperty {
 struct BlockSkin;
 
 impl Class for BlockSkin {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x059;
 }
 
@@ -1211,7 +1214,7 @@ impl BlockSkin {
 struct AnchoredObject;
 
 impl Class for AnchoredObject {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x101;
 }
 
@@ -1308,7 +1311,7 @@ impl AnchoredObject {
 struct ZoneGenealogy;
 
 impl Class for ZoneGenealogy {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x11d;
 }
 
@@ -1446,7 +1449,7 @@ enum Type {
 struct MediaClip;
 
 impl Class for MediaClip {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x079;
 }
 
@@ -1511,7 +1514,7 @@ impl MediaClip {
 struct MediaTrack;
 
 impl Class for MediaTrack {
-    const ENGINE: u8 = 0x03;
+    const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x078;
 }
 

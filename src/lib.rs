@@ -46,6 +46,8 @@ pub mod classes {
 
     #[doc(inline)]
     pub use item::Item;
+    #[doc(inline)]
+    pub use map::Map;
 }
 
 mod common;
@@ -87,4 +89,23 @@ fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_items: u
     } else {
         d.u32()
     }
+}
+
+struct EngineId(u8);
+
+impl EngineId {
+    pub const GAME: u8 = 0x03;
+    pub const PLUG: u8 = 0x09;
+    pub const GAME_DATA: u8 = 0x2e;
+    pub const META: u8 = 0x2f;
+}
+
+struct ClassId {
+    engine: EngineId,
+    class: u16,
+}
+
+struct ChunkId {
+    class: ClassId,
+    chunk: u16,
 }

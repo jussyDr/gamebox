@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::class::Class;
+use crate::{class::Class, EngineId};
 
 mod read;
 
@@ -19,7 +19,7 @@ impl Material {
 }
 
 impl Class for Material {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x079;
 }
 
@@ -29,6 +29,6 @@ struct MaterialCustom {
 }
 
 impl Class for MaterialCustom {
-    const ENGINE: u8 = 0x09;
+    const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x03a;
 }
