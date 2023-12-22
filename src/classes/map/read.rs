@@ -415,7 +415,7 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 6
         self.blocks = d.list(|d| {
-            d.id()?;
+            let id = d.id()?.to_owned();
             d.u32()?;
             let flags = d.u32()?;
 
@@ -430,7 +430,7 @@ impl Map {
 
             let is_free = flags & 0x20000000 != 0;
 
-            Ok(Block { is_free })
+            Ok(Block { id, is_free })
         })?;
 
         Ok(())
@@ -537,9 +537,9 @@ impl Map {
 
             d.u32()?; // 10
             self.items = d.list(|d| {
-                d.inline_node_no_index::<AnchoredObject>()?;
+                let item = d.inline_node_no_index::<AnchoredObject>()?;
 
-                Ok(Item)
+                Ok(item)
             })?;
             d.u32()?; // 0
             d.list(|d| {
@@ -628,13 +628,13 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 6
         self.baked_blocks = d.list(|d| {
-            d.id()?;
+            let id = d.id()?.to_owned();
             d.u32()?;
             let flags = d.u32()?;
 
             let is_free = flags & 0x20000000 != 0;
 
-            Ok(Block { is_free })
+            Ok(Block { id, is_free })
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -1214,8 +1214,7 @@ impl BlockSkin {
     }
 }
 
-#[derive(Default)]
-struct AnchoredObject;
+type AnchoredObject = Item;
 
 impl Class for AnchoredObject {
     const ENGINE: u8 = EngineId::GAME;
@@ -1258,7 +1257,7 @@ impl AnchoredObject {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 8
-        d.id()?; // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
+        self.id = d.id()?.to_owned(); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
         d.u32()?; // 26
         d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
         d.u32()?;

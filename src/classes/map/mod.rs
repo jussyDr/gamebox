@@ -31,8 +31,12 @@ impl Map {
 
 /// Block placed inside of a [Map].
 pub struct Block {
+    id: String,
     is_free: bool,
 }
 
 /// Item placed inside of a [Map].
-pub struct Item;
+#[derive(Default)]
+pub struct Item {
+    id: String,
+}

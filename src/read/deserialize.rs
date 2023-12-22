@@ -544,16 +544,16 @@ impl<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut> Deserializer<R, I, N> {
         Ok(Some(Node::Inline(())))
     }
 
-    pub fn inline_node_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<()> {
+    pub fn inline_node_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
         match self.inline_node_no_index_or_null::<T>()? {
             None => todo!(),
-            Some(()) => Ok(()),
+            Some(node) => Ok(node),
         }
     }
 
     pub fn inline_node_no_index_or_null<T: Default + Class + ReadBody>(
         &mut self,
-    ) -> Result<Option<()>> {
+    ) -> Result<Option<T>> {
         let class_id = self.u32()?;
 
         if class_id == 0xffffffff {
@@ -567,6 +567,6 @@ impl<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut> Deserializer<R, I, N> {
         let mut node = T::default();
         T::read_body(&mut node, self)?;
 
-        Ok(Some(()))
+        Ok(Some(node))
     }
 }
