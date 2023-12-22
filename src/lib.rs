@@ -1,6 +1,6 @@
 #![warn(missing_docs, clippy::unwrap_in_result)]
 
-//! A (incomplete) GameBox (.Gbx) file reader and writer.
+//! A (incomplete) GameBox (.Gbx) file reader and writer for Trackmania (2020).
 //!
 //! # Examples
 //!
@@ -48,10 +48,13 @@ pub mod classes {
     pub use item::Item;
 }
 
+mod common;
+
+pub use common::*;
 #[doc(inline)]
-pub use read::{read, read_file};
+pub use read::{read, read_file, Reader};
 #[doc(inline)]
-pub use write::{write, write_file};
+pub use write::{write, write_file, Writer};
 
 use std::io::Read;
 
@@ -71,20 +74,6 @@ mod class {
         fn class_id() -> u32 {
             ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
         }
-    }
-}
-
-/// Color representation using red, green, and blue components.
-#[derive(Clone, Copy, Debug)]
-pub struct Rgb {
-    r: u8,
-    g: u8,
-    b: u8,
-}
-
-impl Rgb {
-    pub fn into_array(self) -> [u8; 3] {
-        [self.r, self.g, self.b]
     }
 }
 

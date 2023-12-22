@@ -48,13 +48,13 @@ impl Mesh {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum ItemMaterial {
     Game { material_ref: PathBuf },
     Custom(ItemMaterialCustom),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ItemMaterialCustom {
     id: String,
     color: Rgb,
