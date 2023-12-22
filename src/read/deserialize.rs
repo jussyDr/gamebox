@@ -46,7 +46,7 @@ impl<'a, T: IdStateRef<'a>> IdStateRef<'a> for &T {
 
 /// State of nodes read in the past.
 pub struct NodeState {
-    nodes: Vec<Option<Node<Box<dyn Any>>>>,
+    nodes: Box<[Option<Node<Box<dyn Any>>>]>,
 }
 
 impl NodeState {
@@ -58,7 +58,13 @@ impl NodeState {
     }
 
     pub fn set_ref(&mut self, index: usize, path: PathBuf) {
-        self.nodes[index - 1] = Some(Node::Ref(path));
+        let entry = self.nodes.get_mut(index - 1).unwrap();
+
+        if entry.is_some() {
+            todo!()
+        }
+
+        *entry = Some(Node::Ref(path))
     }
 }
 
@@ -334,7 +340,7 @@ impl<'a, R: Read, I: IdStateRef<'a>, N> Deserializer<R, I, N> {
         }
 
         if index & 0xffffc000 == 0x40000000 {
-            let index = (index & 0x3fff) as u16 - 1;
+            let index = (index & 0x00003fff) as u16 - 1;
             let id_ref = self.id_state.borrow().ids.get(index as usize).unwrap();
             return Ok(Some(id_ref));
         }
@@ -359,30 +365,6 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
             Node::Ref(q) => Ok(q),
             _ => todo!(),
         }
-    }
-
-    pub fn flat_inline_node<T>(
-        &mut self,
-        class_id: u32,
-        read_fn: impl Fn(&mut Self) -> Result<T>,
-    ) -> Result<T> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            todo!()
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        if self.u32()? != class_id {
-            todo!()
-        }
-
-        let node = read_fn(self)?;
-
-        Ok(node)
     }
 
     pub fn flat_node<T>(
