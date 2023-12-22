@@ -358,7 +358,7 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeSta
             break;
         }
 
-        println!("{:08X}", chunk_id);
+        // println!("{chunk_id:02X}");
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)

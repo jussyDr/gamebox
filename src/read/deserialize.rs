@@ -171,6 +171,12 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(i16::from_le_bytes(bytes))
     }
 
+    /// Deserialize a 32-bit signed integer.
+    pub fn i32(&mut self) -> Result<i32> {
+        let bytes = self.byte_array()?;
+        Ok(i32::from_le_bytes(bytes))
+    }
+
     /// Deserialize a 32-bit floating point number.
     pub fn f32(&mut self) -> Result<f32> {
         let bytes = self.byte_array()?;
@@ -516,6 +522,17 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Either any inline node, a node reference, or null.
+    pub fn any_inline_node<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
+    ) -> Result<T> {
+        match self.any_inline_node_or_null(read_fn)? {
+            None => todo!(),
+            Some(node) => Ok(node),
+        }
+    }
+
+    /// Either any inline node, a node reference, or null.
     pub fn any_node_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
@@ -547,5 +564,31 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         let node = read_fn(self, class_id)?;
 
         Ok(Some(Node::Inline(())))
+    }
+
+    pub fn inline_node_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<()> {
+        match self.inline_node_no_index_or_null::<T>()? {
+            None => todo!(),
+            Some(()) => Ok(()),
+        }
+    }
+
+    pub fn inline_node_no_index_or_null<T: Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<()>> {
+        let class_id = self.u32()?;
+
+        if class_id == 0xffffffff {
+            return Ok(None);
+        }
+
+        if class_id != T::class_id() {
+            todo!()
+        }
+
+        let mut node = T::default();
+        T::read_body(&mut node, self)?;
+
+        Ok(Some(()))
     }
 }
