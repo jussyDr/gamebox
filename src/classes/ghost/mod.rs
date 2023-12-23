@@ -14,3 +14,11 @@ impl Class for Ghost {
 
 #[derive(Default)]
 struct Ghost2;
+
+#[derive(Default)]
+pub(crate) struct EntRecordData;
+
+impl Class for EntRecordData {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x11f;
+}

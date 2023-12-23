@@ -3,6 +3,7 @@ use std::{
     cmp,
     io::{self, Read, Seek, SeekFrom},
     iter,
+    mem::size_of,
     path::{Path, PathBuf},
     rc::Rc,
 };
@@ -293,6 +294,13 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
         let bytes = self.bytes(n)?;
         self.reader.seek(io::SeekFrom::Current(-(n as i64)))?;
         Ok(bytes)
+    }
+
+    pub fn peek_u32(&mut self) -> Result<u32> {
+        let value = self.u32()?;
+        self.reader
+            .seek(io::SeekFrom::Current(-(size_of::<u32>() as i64)))?;
+        Ok(value)
     }
 }
 

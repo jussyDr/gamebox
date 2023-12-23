@@ -97,6 +97,7 @@ pub(crate) struct EngineId(u8);
 
 impl EngineId {
     pub const GAME: u8 = 0x03;
+    pub const CONTROL: u8 = 0x07;
     pub const PLUG: u8 = 0x09;
     pub const GAME_DATA: u8 = 0x2e;
     pub const META: u8 = 0x2f;

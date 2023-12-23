@@ -1,17 +1,16 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    class::Class,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_body_chunks,
         readable::{BodyChunkEntry, BodyChunkReadFn, BodyChunks},
         ReadBody, Result,
     },
-    read_file_ref, EngineId,
+    read_file_ref,
 };
 
-use super::{Ghost, Ghost2};
+use super::{EntRecordData, Ghost, Ghost2};
 
 impl ReadBody for Ghost {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -383,14 +382,6 @@ impl Ghost2 {
 
         Ok(())
     }
-}
-
-#[derive(Default)]
-struct EntRecordData;
-
-impl Class for EntRecordData {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x11f;
 }
 
 impl ReadBody for EntRecordData {

@@ -328,8 +328,6 @@ fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
     let mut header_chunk_entries = T::header_chunks();
 
     for (chunk_id, chunk_size) in header_chunks {
-        println!("{:08X}", chunk_id);
-
         let is_heavy_chunk = chunk_size & 0x80000000 != 0;
         let chunk_size = chunk_size & 0x7FFFFFFF;
 
@@ -384,8 +382,6 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateMut, N: 
         if chunk_id == NODE_END {
             break;
         }
-
-        println!("{:08X}", chunk_id);
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
