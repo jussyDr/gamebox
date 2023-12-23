@@ -2465,11 +2465,7 @@ impl MediaClipGroup {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 10
-        d.list(|d| {
-            d.inline_node::<MediaClip>()?;
-
-            Ok(())
-        })?;
+        d.list(|d| d.inline_node::<MediaClip>())?;
         d.list(|d| {
             d.u32()?;
             d.u32()?;

@@ -1,10 +1,10 @@
 //! Types used for reading and writing [Map] nodes.
 
+mod read;
+
 use std::rc::Rc;
 
 use crate::{class::Class, EngineId};
-
-mod read;
 
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
