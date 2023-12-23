@@ -57,7 +57,7 @@ impl Map {
         }
     }
 
-    /// In game media clip.
+    /// In game media clip group.
     pub fn in_game_media(&self) -> Option<&MediaClipGroup> {
         match self.in_game_media {
             None => None,
@@ -65,7 +65,7 @@ impl Map {
         }
     }
 
-    /// End race media clip.
+    /// End race media clip group.
     pub fn end_race_media(&self) -> Option<&MediaClipGroup> {
         match self.end_race_media {
             None => None,
