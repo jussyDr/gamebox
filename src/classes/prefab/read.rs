@@ -3,7 +3,7 @@ use std::io::{Read, Seek};
 use crate::{
     classes::static_object_model::StaticObjectModel,
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateMut},
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_gbx,
         readable::{HeaderChunkEntry, HeaderChunks, Sealed},
         BodyOptions, HeaderOptions, ReadBody, Readable, Result,
@@ -31,7 +31,7 @@ impl HeaderChunks for Prefab {
 }
 
 impl ReadBody for Prefab {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

@@ -3,7 +3,7 @@ use std::io::{Read, Seek};
 use crate::{
     classes::visual_indexed_triangles::VisualIndexedTriangles,
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateMut},
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_gbx,
         readable::{HeaderChunkEntry, HeaderChunks, Sealed},
         BodyOptions, HeaderOptions, ReadBody, Readable, Result,
@@ -31,7 +31,7 @@ impl HeaderChunks for VegetTreeModel {
 }
 
 impl ReadBody for VegetTreeModel {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

@@ -1,7 +1,7 @@
 use std::io::{Read, Seek};
 
 use crate::read::{
-    deserialize::{Deserializer, IdStateRef, NodeStateMut},
+    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read_body_chunks, read_gbx,
     readable::{
         BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
@@ -30,7 +30,7 @@ impl HeaderChunks for Texture {
 }
 
 impl ReadBody for Texture {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -39,7 +39,7 @@ impl ReadBody for Texture {
 }
 
 impl BodyChunks for Texture {
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {

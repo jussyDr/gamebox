@@ -7,7 +7,7 @@ use crate::{
         static_object_model::{MaterialUserInst, StaticObjectModel},
     },
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateMut},
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_body_chunks, read_gbx,
         readable::{
             BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
@@ -61,7 +61,7 @@ impl HeaderChunks for Item {
 }
 
 impl ReadBody for Item {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -71,7 +71,7 @@ impl ReadBody for Item {
 
 impl BodyChunks for Item {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -252,7 +252,7 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e002019<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_2e002019<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -304,7 +304,7 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e00201c<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_2e00201c<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -327,7 +327,7 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e00201f<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_2e00201f<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -411,7 +411,7 @@ impl Default for ItemPlacementParam {
 }
 
 impl ReadBody for ItemPlacementParam {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -421,7 +421,7 @@ impl ReadBody for ItemPlacementParam {
 
 impl BodyChunks for ItemPlacementParam {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -510,7 +510,7 @@ impl ItemPlacementParam {
         Ok(())
     }
 
-    fn read_chunk_2e020005<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_2e020005<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -559,7 +559,7 @@ impl ItemPlacementParam {
 }
 
 impl BodyChunks for ItemEntityModel {
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x2e027000,
@@ -570,7 +570,7 @@ impl BodyChunks for ItemEntityModel {
 }
 
 impl ItemEntityModel {
-    fn read_chunk_2e027000<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_2e027000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -595,7 +595,7 @@ impl Default for ItemEntityModelEdition {
 }
 
 impl ReadBody for ItemEntityModelEdition {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -605,7 +605,7 @@ impl ReadBody for ItemEntityModelEdition {
 
 impl BodyChunks for ItemEntityModelEdition {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -622,7 +622,7 @@ impl BodyChunks for ItemEntityModelEdition {
 }
 
 impl ItemEntityModelEdition {
-    fn read_chunk_2e026000<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_2e026000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -689,7 +689,7 @@ impl Default for Crystal {
 }
 
 impl ReadBody for Crystal {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -699,7 +699,7 @@ impl ReadBody for Crystal {
 
 impl BodyChunks for Crystal {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -728,7 +728,7 @@ impl BodyChunks for Crystal {
 }
 
 impl Crystal {
-    fn read_chunk_09003003<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_09003003<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -751,7 +751,7 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003005<'a, R: Read, I: IdStateRef<'a>, N>(
+    fn read_chunk_09003005<R: Read, I: IdStateMut, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -881,7 +881,7 @@ impl Class for MediaClipList {
 }
 
 impl ReadBody for MediaClipList {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -890,7 +890,7 @@ impl ReadBody for MediaClipList {
 }
 
 impl BodyChunks for MediaClipList {
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09189000,

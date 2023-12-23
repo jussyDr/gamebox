@@ -1,10 +1,9 @@
-use core::num;
 use std::io::Read;
 
 use crate::{
     class::Class,
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateMut},
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
         read_body_chunks,
         readable::{BodyChunkEntry, BodyChunkReadFn, BodyChunks},
         ReadBody, Result,
@@ -26,7 +25,7 @@ impl Class for StaticObjectModel {
 }
 
 impl ReadBody for StaticObjectModel {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -85,7 +84,7 @@ impl Class for Solid2Model {
 }
 
 impl ReadBody for Solid2Model {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -95,7 +94,7 @@ impl ReadBody for Solid2Model {
 
 impl BodyChunks for Solid2Model {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -112,7 +111,7 @@ impl BodyChunks for Solid2Model {
 }
 
 impl Solid2Model {
-    fn read_chunk_090bb000<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -250,7 +249,7 @@ impl Class for MaterialUserInst {
 }
 
 impl ReadBody for MaterialUserInst {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -259,7 +258,7 @@ impl ReadBody for MaterialUserInst {
 }
 
 impl BodyChunks for MaterialUserInst {
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -280,7 +279,7 @@ impl BodyChunks for MaterialUserInst {
 }
 
 impl MaterialUserInst {
-    fn read_chunk_090fd000<'a, R: Read, I: IdStateRef<'a>, N>(
+    fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -340,7 +339,7 @@ impl Class for Surface {
 }
 
 impl ReadBody for Surface {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -349,7 +348,7 @@ impl ReadBody for Surface {
 }
 
 impl BodyChunks for Surface {
-    fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0900C003,

@@ -1,5 +1,7 @@
 //! Types used for reading and writing [Map] nodes.
 
+use std::rc::Rc;
+
 use crate::{class::Class, EngineId};
 
 mod read;
@@ -31,12 +33,12 @@ impl Map {
 
 /// Block placed inside of a [Map].
 pub struct Block {
-    id: String,
+    id: Rc<str>,
     is_free: bool,
 }
 
 /// Item placed inside of a [Map].
 #[derive(Default)]
 pub struct Item {
-    id: String,
+    id: Option<Rc<str>>,
 }

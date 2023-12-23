@@ -13,7 +13,7 @@ use serde_jsonrc::Value;
 use crate::{class::Class, FILE_SIGNATURE, NODE_END, SKIP};
 
 use self::{
-    deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateMut},
+    deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
     readable::{BodyChunkReadFn, BodyChunks, HeaderChunks},
 };
 
@@ -281,8 +281,7 @@ pub(crate) fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
                 let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
                 let reader = Cursor::new(body);
 
-                let id_state = IdState::new();
-                let mut d = Deserializer::new(reader, &id_state, node_state);
+                let mut d = Deserializer::new(reader, IdState::new(), node_state);
 
                 T::read_body(&mut node, &mut d)?;
 
@@ -299,8 +298,7 @@ pub(crate) fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
             BodyOptions::Read { .. } => {
                 let reader = d.into_reader();
 
-                let id_state = IdState::new();
-                let mut d = Deserializer::new(reader, &id_state, node_state);
+                let mut d = Deserializer::new(reader, IdState::new(), node_state);
 
                 T::read_body(&mut node, &mut d)?;
 
@@ -336,7 +334,7 @@ fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
         if is_heavy_chunk && !read_heavy_chunks {
             d.skip(chunk_size)?;
         } else {
-            let mut d = d.take(chunk_size as u64, &id_state, ());
+            let mut d = d.take(chunk_size as u64, &mut id_state, ());
 
             let header_chunk_entry = header_chunk_entries
                 .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
@@ -372,7 +370,7 @@ fn read_folders<R: Read, I, N>(
     Ok(())
 }
 
-pub(crate) fn read_body_chunks<'a, T: BodyChunks, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeStateMut>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -418,7 +416,7 @@ pub(crate) mod readable {
     use std::io::{Read, Seek};
 
     use super::{
-        deserialize::{Deserializer, IdState, IdStateRef, NodeStateMut, Take},
+        deserialize::{Deserializer, IdState, IdStateMut, NodeStateMut, Take},
         BodyOptions, HeaderOptions, Result,
     };
 
@@ -428,7 +426,7 @@ pub(crate) mod readable {
     }
 
     type HeaderChunkReadFn<T, R> =
-        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &IdState, ()>) -> Result<()>;
+        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut IdState, ()>) -> Result<()>;
 
     pub struct BodyChunkEntry<T, R, I, N> {
         pub id: u32,
@@ -444,7 +442,7 @@ pub(crate) mod readable {
         fn(n: &mut T, d: &mut Deserializer<R, I, N>) -> Result<()>;
 
     pub type SkippableBodyChunkReadFn<T, R, I, N> =
-        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &I, &mut N>) -> Result<()>;
+        fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut I, &mut N>) -> Result<()>;
 
     pub trait Sealed {
         fn read(
@@ -463,14 +461,14 @@ pub(crate) mod readable {
     }
 
     pub trait BodyChunks {
-        fn body_chunks<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
         where
             Self: Sized;
     }
 }
 pub(crate) trait ReadBody {
-    fn read_body<'a, R: Read, I: IdStateRef<'a>, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()>;
