@@ -37,8 +37,25 @@ pub struct Block {
     is_free: bool,
 }
 
+impl Block {
+    /// Identifier of the block.
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+}
+
 /// Item placed inside of a [Map].
 #[derive(Default)]
 pub struct Item {
     id: Option<Rc<str>>,
+}
+
+impl Item {
+    /// Identifier of the item.
+    pub fn id(&self) -> &str {
+        match self.id {
+            None => "",
+            Some(ref id) => id,
+        }
+    }
 }

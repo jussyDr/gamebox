@@ -1,7 +1,10 @@
+//! Types used for reading [Ghost] nodes.
+
 use crate::{class::Class, EngineId};
 
 mod read;
 
+/// Node type corresponding to GameBox files with the extension `Ghost.Gbx`.
 #[derive(Default)]
 pub struct Ghost {
     parent: Ghost2,

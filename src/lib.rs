@@ -46,6 +46,8 @@ pub mod classes {
     pub mod visual_indexed_triangles;
 
     #[doc(inline)]
+    pub use ghost::Ghost;
+    #[doc(inline)]
     pub use item::Item;
     #[doc(inline)]
     pub use map::Map;
