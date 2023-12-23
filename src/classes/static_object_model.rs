@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use crate::{
     class::Class,
@@ -25,7 +25,7 @@ impl Class for StaticObjectModel {
 }
 
 impl ReadBody for StaticObjectModel {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -84,7 +84,7 @@ impl Class for Solid2Model {
 }
 
 impl ReadBody for Solid2Model {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -94,7 +94,7 @@ impl ReadBody for Solid2Model {
 
 impl BodyChunks for Solid2Model {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -111,7 +111,7 @@ impl BodyChunks for Solid2Model {
 }
 
 impl Solid2Model {
-    fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_090bb000<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -249,7 +249,7 @@ impl Class for MaterialUserInst {
 }
 
 impl ReadBody for MaterialUserInst {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -339,7 +339,7 @@ impl Class for Surface {
 }
 
 impl ReadBody for Surface {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

@@ -30,7 +30,7 @@ impl HeaderChunks for Texture {
 }
 
 impl ReadBody for Texture {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

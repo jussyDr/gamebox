@@ -328,6 +328,8 @@ fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
     let mut header_chunk_entries = T::header_chunks();
 
     for (chunk_id, chunk_size) in header_chunks {
+        println!("{:08X}", chunk_id);
+
         let is_heavy_chunk = chunk_size & 0x80000000 != 0;
         let chunk_size = chunk_size & 0x7FFFFFFF;
 
@@ -370,7 +372,7 @@ fn read_folders<R: Read, I, N>(
     Ok(())
 }
 
-pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeStateMut>(
+pub(crate) fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -383,7 +385,7 @@ pub(crate) fn read_body_chunks<T: BodyChunks, R: Read, I: IdStateMut, N: NodeSta
             break;
         }
 
-        // println!("{chunk_id:02X}");
+        println!("{:08X}", chunk_id);
 
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
@@ -461,14 +463,14 @@ pub(crate) mod readable {
     }
 
     pub trait BodyChunks {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
         where
             Self: Sized;
     }
 }
 pub(crate) trait ReadBody {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()>;

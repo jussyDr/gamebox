@@ -1,10 +1,10 @@
 //! Types used for reading [Texture] nodes.
 
+mod read;
+
 use std::path::{Path, PathBuf};
 
 use crate::{class::Class, EngineId};
-
-mod read;
 
 /// Node type corresponding to GameBox files with the extension `Texture.Gbx`.
 #[derive(Default)]

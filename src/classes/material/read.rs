@@ -30,7 +30,7 @@ impl HeaderChunks for Material {
 }
 
 impl ReadBody for Material {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -40,7 +40,7 @@ impl ReadBody for Material {
 
 impl BodyChunks for Material {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -95,7 +95,7 @@ impl Material {
         Ok(())
     }
 
-    fn read_chunk_09079007<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_09079007<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -178,7 +178,7 @@ impl Material {
 }
 
 impl ReadBody for MaterialCustom {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

@@ -2,6 +2,7 @@ use std::io::{Read, Seek};
 
 use crate::{
     class::Class,
+    classes::ghost::Ghost,
     read::{
         deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
         read_body_chunks, read_gbx,
@@ -10,7 +11,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, ReadBody, Readable, Result,
     },
-    EngineId,
+    read_file_ref, EngineId,
 };
 
 use super::{Block, Item, Map};
@@ -60,7 +61,7 @@ impl HeaderChunks for Map {
 }
 
 impl ReadBody for Map {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -69,7 +70,7 @@ impl ReadBody for Map {
 }
 
 impl BodyChunks for Map {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -318,7 +319,7 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.string()?; // "TrackMania\TM_Race"
-        d.u32()?; // 0
+        d.string()?; // "TrackMania\TM_Race"
         d.u32()?;
         d.u32()?;
         d.u8()?; // 8
@@ -374,7 +375,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043011<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043011<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -398,7 +399,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_0304301f<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0304301f<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -418,6 +419,8 @@ impl Map {
             let id = d.id()?;
             d.u32()?;
             let flags = d.u32()?;
+
+            println!("{flags:08X}");
 
             if flags & 0x00008000 != 0 {
                 d.id()?; // "Nadeo"
@@ -523,7 +526,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043040<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043040<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -584,7 +587,10 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043043<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_03043043<R: Read + Seek, I, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 0
         let size = d.u32()?;
 
@@ -603,7 +609,10 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043044<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_03043044<R: Read + Seek, I, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 0
         let size = d.u32()?;
 
@@ -639,7 +648,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043049<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043049<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -965,7 +974,7 @@ impl Class for CollectorList {
 }
 
 impl ReadBody for CollectorList {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1001,7 +1010,7 @@ impl Class for ChallengeParameters {
 }
 
 impl ReadBody for ChallengeParameters {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1010,7 +1019,7 @@ impl ReadBody for ChallengeParameters {
 }
 
 impl BodyChunks for ChallengeParameters {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1081,31 +1090,22 @@ impl ChallengeParameters {
         Ok(())
     }
 
-    fn read_chunk_0305b00d<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0xffffffff
+    fn read_chunk_0305b00d<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.inline_node_or_null::<Ghost>()?;
 
         Ok(())
     }
 
     fn read_chunk_0305b00e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.string()?; // "TrackMania\TM_Race"
-        d.u32()?; // 0
+        d.string()?; // "TrackMania\TM_Race"
         d.u32()?; // 1
 
         Ok(())
     }
-}
-
-fn read_file_ref<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-    if d.u8()? != 3 {
-        todo!()
-    }
-
-    d.bytes(32)?;
-    d.string()?;
-    d.string()?;
-
-    Ok(())
 }
 
 #[derive(Default)]
@@ -1117,7 +1117,7 @@ impl Class for WaypointSpecialProperty {
 }
 
 impl ReadBody for WaypointSpecialProperty {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1168,7 +1168,7 @@ impl Class for BlockSkin {
 }
 
 impl ReadBody for BlockSkin {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1218,7 +1218,7 @@ impl Class for AnchoredObject {
 }
 
 impl ReadBody for AnchoredObject {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1227,7 +1227,7 @@ impl ReadBody for AnchoredObject {
 }
 
 impl BodyChunks for AnchoredObject {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1248,7 +1248,7 @@ impl BodyChunks for AnchoredObject {
 }
 
 impl AnchoredObject {
-    fn read_chunk_03101002<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03101002<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1315,7 +1315,7 @@ impl Class for ZoneGenealogy {
 }
 
 impl ReadBody for ZoneGenealogy {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1453,7 +1453,7 @@ impl Class for MediaClip {
 }
 
 impl ReadBody for MediaClip {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1462,7 +1462,7 @@ impl ReadBody for MediaClip {
 }
 
 impl BodyChunks for MediaClip {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1479,7 +1479,7 @@ impl BodyChunks for MediaClip {
 }
 
 impl MediaClip {
-    fn read_chunk_0307900d<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0307900d<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1518,7 +1518,7 @@ impl Class for MediaTrack {
 }
 
 impl ReadBody for MediaTrack {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1527,7 +1527,7 @@ impl ReadBody for MediaTrack {
 }
 
 impl BodyChunks for MediaTrack {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1544,7 +1544,7 @@ impl BodyChunks for MediaTrack {
 }
 
 impl MediaTrack {
-    fn read_chunk_03078001<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03078001<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1605,7 +1605,7 @@ impl MediaTrack {
 struct MediaBlockFxColors;
 
 impl ReadBody for MediaBlockFxColors {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1667,7 +1667,7 @@ impl MediaBlockFxColors {
 struct MediaBlockCameraCustom;
 
 impl ReadBody for MediaBlockCameraCustom {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1740,7 +1740,7 @@ impl MediaBlockCameraCustom {
 struct MediaBlockImage;
 
 impl ReadBody for MediaBlockImage {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1749,7 +1749,7 @@ impl ReadBody for MediaBlockImage {
 }
 
 impl BodyChunks for MediaBlockImage {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030a5000,
@@ -1760,7 +1760,7 @@ impl BodyChunks for MediaBlockImage {
 }
 
 impl MediaBlockImage {
-    fn read_chunk_0<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1774,7 +1774,7 @@ impl MediaBlockImage {
 struct MediaBlockToneMapping;
 
 impl ReadBody for MediaBlockToneMapping {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1812,7 +1812,7 @@ impl MediaBlockToneMapping {
 struct MediaBlockColorGrading;
 
 impl ReadBody for MediaBlockColorGrading {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1859,7 +1859,7 @@ impl MediaBlockColorGrading {
 struct MediaBlockFog;
 
 impl ReadBody for MediaBlockFog {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1909,7 +1909,7 @@ impl Class for EffectSimi {
 }
 
 impl ReadBody for EffectSimi {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

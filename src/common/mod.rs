@@ -81,6 +81,18 @@ pub(crate) fn read_compact_index<R: Read, I, N>(
     }
 }
 
+pub(crate) fn read_file_ref<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    if d.u8()? != 3 {
+        todo!()
+    }
+
+    d.bytes(32)?;
+    d.string()?;
+    d.string()?;
+
+    Ok(())
+}
+
 pub(crate) struct EngineId(u8);
 
 impl EngineId {

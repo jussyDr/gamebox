@@ -412,78 +412,6 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    /// An inline node of type `T`.
-    pub fn inline_node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<&T> {
-        match self.inline_node_or_null()? {
-            Some(node) => Ok(node),
-            _ => todo!(),
-        }
-    }
-
-    /// Either an inline node of type `T` or null.
-    pub fn inline_node_or_null<T: 'static + Default + Class + ReadBody>(
-        &mut self,
-    ) -> Result<Option<&T>> {
-        match self.node_or_null()? {
-            None => Ok(None),
-            Some(Node::Inline(node)) => Ok(Some(node)),
-            _ => todo!(),
-        }
-    }
-
-    /// Either an inline node of type `T` or a node reference.
-    pub fn node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Node<&T>> {
-        match self.node_or_null()? {
-            None => todo!(),
-            Some(node) => Ok(node),
-        }
-    }
-
-    /// Either an inline node of type `T`, a node reference, or null.
-    pub fn node_or_null<T: 'static + Default + Class + ReadBody>(
-        &mut self,
-    ) -> Result<Option<Node<&T>>> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            return Ok(None);
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
-            let r = self.node_state.borrow().nodes[index as usize - 1]
-                .as_ref()
-                .unwrap();
-
-            match r {
-                Node::Inline(q) => return Ok(Some(Node::Inline(q.downcast_ref().unwrap()))),
-                Node::Ref(q) => return Ok(Some(Node::Ref(q.to_path_buf()))),
-                _ => todo!(),
-            }
-        }
-
-        if self.u32()? != T::class_id() {
-            todo!()
-        }
-
-        let mut node = T::default();
-        T::read_body(&mut node, self)?;
-
-        self.node_state.borrow_mut().nodes[index as usize - 1] = Some(Node::Inline(Box::new(node)));
-
-        let r = self.node_state.borrow().nodes[index as usize - 1]
-            .as_ref()
-            .unwrap();
-
-        match r {
-            Node::Inline(q) => Ok(Some(Node::Inline(q.downcast_ref().unwrap()))),
-            _ => todo!(),
-        }
-    }
-
     /// Either any inline node or null.
     pub fn any_inline_node_or_null<T>(
         &mut self,
@@ -549,6 +477,80 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         let node = read_fn(self, class_id)?;
 
         Ok(Some(Node::Inline(())))
+    }
+}
+
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
+    /// Either an inline node of type `T`, a node reference, or null.
+    pub fn node_or_null<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<Node<&T>>> {
+        let index = self.u32()?;
+
+        if index == 0xFFFFFFFF {
+            return Ok(None);
+        }
+
+        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
+            todo!()
+        }
+
+        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
+            let r = self.node_state.borrow().nodes[index as usize - 1]
+                .as_ref()
+                .unwrap();
+
+            match r {
+                Node::Inline(q) => return Ok(Some(Node::Inline(q.downcast_ref().unwrap()))),
+                Node::Ref(q) => return Ok(Some(Node::Ref(q.to_path_buf()))),
+                _ => todo!(),
+            }
+        }
+
+        if self.u32()? != T::class_id() {
+            todo!()
+        }
+
+        let mut node = T::default();
+        T::read_body(&mut node, self)?;
+
+        self.node_state.borrow_mut().nodes[index as usize - 1] = Some(Node::Inline(Box::new(node)));
+
+        let r = self.node_state.borrow().nodes[index as usize - 1]
+            .as_ref()
+            .unwrap();
+
+        match r {
+            Node::Inline(q) => Ok(Some(Node::Inline(q.downcast_ref().unwrap()))),
+            _ => todo!(),
+        }
+    }
+
+    /// An inline node of type `T`.
+    pub fn inline_node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<&T> {
+        match self.inline_node_or_null()? {
+            Some(node) => Ok(node),
+            _ => todo!(),
+        }
+    }
+
+    /// Either an inline node of type `T` or null.
+    pub fn inline_node_or_null<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<&T>> {
+        match self.node_or_null()? {
+            None => Ok(None),
+            Some(Node::Inline(node)) => Ok(Some(node)),
+            _ => todo!(),
+        }
+    }
+
+    /// Either an inline node of type `T` or a node reference.
+    pub fn node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Node<&T>> {
+        match self.node_or_null()? {
+            None => todo!(),
+            Some(node) => Ok(node),
+        }
     }
 
     pub fn inline_node_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<T> {

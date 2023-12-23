@@ -35,6 +35,7 @@ pub mod classes {
 
     pub mod collector;
     pub mod color_table;
+    pub mod ghost;
     pub mod item;
     pub mod map;
     pub mod material;
