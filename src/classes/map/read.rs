@@ -680,11 +680,11 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 2
-        d.inline_node::<MediaClip>()?;
+        d.inline_node_or_null::<MediaClip>()?;
         d.inline_node_or_null::<MediaClip>()?;
         d.inline_node_or_null::<MediaClipGroup>()?;
         d.inline_node_or_null::<MediaClipGroup>()?;
-        d.inline_node::<MediaClip>()?;
+        d.inline_node_or_null::<MediaClip>()?;
         d.u32()?; // 3
         d.u32()?; // 1
         d.u32()?; // 3
@@ -754,7 +754,7 @@ impl Map {
             d.list(|d| {
                 d.id()?;
                 d.u32()?; // 26
-                d.id()?;
+                d.id_or_null()?;
 
                 Ok(())
             })?;
@@ -903,11 +903,16 @@ impl Map {
     fn read_chunk_03043061<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         if d.u32()? != 0 {
-            d.bytes(21393)?;
+            let n = d.u32()?;
+            d.bytes(n as usize * 4)?;
+            let n = d.u32()?;
+            d.bytes(n as usize)?;
+            d.u32()?;
+        } else {
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
         }
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
 
         Ok(())
     }
@@ -948,7 +953,9 @@ impl Map {
     fn read_chunk_03043065<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         for _ in &self.items {
-            d.u8()?;
+            if d.bool8()? {
+                read_file_ref(d)?;
+            }
         }
 
         Ok(())
@@ -1297,7 +1304,7 @@ impl AnchoredObject {
         d.u32()?; // 8
         self.id = Some(d.id()?); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
         d.u32()?; // 26
-        d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
+        d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
         d.u32()?;
         d.u32()?;
         d.u32()?;
@@ -1594,8 +1601,6 @@ impl MediaTrack {
         d.u32()?; // 10
         d.list(|d| {
             d.any_inline_node(|d, class_id| {
-                println!("{class_id:08X}");
-
                 match class_id {
                     0x0304c000 => {
                         let mut node = MediaBlockTriangles3D {
@@ -1724,6 +1729,12 @@ impl MediaBlockTriangles {
 
         Ok(())
     }
+
+    fn read_chunk_2<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?;
+
+        Ok(())
+    }
 }
 
 struct MediaBlockTriangles3D {
@@ -1742,12 +1753,20 @@ impl ReadBody for MediaBlockTriangles3D {
 impl BodyChunks for MediaBlockTriangles3D {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [BodyChunkEntry {
-            id: 0x03029001,
-            read_fn: BodyChunkReadFn::Normal(|n: &mut MediaBlockTriangles3D, d| {
-                MediaBlockTriangles::read_chunk_1(&mut n.parent, d)
-            }),
-        }]
+        [
+            BodyChunkEntry {
+                id: 0x03029001,
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    MediaBlockTriangles::read_chunk_1(&mut n.parent, d)
+                }),
+            },
+            BodyChunkEntry {
+                id: 0x03029002,
+                read_fn: BodyChunkReadFn::Skippable(|n: &mut Self, d| {
+                    MediaBlockTriangles::read_chunk_2(&mut n.parent, d)
+                }),
+            },
+        ]
         .into_iter()
     }
 }
