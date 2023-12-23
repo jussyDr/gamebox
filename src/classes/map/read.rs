@@ -14,7 +14,7 @@ use crate::{
     read_file_ref, EngineId,
 };
 
-use super::{Block, Item, Map};
+use super::{Block, Item, Map, MediaClip, MediaClipGroup};
 
 impl Readable for Map {}
 
@@ -361,7 +361,7 @@ impl Map {
         d.u32()?; // 1
         d.u32()?; // 0
         d.string()?; // "qYw071iWQXu9_jXI7SXEvA"
-        d.string()?; // "YannexTM"
+        self.author_name = d.string()?; // "YannexTM"
         d.string()?; // "World|Europe|Switzerland|Fribourg"
         d.u32()?; // 0
 
@@ -607,7 +607,7 @@ impl Map {
         d.u32()?; // 1
         d.u32()?; // 0
         d.string()?; // "qYw071iWQXu9_jXI7SXEvA"
-        d.string()?; // "YannexTM"
+        self.author_name = d.string()?; // "YannexTM"
         d.string()?; // "World|Europe|Switzerland|Fribourg"
         d.u32()?; // 0
 
@@ -680,11 +680,11 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 2
-        d.inline_node_or_null::<MediaClip>()?;
-        d.inline_node_or_null::<MediaClip>()?;
-        d.inline_node_or_null::<MediaClipGroup>()?;
-        d.inline_node_or_null::<MediaClipGroup>()?;
-        d.inline_node_or_null::<MediaClip>()?;
+        self.intro_media = d.inline_node_or_null::<MediaClip>()?;
+        self.podium_media = d.inline_node_or_null::<MediaClip>()?;
+        self.in_game_media = d.inline_node_or_null::<MediaClipGroup>()?;
+        self.end_race_media = d.inline_node_or_null::<MediaClipGroup>()?;
+        self.ambiance_media = d.inline_node_or_null::<MediaClip>()?;
         d.u32()?; // 3
         d.u32()?; // 1
         d.u32()?; // 3
@@ -1491,14 +1491,6 @@ enum Type {
         key_type: Box<Type>,
         element_type: Box<Type>,
     },
-}
-
-#[derive(Default)]
-struct MediaClip;
-
-impl Class for MediaClip {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x079;
 }
 
 impl ReadBody for MediaClip {
@@ -2445,14 +2437,6 @@ impl EffectSimi {
 
         Ok(())
     }
-}
-
-#[derive(Default)]
-struct MediaClipGroup;
-
-impl Class for MediaClipGroup {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x07a;
 }
 
 impl ReadBody for MediaClipGroup {
