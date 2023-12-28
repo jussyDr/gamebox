@@ -13,6 +13,7 @@ pub struct Map {
     author_id: RcStr,
     name: String,
     author_name: String,
+    author_region: String,
     blocks: Vec<Block>,
     items: Vec<Item>,
     baked_blocks: Vec<Block>,
@@ -21,6 +22,7 @@ pub struct Map {
     in_game_media: Option<Rc<MediaClipGroup>>,
     end_race_media: Option<Rc<MediaClipGroup>>,
     ambiance_media: Option<Rc<MediaClip>>,
+    embedded_objects: Option<EmbeddedObjects>,
 }
 
 impl Class for Map {
@@ -39,7 +41,7 @@ impl Map {
         self.author_id.as_str()
     }
 
-    /// Color coded name of the map.
+    /// Name of the map.
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -47,6 +49,11 @@ impl Map {
     /// Name of the map author.
     pub fn author_name(&self) -> &str {
         &self.author_name
+    }
+
+    /// Region of the map author.
+    pub fn author_region(&self) -> &str {
+        &self.author_region
     }
 
     /// List of blocks placed inside of this map.
@@ -97,6 +104,11 @@ impl Map {
             None => None,
             Some(ref ambiance_media) => Some(ambiance_media),
         }
+    }
+
+    /// Embedded objects.
+    pub fn embedded_objects(&self) -> Option<&EmbeddedObjects> {
+        self.embedded_objects.as_ref()
     }
 }
 
@@ -220,6 +232,24 @@ pub struct Coordinate {
     x: u8,
     y: u8,
     z: u8,
+}
+
+/// Objects embedded in a map.
+pub struct EmbeddedObjects {
+    object_ids: Vec<RcStr>,
+    data: Vec<u8>,
+}
+
+impl EmbeddedObjects {
+    /// Identifiers of the embedded objects.
+    pub fn object_ids(&self) -> &[RcStr] {
+        &self.object_ids
+    }
+
+    /// Embedded object data encoded as a ZIP archive.
+    pub fn data(&self) -> &[u8] {
+        &self.data
+    }
 }
 
 #[derive(Default)]

@@ -27,29 +27,34 @@ impl Rgb {
     }
 }
 
+/// Reference counted string.
 #[derive(Default)]
-pub(crate) struct RcStr(Option<Rc<str>>);
+pub struct RcStr(Option<Rc<str>>);
 
 impl RcStr {
-    pub fn from_string(s: String) -> Self {
-        if s.is_empty() {
-            Self(None)
-        } else {
-            Self(Some(Rc::from(s)))
-        }
-    }
-
     pub fn as_str(&self) -> &str {
         match self.0 {
             None => "",
             Some(ref rc_str) => rc_str,
         }
     }
+}
 
-    pub fn clone(&self) -> Self {
+impl Clone for RcStr {
+    fn clone(&self) -> Self {
         match self.0 {
             None => Self(None),
             Some(ref rc_str) => Self(Some(Rc::clone(rc_str))),
+        }
+    }
+}
+
+impl From<String> for RcStr {
+    fn from(s: String) -> Self {
+        if s.is_empty() {
+            Self(None)
+        } else {
+            Self(Some(Rc::from(s)))
         }
     }
 }

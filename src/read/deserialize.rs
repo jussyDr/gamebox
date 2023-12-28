@@ -326,7 +326,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
             let index = (index & 0x00003fff) as u16;
 
             if index == 0 {
-                let id = RcStr::from_string(self.string()?);
+                let id = RcStr::from(self.string()?);
                 self.id_state.borrow_mut().ids.push(RcStr::clone(&id));
                 return Ok(Some(id));
             } else {

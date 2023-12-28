@@ -11,12 +11,12 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    read_file_ref, EngineId, RcStr,
+    read_file_ref, EngineId,
 };
 
 use super::{
-    Block, BlockKind, Color, Coordinate, Direction, FreeBlock, Item, LightmapQuality, Map,
-    MediaClip, MediaClipGroup, NormalBlock, PhaseOffset, Position, Rotation,
+    Block, BlockKind, Color, Coordinate, Direction, EmbeddedObjects, FreeBlock, Item,
+    LightmapQuality, Map, MediaClip, MediaClipGroup, NormalBlock, PhaseOffset, Position, Rotation,
 };
 
 impl Readable for Map {}
@@ -363,9 +363,9 @@ impl Map {
     fn read_chunk_03043008<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 0
-        self.author_id = RcStr::from_string(d.string()?); // "qYw071iWQXu9_jXI7SXEvA"
+        self.author_id = d.string()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.author_name = d.string()?; // "YannexTM"
-        d.string()?; // "World|Europe|Switzerland|Fribourg"
+        self.author_region = d.string()?; // "World|Europe|Switzerland|Fribourg"
         d.u32()?; // 0
 
         Ok(())
@@ -636,9 +636,9 @@ impl Map {
     fn read_chunk_03043042<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 0
-        self.author_id = RcStr::from_string(d.string()?); // "qYw071iWQXu9_jXI7SXEvA"
+        self.author_id = d.string()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.author_name = d.string()?; // "YannexTM"
-        d.string()?; // "World|Europe|Switzerland|Fribourg"
+        self.author_region = d.string()?; // "World|Europe|Switzerland|Fribourg"
         d.u32()?; // 0
 
         Ok(())
@@ -808,15 +808,18 @@ impl Map {
         {
             let mut d = d.take(size as u64, IdState::new(), ());
 
-            d.list(|d| {
-                d.id()?;
+            let object_ids = d.list(|d| {
+                let id = d.id()?;
                 d.u32()?; // 26
                 d.id_or_null()?;
 
-                Ok(())
+                Ok(id)
             })?;
             let size = d.u32()?;
-            d.bytes(size as usize)?;
+            let data = d.bytes(size as usize)?;
+
+            self.embedded_objects = Some(EmbeddedObjects { object_ids, data });
+
             d.u32()?; // 0
 
             d.end()?;
