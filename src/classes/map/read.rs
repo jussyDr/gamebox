@@ -11,7 +11,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    read_file_ref, EngineId,
+    read_file_ref, EngineId, RcStr,
 };
 
 use super::{
@@ -283,7 +283,8 @@ impl BodyChunks for Map {
 
 impl Map {
     fn read_chunk_03043002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 13
+        d.u8()?; // 13
+        d.u32()?;
         d.u32()?;
         d.u32()?;
         d.u32()?;
@@ -293,7 +294,6 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
-        d.u8()?; // 0
         d.u32()?; // 2
         d.u32()?; // 0
         d.u32()?; // 38
@@ -307,10 +307,10 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u8()?; // 11
-        d.id()?; // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
+        self.id = d.id()?; // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
         d.u32()?; // 26
-        d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
-        d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
+        self.author_id = d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
+        self.name = d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
         d.u8()?; // 8
         d.u32()?; // 0
         d.u32()?; // 0
@@ -363,7 +363,7 @@ impl Map {
     fn read_chunk_03043008<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 0
-        d.string()?; // "qYw071iWQXu9_jXI7SXEvA"
+        self.author_id = RcStr::from_string(d.string()?); // "qYw071iWQXu9_jXI7SXEvA"
         self.author_name = d.string()?; // "YannexTM"
         d.string()?; // "World|Europe|Switzerland|Fribourg"
         d.u32()?; // 0
@@ -410,10 +410,10 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.id()?; // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
+        self.id = d.id()?; // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
         d.u32()?; // 26
-        d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
-        d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
+        self.author_id = d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
+        self.name = d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
         d.id()?; // "NoStadium48x48Sunrise"
         d.u32()?; // 26
         d.id()?; // "Nadeo"
@@ -636,7 +636,7 @@ impl Map {
     fn read_chunk_03043042<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 0
-        d.string()?; // "qYw071iWQXu9_jXI7SXEvA"
+        self.author_id = RcStr::from_string(d.string()?); // "qYw071iWQXu9_jXI7SXEvA"
         self.author_name = d.string()?; // "YannexTM"
         d.string()?; // "World|Europe|Switzerland|Fribourg"
         d.u32()?; // 0
@@ -1351,7 +1351,7 @@ impl AnchoredObject {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 8
-        self.id = Some(d.id()?); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
+        self.id = d.id()?; // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
         d.u32()?; // 26
         d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
         d.u32()?;

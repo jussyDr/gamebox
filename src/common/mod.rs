@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{io::Read, rc::Rc};
 
 use crate::read::{deserialize::Deserializer, Result};
 
@@ -24,6 +24,33 @@ impl Rgb {
     /// ```
     pub const fn into_array(self) -> [u8; 3] {
         [self.r, self.g, self.b]
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct RcStr(Option<Rc<str>>);
+
+impl RcStr {
+    pub fn from_string(s: String) -> Self {
+        if s.is_empty() {
+            Self(None)
+        } else {
+            Self(Some(Rc::from(s)))
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self.0 {
+            None => "",
+            Some(ref rc_str) => rc_str,
+        }
+    }
+
+    pub fn clone(&self) -> Self {
+        match self.0 {
+            None => Self(None),
+            Some(ref rc_str) => Self(Some(Rc::clone(rc_str))),
+        }
     }
 }
 

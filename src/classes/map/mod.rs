@@ -4,11 +4,14 @@ mod read;
 
 use std::rc::Rc;
 
-use crate::{class::Class, EngineId};
+use crate::{class::Class, EngineId, RcStr};
 
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
 pub struct Map {
+    id: RcStr,
+    author_id: RcStr,
+    name: String,
     author_name: String,
     blocks: Vec<Block>,
     items: Vec<Item>,
@@ -26,6 +29,21 @@ impl Class for Map {
 }
 
 impl Map {
+    /// Identifier of the map.
+    pub fn id(&self) -> &str {
+        self.id.as_str()
+    }
+
+    /// Identifier of the map author.
+    pub fn author_id(&self) -> &str {
+        self.author_id.as_str()
+    }
+
+    /// Color coded name of the map.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     /// Name of the map author.
     pub fn author_name(&self) -> &str {
         &self.author_name
@@ -84,7 +102,7 @@ impl Map {
 
 /// Block placed inside of a [Map].
 pub struct Block {
-    id: Rc<str>,
+    id: RcStr,
     kind: BlockKind,
     color: Color,
     lightmap_quality: LightmapQuality,
@@ -93,7 +111,7 @@ pub struct Block {
 impl Block {
     /// Identifier of the block.
     pub fn id(&self) -> &str {
-        &self.id
+        self.id.as_str()
     }
 
     /// Kind of block.
@@ -164,7 +182,7 @@ impl FreeBlock {
 /// Item placed inside of a [Map].
 #[derive(Default)]
 pub struct Item {
-    id: Option<Rc<str>>,
+    id: RcStr,
     color: Color,
     animation_offset: PhaseOffset,
 }
@@ -172,10 +190,7 @@ pub struct Item {
 impl Item {
     /// Identifier of the item.
     pub fn id(&self) -> &str {
-        match self.id {
-            None => "",
-            Some(ref id) => id,
-        }
+        self.id.as_str()
     }
 
     pub const fn color(&self) -> Color {
