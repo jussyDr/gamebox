@@ -2,9 +2,8 @@ use std::io::{Read, Seek};
 
 use crate::read::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    read_body_chunks,
-    readable::{BodyChunkEntry, BodyChunkReadFn, BodyChunks},
-    ReadBody, Result,
+    readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
+    Result,
 };
 
 use super::{

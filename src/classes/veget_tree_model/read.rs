@@ -4,9 +4,8 @@ use crate::{
     classes::visual_indexed_triangles::VisualIndexedTriangles,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
-        read_gbx,
-        readable::{HeaderChunkEntry, HeaderChunks, Sealed},
-        BodyOptions, HeaderOptions, ReadBody, Readable, Result,
+        readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
+        BodyOptions, HeaderOptions, Readable, Result,
     },
 };
 

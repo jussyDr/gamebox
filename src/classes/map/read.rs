@@ -5,11 +5,11 @@ use crate::{
     classes::ghost::{EntRecordData, Ghost},
     read::{
         deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
-        read_body_chunks, read_gbx,
         readable::{
-            BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
+            read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
+            HeaderChunkEntry, HeaderChunks, ReadBody, Sealed,
         },
-        BodyOptions, HeaderOptions, ReadBody, Readable, Result,
+        BodyOptions, HeaderOptions, Readable, Result,
     },
     read_file_ref, EngineId,
 };

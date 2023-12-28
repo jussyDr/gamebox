@@ -2,11 +2,11 @@ use std::io::{Read, Seek};
 
 use crate::read::{
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    read_body_chunks, read_gbx,
     readable::{
-        BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry, HeaderChunks, Sealed,
+        read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry,
+        HeaderChunks, ReadBody, Sealed,
     },
-    BodyOptions, HeaderOptions, ReadBody, Readable, Result,
+    BodyOptions, HeaderOptions, Readable, Result,
 };
 
 use super::Texture;

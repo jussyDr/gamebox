@@ -10,7 +10,7 @@ use std::{
 
 use crate::{class::Class, read::Result};
 
-use super::ReadBody;
+use super::readable::ReadBody;
 
 /// State of identifiers read in the past.
 pub struct IdState {

@@ -5,7 +5,10 @@ use std::io::{Read, Seek};
 use serde_jsonrc::Value;
 
 use crate::{
-    read::{read_json, readable::Sealed, BodyOptions, HeaderOptions, ReadJson, Readable, Result},
+    read::{
+        readable::{read_json, ReadJson, Sealed},
+        BodyOptions, HeaderOptions, Readable, Result,
+    },
     Rgb,
 };
 
