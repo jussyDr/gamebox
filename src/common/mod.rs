@@ -27,28 +27,6 @@ impl Rgb {
     }
 }
 
-/// A 3-dimensional vector with components of type `T`.
-pub struct Vec3<T> {
-    x: T,
-    y: T,
-    z: T,
-}
-
-impl<T: Copy> Vec3<T> {
-    /// Convert to an array with the form `[x, y, z]`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # |vec3: gamebox::Vec3<f32>| {
-    /// let array = vec3.into_array();
-    /// # };
-    /// ```
-    pub const fn into_array(self) -> [T; 3] {
-        [self.x, self.y, self.z]
-    }
-}
-
 pub(crate) const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 
 pub(crate) const SKIP: u32 = 0x534b4950;

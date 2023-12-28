@@ -14,7 +14,10 @@ use crate::{
     read_file_ref, EngineId,
 };
 
-use super::{Block, Item, Map, MediaClip, MediaClipGroup};
+use super::{
+    Block, BlockKind, Color, Coordinate, Direction, FreeBlock, Item, LightmapQuality, Map,
+    MediaClip, MediaClipGroup, NormalBlock, PhaseOffset, Position, Rotation,
+};
 
 impl Readable for Map {}
 
@@ -423,7 +426,10 @@ impl Map {
         self.blocks = Vec::with_capacity(num_blocks as usize);
         while d.peek_u32()? & 0xffffc000 == 0x40000000 {
             let id = d.id()?;
-            d.u32()?;
+            let direction = d.u8()?;
+            let x = d.u8()?;
+            let y = d.u8()?;
+            let z = d.u8()?;
             let flags = d.u32()?;
 
             if flags == 0xffffffff {
@@ -441,7 +447,37 @@ impl Map {
 
             let is_free = flags & 0x20000000 != 0;
 
-            self.blocks.push(Block { id, is_free });
+            if is_free {
+                self.blocks.push(Block {
+                    id,
+                    kind: BlockKind::Free(FreeBlock::default()),
+                    color: Color::default(),
+                    lightmap_quality: LightmapQuality::default(),
+                });
+            } else {
+                let direction = match direction {
+                    0 => Direction::North,
+                    1 => Direction::East,
+                    2 => Direction::South,
+                    3 => Direction::West,
+                    _ => todo!(),
+                };
+
+                let coordinate = Coordinate { x, y, z };
+
+                let is_ghost = flags & 0x10000000 != 0;
+
+                self.blocks.push(Block {
+                    id,
+                    kind: BlockKind::Normal(NormalBlock {
+                        direction,
+                        coordinate,
+                        is_ghost,
+                    }),
+                    color: Color::default(),
+                    lightmap_quality: LightmapQuality::default(),
+                });
+            }
         }
 
         Ok(())
@@ -662,12 +698,45 @@ impl Map {
         d.u32()?; // 6
         self.baked_blocks = d.list(|d| {
             let id = d.id()?;
-            d.u32()?;
+            let direction = d.u8()?;
+            let x = d.u8()?;
+            let y = d.u8()?;
+            let z = d.u8()?;
             let flags = d.u32()?;
 
             let is_free = flags & 0x20000000 != 0;
 
-            Ok(Block { id, is_free })
+            if is_free {
+                Ok(Block {
+                    id,
+                    kind: BlockKind::Free(FreeBlock::default()),
+                    color: Color::default(),
+                    lightmap_quality: LightmapQuality::default(),
+                })
+            } else {
+                let direction = match direction {
+                    0 => Direction::North,
+                    1 => Direction::East,
+                    2 => Direction::South,
+                    3 => Direction::West,
+                    _ => todo!(),
+                };
+
+                let coordinate = Coordinate { x, y, z };
+
+                let is_ghost = flags & 0x10000000 != 0;
+
+                Ok(Block {
+                    id,
+                    kind: BlockKind::Normal(NormalBlock {
+                        direction,
+                        coordinate,
+                        is_ghost,
+                    }),
+                    color: Color::default(),
+                    lightmap_quality: LightmapQuality::default(),
+                })
+            }
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -869,24 +938,19 @@ impl Map {
 
     fn read_chunk_0304305f<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for block in &self.blocks {
-            if block.is_free {
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-            }
-        }
-        for block in &self.baked_blocks {
-            if block.is_free {
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
+        for block in self.blocks.iter_mut().chain(self.baked_blocks.iter_mut()) {
+            if let BlockKind::Free(ref mut free_block) = block.kind {
+                let x = d.f32()?;
+                let y = d.f32()?;
+                let z = d.f32()?;
+
+                free_block.position = Position { x, y, z };
+
+                let yaw = d.f32()?;
+                let pitch = d.f32()?;
+                let roll = d.f32()?;
+
+                free_block.rotation = Rotation { yaw, pitch, roll };
             }
         }
 
@@ -919,14 +983,27 @@ impl Map {
 
     fn read_chunk_03043062<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for _ in &self.blocks {
-            d.u8()?;
+        for block in self.blocks.iter_mut().chain(self.baked_blocks.iter_mut()) {
+            block.color = match d.u8()? {
+                0 => Color::Default,
+                1 => Color::White,
+                2 => Color::Green,
+                3 => Color::Blue,
+                4 => Color::Red,
+                5 => Color::Black,
+                _ => todo!(),
+            }
         }
-        for _ in &self.baked_blocks {
-            d.u8()?;
-        }
-        for _ in &self.items {
-            d.u8()?;
+        for item in &mut self.items {
+            item.color = match d.u8()? {
+                0 => Color::Default,
+                1 => Color::White,
+                2 => Color::Green,
+                3 => Color::Blue,
+                4 => Color::Red,
+                5 => Color::Black,
+                _ => todo!(),
+            }
         }
 
         Ok(())
@@ -934,8 +1011,18 @@ impl Map {
 
     fn read_chunk_03043063<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for _ in &self.items {
-            d.u8()?;
+        for item in &mut self.items {
+            item.animation_offset = match d.u8()? {
+                0 => PhaseOffset::None,
+                1 => PhaseOffset::One8th,
+                2 => PhaseOffset::Two8th,
+                3 => PhaseOffset::Three8th,
+                4 => PhaseOffset::Four8th,
+                5 => PhaseOffset::Five8th,
+                6 => PhaseOffset::Six8th,
+                7 => PhaseOffset::Seven8th,
+                _ => todo!(),
+            };
         }
 
         Ok(())

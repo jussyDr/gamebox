@@ -85,7 +85,9 @@ impl Map {
 /// Block placed inside of a [Map].
 pub struct Block {
     id: Rc<str>,
-    is_free: bool,
+    kind: BlockKind,
+    color: Color,
+    lightmap_quality: LightmapQuality,
 }
 
 impl Block {
@@ -93,12 +95,78 @@ impl Block {
     pub fn id(&self) -> &str {
         &self.id
     }
+
+    /// Kind of block.
+    pub const fn kind(&self) -> &BlockKind {
+        &self.kind
+    }
+
+    pub const fn color(&self) -> Color {
+        self.color
+    }
+
+    pub const fn lightmap_quality(&self) -> LightmapQuality {
+        self.lightmap_quality
+    }
+}
+
+/// Either a normal or a free block.
+pub enum BlockKind {
+    /// A normal block.
+    Normal(NormalBlock),
+    /// A free block.
+    Free(FreeBlock),
+}
+
+/// A normal block.
+pub struct NormalBlock {
+    direction: Direction,
+    coordinate: Coordinate,
+    is_ghost: bool,
+}
+
+impl NormalBlock {
+    /// Cardinal direction of the block.
+    pub const fn direction(&self) -> Direction {
+        self.direction
+    }
+
+    /// Coordinate of the block.
+    pub const fn coordinate(&self) -> Coordinate {
+        self.coordinate
+    }
+
+    /// Returns `true` if this block is a ghost block.
+    pub const fn is_ghost_block(&self) -> bool {
+        self.is_ghost
+    }
+}
+
+/// A free block.
+#[derive(Default)]
+pub struct FreeBlock {
+    position: Position,
+    rotation: Rotation,
+}
+
+impl FreeBlock {
+    /// Position of the free block.
+    pub const fn position(&self) -> &Position {
+        &self.position
+    }
+
+    /// Rotation of the free block.
+    pub const fn rotation(&self) -> &Rotation {
+        &self.rotation
+    }
 }
 
 /// Item placed inside of a [Map].
 #[derive(Default)]
 pub struct Item {
     id: Option<Rc<str>>,
+    color: Color,
+    animation_offset: PhaseOffset,
 }
 
 impl Item {
@@ -109,6 +177,84 @@ impl Item {
             Some(ref id) => id,
         }
     }
+
+    pub const fn color(&self) -> Color {
+        self.color
+    }
+
+    pub const fn animation_offset(&self) -> PhaseOffset {
+        self.animation_offset
+    }
+}
+
+/// Cardinal direction.
+#[derive(Clone, Copy)]
+pub enum Direction {
+    /// North.
+    North,
+    /// East.
+    East,
+    /// South.
+    South,
+    /// West.
+    West,
+}
+
+#[derive(Clone, Copy)]
+pub struct Coordinate {
+    x: u8,
+    y: u8,
+    z: u8,
+}
+
+#[derive(Default)]
+pub struct Position {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+#[derive(Default)]
+pub struct Rotation {
+    yaw: f32,
+    pitch: f32,
+    roll: f32,
+}
+
+#[derive(Clone, Copy, Default)]
+pub enum Color {
+    #[default]
+    Default,
+    White,
+    Green,
+    Blue,
+    Red,
+    Black,
+}
+
+#[derive(Clone, Copy, Default)]
+pub enum PhaseOffset {
+    #[default]
+    None,
+    One8th,
+    Two8th,
+    Three8th,
+    Four8th,
+    Five8th,
+    Six8th,
+    Seven8th,
+}
+
+#[derive(Clone, Copy, Default)]
+pub enum LightmapQuality {
+    #[default]
+    Normal,
+    High,
+    VeryHigh,
+    Highest,
+    Low,
+    VeryLow,
+    Lowest,
 }
 
 #[derive(Default)]
