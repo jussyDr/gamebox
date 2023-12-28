@@ -15,9 +15,9 @@ use crate::{
 };
 
 use super::{
-    Block, BlockKind, Color, Coordinate, Direction, EmbeddedObjects, FreeBlock, Item,
-    LightmapQuality, Map, MediaClip, MediaClipGroup, MediaClipWithTrigger, NormalBlock,
-    PhaseOffset, Position, Rotation,
+    Block, BlockKind, Color, Coord, Direction, EmbeddedObjects, FreeBlock, Item, LightmapQuality,
+    Map, MediaClip, MediaClipGroup, MediaClipWithTrigger, NormalBlock, PhaseOffset, Position,
+    Rotation,
 };
 
 impl Readable for Map {}
@@ -458,7 +458,7 @@ impl Map {
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
-                let coordinate = Coordinate { x, y, z };
+                let coord = Coord { x, y, z };
 
                 let is_ghost = flags & 0x10000000 != 0;
 
@@ -466,7 +466,7 @@ impl Map {
                     id,
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
-                        coordinate,
+                        coord,
                         is_ghost,
                     }),
                     color: Color::default(),
@@ -711,7 +711,7 @@ impl Map {
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
-                let coordinate = Coordinate { x, y, z };
+                let coord = Coord { x, y, z };
 
                 let is_ghost = flags & 0x10000000 != 0;
 
@@ -719,7 +719,7 @@ impl Map {
                     id,
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
-                        coordinate,
+                        coord,
                         is_ghost,
                     }),
                     color: Color::default(),
@@ -2526,15 +2526,18 @@ impl MediaClipGroup {
             d.u32()?;
             d.u32()?;
             d.u32()?;
-            d.list(|d| {
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
+            let trigger_coords = d.list(|d| {
+                let x = d.u32()?;
+                let y = d.u32()?;
+                let z = d.u32()?;
 
-                Ok(())
+                Ok(Coord { x, y, z })
             })?;
 
-            Ok(MediaClipWithTrigger { clip })
+            Ok(MediaClipWithTrigger {
+                clip,
+                trigger_coords,
+            })
         })?;
 
         Ok(())

@@ -151,7 +151,7 @@ pub enum BlockKind {
 /// A normal block.
 pub struct NormalBlock {
     direction: Direction,
-    coordinate: Coordinate,
+    coord: Coord<u8>,
     is_ghost: bool,
 }
 
@@ -162,8 +162,8 @@ impl NormalBlock {
     }
 
     /// Coordinate of the block.
-    pub const fn coordinate(&self) -> Coordinate {
-        self.coordinate
+    pub const fn coord(&self) -> Coord<u8> {
+        self.coord
     }
 
     /// Returns `true` if this block is a ghost block.
@@ -227,11 +227,12 @@ pub enum Direction {
     West,
 }
 
+/// A coordinate.
 #[derive(Clone, Copy)]
-pub struct Coordinate {
-    x: u8,
-    y: u8,
-    z: u8,
+pub struct Coord<T> {
+    x: T,
+    y: T,
+    z: T,
 }
 
 /// Objects embedded in a map.
@@ -277,6 +278,7 @@ pub enum Color {
     Black,
 }
 
+/// Phase offset.
 #[derive(Clone, Copy, Default)]
 pub enum PhaseOffset {
     #[default]
@@ -290,6 +292,7 @@ pub enum PhaseOffset {
     Seven8th,
 }
 
+/// Lightmap quality of a block or item.
 #[derive(Clone, Copy, Default)]
 pub enum LightmapQuality {
     #[default]
@@ -302,6 +305,7 @@ pub enum LightmapQuality {
     Lowest,
 }
 
+/// A group of media tracker clips.
 #[derive(Default)]
 pub struct MediaClipGroup {
     clips: Vec<MediaClipWithTrigger>,
@@ -313,21 +317,31 @@ impl Class for MediaClipGroup {
 }
 
 impl MediaClipGroup {
+    /// The media tracker clips in this group with their corresponding triggers.
     pub fn clips(&self) -> &[MediaClipWithTrigger] {
         &self.clips
     }
 }
 
+/// A media tracker clip and its corresponding trigger.
 pub struct MediaClipWithTrigger {
     clip: Rc<MediaClip>,
+    trigger_coords: Vec<Coord<u32>>,
 }
 
 impl MediaClipWithTrigger {
+    /// The media tracker clip.
     pub fn clip(&self) -> &MediaClip {
         &self.clip
     }
+
+    /// List of coordinates where this clip is triggered if its condition is met.
+    pub fn trigger_coords(&self) -> &[Coord<u32>] {
+        &self.trigger_coords
+    }
 }
 
+/// A media tracker clip.
 #[derive(Default)]
 pub struct MediaClip;
 
