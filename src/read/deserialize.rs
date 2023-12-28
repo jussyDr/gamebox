@@ -246,6 +246,20 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         iter::repeat_with(|| read_fn(self)).take(n).collect()
     }
 
+    pub fn list_zipped_with<T, U>(
+        &mut self,
+        vec: Vec<U>,
+        mut read_fn: impl FnMut(&mut Self, U) -> Result<T>,
+    ) -> Result<Vec<T>> {
+        let len = self.u32()?;
+
+        if len as usize != vec.len() {
+            todo!()
+        }
+
+        vec.into_iter().map(|x| read_fn(self, x)).collect()
+    }
+
     /// Create an adapter which will read at most `limit` bytes from this deserializer.
     pub fn take<IS, NS>(
         &mut self,

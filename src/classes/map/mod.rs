@@ -303,11 +303,29 @@ pub enum LightmapQuality {
 }
 
 #[derive(Default)]
-pub struct MediaClipGroup;
+pub struct MediaClipGroup {
+    clips: Vec<MediaClipWithTrigger>,
+}
 
 impl Class for MediaClipGroup {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x07a;
+}
+
+impl MediaClipGroup {
+    pub fn clips(&self) -> &[MediaClipWithTrigger] {
+        &self.clips
+    }
+}
+
+pub struct MediaClipWithTrigger {
+    clip: Rc<MediaClip>,
+}
+
+impl MediaClipWithTrigger {
+    pub fn clip(&self) -> &MediaClip {
+        &self.clip
+    }
 }
 
 #[derive(Default)]

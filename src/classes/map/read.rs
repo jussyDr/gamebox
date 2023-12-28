@@ -16,7 +16,8 @@ use crate::{
 
 use super::{
     Block, BlockKind, Color, Coordinate, Direction, EmbeddedObjects, FreeBlock, Item,
-    LightmapQuality, Map, MediaClip, MediaClipGroup, NormalBlock, PhaseOffset, Position, Rotation,
+    LightmapQuality, Map, MediaClip, MediaClipGroup, MediaClipWithTrigger, NormalBlock,
+    PhaseOffset, Position, Rotation,
 };
 
 impl Readable for Map {}
@@ -2517,8 +2518,8 @@ impl MediaClipGroup {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 10
-        d.list(|d| d.inline_node::<MediaClip>())?;
-        d.list(|d| {
+        let clips = d.list(|d| d.inline_node::<MediaClip>())?;
+        self.clips = d.list_zipped_with(clips, |d, clip| {
             d.u32()?;
             d.u32()?;
             d.u32()?;
@@ -2533,7 +2534,7 @@ impl MediaClipGroup {
                 Ok(())
             })?;
 
-            Ok(())
+            Ok(MediaClipWithTrigger { clip })
         })?;
 
         Ok(())
