@@ -455,13 +455,7 @@ impl Map {
                     lightmap_quality: LightmapQuality::default(),
                 });
             } else {
-                let direction = match direction {
-                    0 => Direction::North,
-                    1 => Direction::East,
-                    2 => Direction::South,
-                    3 => Direction::West,
-                    _ => todo!(),
-                };
+                let direction = Direction::try_from_u8(direction)?;
 
                 let coordinate = Coordinate { x, y, z };
 
@@ -714,13 +708,7 @@ impl Map {
                     lightmap_quality: LightmapQuality::default(),
                 })
             } else {
-                let direction = match direction {
-                    0 => Direction::North,
-                    1 => Direction::East,
-                    2 => Direction::South,
-                    3 => Direction::West,
-                    _ => todo!(),
-                };
+                let direction = Direction::try_from_u8(direction)?;
 
                 let coordinate = Coordinate { x, y, z };
 
@@ -984,26 +972,10 @@ impl Map {
     fn read_chunk_03043062<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         for block in self.blocks.iter_mut().chain(self.baked_blocks.iter_mut()) {
-            block.color = match d.u8()? {
-                0 => Color::Default,
-                1 => Color::White,
-                2 => Color::Green,
-                3 => Color::Blue,
-                4 => Color::Red,
-                5 => Color::Black,
-                _ => todo!(),
-            }
+            block.color = Color::read(d)?;
         }
         for item in &mut self.items {
-            item.color = match d.u8()? {
-                0 => Color::Default,
-                1 => Color::White,
-                2 => Color::Green,
-                3 => Color::Blue,
-                4 => Color::Red,
-                5 => Color::Black,
-                _ => todo!(),
-            }
+            item.color = Color::read(d)?;
         }
 
         Ok(())
@@ -1012,17 +984,7 @@ impl Map {
     fn read_chunk_03043063<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         for item in &mut self.items {
-            item.animation_offset = match d.u8()? {
-                0 => PhaseOffset::None,
-                1 => PhaseOffset::One8th,
-                2 => PhaseOffset::Two8th,
-                3 => PhaseOffset::Three8th,
-                4 => PhaseOffset::Four8th,
-                5 => PhaseOffset::Five8th,
-                6 => PhaseOffset::Six8th,
-                7 => PhaseOffset::Seven8th,
-                _ => todo!(),
-            };
+            item.animation_offset = PhaseOffset::read(d)?;
         }
 
         Ok(())
@@ -2572,5 +2534,53 @@ impl MediaClipGroup {
         })?;
 
         Ok(())
+    }
+}
+
+impl Direction {
+    fn try_from_u8(x: u8) -> Result<Self> {
+        let direction = match x {
+            0 => Self::North,
+            1 => Self::East,
+            2 => Self::South,
+            3 => Self::West,
+            _ => todo!(),
+        };
+
+        Ok(direction)
+    }
+}
+
+impl Color {
+    fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
+        let color = match d.u8()? {
+            0 => Self::Default,
+            1 => Self::White,
+            2 => Self::Green,
+            3 => Self::Blue,
+            4 => Self::Red,
+            5 => Self::Black,
+            _ => todo!(),
+        };
+
+        Ok(color)
+    }
+}
+
+impl PhaseOffset {
+    fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
+        let phase_offset = match d.u8()? {
+            0 => Self::None,
+            1 => Self::One8th,
+            2 => Self::Two8th,
+            3 => Self::Three8th,
+            4 => Self::Four8th,
+            5 => Self::Five8th,
+            6 => Self::Six8th,
+            7 => Self::Seven8th,
+            _ => todo!(),
+        };
+
+        Ok(phase_offset)
     }
 }
