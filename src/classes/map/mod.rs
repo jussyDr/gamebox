@@ -305,7 +305,7 @@ pub enum LightmapQuality {
     Lowest,
 }
 
-/// A group of media tracker clips.
+/// A group of media clips.
 #[derive(Default)]
 pub struct MediaClipGroup {
     clips: Vec<MediaClipWithTrigger>,
@@ -317,20 +317,20 @@ impl Class for MediaClipGroup {
 }
 
 impl MediaClipGroup {
-    /// The media tracker clips in this group with their corresponding triggers.
+    /// The media clips in this group with their corresponding triggers.
     pub fn clips(&self) -> &[MediaClipWithTrigger] {
         &self.clips
     }
 }
 
-/// A media tracker clip and its corresponding trigger.
+/// A media clip and its corresponding trigger.
 pub struct MediaClipWithTrigger {
     clip: Rc<MediaClip>,
     trigger_coords: Vec<Coord<u32>>,
 }
 
 impl MediaClipWithTrigger {
-    /// The media tracker clip.
+    /// The media clip.
     pub fn clip(&self) -> &MediaClip {
         &self.clip
     }
@@ -341,11 +341,88 @@ impl MediaClipWithTrigger {
     }
 }
 
-/// A media tracker clip.
+/// A media clip.
 #[derive(Default)]
-pub struct MediaClip;
+pub struct MediaClip {
+    tracks: Vec<Rc<MediaTrack>>,
+}
 
 impl Class for MediaClip {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x079;
 }
+
+impl MediaClip {
+    /// Media tracks in this clip.
+    pub fn tracks(&self) -> &[Rc<MediaTrack>] {
+        &self.tracks
+    }
+}
+
+/// A media track.
+#[derive(Default)]
+pub struct MediaTrack {
+    blocks: Vec<Rc<MediaBlock>>,
+}
+
+impl MediaTrack {
+    /// Media blocks in this track.
+    pub fn blocks(&self) -> &[Rc<MediaBlock>] {
+        &self.blocks
+    }
+}
+
+impl Class for MediaTrack {
+    const ENGINE: u8 = EngineId::GAME;
+    const CLASS: u16 = 0x078;
+}
+
+/// A media block.
+pub enum MediaBlock {
+    Triangles3D(MediaBlockTriangles3D),
+    FxColors(MediaBlockFxColors),
+    CameraGame(MediaBlockCameraGame),
+    CameraCustom(MediaBlockCameraCustom),
+    CameraEffectShake(MediaBlockCameraEffectShake),
+    Image(MediaBlockImage),
+    Text(MediaBlockText),
+    TransitionFade(MediaBlockTransitionFade),
+    DOF(MediaBlockDOF),
+    ToneMapping(MediaBlockToneMapping),
+    DirtyLens(MediaBlockDirtyLens),
+    ColorGrading(MediaBlockColorGrading),
+    Fog(MediaBlockFog),
+    Entity(MediaBlockEntity),
+}
+
+struct MediaBlockTriangles;
+
+pub struct MediaBlockTriangles3D {
+    parent: MediaBlockTriangles,
+}
+
+pub struct MediaBlockFxColors;
+
+pub struct MediaBlockCameraGame;
+
+pub struct MediaBlockCameraCustom;
+
+pub struct MediaBlockCameraEffectShake;
+
+pub struct MediaBlockImage;
+
+pub struct MediaBlockText;
+
+pub struct MediaBlockTransitionFade;
+
+pub struct MediaBlockDOF;
+
+pub struct MediaBlockToneMapping;
+
+pub struct MediaBlockDirtyLens;
+
+pub struct MediaBlockColorGrading;
+
+pub struct MediaBlockFog;
+
+pub struct MediaBlockEntity;

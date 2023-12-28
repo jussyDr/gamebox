@@ -427,7 +427,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn any_inline_node_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<Option<T>> {
+    ) -> Result<Option<Rc<T>>> {
         let index = self.u32()?;
 
         if index == 0xFFFFFFFF {
@@ -442,14 +442,14 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
 
         let node = read_fn(self, class_id)?;
 
-        Ok(Some(node))
+        Ok(Some(Rc::new(node)))
     }
 
     /// Either any inline node, a node reference, or null.
     pub fn any_inline_node<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<T> {
+    ) -> Result<Rc<T>> {
         match self.any_inline_node_or_null(read_fn)? {
             None => todo!(),
             Some(node) => Ok(node),

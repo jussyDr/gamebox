@@ -16,8 +16,11 @@ use crate::{
 
 use super::{
     Block, BlockKind, Color, Coord, Direction, EmbeddedObjects, FreeBlock, Item, LightmapQuality,
-    Map, MediaClip, MediaClipGroup, MediaClipWithTrigger, NormalBlock, PhaseOffset, Position,
-    Rotation,
+    Map, MediaBlock, MediaBlockCameraCustom, MediaBlockCameraEffectShake, MediaBlockCameraGame,
+    MediaBlockColorGrading, MediaBlockDOF, MediaBlockDirtyLens, MediaBlockEntity, MediaBlockFog,
+    MediaBlockFxColors, MediaBlockImage, MediaBlockText, MediaBlockToneMapping,
+    MediaBlockTransitionFade, MediaBlockTriangles, MediaBlockTriangles3D, MediaClip,
+    MediaClipGroup, MediaClipWithTrigger, MediaTrack, NormalBlock, PhaseOffset, Position, Rotation,
 };
 
 impl Readable for Map {}
@@ -1579,11 +1582,7 @@ impl MediaClip {
     ) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 10
-        d.list(|d| {
-            d.inline_node::<MediaTrack>()?;
-
-            Ok(())
-        })?;
+        self.tracks = d.list(|d| d.inline_node::<MediaTrack>())?;
         d.string()?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -1601,14 +1600,6 @@ impl MediaClip {
 
         Ok(())
     }
-}
-
-#[derive(Default)]
-struct MediaTrack;
-
-impl Class for MediaTrack {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x078;
 }
 
 impl ReadBody for MediaTrack {
@@ -1644,75 +1635,86 @@ impl MediaTrack {
     ) -> Result<()> {
         d.string()?;
         d.u32()?; // 10
-        d.list(|d| {
+        self.blocks = d.list(|d| {
             d.any_inline_node(|d, class_id| {
-                match class_id {
+                let node = match class_id {
                     0x0304c000 => {
                         let mut node = MediaBlockTriangles3D {
                             parent: MediaBlockTriangles,
                         };
-
                         MediaBlockTriangles3D::read_body(&mut node, d)?;
+                        MediaBlock::Triangles3D(node)
                     }
                     0x03080000 => {
                         let mut node = MediaBlockFxColors;
                         MediaBlockFxColors::read_body(&mut node, d)?;
+                        MediaBlock::FxColors(node)
                     }
                     0x03084000 => {
                         let mut node = MediaBlockCameraGame;
                         MediaBlockCameraGame::read_body(&mut node, d)?;
+                        MediaBlock::CameraGame(node)
                     }
                     0x030a2000 => {
                         let mut node = MediaBlockCameraCustom;
                         MediaBlockCameraCustom::read_body(&mut node, d)?;
+                        MediaBlock::CameraCustom(node)
                     }
                     0x030a4000 => {
                         let mut node = MediaBlockCameraEffectShake;
                         MediaBlockCameraEffectShake::read_body(&mut node, d)?;
+                        MediaBlock::CameraEffectShake(node)
                     }
                     0x030a5000 => {
                         let mut node = MediaBlockImage;
                         MediaBlockImage::read_body(&mut node, d)?;
+                        MediaBlock::Image(node)
                     }
                     0x030a8000 => {
                         let mut node = MediaBlockText;
                         MediaBlockText::read_body(&mut node, d)?;
+                        MediaBlock::Text(node)
                     }
                     0x030ab000 => {
                         let mut node = MediaBlockTransitionFade;
                         MediaBlockTransitionFade::read_body(&mut node, d)?;
+                        MediaBlock::TransitionFade(node)
                     }
                     0x03126000 => {
                         let mut node = MediaBlockDOF;
                         MediaBlockDOF::read_body(&mut node, d)?;
+                        MediaBlock::DOF(node)
                     }
                     0x03127000 => {
                         let mut node = MediaBlockToneMapping;
                         MediaBlockToneMapping::read_body(&mut node, d)?;
+                        MediaBlock::ToneMapping(node)
                     }
                     0x03165000 => {
                         let mut node = MediaBlockDirtyLens;
                         MediaBlockDirtyLens::read_body(&mut node, d)?;
+                        MediaBlock::DirtyLens(node)
                     }
                     0x03186000 => {
                         let mut node = MediaBlockColorGrading;
                         MediaBlockColorGrading::read_body(&mut node, d)?;
+                        MediaBlock::ColorGrading(node)
                     }
                     0x03199000 => {
                         let mut node = MediaBlockFog;
                         MediaBlockFog::read_body(&mut node, d)?;
+                        MediaBlock::Fog(node)
                     }
                     0x0329f000 => {
                         let mut node = MediaBlockEntity;
                         MediaBlockEntity::read_body(&mut node, d)?;
+                        MediaBlock::Entity(node)
                     }
                     _ => todo!(),
-                }
+                };
 
-                Ok(())
-            })?;
-
-            Ok(())
+                Ok(node)
+            })
         })?;
         d.u32()?; // 0xffffffff
 
@@ -1730,8 +1732,6 @@ impl MediaTrack {
         Ok(())
     }
 }
-
-struct MediaBlockTriangles;
 
 impl MediaBlockTriangles {
     fn read_chunk_1<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
@@ -1782,10 +1782,6 @@ impl MediaBlockTriangles {
     }
 }
 
-struct MediaBlockTriangles3D {
-    parent: MediaBlockTriangles,
-}
-
 impl ReadBody for MediaBlockTriangles3D {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -1815,8 +1811,6 @@ impl BodyChunks for MediaBlockTriangles3D {
         .into_iter()
     }
 }
-
-struct MediaBlockFxColors;
 
 impl ReadBody for MediaBlockFxColors {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -1878,8 +1872,6 @@ impl MediaBlockFxColors {
     }
 }
 
-struct MediaBlockCameraGame;
-
 impl ReadBody for MediaBlockCameraGame {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -1927,8 +1919,6 @@ impl MediaBlockCameraGame {
         Ok(())
     }
 }
-
-struct MediaBlockCameraCustom;
 
 impl ReadBody for MediaBlockCameraCustom {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -2001,8 +1991,6 @@ impl MediaBlockCameraCustom {
     }
 }
 
-struct MediaBlockCameraEffectShake;
-
 impl ReadBody for MediaBlockCameraEffectShake {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -2036,8 +2024,6 @@ impl MediaBlockCameraEffectShake {
     }
 }
 
-struct MediaBlockImage;
-
 impl ReadBody for MediaBlockImage {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -2069,8 +2055,6 @@ impl MediaBlockImage {
         Ok(())
     }
 }
-
-struct MediaBlockText;
 
 impl ReadBody for MediaBlockText {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -2121,8 +2105,6 @@ impl MediaBlockText {
     }
 }
 
-struct MediaBlockTransitionFade;
-
 impl ReadBody for MediaBlockTransitionFade {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -2162,8 +2144,6 @@ impl MediaBlockTransitionFade {
         Ok(())
     }
 }
-
-struct MediaBlockDOF;
 
 impl ReadBody for MediaBlockDOF {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -2206,8 +2186,6 @@ impl MediaBlockDOF {
     }
 }
 
-struct MediaBlockToneMapping;
-
 impl ReadBody for MediaBlockToneMapping {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -2244,8 +2222,6 @@ impl MediaBlockToneMapping {
     }
 }
 
-struct MediaBlockDirtyLens;
-
 impl ReadBody for MediaBlockDirtyLens {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -2279,8 +2255,6 @@ impl MediaBlockDirtyLens {
         Ok(())
     }
 }
-
-struct MediaBlockColorGrading;
 
 impl ReadBody for MediaBlockColorGrading {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -2327,8 +2301,6 @@ impl MediaBlockColorGrading {
     }
 }
 
-struct MediaBlockFog;
-
 impl ReadBody for MediaBlockFog {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -2370,8 +2342,6 @@ impl MediaBlockFog {
         Ok(())
     }
 }
-
-struct MediaBlockEntity;
 
 impl ReadBody for MediaBlockEntity {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
