@@ -1,4 +1,8 @@
-use std::{io::Read, rc::Rc};
+mod rc_str;
+
+pub use rc_str::RcStr;
+
+use std::io::Read;
 
 use crate::read::{deserialize::Deserializer, Result};
 
@@ -24,38 +28,6 @@ impl Rgb {
     /// ```
     pub const fn into_array(self) -> [u8; 3] {
         [self.r, self.g, self.b]
-    }
-}
-
-/// Reference counted string.
-#[derive(Default)]
-pub struct RcStr(Option<Rc<str>>);
-
-impl RcStr {
-    pub fn as_str(&self) -> &str {
-        match self.0 {
-            None => "",
-            Some(ref rc_str) => rc_str,
-        }
-    }
-}
-
-impl Clone for RcStr {
-    fn clone(&self) -> Self {
-        match self.0 {
-            None => Self(None),
-            Some(ref rc_str) => Self(Some(Rc::clone(rc_str))),
-        }
-    }
-}
-
-impl From<String> for RcStr {
-    fn from(s: String) -> Self {
-        if s.is_empty() {
-            Self(None)
-        } else {
-            Self(Some(Rc::from(s)))
-        }
     }
 }
 
