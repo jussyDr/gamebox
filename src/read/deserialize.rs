@@ -54,7 +54,7 @@ impl<T: IdStateMut> IdStateMut for &mut T {
 
 pub enum NodeRef<T: ?Sized> {
     Internal(Rc<T>),
-    External(Rc<Path>),
+    External { path: Rc<Path> },
 }
 
 pub struct NodeState {
@@ -75,7 +75,7 @@ impl NodeState {
             todo!()
         }
 
-        *entry = Some(NodeRef::External(path.into()))
+        *entry = Some(NodeRef::External { path: path.into() })
     }
 }
 
@@ -350,13 +350,64 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
-        todo!()
+        let index = match self.u32()? {
+            0xffffffff => todo!(),
+            index => index - 1,
+        };
+
+        let node_ref = self
+            .node_state
+            .borrow()
+            .nodes
+            .get(index as usize)
+            .unwrap()
+            .as_ref()
+            .unwrap();
+
+        match node_ref {
+            NodeRef::Internal(_) => todo!(),
+            NodeRef::External { path } => Ok(Rc::clone(path)),
+        }
     }
 }
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn internal_node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
-        todo!()
+        let index = match self.u32()? {
+            0xffffffff => todo!(),
+            index => index - 1,
+        };
+
+        let node_ref_entry = self.node_state.borrow().nodes.get(index as usize).unwrap();
+
+        match node_ref_entry {
+            None => {
+                let class_id = self.u32()?;
+
+                if class_id != T::class_id() {
+                    todo!()
+                }
+
+                let mut node = T::default();
+
+                T::read_body(&mut node, self)?;
+
+                let node = Rc::new(node);
+
+                let node_ref_entry = self
+                    .node_state
+                    .borrow_mut()
+                    .nodes
+                    .get_mut(index as usize)
+                    .unwrap();
+
+                *node_ref_entry = Some(NodeRef::Internal(Rc::<T>::clone(&node)));
+
+                Ok(node)
+            }
+            Some(NodeRef::Internal(node_ref)) => Ok(Rc::clone(node_ref).downcast().unwrap()),
+            Some(NodeRef::External { .. }) => todo!(),
+        }
     }
 
     pub fn internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
