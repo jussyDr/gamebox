@@ -433,7 +433,7 @@ impl Map {
         let num_blocks = d.u32()?;
         self.blocks = Vec::with_capacity(num_blocks as usize);
         while d.peek_u32()? & 0xffffc000 == 0x40000000 {
-            let id = d.id()?.into();
+            let id = d.id()?;
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;
@@ -699,7 +699,7 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 6
         self.baked_blocks = d.list(|d| {
-            let id = d.id()?.into();
+            let id = d.id()?;
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;

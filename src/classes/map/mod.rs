@@ -114,7 +114,7 @@ impl Map {
 
 /// Block placed inside of a [Map].
 pub struct Block {
-    id: RcStr,
+    id: Rc<str>,
     kind: BlockKind,
     color: Color,
     lightmap_quality: LightmapQuality,
@@ -131,10 +131,12 @@ impl Block {
         &self.kind
     }
 
+    /// Element color of the block.
     pub const fn color(&self) -> Color {
         self.color
     }
 
+    /// Lightmap quality of the block.
     pub const fn lightmap_quality(&self) -> LightmapQuality {
         self.lightmap_quality
     }
@@ -205,10 +207,12 @@ impl Item {
         &self.id
     }
 
+    /// Element color of the item.
     pub const fn color(&self) -> Color {
         self.color
     }
 
+    /// Animation phase offset of the item.
     pub const fn animation_offset(&self) -> PhaseOffset {
         self.animation_offset
     }
