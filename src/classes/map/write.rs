@@ -17,14 +17,14 @@ impl HeaderChunks for Map {
         [
             HeaderChunkWriteFn {
                 chunk_id: 0x03043002,
-                write_fn: |_, s| {
+                write_fn: |n: &Map, s| {
                     s.u8(13)?;
                     s.u32(0)?;
                     s.u32(0xffffffff)?;
                     s.u32(0xffffffff)?;
                     s.u32(0xffffffff)?;
                     s.u32(0xffffffff)?;
-                    s.u32(203)?;
+                    s.u32(n.cost)?;
                     s.u32(0)?;
                     s.u32(0)?;
                     s.u32(0)?;
@@ -72,7 +72,7 @@ impl HeaderChunks for Map {
             HeaderChunkWriteFn {
                 chunk_id: 0x03043005,
                 write_fn: |n: &Map, s| {
-                    s.string(&format!("<header type=\"map\" exever=\"3.3.0\" exebuild=\"2023-11-24_17_34\" title=\"TMStadium\" lightmap=\"0\"><ident uid=\"clPHg9CHQjSqYP9wY4nRR6kSqM3\" name=\"Empty\" author=\"{}\" authorzone=\"{}\"/><desc envir=\"Stadium\" mood=\"Day\" type=\"Race\" maptype=\"TrackMania\\TM_Race\" mapstyle=\"\" validated=\"0\" nblaps=\"0\" displaycost=\"203\" mod=\"\" hasghostblocks=\"0\" /><playermodel id=\"\"/><times bronze=\"-1\" silver=\"-1\" gold=\"-1\" authortime=\"-1\" authorscore=\"0\"/><deps></deps></header>", n.author_id.as_str(), n.author_region))
+                    s.string(&format!("<header type=\"map\" exever=\"3.3.0\" exebuild=\"2023-11-24_17_34\" title=\"TMStadium\" lightmap=\"0\"><ident uid=\"clPHg9CHQjSqYP9wY4nRR6kSqM3\" name=\"Empty\" author=\"{}\" authorzone=\"{}\"/><desc envir=\"Stadium\" mood=\"Day\" type=\"Race\" maptype=\"TrackMania\\TM_Race\" mapstyle=\"\" validated=\"0\" nblaps=\"0\" displaycost=\"{}\" mod=\"\" hasghostblocks=\"0\" /><playermodel id=\"\"/><times bronze=\"-1\" silver=\"-1\" gold=\"-1\" authortime=\"-1\" authorscore=\"0\"/><deps></deps></header>", n.author_id.as_str(), n.author_region, n.cost))
                 },
             },
             HeaderChunkWriteFn {

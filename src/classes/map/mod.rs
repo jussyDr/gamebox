@@ -14,6 +14,7 @@ use self::media::{MediaClip, MediaClipGroup};
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
 pub struct Map {
+    cost: u32,
     id: RcStr,
     author_id: RcStr,
     name: String,
@@ -36,6 +37,11 @@ impl Class for Map {
 }
 
 impl Map {
+    /// Display cost of the map.
+    pub fn cost(&self) -> u32 {
+        self.cost
+    }
+
     /// Identifier of the map.
     pub fn id(&self) -> &str {
         &self.id
