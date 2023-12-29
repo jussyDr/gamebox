@@ -39,8 +39,8 @@ pub trait Writable: writable::Sealed {}
 ///
 /// ``` no_run
 /// # use gamebox::write;
-/// # |item: gamebox::classes::Item, writer: std::io::Cursor<&mut [u8]>| {
-/// write(&item, writer)?;
+/// # |map: gamebox::classes::Map, writer: std::io::Cursor<&mut [u8]>| {
+/// write(&map, writer)?;
 /// # Ok::<(), gamebox::write::Error>(()) };
 /// ```
 pub fn write(node: &impl Writable, writer: impl Write) -> Result<()> {
@@ -55,8 +55,8 @@ pub fn write(node: &impl Writable, writer: impl Write) -> Result<()> {
 ///
 /// ``` no_run
 /// # use gamebox::write_file;
-/// # |item: gamebox::classes::Item| {
-/// write_file(&item, "MyItem.Item.Gbx")?;
+/// # |map: gamebox::classes::Map| {
+/// write_file(&map, "MyMap.Item.Gbx")?;
 /// # Ok::<(), gamebox::write::Error>(()) };
 /// ```
 pub fn write_file(node: &impl Writable, path: impl AsRef<Path>) -> Result<()> {
@@ -104,8 +104,8 @@ impl Writer {
     ///
     /// ``` no_run
     /// # use gamebox::write::Writer;
-    /// # |item: gamebox::classes::Item, writer: std::io::Cursor<&mut [u8]>| {
-    /// Writer::new().write(&item, writer)?;
+    /// # |map: gamebox::classes::Map, writer: std::io::Cursor<&mut [u8]>| {
+    /// Writer::new().write(&map, writer)?;
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
     pub fn write(&self, node: &impl Writable, writer: impl Write) -> Result<()> {
@@ -120,8 +120,8 @@ impl Writer {
     ///
     /// ``` no_run
     /// # use gamebox::write::Writer;
-    /// # |item: gamebox::classes::Item| {
-    /// Writer::new().write_file(&item, "MyItem.Item.Gbx")?;
+    /// # |map: gamebox::classes::Map| {
+    /// Writer::new().write_file(&map, "MyMap.Item.Gbx")?;
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
     pub fn write_file(&self, node: &impl Writable, path: impl AsRef<Path>) -> Result<()> {

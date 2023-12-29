@@ -21,9 +21,9 @@
 //! ``` no_run
 //! use gamebox::{write, write_file};
 //!
-//! # |item: gamebox::classes::Item, writer: std::io::Cursor<&mut [u8]>| {
-//! write(&item, writer)?;
-//! write_file(&item, "MyItem.Item.Gbx")?;
+//! # |map: gamebox::classes::Map, writer: std::io::Cursor<&mut [u8]>| {
+//! write(&map, writer)?;
+//! write_file(&map, "MyMap.Item.Gbx")?;
 //! # Ok::<(), gamebox::write::Error>(()) };
 //! ```
 

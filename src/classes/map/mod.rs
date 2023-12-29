@@ -42,6 +42,11 @@ impl Map {
         self.cost
     }
 
+    /// Set the display cost of the map.
+    pub fn set_cost(&mut self, cost: u32) {
+        self.cost = cost;
+    }
+
     /// Identifier of the map.
     pub fn id(&self) -> &str {
         &self.id
