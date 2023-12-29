@@ -379,20 +379,20 @@ impl Class for MediaTrack {
 
 /// A media block.
 pub enum MediaBlock {
-    Triangles3D(MediaBlockTriangles3D),
-    FxColors(MediaBlockFxColors),
-    CameraGame(MediaBlockCameraGame),
-    CameraCustom(MediaBlockCameraCustom),
-    CameraEffectShake(MediaBlockCameraEffectShake),
-    Image(MediaBlockImage),
-    Text(MediaBlockText),
-    TransitionFade(MediaBlockTransitionFade),
-    DOF(MediaBlockDOF),
-    ToneMapping(MediaBlockToneMapping),
-    DirtyLens(MediaBlockDirtyLens),
-    ColorGrading(MediaBlockColorGrading),
-    Fog(MediaBlockFog),
-    Entity(MediaBlockEntity),
+    Triangles3D(Rc<MediaBlockTriangles3D>),
+    FxColors(Rc<MediaBlockFxColors>),
+    CameraGame(Rc<MediaBlockCameraGame>),
+    CameraCustom(Rc<MediaBlockCameraCustom>),
+    CameraEffectShake(Rc<MediaBlockCameraEffectShake>),
+    Image(Rc<MediaBlockImage>),
+    Text(Rc<MediaBlockText>),
+    TransitionFade(Rc<MediaBlockTransitionFade>),
+    DOF(Rc<MediaBlockDOF>),
+    ToneMapping(Rc<MediaBlockToneMapping>),
+    DirtyLens(Rc<MediaBlockDirtyLens>),
+    ColorGrading(Rc<MediaBlockColorGrading>),
+    Fog(Rc<MediaBlockFog>),
+    Entity(Rc<MediaBlockEntity>),
 }
 
 struct MediaBlockTriangles;

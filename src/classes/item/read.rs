@@ -1,4 +1,7 @@
-use std::io::{Read, Seek};
+use std::{
+    io::{Read, Seek},
+    rc::Rc,
+};
 
 use crate::{
     class::Class,
@@ -268,7 +271,7 @@ impl Item {
                 let mut node = ItemEntityModel::default();
                 read_body_chunks(&mut node, d)?;
 
-                Ok(())
+                Ok(Rc::new(node))
             }
             0x2f0bc000 => {
                 d.u32()?; // 1
@@ -285,7 +288,7 @@ impl Item {
                     Ok(())
                 })?;
 
-                Ok(())
+                Ok(Rc::new(()))
             }
             _ => todo!(),
         })?;

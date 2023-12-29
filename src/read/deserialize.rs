@@ -471,17 +471,53 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         Ok(Some(node))
     }
 
-    pub fn any_internal_node_ref<T>(
+    pub fn any_internal_node_ref(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<T> {
-        todo!()
+        read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
+    ) -> Result<Rc<dyn Any>> {
+        match self.any_node_ref_or_null(read_fn)? {
+            None => todo!(),
+            Some(NodeRef::Internal(node_ref)) => Ok(node_ref),
+            Some(NodeRef::External { .. }) => todo!(),
+        }
     }
 
-    pub fn any_node_ref_or_null<T>(
+    pub fn any_node_ref_or_null(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<T> {
-        todo!()
+        read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
+    ) -> Result<Option<NodeRef<dyn Any>>> {
+        let index = match self.u32()? {
+            0xffffffff => return Ok(None),
+            index => index - 1,
+        };
+
+        let node_ref_entry = self.node_state.borrow().nodes.get(index as usize).unwrap();
+
+        match node_ref_entry {
+            None => {
+                let class_id = self.u32()?;
+
+                let node = read_fn(self, class_id)?;
+
+                let node_ref_entry = self
+                    .node_state
+                    .borrow_mut()
+                    .nodes
+                    .get_mut(index as usize)
+                    .unwrap();
+
+                if node_ref_entry.is_some() {
+                    todo!()
+                }
+
+                *node_ref_entry = Some(NodeRef::Internal(Rc::clone(&node)));
+
+                Ok(Some(NodeRef::Internal(node)))
+            }
+            Some(NodeRef::Internal(node_ref)) => Ok(Some(NodeRef::Internal(Rc::clone(node_ref)))),
+            Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
+                path: Rc::clone(path),
+            })),
+        }
     }
 }

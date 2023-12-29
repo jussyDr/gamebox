@@ -1,4 +1,8 @@
-use std::io::{Read, Seek};
+use std::{
+    any::Any,
+    io::{Read, Seek},
+    rc::Rc,
+};
 
 use crate::{
     class::Class,
@@ -1636,85 +1640,103 @@ impl MediaTrack {
         d.string()?;
         d.u32()?; // 10
         self.blocks = d.list(|d| {
-            d.any_internal_node_ref(|d, class_id| {
-                let node = match class_id {
+            let node = d.any_internal_node_ref(|d, class_id| {
+                let node: Rc<dyn Any> = match class_id {
                     0x0304c000 => {
                         let mut node = MediaBlockTriangles3D {
                             parent: MediaBlockTriangles,
                         };
                         MediaBlockTriangles3D::read_body(&mut node, d)?;
-                        MediaBlock::Triangles3D(node)
+                        Rc::new(node)
                     }
                     0x03080000 => {
                         let mut node = MediaBlockFxColors;
                         MediaBlockFxColors::read_body(&mut node, d)?;
-                        MediaBlock::FxColors(node)
+                        Rc::new(node)
                     }
                     0x03084000 => {
                         let mut node = MediaBlockCameraGame;
                         MediaBlockCameraGame::read_body(&mut node, d)?;
-                        MediaBlock::CameraGame(node)
+                        Rc::new(node)
                     }
                     0x030a2000 => {
                         let mut node = MediaBlockCameraCustom;
                         MediaBlockCameraCustom::read_body(&mut node, d)?;
-                        MediaBlock::CameraCustom(node)
+                        Rc::new(node)
                     }
                     0x030a4000 => {
                         let mut node = MediaBlockCameraEffectShake;
                         MediaBlockCameraEffectShake::read_body(&mut node, d)?;
-                        MediaBlock::CameraEffectShake(node)
+                        Rc::new(node)
                     }
                     0x030a5000 => {
                         let mut node = MediaBlockImage;
                         MediaBlockImage::read_body(&mut node, d)?;
-                        MediaBlock::Image(node)
+                        Rc::new(node)
                     }
                     0x030a8000 => {
                         let mut node = MediaBlockText;
                         MediaBlockText::read_body(&mut node, d)?;
-                        MediaBlock::Text(node)
+                        Rc::new(node)
                     }
                     0x030ab000 => {
                         let mut node = MediaBlockTransitionFade;
                         MediaBlockTransitionFade::read_body(&mut node, d)?;
-                        MediaBlock::TransitionFade(node)
+                        Rc::new(node)
                     }
                     0x03126000 => {
                         let mut node = MediaBlockDOF;
                         MediaBlockDOF::read_body(&mut node, d)?;
-                        MediaBlock::DOF(node)
+                        Rc::new(node)
                     }
                     0x03127000 => {
                         let mut node = MediaBlockToneMapping;
                         MediaBlockToneMapping::read_body(&mut node, d)?;
-                        MediaBlock::ToneMapping(node)
+                        Rc::new(node)
                     }
                     0x03165000 => {
                         let mut node = MediaBlockDirtyLens;
                         MediaBlockDirtyLens::read_body(&mut node, d)?;
-                        MediaBlock::DirtyLens(node)
+                        Rc::new(node)
                     }
                     0x03186000 => {
                         let mut node = MediaBlockColorGrading;
                         MediaBlockColorGrading::read_body(&mut node, d)?;
-                        MediaBlock::ColorGrading(node)
+                        Rc::new(node)
                     }
                     0x03199000 => {
                         let mut node = MediaBlockFog;
                         MediaBlockFog::read_body(&mut node, d)?;
-                        MediaBlock::Fog(node)
+                        Rc::new(node)
                     }
                     0x0329f000 => {
                         let mut node = MediaBlockEntity;
                         MediaBlockEntity::read_body(&mut node, d)?;
-                        MediaBlock::Entity(node)
+                        Rc::new(node)
                     }
                     _ => todo!(),
                 };
 
                 Ok(node)
-            })
+            })?;
+
+            Ok(node
+                .downcast()
+                .map(MediaBlock::Triangles3D)
+                .or_else(|node| node.downcast().map(MediaBlock::FxColors))
+                .or_else(|node| node.downcast().map(MediaBlock::CameraGame))
+                .or_else(|node| node.downcast().map(MediaBlock::CameraCustom))
+                .or_else(|node| node.downcast().map(MediaBlock::CameraEffectShake))
+                .or_else(|node| node.downcast().map(MediaBlock::Image))
+                .or_else(|node| node.downcast().map(MediaBlock::Text))
+                .or_else(|node| node.downcast().map(MediaBlock::TransitionFade))
+                .or_else(|node| node.downcast().map(MediaBlock::DOF))
+                .or_else(|node| node.downcast().map(MediaBlock::ToneMapping))
+                .or_else(|node| node.downcast().map(MediaBlock::DirtyLens))
+                .or_else(|node| node.downcast().map(MediaBlock::ColorGrading))
+                .or_else(|node| node.downcast().map(MediaBlock::Fog))
+                .or_else(|node| node.downcast().map(MediaBlock::Entity))
+                .unwrap())
         })?;
         d.u32()?; // 0xffffffff
 
