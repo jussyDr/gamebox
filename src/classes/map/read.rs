@@ -390,8 +390,8 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.inline_node::<CollectorList>()?;
-        d.inline_node::<ChallengeParameters>()?;
+        d.internal_node_ref::<CollectorList>()?;
+        d.internal_node_ref::<ChallengeParameters>()?;
         d.u32()?; // 6
 
         Ok(())
@@ -442,11 +442,11 @@ impl Map {
 
             if flags & 0x00008000 != 0 {
                 d.id()?; // "Nadeo"
-                d.inline_node_or_null::<BlockSkin>()?;
+                d.internal_node_ref_or_null::<BlockSkin>()?;
             }
 
             if flags & 0x00100000 != 0 {
-                d.inline_node::<WaypointSpecialProperty>()?;
+                d.internal_node_ref::<WaypointSpecialProperty>()?;
             }
 
             let is_free = flags & 0x20000000 != 0;
@@ -580,7 +580,7 @@ impl Map {
 
             d.u32()?; // 10
             self.items = d.list(|d| {
-                let item = d.inline_node_no_index::<AnchoredObject>()?;
+                let item = d.internal_node_ref_no_index::<AnchoredObject>()?;
 
                 Ok(item)
             })?;
@@ -659,7 +659,7 @@ impl Map {
             let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
 
             d.list(|d| {
-                d.inline_node_no_index::<ZoneGenealogy>()?;
+                d.internal_node_ref_no_index::<ZoneGenealogy>()?;
 
                 Ok(())
             })?;
@@ -680,7 +680,7 @@ impl Map {
         {
             let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
 
-            d.inline_node_no_index::<TraitsMetadata>()?;
+            d.internal_node_ref_no_index::<TraitsMetadata>()?;
 
             d.end()?;
         }
@@ -741,11 +741,11 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 2
-        self.intro_media = d.inline_node_or_null::<MediaClip>()?;
-        self.podium_media = d.inline_node_or_null::<MediaClip>()?;
-        self.in_game_media = d.inline_node_or_null::<MediaClipGroup>()?;
-        self.end_race_media = d.inline_node_or_null::<MediaClipGroup>()?;
-        self.ambiance_media = d.inline_node_or_null::<MediaClip>()?;
+        self.intro_media = d.internal_node_ref_or_null::<MediaClip>()?;
+        self.podium_media = d.internal_node_ref_or_null::<MediaClip>()?;
+        self.in_game_media = d.internal_node_ref_or_null::<MediaClipGroup>()?;
+        self.end_race_media = d.internal_node_ref_or_null::<MediaClipGroup>()?;
+        self.ambiance_media = d.internal_node_ref_or_null::<MediaClip>()?;
         d.u32()?; // 3
         d.u32()?; // 1
         d.u32()?; // 3
@@ -1199,7 +1199,7 @@ impl ChallengeParameters {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.inline_node_or_null::<Ghost>()?;
+        d.internal_node_ref_or_null::<Ghost>()?;
 
         Ok(())
     }
@@ -1370,7 +1370,7 @@ impl AnchoredObject {
         d.u32()?;
         d.u32()?;
         d.u32()?;
-        d.inline_node_no_index_or_null::<WaypointSpecialProperty>()?;
+        d.internal_node_ref_no_index_or_null::<WaypointSpecialProperty>()?;
         let flags = d.u16()?; // 1
         d.u32()?;
         d.u32()?;
@@ -1582,7 +1582,7 @@ impl MediaClip {
     ) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 10
-        self.tracks = d.list(|d| d.inline_node::<MediaTrack>())?;
+        self.tracks = d.list(|d| d.internal_node_ref::<MediaTrack>())?;
         d.string()?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -1636,7 +1636,7 @@ impl MediaTrack {
         d.string()?;
         d.u32()?; // 10
         self.blocks = d.list(|d| {
-            d.any_inline_node(|d, class_id| {
+            d.any_internal_node_ref(|d, class_id| {
                 let node = match class_id {
                     0x0304c000 => {
                         let mut node = MediaBlockTriangles3D {
@@ -2049,7 +2049,7 @@ impl MediaBlockImage {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.inline_node::<EffectSimi>()?;
+        d.internal_node_ref::<EffectSimi>()?;
         read_file_ref(d)?;
 
         Ok(())
@@ -2088,7 +2088,7 @@ impl MediaBlockText {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.string()?;
-        d.inline_node::<EffectSimi>()?;
+        d.internal_node_ref::<EffectSimi>()?;
 
         Ok(())
     }
@@ -2369,7 +2369,7 @@ impl MediaBlockEntity {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 6
-        d.inline_node::<EntRecordData>()?;
+        d.internal_node_ref::<EntRecordData>()?;
         d.u32()?; // 0
         d.list(|d| {
             d.u32()?;
@@ -2488,7 +2488,7 @@ impl MediaClipGroup {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 10
-        let clips = d.list(|d| d.inline_node::<MediaClip>())?;
+        let clips = d.list(|d| d.internal_node_ref::<MediaClip>())?;
         self.clips = d.list_zipped_with(clips, |d, clip| {
             d.u32()?;
             d.u32()?;

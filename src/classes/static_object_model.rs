@@ -29,9 +29,9 @@ impl ReadBody for StaticObjectModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 3
-        let _solid_to_model = d.inline_node::<Solid2Model>()?.clone();
+        let _solid_to_model = d.internal_node_ref::<Solid2Model>()?;
         let b = d.bool8()?;
-        d.inline_node_or_null::<Surface>()?;
+        d.internal_node_ref_or_null::<Surface>()?;
         if b {
             d.f32()?; // 1.0
             d.u32()?; // 0
@@ -131,7 +131,7 @@ impl Solid2Model {
 
         d.u32()?; // 10
         let _meshes = d.list(|d| {
-            let _visual_indexed_triangles = d.inline_node::<VisualIndexedTriangles>()?;
+            let _visual_indexed_triangles = d.internal_node_ref::<VisualIndexedTriangles>()?;
 
             Ok(())
         })?;
@@ -140,7 +140,7 @@ impl Solid2Model {
         if num_materials == 0 {
             d.u32()?; // 10
             d.list(|d| {
-                d.node_ref()?;
+                d.external_node_ref()?;
 
                 Ok(())
             })?;
@@ -212,7 +212,7 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 0
         let _materials = d.repeat(num_materials as usize, |d| {
-            let material = d.inline_node::<MaterialUserInst>()?.clone();
+            let material = d.internal_node_ref::<MaterialUserInst>()?.clone();
             d.u32()?; // 0
 
             Ok(material.material.clone())

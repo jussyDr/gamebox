@@ -159,7 +159,7 @@ impl Ghost {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
-        d.inline_node::<EntRecordData>()?;
+        d.internal_node_ref::<EntRecordData>()?;
         d.u32()?; // 1
         d.u32()?; // 1
         d.string()?; // "TIM"

@@ -262,8 +262,8 @@ impl Item {
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
-        d.node_or_null::<ItemEntityModelEdition>()?;
-        d.any_node_or_null(|d, class_id| match class_id {
+        d.node_ref_or_null::<ItemEntityModelEdition>()?;
+        d.any_node_ref_or_null(|d, class_id| match class_id {
             0x2e027000 => {
                 let mut node = ItemEntityModel::default();
                 read_body_chunks(&mut node, d)?;
@@ -309,7 +309,7 @@ impl Item {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 5
-        d.node::<ItemPlacementParam>()?;
+        d.node_ref::<ItemPlacementParam>()?;
 
         Ok(())
     }
@@ -338,7 +338,7 @@ impl Item {
         d.u8()?; // 0
 
         if version >= 12 {
-            d.inline_node_or_null::<MediaClipList>()?;
+            d.internal_node_ref_or_null::<MediaClipList>()?;
             d.u32()?; // 0xffffffff
         }
 
@@ -514,7 +514,7 @@ impl ItemPlacementParam {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.node::<ItemPlacement>()?;
+        d.node_ref::<ItemPlacement>()?;
 
         Ok(())
     }
@@ -537,7 +537,7 @@ impl ItemEntityModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
-        d.inline_node::<StaticObjectModel>()?;
+        d.internal_node_ref::<StaticObjectModel>()?;
 
         Ok(())
     }
@@ -590,7 +590,7 @@ impl ItemEntityModelEdition {
     ) -> Result<()> {
         d.u32()?; // 7
         d.u32()?; // 1
-        d.inline_node::<Crystal>()?;
+        d.internal_node_ref::<Crystal>()?;
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
@@ -697,7 +697,7 @@ impl Crystal {
         d.u32()?; // 2
         d.list(|d| {
             d.u32()?; // 0
-            d.inline_node::<MaterialUserInst>()?;
+            d.internal_node_ref::<MaterialUserInst>()?;
 
             Ok(())
         })?;

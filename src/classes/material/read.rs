@@ -99,8 +99,7 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let material_custom = d.inline_node::<MaterialCustom>()?;
-        self.diffuse_texture_ref = material_custom.diffuse_texture_ref.clone();
+        let material_custom = d.internal_node_ref::<MaterialCustom>()?;
 
         Ok(())
     }
@@ -306,12 +305,12 @@ impl MaterialCustom {
         d.list(|d| {
             let texture_kind = d.id()?; // "BaseColor" | "RoughMetal" | "Normal" | "BaseColorHueMask"
             d.u32()?; // 0
-            let texture_ref = d.node_ref()?.to_owned();
+            let texture_ref = d.external_node_ref()?;
             d.u32()?; // 4
             d.u32()?; // 4
 
             match texture_kind.as_str() {
-                "BaseColor" => self.diffuse_texture_ref = texture_ref,
+                "BaseColor" => self.diffuse_texture_ref = texture_ref.into(),
                 "BaseColorHueMask" => {}
                 "Normal" => {}
                 "RoughMetal" => {}

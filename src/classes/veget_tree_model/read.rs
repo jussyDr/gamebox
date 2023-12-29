@@ -75,23 +75,23 @@ impl ReadBody for VegetTreeModel {
         d.id()?; // "FallTree_leaf"
         d.u32()?; // 3
         d.u16()?; // 0
-        d.inline_node::<VisualIndexedTriangles>()?;
+        d.internal_node_ref::<VisualIndexedTriangles>()?;
         d.u8()?; // 0
         d.u16()?; // 1
-        d.inline_node::<VisualIndexedTriangles>()?;
+        d.internal_node_ref::<VisualIndexedTriangles>()?;
         d.u8()?; // 0
         d.u16()?; // 2
-        d.inline_node::<VisualIndexedTriangles>()?;
+        d.internal_node_ref::<VisualIndexedTriangles>()?;
         d.u8()?; // 0
         d.u16()?; // 3
         d.u32()?; // 0
-        d.inline_node::<VisualIndexedTriangles>()?;
+        d.internal_node_ref::<VisualIndexedTriangles>()?;
         d.u8()?; // 0
         d.u16()?; // 1
-        d.inline_node::<VisualIndexedTriangles>()?;
+        d.internal_node_ref::<VisualIndexedTriangles>()?;
         d.u8()?; // 0
         d.u16()?; // 2
-        d.inline_node::<VisualIndexedTriangles>()?;
+        d.internal_node_ref::<VisualIndexedTriangles>()?;
         d.u32()?; // 0x48000000
         d.u32()?; // 0x142
         d.u32()?; // 0x20342c8

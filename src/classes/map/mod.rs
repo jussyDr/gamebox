@@ -362,12 +362,12 @@ impl MediaClip {
 /// A media track.
 #[derive(Default)]
 pub struct MediaTrack {
-    blocks: Vec<Rc<MediaBlock>>,
+    blocks: Vec<MediaBlock>,
 }
 
 impl MediaTrack {
     /// Media blocks in this track.
-    pub fn blocks(&self) -> &[Rc<MediaBlock>] {
+    pub fn blocks(&self) -> &[MediaBlock] {
         &self.blocks
     }
 }

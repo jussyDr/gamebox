@@ -2,14 +2,14 @@
 
 mod read;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::{class::Class, EngineId};
+use crate::{class::Class, EngineId, RcPath};
 
 /// Node type corresponding to GameBox files with the extension `Texture.Gbx`.
 #[derive(Default)]
 pub struct Texture {
-    image_ref: PathBuf,
+    image_ref: RcPath,
 }
 
 impl Texture {

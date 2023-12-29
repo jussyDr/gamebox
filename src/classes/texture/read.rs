@@ -172,7 +172,7 @@ impl Texture {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 5
-        self.image_ref = d.node_ref()?.to_owned(); // 1
+        self.image_ref = d.external_node_ref()?.into();
         d.u32()?; // 0x2c0000
         d.u32()?; // 0x10004e12
         d.u32()?; // 0x08003680

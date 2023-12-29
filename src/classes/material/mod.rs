@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::{class::Class, EngineId};
+use crate::{class::Class, EngineId, RcPath};
 
 mod read;
 
@@ -25,7 +25,7 @@ impl Class for Material {
 
 #[derive(Default)]
 struct MaterialCustom {
-    diffuse_texture_ref: PathBuf,
+    diffuse_texture_ref: RcPath,
 }
 
 impl Class for MaterialCustom {

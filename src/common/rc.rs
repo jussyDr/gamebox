@@ -1,6 +1,5 @@
 use std::{ops::Deref, path::Path, rc::Rc};
 
-/// Reference counted string.
 #[derive(Default)]
 pub struct RcStr(Option<Rc<str>>);
 
@@ -40,4 +39,26 @@ impl From<String> for RcStr {
     }
 }
 
+#[derive(Default)]
 pub struct RcPath(Option<Rc<Path>>);
+
+impl Deref for RcPath {
+    type Target = Path;
+
+    fn deref(&self) -> &Path {
+        match self.0 {
+            None => Path::new(""),
+            Some(ref rc_path) => rc_path,
+        }
+    }
+}
+
+impl From<Rc<Path>> for RcPath {
+    fn from(rc_path: Rc<Path>) -> Self {
+        if rc_path.as_os_str().is_empty() {
+            Self(None)
+        } else {
+            Self(Some(rc_path))
+        }
+    }
+}

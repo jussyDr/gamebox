@@ -349,189 +349,53 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn node_ref(&mut self) -> Result<&Path> {
-        let index = self.u32()?;
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        let r = self.node_state.borrow().nodes[index as usize - 1]
-            .as_ref()
-            .unwrap();
-
-        match r {
-            NodeRef::External(q) => Ok(q),
-            _ => todo!(),
-        }
-    }
-}
-
-impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn any_inline_node_or_null<T>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<Option<Rc<T>>> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            return Ok(None);
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        let class_id = self.u32()?;
-
-        let node = read_fn(self, class_id)?;
-
-        Ok(Some(Rc::new(node)))
-    }
-
-    pub fn any_inline_node<T>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<Rc<T>> {
-        match self.any_inline_node_or_null(read_fn)? {
-            None => todo!(),
-            Some(node) => Ok(node),
-        }
-    }
-
-    pub fn any_node_or_null<T>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<Option<NodeRef<()>>> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            return Ok(None);
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
-            let r = self.node_state.borrow().nodes[index as usize - 1]
-                .as_ref()
-                .unwrap();
-
-            match r {
-                NodeRef::Internal(q) => return Ok(Some(NodeRef::Internal(Rc::new(())))),
-                NodeRef::External(q) => return Ok(Some(NodeRef::External(Rc::clone(q)))),
-                _ => todo!(),
-            }
-        }
-
-        let class_id = self.u32()?;
-
-        let node = read_fn(self, class_id)?;
-
-        Ok(Some(NodeRef::Internal(Rc::new(()))))
+    pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
+        todo!()
     }
 }
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn node_or_null<T: 'static + Default + Class + ReadBody>(
-        &mut self,
-    ) -> Result<Option<NodeRef<T>>> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            return Ok(None);
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
-            let r = self.node_state.borrow().nodes[index as usize - 1]
-                .as_ref()
-                .unwrap();
-
-            match r {
-                NodeRef::Internal(q) => {
-                    return Ok(Some(NodeRef::Internal(
-                        Rc::clone(q).downcast::<T>().unwrap(),
-                    )));
-                }
-                NodeRef::External(q) => return Ok(Some(NodeRef::External(Rc::clone(q)))),
-                _ => todo!(),
-            }
-        }
-
-        if self.u32()? != T::class_id() {
-            todo!()
-        }
-
-        let mut node = T::default();
-        T::read_body(&mut node, self)?;
-
-        self.node_state.borrow_mut().nodes[index as usize - 1] =
-            Some(NodeRef::Internal(Rc::new(node)));
-
-        let r = self.node_state.borrow().nodes[index as usize - 1]
-            .as_ref()
-            .unwrap();
-
-        match r {
-            NodeRef::Internal(q) => Ok(Some(NodeRef::Internal(
-                Rc::clone(q).downcast::<T>().unwrap(),
-            ))),
-            _ => todo!(),
-        }
+    pub fn internal_node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
+        todo!()
     }
 
-    pub fn inline_node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
-        match self.inline_node_or_null()? {
-            Some(node) => Ok(node),
-            _ => todo!(),
-        }
-    }
-
-    pub fn inline_node_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<Rc<T>>> {
-        match self.node_or_null()? {
-            None => Ok(None),
-            Some(NodeRef::Internal(node)) => Ok(Some(node)),
-            _ => todo!(),
-        }
+        todo!()
     }
 
-    pub fn node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<T>> {
-        match self.node_or_null()? {
-            None => todo!(),
-            Some(node) => Ok(node),
-        }
+    pub fn node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<T>> {
+        todo!()
     }
 
-    pub fn inline_node_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
-        match self.inline_node_no_index_or_null::<T>()? {
-            None => todo!(),
-            Some(node) => Ok(node),
-        }
+    pub fn node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<NodeRef<T>>> {
+        todo!()
     }
 
-    pub fn inline_node_no_index_or_null<T: Default + Class + ReadBody>(
+    pub fn internal_node_ref_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
+        todo!()
+    }
+
+    pub fn internal_node_ref_no_index_or_null<T: Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<T>> {
-        let class_id = self.u32()?;
+        todo!()
+    }
 
-        if class_id == 0xffffffff {
-            return Ok(None);
-        }
+    pub fn any_internal_node_ref<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
+    ) -> Result<T> {
+        todo!()
+    }
 
-        if class_id != T::class_id() {
-            todo!()
-        }
-
-        let mut node = T::default();
-        T::read_body(&mut node, self)?;
-
-        Ok(Some(node))
+    pub fn any_node_ref_or_null<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
+    ) -> Result<T> {
+        todo!()
     }
 }

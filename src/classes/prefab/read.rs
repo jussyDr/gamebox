@@ -41,7 +41,7 @@ impl ReadBody for Prefab {
         d.u32()?;
         d.list(|d| {
             d.u32()?; // 0
-            d.node::<StaticObjectModel>()?;
+            d.node_ref::<StaticObjectModel>()?;
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0
