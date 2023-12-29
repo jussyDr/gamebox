@@ -1,4 +1,4 @@
-use std::{ops::Deref, rc::Rc};
+use std::{ops::Deref, path::Path, rc::Rc};
 
 /// Reference counted string.
 #[derive(Default)]
@@ -39,3 +39,5 @@ impl From<String> for RcStr {
         }
     }
 }
+
+pub struct RcPath(Option<Rc<Path>>);

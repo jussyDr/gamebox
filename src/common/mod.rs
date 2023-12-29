@@ -1,6 +1,6 @@
-mod rc_str;
+mod rc;
 
-pub use rc_str::RcStr;
+pub use rc::{RcPath, RcStr};
 
 use std::io::Read;
 

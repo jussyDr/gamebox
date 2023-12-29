@@ -52,13 +52,16 @@ impl<T: IdStateMut> IdStateMut for &mut T {
     }
 }
 
-/// State of nodes read in the past.
+pub enum NodeRef<T: ?Sized> {
+    Internal(Rc<T>),
+    External(Rc<Path>),
+}
+
 pub struct NodeState {
-    nodes: Box<[Option<Node<dyn Any>>]>,
+    nodes: Box<[Option<NodeRef<dyn Any>>]>,
 }
 
 impl NodeState {
-    /// Create a new `NodeState` with a node limit of `num_nodes`.
     pub fn new(num_nodes: usize) -> Self {
         Self {
             nodes: iter::repeat_with(|| None).take(num_nodes).collect(),
@@ -72,17 +75,10 @@ impl NodeState {
             todo!()
         }
 
-        *entry = Some(Node::Ref(path))
+        *entry = Some(NodeRef::External(path.into()))
     }
 }
 
-pub enum Node<T: ?Sized> {
-    Inline(Rc<T>),
-    Ref(PathBuf),
-}
-
-/// Trait which should be used as a generic trait bound in
-/// functions that need to access the `NodeState`.
 pub trait NodeStateMut {
     fn borrow(&self) -> &NodeState;
     fn borrow_mut(&mut self) -> &mut NodeState;
@@ -134,7 +130,6 @@ impl<R: Seek> Seek for Take<R> {
     }
 }
 
-/// Used for reading binary data in GameBox files.
 pub struct Deserializer<R, I, N> {
     reader: R,
     id_state: I,
@@ -142,7 +137,6 @@ pub struct Deserializer<R, I, N> {
 }
 
 impl<R, I, N> Deserializer<R, I, N> {
-    /// Create a new `Deserializer`.
     pub fn new(reader: R, id_state: I, node_state: N) -> Self {
         Self {
             reader,
@@ -157,37 +151,31 @@ impl<R, I, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N> Deserializer<R, I, N> {
-    /// Deserialize an 8-bit unsigned integer.
     pub fn u8(&mut self) -> Result<u8> {
         let bytes = self.byte_array()?;
         Ok(u8::from_le_bytes(bytes))
     }
 
-    /// Deserialize a 16-bit unsigned integer.
     pub fn u16(&mut self) -> Result<u16> {
         let bytes = self.byte_array()?;
         Ok(u16::from_le_bytes(bytes))
     }
 
-    /// Deserialize a 32-bit unsigned integer.
     pub fn u32(&mut self) -> Result<u32> {
         let bytes = self.byte_array()?;
         Ok(u32::from_le_bytes(bytes))
     }
 
-    /// Deserialize a 16-bit signed integer.
     pub fn i16(&mut self) -> Result<i16> {
         let bytes = self.byte_array()?;
         Ok(i16::from_le_bytes(bytes))
     }
 
-    /// Deserialize a 32-bit signed integer.
     pub fn i32(&mut self) -> Result<i32> {
         let bytes = self.byte_array()?;
         Ok(i32::from_le_bytes(bytes))
     }
 
-    /// Deserialize a 32-bit floating point number.
     pub fn f32(&mut self) -> Result<f32> {
         let bytes = self.byte_array()?;
         Ok(f32::from_le_bytes(bytes))
@@ -209,21 +197,18 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         }
     }
 
-    /// Deserialize `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let mut buf = vec![0; n];
         self.reader.read_exact(&mut buf)?;
         Ok(buf)
     }
 
-    /// Deserialize an array of `L` bytes.
     pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
         self.reader.read_exact(&mut array)?;
         Ok(array)
     }
 
-    /// Deserialize a string.
     pub fn string(&mut self) -> Result<String> {
         let len = self.u32()?;
         let bytes = self.bytes(len as usize)?;
@@ -231,13 +216,11 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(string)
     }
 
-    /// Deserialize a list.
     pub fn list<T>(&mut self, read_fn: impl FnMut(&mut Self) -> Result<T>) -> Result<Vec<T>> {
         let len = self.u32()?;
         self.repeat(len as usize, read_fn)
     }
 
-    /// Repeat the `read_fn` a total of `n` times.
     pub fn repeat<T>(
         &mut self,
         n: usize,
@@ -260,7 +243,6 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         vec.into_iter().map(|x| read_fn(self, x)).collect()
     }
 
-    /// Create an adapter which will read at most `limit` bytes from this deserializer.
     pub fn take<IS, NS>(
         &mut self,
         limit: u64,
@@ -284,7 +266,6 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
     }
 
-    /// Check if we are at the end of the reader.
     pub fn end(&mut self) -> Result<()> {
         let mut buf = [0];
 
@@ -380,50 +361,13 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
             .unwrap();
 
         match r {
-            Node::Ref(q) => Ok(q),
+            NodeRef::External(q) => Ok(q),
             _ => todo!(),
         }
-    }
-
-    pub fn flat_node<T>(
-        &mut self,
-        class_id: u32,
-        read_fn: impl Fn(&mut Self) -> Result<T>,
-    ) -> Result<Node<()>> {
-        let index = self.u32()?;
-
-        if index == 0xFFFFFFFF {
-            todo!()
-        }
-
-        if index == 0 || index > self.node_state.borrow().nodes.len() as u32 {
-            todo!()
-        }
-
-        if self.node_state.borrow().nodes[index as usize - 1].is_some() {
-            let r = self.node_state.borrow().nodes[index as usize - 1]
-                .as_ref()
-                .unwrap();
-
-            match r {
-                Node::Inline(q) => return Ok(Node::Inline(Rc::new(()))),
-                Node::Ref(q) => return Ok(Node::Ref(q.to_path_buf())),
-                _ => todo!(),
-            }
-        }
-
-        if self.u32()? != class_id {
-            todo!()
-        }
-
-        let node = read_fn(self)?;
-
-        Ok(Node::Inline(Rc::new(())))
     }
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    /// Either any inline node or null.
     pub fn any_inline_node_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
@@ -445,7 +389,6 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         Ok(Some(Rc::new(node)))
     }
 
-    /// Either any inline node, a node reference, or null.
     pub fn any_inline_node<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
@@ -456,11 +399,10 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
-    /// Either any inline node, a node reference, or null.
     pub fn any_node_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,
-    ) -> Result<Option<Node<()>>> {
+    ) -> Result<Option<NodeRef<()>>> {
         let index = self.u32()?;
 
         if index == 0xFFFFFFFF {
@@ -477,8 +419,8 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                 .unwrap();
 
             match r {
-                Node::Inline(q) => return Ok(Some(Node::Inline(Rc::new(())))),
-                Node::Ref(q) => return Ok(Some(Node::Ref(q.to_path_buf()))),
+                NodeRef::Internal(q) => return Ok(Some(NodeRef::Internal(Rc::new(())))),
+                NodeRef::External(q) => return Ok(Some(NodeRef::External(Rc::clone(q)))),
                 _ => todo!(),
             }
         }
@@ -487,15 +429,14 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
 
         let node = read_fn(self, class_id)?;
 
-        Ok(Some(Node::Inline(Rc::new(()))))
+        Ok(Some(NodeRef::Internal(Rc::new(()))))
     }
 }
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    /// Either an inline node of type `T`, a node reference, or null.
     pub fn node_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
-    ) -> Result<Option<Node<T>>> {
+    ) -> Result<Option<NodeRef<T>>> {
         let index = self.u32()?;
 
         if index == 0xFFFFFFFF {
@@ -512,10 +453,12 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                 .unwrap();
 
             match r {
-                Node::Inline(q) => {
-                    return Ok(Some(Node::Inline(Rc::clone(q).downcast::<T>().unwrap())));
+                NodeRef::Internal(q) => {
+                    return Ok(Some(NodeRef::Internal(
+                        Rc::clone(q).downcast::<T>().unwrap(),
+                    )));
                 }
-                Node::Ref(q) => return Ok(Some(Node::Ref(q.to_path_buf()))),
+                NodeRef::External(q) => return Ok(Some(NodeRef::External(Rc::clone(q)))),
                 _ => todo!(),
             }
         }
@@ -527,19 +470,21 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         let mut node = T::default();
         T::read_body(&mut node, self)?;
 
-        self.node_state.borrow_mut().nodes[index as usize - 1] = Some(Node::Inline(Rc::new(node)));
+        self.node_state.borrow_mut().nodes[index as usize - 1] =
+            Some(NodeRef::Internal(Rc::new(node)));
 
         let r = self.node_state.borrow().nodes[index as usize - 1]
             .as_ref()
             .unwrap();
 
         match r {
-            Node::Inline(q) => Ok(Some(Node::Inline(Rc::clone(q).downcast::<T>().unwrap()))),
+            NodeRef::Internal(q) => Ok(Some(NodeRef::Internal(
+                Rc::clone(q).downcast::<T>().unwrap(),
+            ))),
             _ => todo!(),
         }
     }
 
-    /// An inline node of type `T`.
     pub fn inline_node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
         match self.inline_node_or_null()? {
             Some(node) => Ok(node),
@@ -547,19 +492,17 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
-    /// Either an inline node of type `T` or null.
     pub fn inline_node_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<Rc<T>>> {
         match self.node_or_null()? {
             None => Ok(None),
-            Some(Node::Inline(node)) => Ok(Some(node)),
+            Some(NodeRef::Internal(node)) => Ok(Some(node)),
             _ => todo!(),
         }
     }
 
-    /// Either an inline node of type `T` or a node reference.
-    pub fn node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Node<T>> {
+    pub fn node<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<T>> {
         match self.node_or_null()? {
             None => todo!(),
             Some(node) => Ok(node),

@@ -421,7 +421,7 @@ impl ReadBody for ItemPlacementParam {
 
 impl BodyChunks for ItemPlacementParam {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -510,49 +510,11 @@ impl ItemPlacementParam {
         Ok(())
     }
 
-    fn read_chunk_2e020005<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e020005<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.flat_node(0x09187000, |d| {
-            d.u32()?; // 10
-            d.id_or_null()?; // "1x1"
-            d.list(|d| {
-                d.id()?;
-
-                Ok(())
-            })?;
-            d.u32()?; // 0 | 1
-            d.u32()?; // 0 | 1
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.list(|d| {
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.list(|d| {
-                    d.id()?;
-
-                    Ok(())
-                })?;
-                d.u32()?;
-                d.u32()?;
-
-                Ok(())
-            })?;
-            d.list(|d| {
-                d.u32()?;
-
-                Ok(())
-            })?;
-
-            Ok(())
-        })?;
+        d.node::<ItemPlacement>()?;
 
         Ok(())
     }
@@ -905,6 +867,59 @@ impl MediaClipList {
         d.u32()?; // 0
         d.u32()?; // 1
         d.u32()?; // 6
+
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct ItemPlacement;
+
+impl Class for ItemPlacement {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x187;
+}
+
+impl ReadBody for ItemPlacement {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 10
+        d.id_or_null()?; // "1x1"
+        d.list(|d| {
+            d.id()?;
+
+            Ok(())
+        })?;
+        d.u32()?; // 0 | 1
+        d.u32()?; // 0 | 1
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.list(|d| {
+                d.id()?;
+
+                Ok(())
+            })?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+        d.list(|d| {
+            d.u32()?;
+
+            Ok(())
+        })?;
 
         Ok(())
     }
