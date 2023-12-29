@@ -1,7 +1,7 @@
 use std::{
     any::Any,
     cmp,
-    io::{self, Read, Seek, SeekFrom},
+    io::{self, BufRead, Read, Seek, SeekFrom},
     iter,
     mem::size_of,
     path::{Path, PathBuf},
@@ -120,6 +120,24 @@ impl<R: Read> Read for Take<R> {
         self.limit -= n as u64;
 
         Ok(n)
+    }
+}
+
+impl<T: BufRead> BufRead for Take<T> {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        if self.limit == 0 {
+            return Ok(&[]);
+        }
+
+        let buf = self.reader.fill_buf()?;
+        let cap = cmp::min(buf.len() as u64, self.limit) as usize;
+        Ok(&buf[..cap])
+    }
+
+    fn consume(&mut self, amt: usize) {
+        let amt = cmp::min(amt as u64, self.limit) as usize;
+        self.limit -= amt as u64;
+        self.reader.consume(amt);
     }
 }
 
@@ -279,6 +297,10 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
             Ok(0) => Ok(()),
             _ => todo!(),
         }
+    }
+
+    pub fn xml_reader(&mut self) -> quick_xml::Reader<&mut R> {
+        quick_xml::Reader::from_reader(&mut self.reader)
     }
 }
 

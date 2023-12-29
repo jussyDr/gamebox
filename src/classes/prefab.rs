@@ -1,4 +1,4 @@
-use std::io::{Read, Seek};
+use std::io::{BufRead, Read, Seek};
 
 use crate::{
     class::Class,
@@ -24,7 +24,7 @@ impl Readable for Prefab {}
 
 impl Sealed for Prefab {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl BufRead + Seek,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

@@ -5,7 +5,7 @@ pub(crate) mod readable;
 
 use std::{
     fs::File,
-    io::{BufReader, Read, Seek},
+    io::{BufRead, BufReader, Seek},
     path::Path,
 };
 
@@ -34,7 +34,7 @@ pub trait Readable: readable::Sealed {}
 /// let item: Item = read(reader)?;
 /// # Ok::<(), gamebox::read::Error>(()) };
 /// ```
-pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T> {
+pub fn read<T: Readable>(reader: impl BufRead + Seek) -> Result<T> {
     Reader::new().read(reader)
 }
 
@@ -103,7 +103,7 @@ impl Reader {
     /// let item: Item = Reader::new().read(reader)?;
     /// # Ok::<(), gamebox::read::Error>(()) };
     /// ```
-    pub fn read<T: Readable>(&self, reader: impl Read + Seek) -> Result<T> {
+    pub fn read<T: Readable>(&self, reader: impl BufRead + Seek) -> Result<T> {
         T::read(reader, self.read_header, self.skip_body)
     }
 

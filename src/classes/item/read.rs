@@ -1,5 +1,5 @@
 use std::{
-    io::{Read, Seek},
+    io::{BufRead, Read, Seek},
     rc::Rc,
 };
 
@@ -26,7 +26,7 @@ impl Readable for Item {}
 
 impl Sealed for Item {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl BufRead + Seek,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

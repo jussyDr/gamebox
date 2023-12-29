@@ -1,4 +1,4 @@
-use std::io::{Read, Seek};
+use std::io::{BufRead, Read, Seek};
 
 use crate::{
     class::Class,
@@ -17,14 +17,14 @@ use crate::{
 use super::{
     media::{MediaClip, MediaClipGroup},
     Block, BlockKind, Color, Coord, Direction, EmbeddedObjects, FreeBlock, Item, LightmapQuality,
-    Map, NormalBlock, PhaseOffset, Position, Rotation,
+    Map, MedalTimes, NormalBlock, PhaseOffset, Position, Rotation,
 };
 
 impl Readable for Map {}
 
 impl Sealed for Map {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl BufRead + Seek,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {
@@ -33,7 +33,7 @@ impl Sealed for Map {
 }
 
 impl HeaderChunks for Map {
-    fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>> {
+    fn header_chunks<R: BufRead>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>> {
         [
             HeaderChunkEntry {
                 id: 0x03043002,
@@ -286,10 +286,10 @@ impl Map {
     fn read_chunk_03043002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u8()?; // 13
         d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
+        let bronze = d.u32()?;
+        let silver = d.u32()?;
+        let gold = d.u32()?;
+        let author = d.u32()?;
         self.cost = d.u32()?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -299,6 +299,19 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 38
         d.u32()?; // 1
+
+        if bronze != 0xffffffff
+            && silver != 0xffffffff
+            && gold != 0xffffffff
+            && author != 0xffffffff
+        {
+            self.medal_times = Some(MedalTimes {
+                bronze,
+                silver,
+                gold,
+                author,
+            });
+        }
 
         Ok(())
     }
@@ -342,8 +355,24 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043005<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.string()?;
+    fn read_chunk_03043005<R: BufRead, I, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        use quick_xml::events::Event;
+
+        let len = d.u32()?;
+
+        let mut xml_reader = d.xml_reader();
+
+        let mut buf = Vec::with_capacity(len as usize);
+
+        loop {
+            match xml_reader.read_event_into(&mut buf) {
+                Ok(Event::Eof) => break,
+                _ => (),
+            }
+        }
 
         Ok(())
     }
@@ -388,8 +417,10 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.internal_node_ref::<CollectorList>()?;
-        d.internal_node_ref::<ChallengeParameters>()?;
+        let challenge_parameters = d.internal_node_ref::<ChallengeParameters>()?;
         d.u32()?; // 6
+
+        self.medal_times = challenge_parameters.medal_times.clone();
 
         Ok(())
     }
@@ -1106,7 +1137,9 @@ impl CollectorList {
 }
 
 #[derive(Default)]
-struct ChallengeParameters;
+struct ChallengeParameters {
+    medal_times: Option<MedalTimes>,
+}
 
 impl Class for ChallengeParameters {
     const ENGINE: u8 = EngineId::GAME;
@@ -1184,12 +1217,25 @@ impl ChallengeParameters {
 
     fn read_chunk_0305b00a<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
+        let bronze = d.u32()?;
+        let silver = d.u32()?;
+        let gold = d.u32()?;
+        let author = d.u32()?;
         d.u32()?;
         d.u32()?; // 0
+
+        if bronze != 0xffffffff
+            && silver != 0xffffffff
+            && gold != 0xffffffff
+            && author != 0xffffffff
+        {
+            self.medal_times = Some(MedalTimes {
+                bronze,
+                silver,
+                gold,
+                author,
+            });
+        }
 
         Ok(())
     }

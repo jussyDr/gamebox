@@ -1,7 +1,7 @@
 //! Types used for reading [Texture] nodes.
 
 use std::{
-    io::{Read, Seek},
+    io::{BufRead, Read, Seek},
     path::Path,
 };
 
@@ -39,7 +39,7 @@ impl Readable for Texture {}
 
 impl Sealed for Texture {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl BufRead + Seek,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

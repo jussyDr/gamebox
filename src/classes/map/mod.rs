@@ -14,6 +14,7 @@ use self::media::{MediaClip, MediaClipGroup};
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
 pub struct Map {
+    medal_times: Option<MedalTimes>,
     cost: u32,
     id: RcStr,
     author_id: RcStr,
@@ -37,6 +38,11 @@ impl Class for Map {
 }
 
 impl Map {
+    /// Medal time objectives of the map.
+    pub fn medal_times(&self) -> Option<&MedalTimes> {
+        self.medal_times.as_ref()
+    }
+
     /// Display cost of the map.
     pub fn cost(&self) -> u32 {
         self.cost
@@ -58,8 +64,8 @@ impl Map {
     }
 
     /// Set the id of the map author.
-    pub fn set_author_id(&mut self, author_id: impl AsRef<str>) {
-        self.author_id = author_id.as_ref().into()
+    pub fn set_author_id(&mut self, author_id: impl Into<RcStr>) {
+        self.author_id = author_id.into()
     }
 
     /// Name of the map.
@@ -140,6 +146,37 @@ impl Map {
     /// Embedded objects.
     pub fn embedded_objects(&self) -> Option<&EmbeddedObjects> {
         self.embedded_objects.as_ref()
+    }
+}
+
+/// Medal time objectives of a map.
+#[derive(Clone)]
+pub struct MedalTimes {
+    bronze: u32,
+    silver: u32,
+    gold: u32,
+    author: u32,
+}
+
+impl MedalTimes {
+    /// Bronze medal time objective.
+    pub fn bronze(&self) -> u32 {
+        self.bronze
+    }
+
+    /// Silver medal time objective.
+    pub fn silver(&self) -> u32 {
+        self.silver
+    }
+
+    /// Gold medal time objective.
+    pub fn gold(&self) -> u32 {
+        self.gold
+    }
+
+    /// Author medal time objective.
+    pub fn author(&self) -> u32 {
+        self.author
     }
 }
 

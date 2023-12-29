@@ -1,7 +1,7 @@
 //! Types used for reading [Material] nodes.
 
 use std::{
-    io::{Read, Seek},
+    io::{BufRead, Read, Seek},
     path::Path,
 };
 
@@ -49,7 +49,7 @@ impl Readable for Material {}
 
 impl Sealed for Material {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl BufRead + Seek,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

@@ -1,5 +1,5 @@
 use std::{
-    io::{Cursor, Read, Seek},
+    io::{BufRead, Cursor, Read, Seek},
     path::PathBuf,
 };
 
@@ -13,7 +13,7 @@ use super::{
 };
 
 pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
-    reader: impl Read + Seek,
+    reader: impl BufRead + Seek,
     header_options: HeaderOptions,
     body_options: BodyOptions,
 ) -> Result<T> {
@@ -141,7 +141,7 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
     Ok(node)
 }
 
-fn read_header<T: HeaderChunks, R: Read + Seek, I, N>(
+fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
     node: &mut T,
     mut d: Deserializer<R, I, N>,
     read_heavy_chunks: bool,
@@ -266,7 +266,7 @@ pub type SkippableBodyChunkReadFn<T, R, I, N> =
 
 pub trait Sealed {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl BufRead + Seek,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self>
@@ -275,7 +275,7 @@ pub trait Sealed {
 }
 
 pub trait HeaderChunks {
-    fn header_chunks<R: Read>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>>
+    fn header_chunks<R: BufRead>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>>
     where
         Self: Sized;
 }
