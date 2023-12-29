@@ -1,22 +1,11 @@
-use std::{ops::Deref, path::Path, rc::Rc};
+use std::{
+    ops::Deref,
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
 #[derive(Default)]
 pub struct RcStr(Option<Rc<str>>);
-
-impl RcStr {
-    pub fn as_str(&self) -> &str {
-        self
-    }
-}
-
-impl Clone for RcStr {
-    fn clone(&self) -> Self {
-        match self.0 {
-            None => Self(None),
-            Some(ref rc_str) => Self(Some(Rc::clone(rc_str))),
-        }
-    }
-}
 
 impl Deref for RcStr {
     type Target = str;
@@ -29,12 +18,22 @@ impl Deref for RcStr {
     }
 }
 
-impl From<String> for RcStr {
-    fn from(s: String) -> Self {
-        if s.is_empty() {
+impl From<Rc<str>> for RcStr {
+    fn from(rc_str: Rc<str>) -> Self {
+        if rc_str.is_empty() {
             Self(None)
         } else {
-            Self(Some(Rc::from(s)))
+            Self(Some(rc_str))
+        }
+    }
+}
+
+impl From<String> for RcStr {
+    fn from(string: String) -> Self {
+        if string.is_empty() {
+            Self(None)
+        } else {
+            Self(Some(string.into()))
         }
     }
 }
@@ -49,6 +48,16 @@ impl Deref for RcPath {
         match self.0 {
             None => Path::new(""),
             Some(ref rc_path) => rc_path,
+        }
+    }
+}
+
+impl From<PathBuf> for RcPath {
+    fn from(path_buf: PathBuf) -> Self {
+        if path_buf.as_os_str().is_empty() {
+            Self(None)
+        } else {
+            Self(Some(path_buf.into()))
         }
     }
 }

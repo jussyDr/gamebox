@@ -8,14 +8,14 @@ use std::{
     rc::Rc,
 };
 
-use crate::{class::Class, read::Result, RcStr};
+use crate::{class::Class, read::Result};
 
 use super::readable::ReadBody;
 
 /// State of identifiers read in the past.
 pub struct IdState {
     seen_id: bool,
-    ids: Vec<RcStr>,
+    ids: Vec<Rc<str>>,
 }
 
 impl IdState {
@@ -303,14 +303,14 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
         Ok(())
     }
 
-    pub fn id(&mut self) -> Result<RcStr> {
+    pub fn id(&mut self) -> Result<Rc<str>> {
         match self.id_or_null()? {
             None => todo!(),
             Some(id) => Ok(id),
         }
     }
 
-    pub fn id_or_null(&mut self) -> Result<Option<RcStr>> {
+    pub fn id_or_null(&mut self) -> Result<Option<Rc<str>>> {
         let index = self.id_index()?;
 
         if index == 0xffffffff {
@@ -321,11 +321,11 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
             let index = (index & 0x00003fff) as u16;
 
             if index == 0 {
-                let id = RcStr::from(self.string()?);
-                self.id_state.borrow_mut().ids.push(RcStr::clone(&id));
+                let id = Rc::from(self.string()?);
+                self.id_state.borrow_mut().ids.push(Rc::clone(&id));
                 return Ok(Some(id));
             } else {
-                let id = RcStr::clone(self.id_state.borrow().ids.get(index as usize - 1).unwrap());
+                let id = Rc::clone(self.id_state.borrow().ids.get(index as usize - 1).unwrap());
                 return Ok(Some(id));
             }
         }

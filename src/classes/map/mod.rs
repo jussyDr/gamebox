@@ -33,12 +33,12 @@ impl Class for Map {
 impl Map {
     /// Identifier of the map.
     pub fn id(&self) -> &str {
-        self.id.as_str()
+        &self.id
     }
 
     /// Identifier of the map author.
     pub fn author_id(&self) -> &str {
-        self.author_id.as_str()
+        &self.author_id
     }
 
     /// Name of the map.
@@ -123,7 +123,7 @@ pub struct Block {
 impl Block {
     /// Identifier of the block.
     pub fn id(&self) -> &str {
-        self.id.as_str()
+        &self.id
     }
 
     /// Kind of block.
@@ -202,7 +202,7 @@ pub struct Item {
 impl Item {
     /// Identifier of the item.
     pub fn id(&self) -> &str {
-        self.id.as_str()
+        &self.id
     }
 
     pub const fn color(&self) -> Color {

@@ -315,9 +315,9 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u8()?; // 11
-        self.id = d.id()?; // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
+        self.id = d.id()?.into(); // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
         d.u32()?; // 26
-        self.author_id = d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
+        self.author_id = d.id()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.name = d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
         d.u8()?; // 8
         d.u32()?; // 0
@@ -418,9 +418,9 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        self.id = d.id()?; // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
+        self.id = d.id()?.into(); // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
         d.u32()?; // 26
-        self.author_id = d.id()?; // "qYw071iWQXu9_jXI7SXEvA"
+        self.author_id = d.id()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.name = d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
         d.id()?; // "NoStadium48x48Sunrise"
         d.u32()?; // 26
@@ -433,7 +433,7 @@ impl Map {
         let num_blocks = d.u32()?;
         self.blocks = Vec::with_capacity(num_blocks as usize);
         while d.peek_u32()? & 0xffffc000 == 0x40000000 {
-            let id = d.id()?;
+            let id = d.id()?.into();
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;
@@ -699,7 +699,7 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 6
         self.baked_blocks = d.list(|d| {
-            let id = d.id()?;
+            let id = d.id()?.into();
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;
@@ -817,7 +817,7 @@ impl Map {
             let mut d = d.take(size as u64, IdState::new(), ());
 
             let object_ids = d.list(|d| {
-                let id = d.id()?;
+                let id = d.id()?.into();
                 d.u32()?; // 26
                 d.id_or_null()?;
 
@@ -1362,7 +1362,7 @@ impl AnchoredObject {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 8
-        self.id = d.id()?; // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
+        self.id = d.id()?.into(); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
         d.u32()?; // 26
         d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
         d.u32()?;

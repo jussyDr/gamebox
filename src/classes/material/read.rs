@@ -309,7 +309,7 @@ impl MaterialCustom {
             d.u32()?; // 4
             d.u32()?; // 4
 
-            match texture_kind.as_str() {
+            match texture_kind.as_ref() {
                 "BaseColor" => self.diffuse_texture_ref = texture_ref.into(),
                 "BaseColorHueMask" => {}
                 "Normal" => {}
