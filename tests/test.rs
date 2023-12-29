@@ -17,13 +17,13 @@ use gamebox::{
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
 fn main() {
-    // let map = Map::default();
+    let map = Map::default();
 
-    // gamebox::write_file(
-    //     &map,
-    //     "C:\\Users\\Justin\\Documents\\Trackmania\\Maps\\My Maps\\Empty.Map.Gbx",
-    // )
-    // .unwrap();
+    gamebox::write_file(
+        &map,
+        "C:\\Users\\Justin\\Documents\\Trackmania\\Maps\\My Maps\\Empty.Map.Gbx",
+    )
+    .unwrap();
 
     let args = env::args().collect::<Vec<_>>();
 

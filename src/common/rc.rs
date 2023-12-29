@@ -8,6 +8,12 @@ use std::{
 #[derive(Clone, Default)]
 pub struct RcStr(Option<Rc<str>>);
 
+impl RcStr {
+    pub fn as_str(&self) -> &str {
+        self
+    }
+}
+
 impl Deref for RcStr {
     type Target = str;
 
@@ -42,6 +48,12 @@ impl From<String> for RcStr {
 /// A reference counted path.
 #[derive(Clone, Default)]
 pub struct RcPath(Option<Rc<Path>>);
+
+impl RcPath {
+    pub fn as_path(&self) -> &Path {
+        self
+    }
+}
 
 impl Deref for RcPath {
     type Target = Path;

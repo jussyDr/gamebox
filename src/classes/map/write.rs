@@ -37,11 +37,11 @@ impl HeaderChunks for Map {
             },
             HeaderChunkWriteFn {
                 chunk_id: 0x03043003,
-                write_fn: |_, s| {
+                write_fn: |n: &Map, s| {
                     s.u8(11)?;
                     s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
                     s.u32(26)?;
-                    s.id("r-brwiQCRnOZ2PIHcM0Q8A")?;
+                    s.id(&n.author_id)?;
                     s.string("Empty")?;
                     s.u8(6)?;
                     s.u32(0)?;
@@ -71,8 +71,8 @@ impl HeaderChunks for Map {
             },
             HeaderChunkWriteFn {
                 chunk_id: 0x03043005,
-                write_fn: |_, s| {
-                    s.string("<header type=\"map\" exever=\"3.3.0\" exebuild=\"2023-11-24_17_34\" title=\"TMStadium\" lightmap=\"0\"><ident uid=\"clPHg9CHQjSqYP9wY4nRR6kSqM3\" name=\"Empty\" author=\"r-brwiQCRnOZ2PIHcM0Q8A\" authorzone=\"World|Europe|Netherlands|Zuid-Holland\"/><desc envir=\"Stadium\" mood=\"Day\" type=\"Race\" maptype=\"TrackMania\\TM_Race\" mapstyle=\"\" validated=\"0\" nblaps=\"0\" displaycost=\"203\" mod=\"\" hasghostblocks=\"0\" /><playermodel id=\"\"/><times bronze=\"-1\" silver=\"-1\" gold=\"-1\" authortime=\"-1\" authorscore=\"0\"/><deps></deps></header>")
+                write_fn: |n: &Map, s| {
+                    s.string(&format!("<header type=\"map\" exever=\"3.3.0\" exebuild=\"2023-11-24_17_34\" title=\"TMStadium\" lightmap=\"0\"><ident uid=\"clPHg9CHQjSqYP9wY4nRR6kSqM3\" name=\"Empty\" author=\"{}\" authorzone=\"{}\"/><desc envir=\"Stadium\" mood=\"Day\" type=\"Race\" maptype=\"TrackMania\\TM_Race\" mapstyle=\"\" validated=\"0\" nblaps=\"0\" displaycost=\"203\" mod=\"\" hasghostblocks=\"0\" /><playermodel id=\"\"/><times bronze=\"-1\" silver=\"-1\" gold=\"-1\" authortime=\"-1\" authorscore=\"0\"/><deps></deps></header>", n.author_id.as_str(), n.author_region))
                 },
             },
             HeaderChunkWriteFn {
@@ -91,12 +91,12 @@ impl HeaderChunks for Map {
             },
             HeaderChunkWriteFn {
                 chunk_id: 0x03043008,
-                write_fn: |_, s| {
+                write_fn: |n, s| {
                     s.u32(1)?;
                     s.u32(0)?;
-                    s.string("r-brwiQCRnOZ2PIHcM0Q8A")?;
-                    s.string("JussyDr")?;
-                    s.string("World|Europe|Netherlands|Zuid-Holland")?;
+                    s.string(&n.author_id)?;
+                    s.string(&n.author_name)?;
+                    s.string(&n.author_region)?;
                     s.u32(0)
                 },
             },
@@ -186,7 +186,7 @@ impl WriteBody for Map {
         s.u32(0x0304301f)?;
         s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
         s.u32(26)?;
-        s.id("r-brwiQCRnOZ2PIHcM0Q8A")?;
+        s.id(&self.author_id)?;
         s.string("Empty")?;
         s.id("48x48Day")?;
         s.u32(26)?;
@@ -295,9 +295,9 @@ impl WriteBody for Map {
         s.byte_buffer(|s| {
             s.u32(1)?;
             s.u32(0)?;
-            s.string("r-brwiQCRnOZ2PIHcM0Q8A")?;
-            s.string("JussyDr")?;
-            s.string("World|Europe|Netherlands|Zuid-Holland")?;
+            s.string(&self.author_id)?;
+            s.string(&self.author_name)?;
+            s.string(&self.author_region)?;
             s.u32(0)
         })?;
 
@@ -602,11 +602,3 @@ impl WriteBody for Map {
         Ok(())
     }
 }
-
-// 03043063
-// 03043064
-// 03043065
-// 03043067
-// 03043068
-// 03043069
-// 0304306B
