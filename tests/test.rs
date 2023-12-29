@@ -30,11 +30,6 @@ fn main() {
     read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
     read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
 
-    read_file_tests::<Map>(
-        &mut tests,
-        "C:\\Users\\Justin\\Documents\\Trackmania\\Maps\\My Maps",
-    );
-
     test_main(&args, tests, None);
 }
 
