@@ -18,13 +18,6 @@ use super::{
 #[derive(Default)]
 pub struct Item {
     parent: Collector,
-    layers: Vec<(Mesh, ItemMaterial)>,
-}
-
-impl Item {
-    pub fn layers(&self) -> &[(Mesh, ItemMaterial)] {
-        &self.layers
-    }
 }
 
 #[derive(Clone)]

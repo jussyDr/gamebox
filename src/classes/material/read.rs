@@ -1,12 +1,15 @@
 use std::io::{Read, Seek};
 
-use crate::read::{
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    readable::{
-        read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry,
-        HeaderChunks, ReadBody, Sealed,
+use crate::{
+    read::{
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
+        readable::{
+            read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
+            HeaderChunkEntry, HeaderChunks, ReadBody, Sealed,
+        },
+        BodyOptions, HeaderOptions, Readable, Result,
     },
-    BodyOptions, HeaderOptions, Readable, Result,
+    RcPath,
 };
 
 use super::{Material, MaterialCustom};
@@ -100,6 +103,8 @@ impl Material {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         let material_custom = d.internal_node_ref::<MaterialCustom>()?;
+
+        self.diffuse_texture_path = RcPath::clone(&material_custom.diffuse_texture_path);
 
         Ok(())
     }
@@ -310,7 +315,7 @@ impl MaterialCustom {
             d.u32()?; // 4
 
             match texture_kind.as_ref() {
-                "BaseColor" => self.diffuse_texture_ref = texture_ref.into(),
+                "BaseColor" => self.diffuse_texture_path = texture_ref.into(),
                 "BaseColorHueMask" => {}
                 "Normal" => {}
                 "RoughMetal" => {}

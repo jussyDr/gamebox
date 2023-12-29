@@ -4,7 +4,8 @@ use std::{
     rc::Rc,
 };
 
-#[derive(Default)]
+/// A reference counted string.
+#[derive(Clone, Default)]
 pub struct RcStr(Option<Rc<str>>);
 
 impl Deref for RcStr {
@@ -38,7 +39,8 @@ impl From<String> for RcStr {
     }
 }
 
-#[derive(Default)]
+/// A reference counted path.
+#[derive(Clone, Default)]
 pub struct RcPath(Option<Rc<Path>>);
 
 impl Deref for RcPath {

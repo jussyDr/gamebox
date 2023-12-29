@@ -1,6 +1,6 @@
 //! Types used for reading [Material] nodes.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::{class::Class, EngineId, RcPath};
 
@@ -9,12 +9,12 @@ mod read;
 /// Node type corresponding to GameBox files with the extension `Material.Gbx`.
 #[derive(Default)]
 pub struct Material {
-    diffuse_texture_ref: PathBuf,
+    diffuse_texture_path: RcPath,
 }
 
 impl Material {
-    pub fn diffuse_texture_ref(&self) -> &Path {
-        &self.diffuse_texture_ref
+    pub fn diffuse_texture_path(&self) -> &Path {
+        &self.diffuse_texture_path
     }
 }
 
@@ -25,7 +25,7 @@ impl Class for Material {
 
 #[derive(Default)]
 struct MaterialCustom {
-    diffuse_texture_ref: RcPath,
+    diffuse_texture_path: RcPath,
 }
 
 impl Class for MaterialCustom {
