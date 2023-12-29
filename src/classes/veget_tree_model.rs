@@ -1,15 +1,24 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    classes::visual_indexed_triangles::VisualIndexedTriangles,
+    class::Class,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
+    EngineId,
 };
 
-use super::VegetTreeModel;
+use super::visual_indexed_triangles::VisualIndexedTriangles;
+
+#[derive(Default)]
+pub struct VegetTreeModel;
+
+impl Class for VegetTreeModel {
+    const ENGINE: u8 = EngineId::META;
+    const CLASS: u16 = 0x086;
+}
 
 impl Readable for VegetTreeModel {}
 

@@ -1,15 +1,39 @@
-use std::io::{Read, Seek};
+//! Types used for reading [Texture] nodes.
 
-use crate::read::{
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
-    readable::{
-        read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks, HeaderChunkEntry,
-        HeaderChunks, ReadBody, Sealed,
-    },
-    BodyOptions, HeaderOptions, Readable, Result,
+use std::{
+    io::{Read, Seek},
+    path::Path,
 };
 
-use super::Texture;
+use crate::{
+    class::Class,
+    read::{
+        deserialize::{Deserializer, IdStateMut, NodeStateMut},
+        readable::{
+            read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
+            HeaderChunkEntry, HeaderChunks, ReadBody, Sealed,
+        },
+        BodyOptions, HeaderOptions, Readable, Result,
+    },
+    EngineId, RcPath,
+};
+
+/// Node type corresponding to GameBox files with the extension `Texture.Gbx`.
+#[derive(Default)]
+pub struct Texture {
+    image_path: RcPath,
+}
+
+impl Texture {
+    pub fn image_path(&self) -> &Path {
+        &self.image_path
+    }
+}
+
+impl Class for Texture {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x011;
+}
 
 impl Readable for Texture {}
 

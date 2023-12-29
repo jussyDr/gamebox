@@ -1,15 +1,24 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    classes::static_object_model::StaticObjectModel,
+    class::Class,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
+    EngineId,
 };
 
-use super::Prefab;
+use super::static_object_model::StaticObjectModel;
+
+#[derive(Default)]
+pub struct Prefab;
+
+impl Class for Prefab {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x145;
+}
 
 impl Readable for Prefab {}
 

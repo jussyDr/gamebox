@@ -1,10 +1,15 @@
 //! Types used for reading and writing [Map] nodes.
 
+pub mod media;
+
 mod read;
+mod write;
 
 use std::rc::Rc;
 
 use crate::{class::Class, EngineId, RcStr};
+
+use self::media::{MediaClip, MediaClipGroup};
 
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
@@ -308,125 +313,3 @@ pub enum LightmapQuality {
     VeryLow,
     Lowest,
 }
-
-/// A group of media clips.
-#[derive(Default)]
-pub struct MediaClipGroup {
-    clips: Vec<MediaClipWithTrigger>,
-}
-
-impl Class for MediaClipGroup {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x07a;
-}
-
-impl MediaClipGroup {
-    /// The media clips in this group with their corresponding triggers.
-    pub fn clips(&self) -> &[MediaClipWithTrigger] {
-        &self.clips
-    }
-}
-
-/// A media clip and its corresponding trigger.
-pub struct MediaClipWithTrigger {
-    clip: Rc<MediaClip>,
-    trigger_coords: Vec<Coord<u32>>,
-}
-
-impl MediaClipWithTrigger {
-    /// The media clip.
-    pub fn clip(&self) -> &MediaClip {
-        &self.clip
-    }
-
-    /// List of coordinates where this clip is triggered if its condition is met.
-    pub fn trigger_coords(&self) -> &[Coord<u32>] {
-        &self.trigger_coords
-    }
-}
-
-/// A media clip.
-#[derive(Default)]
-pub struct MediaClip {
-    tracks: Vec<Rc<MediaTrack>>,
-}
-
-impl Class for MediaClip {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x079;
-}
-
-impl MediaClip {
-    /// Media tracks in this clip.
-    pub fn tracks(&self) -> &[Rc<MediaTrack>] {
-        &self.tracks
-    }
-}
-
-/// A media track.
-#[derive(Default)]
-pub struct MediaTrack {
-    blocks: Vec<MediaBlock>,
-}
-
-impl MediaTrack {
-    /// Media blocks in this track.
-    pub fn blocks(&self) -> &[MediaBlock] {
-        &self.blocks
-    }
-}
-
-impl Class for MediaTrack {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x078;
-}
-
-/// A media block.
-pub enum MediaBlock {
-    Triangles3D(Rc<MediaBlockTriangles3D>),
-    FxColors(Rc<MediaBlockFxColors>),
-    CameraGame(Rc<MediaBlockCameraGame>),
-    CameraCustom(Rc<MediaBlockCameraCustom>),
-    CameraEffectShake(Rc<MediaBlockCameraEffectShake>),
-    Image(Rc<MediaBlockImage>),
-    Text(Rc<MediaBlockText>),
-    TransitionFade(Rc<MediaBlockTransitionFade>),
-    DOF(Rc<MediaBlockDOF>),
-    ToneMapping(Rc<MediaBlockToneMapping>),
-    DirtyLens(Rc<MediaBlockDirtyLens>),
-    ColorGrading(Rc<MediaBlockColorGrading>),
-    Fog(Rc<MediaBlockFog>),
-    Entity(Rc<MediaBlockEntity>),
-}
-
-struct MediaBlockTriangles;
-
-pub struct MediaBlockTriangles3D {
-    parent: MediaBlockTriangles,
-}
-
-pub struct MediaBlockFxColors;
-
-pub struct MediaBlockCameraGame;
-
-pub struct MediaBlockCameraCustom;
-
-pub struct MediaBlockCameraEffectShake;
-
-pub struct MediaBlockImage;
-
-pub struct MediaBlockText;
-
-pub struct MediaBlockTransitionFade;
-
-pub struct MediaBlockDOF;
-
-pub struct MediaBlockToneMapping;
-
-pub struct MediaBlockDirtyLens;
-
-pub struct MediaBlockColorGrading;
-
-pub struct MediaBlockFog;
-
-pub struct MediaBlockEntity;

@@ -1,15 +1,38 @@
+//! Types used for reading [Ghost] nodes.
+
 use std::io::{Read, Seek};
 
 use crate::{
+    class::Class,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    read_file_ref,
+    read_file_ref, EngineId,
 };
 
-use super::{EntRecordData, Ghost, Ghost2};
+/// Node type corresponding to GameBox files with the extension `Ghost.Gbx`.
+#[derive(Default)]
+pub struct Ghost {
+    parent: Ghost2,
+}
+
+impl Class for Ghost {
+    const ENGINE: u8 = EngineId::GAME;
+    const CLASS: u16 = 0x092;
+}
+
+#[derive(Default)]
+struct Ghost2;
+
+#[derive(Default)]
+pub(crate) struct EntRecordData;
+
+impl Class for EntRecordData {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x11f;
+}
 
 impl ReadBody for Ghost {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

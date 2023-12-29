@@ -1,6 +1,12 @@
-use std::io::{Read, Seek};
+//! Types used for reading [Material] nodes.
+
+use std::{
+    io::{Read, Seek},
+    path::Path,
+};
 
 use crate::{
+    class::Class,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{
@@ -9,10 +15,35 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    RcPath,
+    EngineId, RcPath,
 };
 
-use super::{Material, MaterialCustom};
+/// Node type corresponding to GameBox files with the extension `Material.Gbx`.
+#[derive(Default)]
+pub struct Material {
+    diffuse_texture_path: RcPath,
+}
+
+impl Material {
+    pub fn diffuse_texture_path(&self) -> &Path {
+        &self.diffuse_texture_path
+    }
+}
+
+impl Class for Material {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x079;
+}
+
+#[derive(Default)]
+struct MaterialCustom {
+    diffuse_texture_path: RcPath,
+}
+
+impl Class for MaterialCustom {
+    const ENGINE: u8 = EngineId::PLUG;
+    const CLASS: u16 = 0x03a;
+}
 
 impl Readable for Material {}
 
