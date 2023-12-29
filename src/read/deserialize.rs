@@ -162,8 +162,35 @@ impl<R, I, N> Deserializer<R, I, N> {
         }
     }
 
-    pub fn into_reader(self) -> R {
+    pub fn into_inner(self) -> R {
         self.reader
+    }
+
+    pub fn get_mut(&mut self) -> &mut R {
+        &mut self.reader
+    }
+
+    pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
+        let inner = Take {
+            reader: &mut self.reader,
+            limit,
+        };
+
+        Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
+    }
+
+    pub fn take_with<IS, NS>(
+        &mut self,
+        limit: u64,
+        id_state: IS,
+        node_state: NS,
+    ) -> Deserializer<Take<&mut R>, IS, NS> {
+        let inner = Take {
+            reader: &mut self.reader,
+            limit,
+        };
+
+        Deserializer::new(inner, id_state, node_state)
     }
 }
 
@@ -240,17 +267,17 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(string)
     }
 
-    pub fn list<T>(&mut self, read_fn: impl FnMut(&mut Self) -> Result<T>) -> Result<Vec<T>> {
-        let len = self.u32()?;
-        self.repeat(len as usize, read_fn)
-    }
-
     pub fn repeat<T>(
         &mut self,
         n: usize,
         mut read_fn: impl FnMut(&mut Self) -> Result<T>,
     ) -> Result<Vec<T>> {
         iter::repeat_with(|| read_fn(self)).take(n).collect()
+    }
+
+    pub fn list<T>(&mut self, read_fn: impl FnMut(&mut Self) -> Result<T>) -> Result<Vec<T>> {
+        let len = self.u32()?;
+        self.repeat(len as usize, read_fn)
     }
 
     pub fn list_zipped_with<T, U>(
@@ -267,29 +294,6 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         vec.into_iter().map(|x| read_fn(self, x)).collect()
     }
 
-    pub fn take<IS, NS>(
-        &mut self,
-        limit: u64,
-        id_state: IS,
-        node_state: NS,
-    ) -> Deserializer<Take<&mut R>, IS, NS> {
-        let inner = Take {
-            reader: &mut self.reader,
-            limit,
-        };
-
-        Deserializer::new(inner, id_state, node_state)
-    }
-
-    pub fn take2(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
-        let inner = Take {
-            reader: &mut self.reader,
-            limit,
-        };
-
-        Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
-    }
-
     pub fn end(&mut self) -> Result<()> {
         let mut buf = [0];
 
@@ -297,10 +301,6 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
             Ok(0) => Ok(()),
             _ => todo!(),
         }
-    }
-
-    pub fn xml_reader(&mut self) -> quick_xml::Reader<&mut R> {
-        quick_xml::Reader::from_reader(&mut self.reader)
     }
 }
 

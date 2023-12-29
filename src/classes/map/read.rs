@@ -359,11 +359,11 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        use quick_xml::events::Event;
+        use quick_xml::{events::Event, Reader};
 
         let len = d.u32()?;
 
-        let mut xml_reader = d.xml_reader();
+        let mut xml_reader = Reader::from_reader(d.get_mut());
 
         let mut buf = Vec::with_capacity(len as usize);
 
@@ -604,7 +604,7 @@ impl Map {
         d.u32()?; // 0
         let size = d.u32()?;
         {
-            let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
+            let mut d = d.take_with(size as u64, IdState::new(), NodeState::new(0));
 
             d.u32()?; // 10
             self.items = d.list(|d| {
@@ -684,7 +684,7 @@ impl Map {
         let size = d.u32()?;
 
         {
-            let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
+            let mut d = d.take_with(size as u64, IdState::new(), NodeState::new(0));
 
             d.list(|d| {
                 d.node::<ZoneGenealogy>()?;
@@ -706,7 +706,7 @@ impl Map {
         let size = d.u32()?;
 
         {
-            let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
+            let mut d = d.take_with(size as u64, IdState::new(), NodeState::new(0));
 
             d.node::<TraitsMetadata>()?;
 
@@ -838,7 +838,7 @@ impl Map {
         let size = d.u32()?;
 
         {
-            let mut d = d.take(size as u64, IdState::new(), ());
+            let mut d = d.take_with(size as u64, IdState::new(), ());
 
             let object_ids = d.list(|d| {
                 let id = d.id()?.into();

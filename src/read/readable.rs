@@ -59,7 +59,7 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
         HeaderOptions::Read { read_heavy_chunks } => {
             read_header(
                 &mut node,
-                d.take(header_data_size as u64, (), ()),
+                d.take_with(header_data_size as u64, (), ()),
                 read_heavy_chunks,
             )?;
         }
@@ -126,7 +126,7 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
     } else {
         match body_options {
             BodyOptions::Read { .. } => {
-                let reader = d.into_reader();
+                let reader = d.into_inner();
 
                 let mut d = Deserializer::new(reader, IdState::new(), node_state);
 
@@ -164,7 +164,7 @@ fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
         if is_heavy_chunk && !read_heavy_chunks {
             d.skip(chunk_size)?;
         } else {
-            let mut d = d.take(chunk_size as u64, &mut id_state, ());
+            let mut d = d.take_with(chunk_size as u64, &mut id_state, ());
 
             let header_chunk_entry = header_chunk_entries
                 .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
@@ -228,7 +228,7 @@ pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateMut, N: NodeSta
 
                 let chunk_size = d.u32()?;
 
-                let mut d = d.take2(chunk_size as u64);
+                let mut d = d.take(chunk_size as u64);
 
                 read_fn(node, &mut d)?;
 
