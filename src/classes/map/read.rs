@@ -577,7 +577,7 @@ impl Map {
 
             d.u32()?; // 10
             self.items = d.list(|d| {
-                let item = d.internal_node_ref_no_index::<AnchoredObject>()?;
+                let item = d.node::<AnchoredObject>()?;
 
                 Ok(item)
             })?;
@@ -656,7 +656,7 @@ impl Map {
             let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
 
             d.list(|d| {
-                d.internal_node_ref_no_index::<ZoneGenealogy>()?;
+                d.node::<ZoneGenealogy>()?;
 
                 Ok(())
             })?;
@@ -677,7 +677,7 @@ impl Map {
         {
             let mut d = d.take(size as u64, IdState::new(), NodeState::new(0));
 
-            d.internal_node_ref_no_index::<TraitsMetadata>()?;
+            d.node::<TraitsMetadata>()?;
 
             d.end()?;
         }
@@ -1367,7 +1367,7 @@ impl AnchoredObject {
         d.u32()?;
         d.u32()?;
         d.u32()?;
-        d.internal_node_ref_no_index_or_null::<WaypointSpecialProperty>()?;
+        d.node_or_null::<WaypointSpecialProperty>()?;
         let flags = d.u16()?; // 1
         d.u32()?;
         d.u32()?;

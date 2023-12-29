@@ -323,14 +323,16 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
             if index == 0 {
                 let id = Rc::from(self.string()?);
                 self.id_state.borrow_mut().ids.push(Rc::clone(&id));
-                return Ok(Some(id));
+
+                Ok(Some(id))
             } else {
                 let id = Rc::clone(self.id_state.borrow().ids.get(index as usize - 1).unwrap());
-                return Ok(Some(id));
-            }
-        }
 
-        todo!()
+                Ok(Some(id))
+            }
+        } else {
+            todo!()
+        }
     }
 
     fn id_index(&mut self) -> Result<u32> {
@@ -444,16 +446,14 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref_no_index<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
-        match self.internal_node_ref_no_index_or_null()? {
+    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
+        match self.node_or_null()? {
             None => todo!(),
             Some(node_ref) => Ok(node_ref),
         }
     }
 
-    pub fn internal_node_ref_no_index_or_null<T: Default + Class + ReadBody>(
-        &mut self,
-    ) -> Result<Option<T>> {
+    pub fn node_or_null<T: Default + Class + ReadBody>(&mut self) -> Result<Option<T>> {
         let class_id = self.u32()?;
 
         if class_id == 0xffffffff {
