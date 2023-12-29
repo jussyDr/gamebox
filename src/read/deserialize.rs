@@ -151,31 +151,37 @@ impl<R, I, N> Deserializer<R, I, N> {
 }
 
 impl<R: Read, I, N> Deserializer<R, I, N> {
+    #[inline]
     pub fn u8(&mut self) -> Result<u8> {
         let bytes = self.byte_array()?;
         Ok(u8::from_le_bytes(bytes))
     }
 
+    #[inline]
     pub fn u16(&mut self) -> Result<u16> {
         let bytes = self.byte_array()?;
         Ok(u16::from_le_bytes(bytes))
     }
 
+    #[inline]
     pub fn u32(&mut self) -> Result<u32> {
         let bytes = self.byte_array()?;
         Ok(u32::from_le_bytes(bytes))
     }
 
+    #[inline]
     pub fn i16(&mut self) -> Result<i16> {
         let bytes = self.byte_array()?;
         Ok(i16::from_le_bytes(bytes))
     }
 
+    #[inline]
     pub fn i32(&mut self) -> Result<i32> {
         let bytes = self.byte_array()?;
         Ok(i32::from_le_bytes(bytes))
     }
 
+    #[inline]
     pub fn f32(&mut self) -> Result<f32> {
         let bytes = self.byte_array()?;
         Ok(f32::from_le_bytes(bytes))
@@ -203,6 +209,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(buf)
     }
 
+    #[inline]
     pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
         self.reader.read_exact(&mut array)?;
