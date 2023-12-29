@@ -35,6 +35,16 @@ impl From<Rc<str>> for RcStr {
     }
 }
 
+impl From<&str> for RcStr {
+    fn from(s: &str) -> Self {
+        if s.is_empty() {
+            Self(None)
+        } else {
+            Self(Some(s.into()))
+        }
+    }
+}
+
 impl From<String> for RcStr {
     fn from(string: String) -> Self {
         if string.is_empty() {

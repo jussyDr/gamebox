@@ -46,6 +46,11 @@ impl Map {
         &self.author_id
     }
 
+    /// Set the id of the map author.
+    pub fn set_author_id(&mut self, author_id: impl AsRef<str>) {
+        self.author_id = author_id.as_ref().into()
+    }
+
     /// Name of the map.
     pub fn name(&self) -> &str {
         &self.name
@@ -56,9 +61,19 @@ impl Map {
         &self.author_name
     }
 
+    /// Set the name of the map author.
+    pub fn set_author_name(&mut self, author_name: impl Into<String>) {
+        self.author_name = author_name.into()
+    }
+
     /// Region of the map author.
     pub fn author_region(&self) -> &str {
         &self.author_region
+    }
+
+    /// Set the region of the map author.
+    pub fn set_author_region(&mut self, author_region: impl Into<String>) {
+        self.author_region = author_region.into()
     }
 
     /// List of blocks placed inside of this map.

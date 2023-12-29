@@ -17,7 +17,7 @@ use gamebox::{
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
 fn main() {
-    let map = Map::default();
+    let mut map = Map::default();
 
     gamebox::write_file(
         &map,
