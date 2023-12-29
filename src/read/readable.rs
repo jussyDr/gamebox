@@ -53,19 +53,19 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
         return Err("class id does not match".into());
     }
 
-    let user_data_size = d.u32()?;
+    let header_data_size = d.u32()?;
 
     match header_options {
         HeaderOptions::Read { read_heavy_chunks } => {
             read_header(
                 &mut node,
-                d.take(user_data_size as u64, (), ()),
+                d.take(header_data_size as u64, (), ()),
                 read_heavy_chunks,
             )?;
         }
         HeaderOptions::Skip { assume_size_zero } => {
             if !assume_size_zero {
-                d.skip(user_data_size)?;
+                d.skip(header_data_size)?;
             }
         }
     }
@@ -104,9 +104,11 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
         match body_options {
             BodyOptions::Read { .. } => {
                 let compressed_body = d.bytes(compressed_body_size as usize)?;
+
                 let mut buf = vec![0; body_size as usize];
 
                 let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
+
                 let reader = Cursor::new(body);
 
                 let mut d = Deserializer::new(reader, IdState::new(), node_state);

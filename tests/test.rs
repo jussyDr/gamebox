@@ -17,6 +17,9 @@ use gamebox::{
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
 fn main() {
+    let map = gamebox::read_file::<Map>("tests/files/map/Empty.Map.Gbx").unwrap();
+    gamebox::write_file(&map, "Written.Map.Gbx").unwrap();
+
     let args = env::args().collect::<Vec<_>>();
 
     let mut tests = vec![];

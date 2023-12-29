@@ -1,20 +1,47 @@
 use std::{borrow::BorrowMut, io::Write};
 
+use indexmap::IndexSet;
+
 use crate::write::Result;
 
 pub struct IdState {
     written_id: bool,
+    ids: IndexSet<String>,
 }
 
 impl IdState {
     pub fn new() -> Self {
-        Self { written_id: false }
+        Self {
+            written_id: false,
+            ids: IndexSet::new(),
+        }
     }
 }
 
-pub trait IdStateMut: BorrowMut<IdState> {}
+pub trait IdStateMut {
+    fn borrow(&self) -> &IdState;
+    fn borrow_mut(&mut self) -> &mut IdState;
+}
 
-impl<T: BorrowMut<IdState>> IdStateMut for T {}
+impl IdStateMut for IdState {
+    fn borrow(&self) -> &IdState {
+        self
+    }
+
+    fn borrow_mut(&mut self) -> &mut IdState {
+        self
+    }
+}
+
+impl<T: IdStateMut> IdStateMut for &mut T {
+    fn borrow(&self) -> &IdState {
+        (**self).borrow()
+    }
+
+    fn borrow_mut(&mut self) -> &mut IdState {
+        (**self).borrow_mut()
+    }
+}
 
 pub struct NodeState {
     num_nodes: u32,
@@ -22,7 +49,11 @@ pub struct NodeState {
 
 impl NodeState {
     pub fn new() -> Self {
-        Self { num_nodes: 0 }
+        Self { num_nodes: 1 }
+    }
+
+    pub const fn num_nodes(&self) -> u32 {
+        self.num_nodes
     }
 }
 
@@ -76,6 +107,32 @@ impl<W: Write, I, N> Serializer<W, I, N> {
         self.u32(s.len() as u32)?;
         self.bytes(s.as_bytes())
     }
+
+    pub fn byte_buffer(
+        &mut self,
+        write_fn: impl Fn(&mut Serializer<&mut Vec<u8>, &mut I, &mut N>) -> Result<()>,
+    ) -> Result<()> {
+        let mut data = vec![];
+
+        let mut s = Serializer::new(&mut data, &mut self.id_state, &mut self.node_state);
+        write_fn(&mut s)?;
+
+        self.u32(data.len() as u32)?;
+        self.bytes(&data)
+    }
+
+    pub fn something(
+        &mut self,
+        write_fn: impl Fn(&mut Serializer<&mut Vec<u8>, IdState, NodeState>) -> Result<()>,
+    ) -> Result<()> {
+        let mut data = vec![];
+
+        let mut s = Serializer::new(&mut data, IdState::new(), NodeState::new());
+        write_fn(&mut s)?;
+
+        self.u32(data.len() as u32)?;
+        self.bytes(&data)
+    }
 }
 
 impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
@@ -86,8 +143,15 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
             self.id_state.borrow_mut().written_id = true;
         }
 
-        self.u32(0x40000000)?;
-        self.string(id)
+        match self.id_state.borrow().ids.get_index_of(id) {
+            None => {
+                self.id_state.borrow_mut().ids.insert(id.to_owned());
+
+                self.u32(0x40000000)?;
+                self.string(id)
+            }
+            Some(index) => self.u32(0x40000000 | ((index as u32 + 1) & 0x00003fff)),
+        }
     }
 
     pub fn null_id(&mut self) -> Result<()> {
@@ -103,8 +167,10 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
 
 impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
     pub fn node_index(&mut self) -> Result<()> {
+        self.u32(self.node_state.borrow().num_nodes)?;
         self.node_state.borrow_mut().num_nodes += 1;
-        self.u32(self.node_state.borrow().num_nodes)
+
+        Ok(())
     }
 }
 

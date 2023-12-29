@@ -1,7 +1,6 @@
 //! Types used for reading and writing [Item] nodes.
 
 mod read;
-mod write;
 
 use std::{
     ops::{Deref, DerefMut},
