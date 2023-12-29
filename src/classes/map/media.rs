@@ -238,7 +238,7 @@ impl MediaTrack {
                         Rc::new(node)
                     }
                     0x03080000 => {
-                        let mut node = MediaBlockFxColors;
+                        let mut node = MediaBlockFxColors::default();
                         MediaBlockFxColors::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
@@ -446,7 +446,10 @@ impl BodyChunks for MediaBlockTriangles3D {
     }
 }
 
-pub struct MediaBlockFxColors;
+#[derive(Default)]
+pub struct MediaBlockFxColors {
+    keys: Vec<MediaBlockFxColorsKey>,
+}
 
 impl ReadBody for MediaBlockFxColors {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -470,41 +473,109 @@ impl BodyChunks for MediaBlockFxColors {
 
 impl MediaBlockFxColors {
     fn read_chunk_3<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.list(|d| {
+        self.keys = d.list(|d| {
+            d.u32()?;
+            let global_intensity = d.f32()?;
+            let far_blend = d.f32()?;
+            let near_distance = d.f32()?;
+            let far_distance = d.f32()?;
+            let near_inverse = d.f32()?;
+            let near_hue = d.f32()?;
+            let near_saturation = d.f32()?;
+            let near_brightness = d.f32()?;
+            let near_contrast = d.f32()?;
+            let near_red = d.f32()?;
+            let near_green = d.f32()?;
+            let near_blue = d.f32()?;
             d.u32()?;
             d.u32()?;
             d.u32()?;
             d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
+            let far_inverse = d.f32()?;
+            let far_hue = d.f32()?;
+            let far_saturation = d.f32()?;
+            let far_brightness = d.f32()?;
+            let far_contrast = d.f32()?;
+            let far_red = d.f32()?;
+            let far_green = d.f32()?;
+            let far_blue = d.f32()?;
             d.u32()?;
             d.u32()?;
             d.u32()?;
             d.u32()?;
 
-            Ok(())
+            Ok(MediaBlockFxColorsKey {
+                global_intensity,
+                far_blend,
+                near_distance,
+                far_distance,
+                near_inverse,
+                near_hue,
+                near_saturation,
+                near_brightness,
+                near_contrast,
+                near_red,
+                near_green,
+                near_blue,
+                far_inverse,
+                far_hue,
+                far_saturation,
+                far_brightness,
+                far_contrast,
+                far_red,
+                far_green,
+                far_blue,
+            })
         })?;
 
         Ok(())
+    }
+}
+
+pub struct MediaBlockFxColorsKey {
+    global_intensity: f32,
+    /// [0.0, 1.0].
+    far_blend: f32,
+    near_distance: f32,
+    far_distance: f32,
+    /// [0.0, 1.0].
+    near_inverse: f32,
+    /// [0.0, 1.0].
+    near_hue: f32,
+    /// [-1.0, 1.0].
+    near_saturation: f32,
+    /// [-1.0, 1.0].
+    near_brightness: f32,
+    /// [-1.0, 1.0].
+    near_contrast: f32,
+    /// [0.0, 1.0].
+    near_red: f32,
+    /// [0.0, 1.0].
+    near_green: f32,
+    /// [0.0, 1.0].
+    near_blue: f32,
+    /// [0.0, 1.0].
+    far_inverse: f32,
+    /// [0.0, 1.0].
+    far_hue: f32,
+    /// [-1.0, 1.0].
+    far_saturation: f32,
+    /// [-1.0, 1.0].
+    far_brightness: f32,
+    /// [-1.0, 1.0].
+    far_contrast: f32,
+    /// [0.0, 1.0].
+    far_red: f32,
+    /// [0.0, 1.0].
+    far_green: f32,
+    /// [0.0, 1.0].
+    far_blue: f32,
+}
+
+impl MediaBlockFxColorsKey {
+    /// [0.0, 1.0].
+    pub fn global_intensity(&self) -> f32 {
+        self.global_intensity
     }
 }
 

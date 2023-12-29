@@ -15,7 +15,6 @@ use gamebox::{
     read::{HeaderOptions, Readable},
 };
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
-use walkdir::WalkDir;
 
 fn main() {
     let args = env::args().collect::<Vec<_>>();
@@ -31,7 +30,10 @@ fn main() {
     read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
     read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
 
-    // read_extracted_file_tests_recursive(&mut tests, "C:/Users/Justin/Projects/tm-files");
+    read_file_tests::<Map>(
+        &mut tests,
+        "C:\\Users\\Justin\\Documents\\Trackmania\\Maps\\My Maps",
+    );
 
     test_main(&args, tests, None);
 }
@@ -94,51 +96,4 @@ fn read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
         })
         .read_file::<T>(path)
         .unwrap();
-}
-
-fn read_extracted_file_tests_recursive(tests: &mut Vec<TestDescAndFn>, dir_path: impl AsRef<Path>) {
-    for entry in WalkDir::new(dir_path) {
-        let entry = entry.unwrap();
-
-        if !entry.file_type().is_file() {
-            continue;
-        }
-
-        let file_name = entry.file_name().to_str().unwrap().to_owned();
-        let file_extension = file_name.split_once('.').unwrap().1.to_owned();
-
-        let read_fn = match file_extension.to_lowercase().as_str() {
-            "colortable.gbx.json" => |path: &Path| read_extracted_file::<ColorTable>(path),
-            "item.gbx" => |path: &Path| read_extracted_file::<Item>(path),
-            "material.gbx" => |path: &Path| read_extracted_file::<Material>(path),
-            "prefab.gbx" => |path: &Path| read_extracted_file::<Prefab>(path),
-            "texture.gbx" => |path: &Path| read_extracted_file::<Texture>(path),
-            "vegettreemodel.gbx" => |path: &Path| read_extracted_file::<VegetTreeModel>(path),
-            _ => continue,
-        };
-
-        let test = TestDescAndFn {
-            desc: TestDesc {
-                name: TestName::DynTestName(file_name),
-                ignore: false,
-                ignore_message: None,
-                source_file: "",
-                start_line: 0,
-                start_col: 0,
-                end_line: 0,
-                end_col: 0,
-                should_panic: ShouldPanic::No,
-                compile_fail: false,
-                no_run: false,
-                test_type: TestType::IntegrationTest,
-            },
-            testfn: TestFn::DynTestFn(Box::new(move || {
-                read_fn(entry.path());
-
-                Ok(())
-            })),
-        };
-
-        tests.push(test);
-    }
 }
