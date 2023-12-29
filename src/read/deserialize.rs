@@ -12,7 +12,6 @@ use crate::{class::Class, read::Result};
 
 use super::readable::ReadBody;
 
-/// State of identifiers read in the past.
 pub struct IdState {
     seen_id: bool,
     ids: Vec<Rc<str>>,

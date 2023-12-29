@@ -883,7 +883,7 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 10
-        d.list(|d| {
+        let list = d.list(|d| {
             let size = d.u32()?;
             d.bytes(size as usize)?;
             let size = d.u32()?;
@@ -893,9 +893,11 @@ impl Map {
 
             Ok(())
         })?;
-        d.u32()?;
-        let size = d.u32()?;
-        d.bytes(size as usize)?;
+        if !list.is_empty() {
+            d.u32()?;
+            let size = d.u32()?;
+            d.bytes(size as usize)?;
+        }
 
         Ok(())
     }
