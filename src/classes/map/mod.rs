@@ -189,7 +189,7 @@ impl MedalTimes {
     }
 }
 
-/// Block placed inside of a [Map].
+/// Block placed inside of a `Map`.
 pub struct Block {
     id: Rc<str>,
     kind: BlockKind,
@@ -270,7 +270,7 @@ impl FreeBlock {
     }
 }
 
-/// Item placed inside of a [Map].
+/// Item placed inside of a `Map`.
 #[derive(Default)]
 pub struct Item {
     id: RcStr,
@@ -348,40 +348,62 @@ pub struct Rotation {
     roll: f32,
 }
 
+/// Element color of a block or item.
 #[derive(Clone, Copy, Default)]
 pub enum Color {
+    /// Default.
     #[default]
     Default,
+    /// White.
     White,
+    /// Green.
     Green,
+    /// Blue.
     Blue,
+    /// Red.
     Red,
+    /// Black.
     Black,
 }
 
-/// Phase offset.
+/// Phase offset of an animated item.
 #[derive(Clone, Copy, Default)]
 pub enum PhaseOffset {
+    /// None.
     #[default]
     None,
+    /// One eighth.
     One8th,
+    /// Two eighth.
     Two8th,
+    /// Three eighth.
     Three8th,
+    /// Four eighth.
     Four8th,
+    /// Five eighth.
     Five8th,
+    /// Six eighth.
     Six8th,
+    /// Seven eighth.
     Seven8th,
 }
 
 /// Lightmap quality of a block or item.
 #[derive(Clone, Copy, Default)]
 pub enum LightmapQuality {
+    /// Normal.
     #[default]
     Normal,
+    /// High.
     High,
+    /// Very high.
     VeryHigh,
+    /// Highest.
     Highest,
+    /// Low.
     Low,
+    /// Very low.
     VeryLow,
+    /// Lowest.
     Lowest,
 }
