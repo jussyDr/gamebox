@@ -2,7 +2,10 @@ mod rc;
 
 pub use rc::{RcPath, RcStr};
 
-use std::io::Read;
+use std::{
+    io::Read,
+    path::{Path, PathBuf},
+};
 
 use crate::read::{deserialize::Deserializer, Result};
 
@@ -28,6 +31,88 @@ impl Rgb {
     /// ```
     pub const fn into_array(self) -> [u8; 3] {
         [self.r, self.g, self.b]
+    }
+}
+
+/// Reference to a file.
+pub enum FileRef {
+    /// Reference to an internal game file.
+    Internal(InternalFileRef),
+    /// Reference to an external file.
+    External(ExternalFileRef),
+}
+
+impl FileRef {
+    pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
+        if d.u8()? != 3 {
+            todo!()
+        }
+
+        let checksum = d.byte_array::<32>()?;
+        let path = PathBuf::from(d.string()?);
+        let url = d.string()?;
+
+        if path.as_os_str().is_empty() {
+            return Ok(None);
+        }
+
+        if url.is_empty() {
+            Ok(Some(Self::Internal(InternalFileRef { path })))
+        } else {
+            Ok(Some(Self::External(ExternalFileRef {
+                checksum,
+                path,
+                url,
+            })))
+        }
+    }
+}
+
+/// Reference to an internal game file.
+pub struct InternalFileRef {
+    path: PathBuf,
+}
+
+impl InternalFileRef {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
+        match FileRef::read(d)? {
+            None => Ok(None),
+            Some(FileRef::Internal(file_ref)) => Ok(Some(file_ref)),
+            Some(FileRef::External(_)) => todo!(),
+        }
+    }
+}
+
+/// Reference to an external file.
+pub struct ExternalFileRef {
+    checksum: [u8; 32],
+    path: PathBuf,
+    url: String,
+}
+
+impl ExternalFileRef {
+    pub fn checksum(&self) -> &[u8; 32] {
+        &self.checksum
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
+    pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
+        match FileRef::read(d)? {
+            None => Ok(None),
+            Some(FileRef::Internal(_)) => todo!(),
+            Some(FileRef::External(file_ref)) => Ok(Some(file_ref)),
+        }
     }
 }
 
@@ -61,18 +146,6 @@ pub(crate) fn read_compact_index<R: Read, I, N>(
     } else {
         d.u32()
     }
-}
-
-pub(crate) fn read_file_ref<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
-    if d.u8()? != 3 {
-        todo!()
-    }
-
-    d.bytes(32)?;
-    d.string()?;
-    d.string()?;
-
-    Ok(())
 }
 
 pub(crate) struct EngineId(u8);

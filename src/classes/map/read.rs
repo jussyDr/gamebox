@@ -11,7 +11,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    read_file_ref, EngineId,
+    EngineId, ExternalFileRef, FileRef, InternalFileRef,
 };
 
 use super::{
@@ -497,7 +497,7 @@ impl Map {
     }
 
     fn read_chunk_03043019<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        let _mod = read_file_ref(d)?;
+        let _mod = ExternalFileRef::read(d)?;
 
         Ok(())
     }
@@ -580,7 +580,7 @@ impl Map {
     }
 
     fn read_chunk_03043024<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        let _music = read_file_ref(d)?;
+        let _music = ExternalFileRef::read(d)?;
 
         Ok(())
     }
@@ -1101,7 +1101,7 @@ impl Map {
         d.u32()?; // 0
         for _ in &self.items {
             if d.bool8()? {
-                read_file_ref(d)?;
+                InternalFileRef::read(d)?;
             }
         }
 
@@ -1409,15 +1409,15 @@ impl BodyChunks for BlockSkin {
 impl BlockSkin {
     fn read_chunk_03059002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.string()?; // "!4"
-        read_file_ref(d)?;
-        read_file_ref(d)?;
+        FileRef::read(d)?;
+        InternalFileRef::read(d)?;
 
         Ok(())
     }
 
     fn read_chunk_03059003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        read_file_ref(d)?;
+        InternalFileRef::read(d)?;
 
         Ok(())
     }
@@ -1485,7 +1485,7 @@ impl AnchoredObject {
         d.u32()?;
         d.u32()?;
         if flags & 0x0004 != 0 {
-            read_file_ref(d)?;
+            FileRef::read(d)?;
         }
         d.u32()?;
         d.u32()?;

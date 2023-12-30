@@ -9,7 +9,7 @@ use crate::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    read_file_ref, EngineId,
+    EngineId, ExternalFileRef, FileRef, InternalFileRef,
 };
 
 /// Node type corresponding to GameBox files with the extension `Ghost.Gbx`.
@@ -173,7 +173,7 @@ impl Ghost {
         d.u32()?;
         d.u32()?; // 0
         d.list(|d| {
-            read_file_ref(d)?;
+            FileRef::read(d)?;
 
             Ok(())
         })?;

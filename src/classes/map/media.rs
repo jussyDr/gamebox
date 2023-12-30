@@ -12,7 +12,7 @@ use crate::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    read_file_ref, EngineId,
+    EngineId, FileRef, InternalFileRef,
 };
 
 use super::Coord;
@@ -765,7 +765,7 @@ impl MediaBlockImage {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.internal_node_ref::<EffectSimi>()?;
-        read_file_ref(d)?;
+        InternalFileRef::read(d)?;
 
         Ok(())
     }
@@ -1011,7 +1011,7 @@ impl BodyChunks for MediaBlockColorGrading {
 
 impl MediaBlockColorGrading {
     fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_file_ref(d)?;
+        InternalFileRef::read(d)?;
 
         Ok(())
     }
@@ -1118,7 +1118,7 @@ impl MediaBlockEntity {
         d.u32()?;
         d.u32()?;
         d.list(|d| {
-            read_file_ref(d)?;
+            FileRef::read(d)?;
 
             Ok(())
         })?;
