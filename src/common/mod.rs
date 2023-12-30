@@ -84,13 +84,3 @@ impl EngineId {
     pub const GAME_DATA: u8 = 0x2e;
     pub const META: u8 = 0x2f;
 }
-
-pub(crate) struct ClassId {
-    engine: EngineId,
-    class: u16,
-}
-
-pub(crate) struct ChunkId {
-    class: ClassId,
-    chunk: u16,
-}

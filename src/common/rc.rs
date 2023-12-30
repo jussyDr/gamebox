@@ -9,6 +9,7 @@ use std::{
 pub struct RcStr(Option<Rc<str>>);
 
 impl RcStr {
+    /// Extracts a string slice containing the entire `RcStr`.
     pub fn as_str(&self) -> &str {
         self
     }
@@ -60,6 +61,7 @@ impl From<String> for RcStr {
 pub struct RcPath(Option<Rc<Path>>);
 
 impl RcPath {
+    /// Coerces to a `Path` slice.
     pub fn as_path(&self) -> &Path {
         self
     }

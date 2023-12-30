@@ -12,6 +12,7 @@ use crate::{
 
 use super::visual_indexed_triangles::VisualIndexedTriangles;
 
+/// Node type corresponding to GameBox files with the extension `VegetTreeModel.Gbx`.
 #[derive(Default)]
 pub struct VegetTreeModel;
 
