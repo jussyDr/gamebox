@@ -363,243 +363,86 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        use quick_xml::{events::Event, Reader};
-
         let len = d.u32()?;
 
-        let mut xml_reader = Reader::from_reader(d.get_mut());
+        let mut xml_reader = xml::Deserializer::new(d.get_mut(), len as usize);
 
-        let mut buf = Vec::with_capacity(len as usize);
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Start(tag)) if tag.name().into_inner() == b"header" => {
-                let mut attributes = HashMap::new();
-
-                for attribute in tag.attributes() {
-                    let attribute = attribute.unwrap();
-                    attributes.insert(attribute.key.0, attribute.value);
-                }
-
-                if attributes.get(b"type".as_ref()).unwrap().as_ref() != b"map" {
+        xml_reader.with_inner_content(
+            b"header",
+            |attributes| {
+                if attributes.get(b"type").unwrap() != b"map" {
                     todo!()
                 }
 
-                if attributes.get(b"exever".as_ref()).unwrap().as_ref() != b"3.3.0" {
+                if attributes.get(b"exever").unwrap() != b"3.3.0" {
                     todo!()
                 }
 
-                if !attributes.contains_key(b"exebuild".as_ref()) {
-                    todo!()
-                }
+                attributes.get(b"exebuild").unwrap();
+                attributes.get(b"title").unwrap();
+                attributes.get(b"lightmap").unwrap();
+            },
+            |xml_reader| {
+                xml_reader.with_empty(b"ident", |attributes| {
+                    self.id = attributes.get_str(b"uid").unwrap().into();
+                    self.name = attributes.get_str(b"name").unwrap().into();
+                    self.author_id = attributes.get_str(b"author").unwrap().into();
+                    self.author_region = attributes.get_str(b"authorzone").unwrap().into();
+                });
 
-                if !attributes.contains_key(b"title".as_ref()) {
-                    todo!()
-                }
-
-                if !attributes.contains_key(b"lightmap".as_ref()) {
-                    todo!()
-                }
-            }
-            _ => todo!(),
-        }
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"ident" => {
-                let mut attributes = HashMap::new();
-
-                for attribute in tag.attributes() {
-                    let attribute = attribute.unwrap();
-                    attributes.insert(attribute.key.0, attribute.value);
-                }
-
-                match attributes.get(b"uid".as_ref()) {
-                    None => todo!(),
-                    Some(id) => self.id = str::from_utf8(id).unwrap().into(),
-                }
-
-                match attributes.get(b"name".as_ref()) {
-                    None => todo!(),
-                    Some(name) => self.name = str::from_utf8(name).unwrap().into(),
-                }
-
-                match attributes.get(b"author".as_ref()) {
-                    None => todo!(),
-                    Some(author_id) => self.author_id = str::from_utf8(author_id).unwrap().into(),
-                }
-
-                match attributes.get(b"authorzone".as_ref()) {
-                    None => todo!(),
-                    Some(author_region) => {
-                        self.author_region = str::from_utf8(author_region).unwrap().into()
+                xml_reader.with_empty(b"desc", |attributes| {
+                    if attributes.get(b"envir").unwrap() != b"Stadium" {
+                        todo!()
                     }
-                }
-            }
-            _ => todo!(),
-        }
 
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"desc" => {
-                let mut attributes = HashMap::new();
+                    attributes.get(b"mood").unwrap();
 
-                for attribute in tag.attributes() {
-                    let attribute = attribute.unwrap();
-                    attributes.insert(attribute.key.0, attribute.value);
-                }
-
-                if attributes.get(b"envir".as_ref()).unwrap().as_ref() != b"Stadium" {
-                    todo!()
-                }
-
-                if !attributes.contains_key(b"mood".as_ref()) {
-                    todo!()
-                }
-
-                if attributes.get(b"type".as_ref()).unwrap().as_ref() != b"Race" {
-                    todo!()
-                }
-
-                if attributes.get(b"maptype".as_ref()).unwrap().as_ref() != b"TrackMania\\TM_Race" {
-                    todo!()
-                }
-
-                if !attributes.contains_key(b"mapstyle".as_ref()) {
-                    todo!()
-                }
-
-                if !attributes.contains_key(b"validated".as_ref()) {
-                    todo!()
-                }
-
-                if !attributes.contains_key(b"nblaps".as_ref()) {
-                    todo!()
-                }
-
-                match attributes.get(b"displaycost".as_ref()) {
-                    None => todo!(),
-                    Some(cost) => self.cost = str::from_utf8(cost).unwrap().parse().unwrap(),
-                }
-
-                if !attributes.contains_key(b"mod".as_ref()) {
-                    todo!()
-                }
-
-                if !attributes.contains_key(b"hasghostblocks".as_ref()) {
-                    todo!()
-                }
-            }
-            _ => todo!(),
-        }
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"playermodel" => {
-                let mut attributes = HashMap::new();
-
-                for attribute in tag.attributes() {
-                    let attribute = attribute.unwrap();
-                    attributes.insert(attribute.key.0, attribute.value);
-                }
-
-                if attributes.get(b"id".as_ref()).unwrap().as_ref() != b"" {
-                    todo!()
-                }
-            }
-            _ => todo!(),
-        }
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"times" => {
-                let mut attributes = HashMap::new();
-
-                for attribute in tag.attributes() {
-                    let attribute = attribute.unwrap();
-                    attributes.insert(attribute.key.0, attribute.value);
-                }
-
-                let bronze: u32 = match attributes.get(b"bronze".as_ref()) {
-                    None => todo!(),
-                    Some(bronze) => {
-                        if bronze.as_ref() == b"-1" {
-                            0xffffffff
-                        } else {
-                            str::from_utf8(bronze).unwrap().parse().unwrap()
-                        }
+                    if attributes.get(b"type").unwrap() != b"Race" {
+                        todo!()
                     }
-                };
 
-                let silver: u32 = match attributes.get(b"silver".as_ref()) {
-                    None => todo!(),
-                    Some(silver) => {
-                        if silver.as_ref() == b"-1" {
-                            0xffffffff
-                        } else {
-                            str::from_utf8(silver).unwrap().parse().unwrap()
-                        }
+                    if attributes.get(b"maptype").unwrap() != b"TrackMania\\TM_Race" {
+                        todo!()
                     }
-                };
 
-                let gold: u32 = match attributes.get(b"gold".as_ref()) {
-                    None => todo!(),
-                    Some(gold) => {
-                        if gold.as_ref() == b"-1" {
-                            0xffffffff
-                        } else {
-                            str::from_utf8(gold).unwrap().parse().unwrap()
-                        }
+                    attributes.get(b"mapstyle").unwrap();
+                    attributes.get(b"validated").unwrap();
+                    attributes.get(b"nblaps").unwrap();
+                    self.cost = attributes.get_u32(b"displaycost").unwrap();
+                    attributes.get(b"mod").unwrap();
+                    attributes.get(b"hasghostblocks").unwrap();
+                });
+
+                xml_reader.with_empty(b"playermodel", |attributes| {
+                    attributes.get(b"id").unwrap();
+                });
+
+                xml_reader.with_empty(b"times", |attributes| {
+                    let bronze = attributes.get_u32_or_null(b"bronze").unwrap();
+                    let silver = attributes.get_u32_or_null(b"silver").unwrap();
+                    let gold = attributes.get_u32_or_null(b"gold").unwrap();
+                    let author = attributes.get_u32_or_null(b"authortime").unwrap();
+                    attributes.get(b"authorscore").unwrap();
+
+                    if bronze != 0xffffffff
+                        && silver != 0xffffffff
+                        && gold != 0xffffffff
+                        && author != 0xffffffff
+                    {
+                        self.medal_times = Some(MedalTimes {
+                            bronze,
+                            silver,
+                            gold,
+                            author,
+                        });
                     }
-                };
+                });
 
-                let author: u32 = match attributes.get(b"authortime".as_ref()) {
-                    None => todo!(),
-                    Some(author) => {
-                        if author.as_ref() == b"-1" {
-                            0xffffffff
-                        } else {
-                            str::from_utf8(author).unwrap().parse().unwrap()
-                        }
-                    }
-                };
+                xml_reader.until_end(b"deps");
+            },
+        );
 
-                if !attributes.contains_key(b"authorscore".as_ref()) {
-                    todo!()
-                }
-
-                if bronze != 0xffffffff
-                    && silver != 0xffffffff
-                    && gold != 0xffffffff
-                    && author != 0xffffffff
-                {
-                    self.medal_times = Some(MedalTimes {
-                        bronze,
-                        silver,
-                        gold,
-                        author,
-                    });
-                }
-            }
-            _ => todo!(),
-        }
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Start(tag)) if tag.name().into_inner() == b"deps" => {}
-            _ => todo!(),
-        }
-
-        loop {
-            match xml_reader.read_event_into(&mut buf) {
-                Ok(Event::End(tag)) if tag.name().into_inner() == b"deps" => break,
-                _ => {}
-            }
-        }
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::End(tag)) if tag.name().into_inner() == b"header" => {}
-            _ => {}
-        }
-
-        match xml_reader.read_event_into(&mut buf) {
-            Ok(Event::Eof) => {}
-            _ => todo!(),
-        }
+        xml_reader.eof();
 
         Ok(())
     }
@@ -1866,5 +1709,133 @@ impl PhaseOffset {
         };
 
         Ok(phase_offset)
+    }
+}
+
+mod xml {
+    use std::{borrow::Cow, collections::HashMap, io::BufRead, str};
+
+    use quick_xml::{events::Event, Reader};
+
+    pub struct Deserializer<R> {
+        reader: Reader<R>,
+        buf: Vec<u8>,
+    }
+
+    impl<R> Deserializer<R> {
+        pub fn new(reader: R, len: usize) -> Self {
+            Self {
+                reader: Reader::from_reader(reader),
+                buf: Vec::with_capacity(len),
+            }
+        }
+    }
+
+    impl<R: BufRead> Deserializer<R> {
+        pub fn with_inner_content(
+            &mut self,
+            name: &[u8],
+            mut attr_read_fn: impl FnMut(Attributes),
+            mut inner_read_fn: impl FnMut(&mut Self),
+        ) {
+            let tag = match self.reader.read_event_into(&mut self.buf).unwrap() {
+                Event::Start(tag) if tag.name().into_inner() == name => tag,
+                _ => todo!(),
+            };
+
+            let mut attribute_map = HashMap::new();
+
+            for attribute in tag.attributes() {
+                let attribute = attribute.unwrap();
+
+                attribute_map.insert(attribute.key.into_inner(), attribute.value);
+            }
+
+            let attributes = Attributes { map: attribute_map };
+
+            attr_read_fn(attributes);
+
+            inner_read_fn(self);
+
+            match self.reader.read_event_into(&mut self.buf).unwrap() {
+                Event::End(tag) if tag.name().into_inner() == name => {}
+                e => todo!("{e:?}"),
+            }
+        }
+
+        pub fn with_empty(&mut self, name: &[u8], mut attr_read_fn: impl FnMut(Attributes)) {
+            let tag = match self.reader.read_event_into(&mut self.buf).unwrap() {
+                Event::Empty(tag) if tag.name().into_inner() == name => tag,
+                _ => todo!(),
+            };
+
+            let mut attribute_map = HashMap::new();
+
+            for attribute in tag.attributes() {
+                let attribute = attribute.unwrap();
+
+                attribute_map.insert(attribute.key.into_inner(), attribute.value);
+            }
+
+            let attributes = Attributes { map: attribute_map };
+
+            attr_read_fn(attributes);
+        }
+
+        pub fn eof(&mut self) {
+            match self.reader.read_event_into(&mut self.buf).unwrap() {
+                Event::Eof => {}
+                _ => todo!(),
+            };
+        }
+
+        pub fn until_end(&mut self, name: &[u8]) {
+            match self.reader.read_event_into(&mut self.buf).unwrap() {
+                Event::Start(tag) if tag.name().into_inner() == name => {}
+                _ => todo!(),
+            };
+
+            loop {
+                match self.reader.read_event_into(&mut self.buf).unwrap() {
+                    Event::End(tag) if tag.name().into_inner() == name => break,
+                    _ => {}
+                };
+            }
+        }
+    }
+
+    pub struct Attributes<'a> {
+        map: HashMap<&'a [u8], Cow<'a, [u8]>>,
+    }
+
+    impl Attributes<'_> {
+        pub fn get(&self, key: &[u8]) -> Option<&[u8]> {
+            match self.map.get(key) {
+                None => None,
+                Some(value) => Some(value.as_ref()),
+            }
+        }
+
+        pub fn get_u32(&self, key: &[u8]) -> Option<u32> {
+            match self.get_str(key) {
+                None => None,
+                Some(s) => Some(s.parse().unwrap()),
+            }
+        }
+
+        pub fn get_u32_or_null(&self, key: &[u8]) -> Option<u32> {
+            match self.get_str(key) {
+                None => None,
+                Some("-1") => Some(0xffffffff),
+                Some(s) => Some(s.parse().unwrap()),
+            }
+        }
+
+        pub fn get_str(&self, key: &[u8]) -> Option<&str> {
+            match self.map.get(key) {
+                None => None,
+                Some(value) => Some(str::from_utf8(value).unwrap()),
+            }
+        }
     }
 }
