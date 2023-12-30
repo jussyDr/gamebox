@@ -17,7 +17,7 @@ use crate::{
 use super::{
     media::{MediaClip, MediaClipGroup},
     Block, BlockKind, Color, Coord, Direction, EmbeddedObjects, FreeBlock, Item, LightmapQuality,
-    Map, MapType, MedalTimes, NormalBlock, PhaseOffset, Position, Rotation,
+    Map, MedalTimes, NormalBlock, PhaseOffset, Position, Rotation,
 };
 
 impl Readable for Map {}
@@ -339,8 +339,8 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
-        self.map_type = MapType::from_script_id(&d.string()?);
-        self.map_style = d.string()?;
+        self.ty = d.string()?;
+        self.style = d.string()?;
         let _lightmap_cache_id = d.u64()?;
         let _lightmap_version = d.u8()?; // 8
         let _title_id = d.id()?; // "TMStadium"
@@ -396,9 +396,8 @@ impl Map {
                         todo!()
                     }
 
-                    self.map_type =
-                        MapType::from_script_id(attributes.get_str(b"maptype").unwrap());
-                    self.map_style = attributes.get_str(b"mapstyle").unwrap().to_owned();
+                    self.ty = attributes.get_str(b"maptype").unwrap().into();
+                    self.style = attributes.get_str(b"mapstyle").unwrap().to_owned();
                     attributes.get(b"validated").unwrap();
                     attributes.get(b"nblaps").unwrap();
                     self.cost = attributes.get_u32(b"displaycost").unwrap();
@@ -480,11 +479,12 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.internal_node_ref::<CollectorList>()?;
-        let challenge_parameters = d.internal_node_ref::<ChallengeParameters>()?;
+        let params = d.internal_node_ref::<ChallengeParameters>()?;
         let _map_kind = d.u32()?; // 6
 
-        self.medal_times = challenge_parameters.medal_times.clone();
-        self.map_type = challenge_parameters.map_type;
+        self.medal_times = params.medal_times.clone();
+        self.ty = params.ty.clone();
+        self.style = params.style.clone();
 
         Ok(())
     }
@@ -1200,8 +1200,8 @@ impl CollectorList {
 #[derive(Default)]
 struct ChallengeParameters {
     medal_times: Option<MedalTimes>,
-    map_type: MapType,
-    map_style: String,
+    ty: String,
+    style: String,
 }
 
 impl Class for ChallengeParameters {
@@ -1313,8 +1313,8 @@ impl ChallengeParameters {
     }
 
     fn read_chunk_0305b00e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        self.map_type = MapType::from_script_id(&d.string()?);
-        self.map_style = d.string()?;
+        self.ty = d.string()?;
+        self.style = d.string()?;
         d.u32()?; // 1
 
         Ok(())

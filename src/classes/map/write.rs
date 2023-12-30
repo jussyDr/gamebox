@@ -146,8 +146,8 @@ impl Map {
         s.u32(0)?;
         s.u32(0)?;
         s.u32(0)?;
-        s.string(self.map_type.script_id())?;
-        s.string(&self.map_style)?;
+        s.string(&self.ty)?;
+        s.string(&self.style)?;
         s.u32(0x4983cc85)?;
         s.u32(0xff58b673)?;
         s.u8(0)?;
@@ -189,8 +189,8 @@ impl Map {
                         .with_attribute(("envir", "Stadium"))
                         .with_attribute(("mood", "Day"))
                         .with_attribute(("type", "Race"))
-                        .with_attribute(("maptype", self.map_type.script_id()))
-                        .with_attribute(("mapstyle", self.map_style.as_str()))
+                        .with_attribute(("maptype", self.ty.as_str()))
+                        .with_attribute(("mapstyle", self.style.as_str()))
                         .with_attribute(("validated", "0"))
                         .with_attribute(("nblaps", "0"))
                         .with_attribute(("displaycost", self.cost.to_string().as_str()))
@@ -316,8 +316,8 @@ impl Map {
         s.u32(0x0305b00e)?;
         s.u32(0x534b4950)?;
         s.byte_buffer(|s| {
-            s.string(self.map_type.script_id())?;
-            s.string(&self.map_style)?;
+            s.string(&self.ty)?;
+            s.string(&self.style)?;
             s.u32(0)
         })?;
         s.u32(0xfacade01)?;
