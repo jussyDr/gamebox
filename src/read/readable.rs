@@ -5,14 +5,14 @@ use std::{
 
 use serde_jsonrc::Value;
 
-use crate::{class::Class, FILE_SIGNATURE, NODE_END, SKIP};
+use crate::{class::ClassId, FILE_SIGNATURE, NODE_END, SKIP};
 
 use super::{
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut, Take},
     BodyOptions, HeaderOptions, Result,
 };
 
-pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
+pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
     reader: impl BufRead + Seek,
     header_options: HeaderOptions,
     body_options: BodyOptions,

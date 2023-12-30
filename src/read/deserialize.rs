@@ -8,7 +8,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::{class::Class, read::Result};
+use crate::{class::ClassId, read::Result};
 
 use super::readable::ReadBody;
 
@@ -408,14 +408,16 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 }
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    pub fn internal_node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
+    pub fn internal_node_ref<T: 'static + Default + ClassId + ReadBody>(
+        &mut self,
+    ) -> Result<Rc<T>> {
         match self.internal_node_ref_or_null()? {
             None => todo!(),
             Some(node_ref) => Ok(node_ref),
         }
     }
 
-    pub fn internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn internal_node_ref_or_null<T: 'static + Default + ClassId + ReadBody>(
         &mut self,
     ) -> Result<Option<Rc<T>>> {
         match self.node_ref_or_null()? {
@@ -425,14 +427,14 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
-    pub fn node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<T>> {
+    pub fn node_ref<T: 'static + Default + ClassId + ReadBody>(&mut self) -> Result<NodeRef<T>> {
         match self.node_ref_or_null()? {
             None => todo!(),
             Some(node_ref) => Ok(node_ref),
         }
     }
 
-    pub fn node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn node_ref_or_null<T: 'static + Default + ClassId + ReadBody>(
         &mut self,
     ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
@@ -480,14 +482,14 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
     }
 
-    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
+    pub fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T> {
         match self.node_or_null()? {
             None => todo!(),
             Some(node_ref) => Ok(node_ref),
         }
     }
 
-    pub fn node_or_null<T: Default + Class + ReadBody>(&mut self) -> Result<Option<T>> {
+    pub fn node_or_null<T: Default + ClassId + ReadBody>(&mut self) -> Result<Option<T>> {
         let class_id = self.u32()?;
 
         if class_id == 0xffffffff {

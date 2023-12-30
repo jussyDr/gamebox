@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    class::Class,
+    class::ClassId,
     classes::{
         collector::Collector,
         static_object_model::{MaterialUserInst, StaticObjectModel},
@@ -402,7 +402,7 @@ impl Item {
 
 struct ItemPlacementParam;
 
-impl Class for ItemPlacementParam {
+impl ClassId for ItemPlacementParam {
     const ENGINE: u8 = EngineId::GAME_DATA;
     const CLASS: u16 = 0x020;
 }
@@ -548,7 +548,7 @@ impl ItemEntityModel {
 
 struct ItemEntityModelEdition;
 
-impl Class for ItemEntityModelEdition {
+impl ClassId for ItemEntityModelEdition {
     const ENGINE: u8 = EngineId::GAME_DATA;
     const CLASS: u16 = 0x026;
 }
@@ -642,7 +642,7 @@ impl ItemEntityModelEdition {
 
 struct Crystal;
 
-impl Class for Crystal {
+impl ClassId for Crystal {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x003;
 }
@@ -840,7 +840,7 @@ impl Crystal {
 #[derive(Default)]
 struct MediaClipList;
 
-impl Class for MediaClipList {
+impl ClassId for MediaClipList {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x189;
 }
@@ -878,7 +878,7 @@ impl MediaClipList {
 #[derive(Default)]
 struct ItemPlacement;
 
-impl Class for ItemPlacement {
+impl ClassId for ItemPlacement {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x187;
 }

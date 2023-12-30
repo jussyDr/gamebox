@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{class::Class, EngineId, Rgb};
+use crate::{class::ClassId, EngineId, Rgb};
 
 use super::{
     collector::Collector, static_object_model::Solid2Model, visual_indexed_triangles::Indices,
@@ -66,7 +66,7 @@ impl Default for ItemMaterial {
     }
 }
 
-impl Class for Item {
+impl ClassId for Item {
     const ENGINE: u8 = EngineId::GAME_DATA;
     const CLASS: u16 = 0x002;
 }
@@ -90,7 +90,7 @@ struct ItemEntityModel {
     solid_to_model: Solid2Model,
 }
 
-impl Class for ItemEntityModel {
+impl ClassId for ItemEntityModel {
     const ENGINE: u8 = EngineId::GAME_DATA;
     const CLASS: u16 = 0x027;
 }

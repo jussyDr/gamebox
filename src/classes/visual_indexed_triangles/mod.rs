@@ -2,14 +2,14 @@ mod read;
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{class::Class, EngineId};
+use crate::{class::ClassId, EngineId};
 
 #[derive(Default)]
 pub struct VisualIndexedTriangles {
     parent: VisualIndexed,
 }
 
-impl Class for VisualIndexedTriangles {
+impl ClassId for VisualIndexedTriangles {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x01e;
 }
@@ -78,7 +78,7 @@ pub struct VertexStream {
     pub texcoords: Vec<[f32; 2]>,
 }
 
-impl Class for VertexStream {
+impl ClassId for VertexStream {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x056;
 }
@@ -88,7 +88,7 @@ struct IndexBuffer {
     indices: Indices,
 }
 
-impl Class for IndexBuffer {
+impl ClassId for IndexBuffer {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x057;
 }

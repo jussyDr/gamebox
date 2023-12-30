@@ -3,7 +3,7 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    class::Class,
+    class::ClassId,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
@@ -18,7 +18,7 @@ pub struct Ghost {
     parent: Ghost2,
 }
 
-impl Class for Ghost {
+impl ClassId for Ghost {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x092;
 }
@@ -29,7 +29,7 @@ struct Ghost2;
 #[derive(Default)]
 pub(crate) struct EntRecordData;
 
-impl Class for EntRecordData {
+impl ClassId for EntRecordData {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x11f;
 }

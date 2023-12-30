@@ -1,7 +1,7 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    class::Class,
+    class::ClassId,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
@@ -15,7 +15,7 @@ use super::visual_indexed_triangles::VisualIndexedTriangles;
 #[derive(Default)]
 pub struct VegetTreeModel;
 
-impl Class for VegetTreeModel {
+impl ClassId for VegetTreeModel {
     const ENGINE: u8 = EngineId::META;
     const CLASS: u16 = 0x086;
 }

@@ -7,7 +7,7 @@ mod write;
 
 use std::rc::Rc;
 
-use crate::{class::Class, EngineId, RcStr};
+use crate::{class::ClassId, EngineId, RcStr};
 
 use self::media::{MediaClip, MediaClipGroup};
 
@@ -34,7 +34,7 @@ pub struct Map {
     embedded_objects: Option<EmbeddedObjects>,
 }
 
-impl Class for Map {
+impl ClassId for Map {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x043;
 }
@@ -45,7 +45,7 @@ impl Map {
         self.medal_times.as_ref()
     }
 
-    /// Display cost of the map.
+    /// (Display) cost of the map.
     pub fn cost(&self) -> u32 {
         self.cost
     }
@@ -65,7 +65,7 @@ impl Map {
         &self.author_id
     }
 
-    /// Set the id of the map author.
+    /// Sets the id of the map author.
     pub fn set_author_id(&mut self, author_id: impl Into<RcStr>) {
         self.author_id = author_id.into()
     }
@@ -87,7 +87,7 @@ impl Map {
         &self.author_name
     }
 
-    /// Set the name of the map author.
+    /// Sets the name of the map author.
     pub fn set_author_name(&mut self, author_name: impl Into<String>) {
         self.author_name = author_name.into()
     }
@@ -97,7 +97,7 @@ impl Map {
         &self.author_region
     }
 
-    /// Set the region of the map author.
+    /// Sets the region of the map author.
     pub fn set_author_region(&mut self, author_region: impl Into<String>) {
         self.author_region = author_region.into()
     }

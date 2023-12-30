@@ -1,7 +1,7 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    class::Class,
+    class::ClassId,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
@@ -18,7 +18,7 @@ use super::{
 #[derive(Default)]
 pub struct StaticObjectModel;
 
-impl Class for StaticObjectModel {
+impl ClassId for StaticObjectModel {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x159;
 }
@@ -77,7 +77,7 @@ pub struct Solid2Model {
     layers: Vec<(Mesh, ItemMaterial)>,
 }
 
-impl Class for Solid2Model {
+impl ClassId for Solid2Model {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x0bb;
 }
@@ -242,7 +242,7 @@ pub struct MaterialUserInst {
     material: ItemMaterial,
 }
 
-impl Class for MaterialUserInst {
+impl ClassId for MaterialUserInst {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x0fd;
 }
@@ -332,7 +332,7 @@ impl MaterialUserInst {
 #[derive(Default)]
 struct Surface;
 
-impl Class for Surface {
+impl ClassId for Surface {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x00c;
 }

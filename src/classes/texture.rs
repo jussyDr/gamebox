@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    class::Class,
+    class::ClassId,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{
@@ -30,7 +30,7 @@ impl Texture {
     }
 }
 
-impl Class for Texture {
+impl ClassId for Texture {
     const ENGINE: u8 = EngineId::PLUG;
     const CLASS: u16 = 0x011;
 }

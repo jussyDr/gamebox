@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    class::Class,
+    class::ClassId,
     classes::ghost::EntRecordData,
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
@@ -23,7 +23,7 @@ pub struct MediaClipGroup {
     clips: Vec<MediaClipWithTrigger>,
 }
 
-impl Class for MediaClipGroup {
+impl ClassId for MediaClipGroup {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x07a;
 }
@@ -111,7 +111,7 @@ pub struct MediaClip {
     tracks: Vec<Rc<MediaTrack>>,
 }
 
-impl Class for MediaClip {
+impl ClassId for MediaClip {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x079;
 }
@@ -189,7 +189,7 @@ impl MediaTrack {
     }
 }
 
-impl Class for MediaTrack {
+impl ClassId for MediaTrack {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x078;
 }
@@ -1141,7 +1141,7 @@ impl MediaBlockEntity {
 #[derive(Default)]
 struct EffectSimi;
 
-impl Class for EffectSimi {
+impl ClassId for EffectSimi {
     const ENGINE: u8 = EngineId::CONTROL;
     const CLASS: u16 = 0x010;
 }

@@ -1,7 +1,7 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    class::Class,
+    class::ClassId,
     classes::ghost::Ghost,
     read::{
         deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
@@ -1164,7 +1164,7 @@ impl Map {
 #[derive(Default)]
 struct CollectorList;
 
-impl Class for CollectorList {
+impl ClassId for CollectorList {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x01b;
 }
@@ -1204,7 +1204,7 @@ struct ChallengeParameters {
     style: String,
 }
 
-impl Class for ChallengeParameters {
+impl ClassId for ChallengeParameters {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x05b;
 }
@@ -1324,7 +1324,7 @@ impl ChallengeParameters {
 #[derive(Default)]
 struct WaypointSpecialProperty;
 
-impl Class for WaypointSpecialProperty {
+impl ClassId for WaypointSpecialProperty {
     const ENGINE: u8 = 0x2e;
     const CLASS: u16 = 0x009;
 }
@@ -1375,7 +1375,7 @@ impl WaypointSpecialProperty {
 #[derive(Default)]
 struct BlockSkin;
 
-impl Class for BlockSkin {
+impl ClassId for BlockSkin {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x059;
 }
@@ -1425,7 +1425,7 @@ impl BlockSkin {
 
 type AnchoredObject = Item;
 
-impl Class for AnchoredObject {
+impl ClassId for AnchoredObject {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x101;
 }
@@ -1522,7 +1522,7 @@ impl AnchoredObject {
 #[derive(Default)]
 struct ZoneGenealogy;
 
-impl Class for ZoneGenealogy {
+impl ClassId for ZoneGenealogy {
     const ENGINE: u8 = EngineId::GAME;
     const CLASS: u16 = 0x11d;
 }
@@ -1565,7 +1565,7 @@ impl ZoneGenealogy {
 #[derive(Default)]
 struct TraitsMetadata;
 
-impl Class for TraitsMetadata {
+impl ClassId for TraitsMetadata {
     const ENGINE: u8 = 0x11;
     const CLASS: u16 = 0x002;
 }

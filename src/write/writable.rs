@@ -1,15 +1,15 @@
 use std::io::Write;
 
-use crate::{class::Class, write::serialize::IdState, FILE_SIGNATURE};
+use crate::{class::ClassId, write::serialize::IdState, FILE_SIGNATURE};
 
 use super::{
     serialize::{IdStateMut, NodeState, NodeStateMut, Serializer},
     Result,
 };
 
-pub trait Sealed: Class + HeaderChunks + WriteBody {}
+pub trait Sealed: ClassId + HeaderChunks + WriteBody {}
 
-pub fn write_gbx<T: Class + HeaderChunks + WriteBody>(
+pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
     node: &T,
     writer: impl Write,
     compress_body: bool,
