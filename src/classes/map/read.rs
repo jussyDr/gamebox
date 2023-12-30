@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    io::{BufRead, Read, Seek},
-    str,
-};
+use std::io::{BufRead, Read, Seek};
 
 use crate::{
     class::Class,
@@ -21,7 +17,7 @@ use crate::{
 use super::{
     media::{MediaClip, MediaClipGroup},
     Block, BlockKind, Color, Coord, Direction, EmbeddedObjects, FreeBlock, Item, LightmapQuality,
-    Map, MedalTimes, NormalBlock, PhaseOffset, Position, Rotation,
+    Map, MapType, MedalTimes, NormalBlock, PhaseOffset, Position, Rotation,
 };
 
 impl Readable for Map {}
@@ -325,10 +321,10 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u8()?; // 11
-        self.id = d.id()?.into(); // "d1I0RQQLjvUJLOmy9kiZDGX5E4e"
+        self.id = d.id()?.into();
         d.u32()?; // 26
-        self.author_id = d.id()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
-        self.name = d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
+        self.author_id = d.id()?.into();
+        self.name = d.string()?;
         d.u8()?; // 8
         d.u32()?; // 0
         d.u32()?; // 0
@@ -343,8 +339,8 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
-        d.string()?; // "TrackMania\TM_Race"
-        d.string()?; // "TrackMania\TM_Race"
+        self.map_type = MapType::from_script_id(&d.string()?);
+        self.map_style = d.string()?;
         d.u32()?;
         d.u32()?;
         d.u8()?; // 8
@@ -401,11 +397,9 @@ impl Map {
                         todo!()
                     }
 
-                    if attributes.get(b"maptype").unwrap() != b"TrackMania\\TM_Race" {
-                        todo!()
-                    }
-
-                    attributes.get(b"mapstyle").unwrap();
+                    self.map_type =
+                        MapType::from_script_id(attributes.get_str(b"maptype").unwrap());
+                    self.map_style = attributes.get_str(b"mapstyle").unwrap().to_owned();
                     attributes.get(b"validated").unwrap();
                     attributes.get(b"nblaps").unwrap();
                     self.cost = attributes.get_u32(b"displaycost").unwrap();
@@ -491,6 +485,7 @@ impl Map {
         d.u32()?; // 6
 
         self.medal_times = challenge_parameters.medal_times.clone();
+        self.map_type = challenge_parameters.map_type;
 
         Ok(())
     }
@@ -1209,6 +1204,8 @@ impl CollectorList {
 #[derive(Default)]
 struct ChallengeParameters {
     medal_times: Option<MedalTimes>,
+    map_type: MapType,
+    map_style: String,
 }
 
 impl Class for ChallengeParameters {
@@ -1320,8 +1317,8 @@ impl ChallengeParameters {
     }
 
     fn read_chunk_0305b00e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.string()?; // "TrackMania\TM_Race"
-        d.string()?; // "TrackMania\TM_Race"
+        self.map_type = MapType::from_script_id(&d.string()?);
+        self.map_style = d.string()?;
         d.u32()?; // 1
 
         Ok(())

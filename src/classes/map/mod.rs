@@ -19,6 +19,8 @@ pub struct Map {
     id: RcStr,
     author_id: RcStr,
     name: String,
+    map_type: MapType,
+    map_style: String,
     author_name: String,
     author_region: String,
     blocks: Vec<Block>,
@@ -71,6 +73,11 @@ impl Map {
     /// Name of the map.
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    /// Type of the map.
+    pub fn map_type(&self) -> MapType {
+        self.map_type
     }
 
     /// Name of the map author.
@@ -177,6 +184,33 @@ impl MedalTimes {
     /// Author medal time objective.
     pub fn author(&self) -> u32 {
         self.author
+    }
+}
+
+/// Type of map.
+#[derive(Clone, Copy, Default)]
+pub enum MapType {
+    /// `TrackMania\TM_Race`.
+    #[default]
+    Race,
+    /// `TrackMania\TM_Royal`.
+    Royal,
+}
+
+impl MapType {
+    fn from_script_id(script_id: &str) -> Self {
+        match script_id {
+            "TrackMania\\TM_Race" => Self::Race,
+            "TrackMania\\TM_Royal" => Self::Royal,
+            _ => todo!(),
+        }
+    }
+
+    fn script_id(&self) -> &str {
+        match *self {
+            Self::Race => "TrackMania\\TM_Race",
+            Self::Royal => "TrackMania\\TM_Royal",
+        }
     }
 }
 
