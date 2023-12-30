@@ -1,4 +1,8 @@
-use std::io::{BufRead, Read, Seek};
+use std::{
+    collections::HashMap,
+    io::{BufRead, Read, Seek},
+    str,
+};
 
 use crate::{
     class::Class,
@@ -367,11 +371,234 @@ impl Map {
 
         let mut buf = Vec::with_capacity(len as usize);
 
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Start(tag)) if tag.name().into_inner() == b"header" => {
+                let mut attributes = HashMap::new();
+
+                for attribute in tag.attributes() {
+                    let attribute = attribute.unwrap();
+                    attributes.insert(attribute.key.0, attribute.value);
+                }
+
+                if attributes.get(b"type".as_ref()).unwrap().as_ref() != b"map" {
+                    todo!()
+                }
+
+                if attributes.get(b"exever".as_ref()).unwrap().as_ref() != b"3.3.0" {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"exebuild".as_ref()) {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"title".as_ref()) {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"lightmap".as_ref()) {
+                    todo!()
+                }
+            }
+            _ => todo!(),
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"ident" => {
+                let mut attributes = HashMap::new();
+
+                for attribute in tag.attributes() {
+                    let attribute = attribute.unwrap();
+                    attributes.insert(attribute.key.0, attribute.value);
+                }
+
+                match attributes.get(b"uid".as_ref()) {
+                    None => todo!(),
+                    Some(id) => self.id = str::from_utf8(id).unwrap().into(),
+                }
+
+                match attributes.get(b"name".as_ref()) {
+                    None => todo!(),
+                    Some(name) => self.name = str::from_utf8(name).unwrap().into(),
+                }
+
+                match attributes.get(b"author".as_ref()) {
+                    None => todo!(),
+                    Some(author_id) => self.author_id = str::from_utf8(author_id).unwrap().into(),
+                }
+
+                match attributes.get(b"authorzone".as_ref()) {
+                    None => todo!(),
+                    Some(author_region) => {
+                        self.author_region = str::from_utf8(author_region).unwrap().into()
+                    }
+                }
+            }
+            _ => todo!(),
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"desc" => {
+                let mut attributes = HashMap::new();
+
+                for attribute in tag.attributes() {
+                    let attribute = attribute.unwrap();
+                    attributes.insert(attribute.key.0, attribute.value);
+                }
+
+                if attributes.get(b"envir".as_ref()).unwrap().as_ref() != b"Stadium" {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"mood".as_ref()) {
+                    todo!()
+                }
+
+                if attributes.get(b"type".as_ref()).unwrap().as_ref() != b"Race" {
+                    todo!()
+                }
+
+                if attributes.get(b"maptype".as_ref()).unwrap().as_ref() != b"TrackMania\\TM_Race" {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"mapstyle".as_ref()) {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"validated".as_ref()) {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"nblaps".as_ref()) {
+                    todo!()
+                }
+
+                match attributes.get(b"displaycost".as_ref()) {
+                    None => todo!(),
+                    Some(cost) => self.cost = str::from_utf8(cost).unwrap().parse().unwrap(),
+                }
+
+                if !attributes.contains_key(b"mod".as_ref()) {
+                    todo!()
+                }
+
+                if !attributes.contains_key(b"hasghostblocks".as_ref()) {
+                    todo!()
+                }
+            }
+            _ => todo!(),
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"playermodel" => {
+                let mut attributes = HashMap::new();
+
+                for attribute in tag.attributes() {
+                    let attribute = attribute.unwrap();
+                    attributes.insert(attribute.key.0, attribute.value);
+                }
+
+                if attributes.get(b"id".as_ref()).unwrap().as_ref() != b"" {
+                    todo!()
+                }
+            }
+            _ => todo!(),
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Empty(tag)) if tag.name().into_inner() == b"times" => {
+                let mut attributes = HashMap::new();
+
+                for attribute in tag.attributes() {
+                    let attribute = attribute.unwrap();
+                    attributes.insert(attribute.key.0, attribute.value);
+                }
+
+                let bronze: u32 = match attributes.get(b"bronze".as_ref()) {
+                    None => todo!(),
+                    Some(bronze) => {
+                        if bronze.as_ref() == b"-1" {
+                            0xffffffff
+                        } else {
+                            str::from_utf8(bronze).unwrap().parse().unwrap()
+                        }
+                    }
+                };
+
+                let silver: u32 = match attributes.get(b"silver".as_ref()) {
+                    None => todo!(),
+                    Some(silver) => {
+                        if silver.as_ref() == b"-1" {
+                            0xffffffff
+                        } else {
+                            str::from_utf8(silver).unwrap().parse().unwrap()
+                        }
+                    }
+                };
+
+                let gold: u32 = match attributes.get(b"gold".as_ref()) {
+                    None => todo!(),
+                    Some(gold) => {
+                        if gold.as_ref() == b"-1" {
+                            0xffffffff
+                        } else {
+                            str::from_utf8(gold).unwrap().parse().unwrap()
+                        }
+                    }
+                };
+
+                let author: u32 = match attributes.get(b"authortime".as_ref()) {
+                    None => todo!(),
+                    Some(author) => {
+                        if author.as_ref() == b"-1" {
+                            0xffffffff
+                        } else {
+                            str::from_utf8(author).unwrap().parse().unwrap()
+                        }
+                    }
+                };
+
+                if !attributes.contains_key(b"authorscore".as_ref()) {
+                    todo!()
+                }
+
+                if bronze != 0xffffffff
+                    && silver != 0xffffffff
+                    && gold != 0xffffffff
+                    && author != 0xffffffff
+                {
+                    self.medal_times = Some(MedalTimes {
+                        bronze,
+                        silver,
+                        gold,
+                        author,
+                    });
+                }
+            }
+            _ => todo!(),
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Start(tag)) if tag.name().into_inner() == b"deps" => {}
+            _ => todo!(),
+        }
+
         loop {
             match xml_reader.read_event_into(&mut buf) {
-                Ok(Event::Eof) => break,
-                _ => (),
+                Ok(Event::End(tag)) if tag.name().into_inner() == b"deps" => break,
+                _ => {}
             }
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::End(tag)) if tag.name().into_inner() == b"header" => {}
+            _ => {}
+        }
+
+        match xml_reader.read_event_into(&mut buf) {
+            Ok(Event::Eof) => {}
+            _ => todo!(),
         }
 
         Ok(())

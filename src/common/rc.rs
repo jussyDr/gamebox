@@ -25,22 +25,22 @@ impl Deref for RcStr {
     }
 }
 
-impl From<Rc<str>> for RcStr {
-    fn from(rc_str: Rc<str>) -> Self {
-        if rc_str.is_empty() {
-            Self(None)
-        } else {
-            Self(Some(rc_str))
-        }
-    }
-}
-
 impl From<&str> for RcStr {
     fn from(s: &str) -> Self {
         if s.is_empty() {
             Self(None)
         } else {
             Self(Some(s.into()))
+        }
+    }
+}
+
+impl From<Rc<str>> for RcStr {
+    fn from(rc_str: Rc<str>) -> Self {
+        if rc_str.is_empty() {
+            Self(None)
+        } else {
+            Self(Some(rc_str))
         }
     }
 }
@@ -76,12 +76,12 @@ impl Deref for RcPath {
     }
 }
 
-impl From<PathBuf> for RcPath {
-    fn from(path_buf: PathBuf) -> Self {
-        if path_buf.as_os_str().is_empty() {
+impl From<&Path> for RcPath {
+    fn from(path: &Path) -> Self {
+        if path.as_os_str().is_empty() {
             Self(None)
         } else {
-            Self(Some(path_buf.into()))
+            Self(Some(path.into()))
         }
     }
 }
@@ -92,6 +92,16 @@ impl From<Rc<Path>> for RcPath {
             Self(None)
         } else {
             Self(Some(rc_path))
+        }
+    }
+}
+
+impl From<PathBuf> for RcPath {
+    fn from(path_buf: PathBuf) -> Self {
+        if path_buf.as_os_str().is_empty() {
+            Self(None)
+        } else {
+            Self(Some(path_buf.into()))
         }
     }
 }

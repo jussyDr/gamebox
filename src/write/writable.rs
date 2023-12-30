@@ -93,10 +93,10 @@ pub trait HeaderChunks
 where
     Self: Sized,
 {
-    fn header_chunks() -> impl Iterator<Item = HeaderChunkWriteFn<Self>>;
+    fn header_chunks() -> impl Iterator<Item = HeaderChunk<Self>>;
 }
 
-pub struct HeaderChunkWriteFn<T> {
+pub struct HeaderChunk<T> {
     pub chunk_id: u32,
     pub write_fn: fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result<()>,
 }

@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crate::write::{
     serialize::{IdStateMut, NodeStateMut, Serializer},
-    writable::{HeaderChunkWriteFn, HeaderChunks, Sealed, WriteBody},
+    writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
     Result, Writable,
 };
 
@@ -13,92 +13,31 @@ impl Writable for Map {}
 impl Sealed for Map {}
 
 impl HeaderChunks for Map {
-    fn header_chunks() -> impl Iterator<Item = HeaderChunkWriteFn<Self>> {
+    fn header_chunks() -> impl Iterator<Item = HeaderChunk<Self>> {
         [
-            HeaderChunkWriteFn {
+            HeaderChunk {
                 chunk_id: 0x03043002,
-                write_fn: |n: &Map, s| {
-                    s.u8(13)?;
-                    s.u32(0)?;
-                    s.u32(0xffffffff)?;
-                    s.u32(0xffffffff)?;
-                    s.u32(0xffffffff)?;
-                    s.u32(0xffffffff)?;
-                    s.u32(n.cost)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(1)?;
-                    s.u32(1)
-                },
+                write_fn: |n, s| Self::write_chunk_2(n, s),
             },
-            HeaderChunkWriteFn {
+            HeaderChunk {
                 chunk_id: 0x03043003,
-                write_fn: |n: &Map, s| {
-                    s.u8(11)?;
-                    s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
-                    s.u32(26)?;
-                    s.id(&n.author_id)?;
-                    s.string("Empty")?;
-                    s.u8(6)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.id("48x48Day")?;
-                    s.u32(26)?;
-                    s.id("Nadeo")?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.u32(0)?;
-                    s.string("TrackMania\\TM_Race")?;
-                    s.u32(0)?;
-                    s.u32(0x4983cc85)?;
-                    s.u32(0xff58b673)?;
-                    s.u8(0)?;
-                    s.id("TMStadium")
-                },
+                write_fn: |n, s| Self::write_chunk_3(n, s),
             },
-            HeaderChunkWriteFn {
+            HeaderChunk {
                 chunk_id: 0x03043004,
-                write_fn: |_, s| s.u32(6),
+                write_fn: |n, s| Self::write_chunk_4(n, s),
             },
-            HeaderChunkWriteFn {
+            HeaderChunk {
                 chunk_id: 0x03043005,
-                write_fn: |n: &Map, s| {
-                    s.string(&format!("<header type=\"map\" exever=\"3.3.0\" exebuild=\"2023-11-24_17_34\" title=\"TMStadium\" lightmap=\"0\"><ident uid=\"clPHg9CHQjSqYP9wY4nRR6kSqM3\" name=\"Empty\" author=\"{}\" authorzone=\"{}\"/><desc envir=\"Stadium\" mood=\"Day\" type=\"Race\" maptype=\"TrackMania\\TM_Race\" mapstyle=\"\" validated=\"0\" nblaps=\"0\" displaycost=\"{}\" mod=\"\" hasghostblocks=\"0\" /><playermodel id=\"\"/><times bronze=\"-1\" silver=\"-1\" gold=\"-1\" authortime=\"-1\" authorscore=\"0\"/><deps></deps></header>", n.author_id.as_str(), n.author_region, n.cost))
-                },
+                write_fn: |n, s| Self::write_chunk_5(n, s),
             },
-            HeaderChunkWriteFn {
+            HeaderChunk {
                 chunk_id: 0x03043007,
-                write_fn: |_, s| {
-                    s.u32(1)?;
-                    s.u32(34375)?;
-                    s.bytes(b"<Thumbnail.jpg>")?;
-                    for _ in 0..34375 {
-                        s.u8(0)?;
-                    }
-                    s.bytes(b"</Thumbnail.jpg><Comments>")?;
-                    s.u32(0)?;
-                    s.bytes(b"</Comments>")
-                },
+                write_fn: |n, s| Self::write_chunk_7(n, s),
             },
-            HeaderChunkWriteFn {
+            HeaderChunk {
                 chunk_id: 0x03043008,
-                write_fn: |n, s| {
-                    s.u32(1)?;
-                    s.u32(0)?;
-                    s.string(&n.author_id)?;
-                    s.string(&n.author_name)?;
-                    s.string(&n.author_region)?;
-                    s.u32(0)
-                },
+                write_fn: |n, s| Self::write_chunk_8(n, s),
             },
         ]
         .into_iter()
@@ -598,6 +537,164 @@ impl WriteBody for Map {
         })?;
 
         s.u32(0xfacade01)?;
+
+        Ok(())
+    }
+}
+
+impl Map {
+    fn write_chunk_2<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+        s.u8(13)?;
+        s.u32(0)?;
+        s.u32(0xffffffff)?;
+        s.u32(0xffffffff)?;
+        s.u32(0xffffffff)?;
+        s.u32(0xffffffff)?;
+        s.u32(self.cost)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(1)?;
+        s.u32(1)?;
+
+        Ok(())
+    }
+
+    fn write_chunk_3<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+        s.u8(11)?;
+        s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
+        s.u32(26)?;
+        s.id(&self.author_id)?;
+        s.string("Empty")?;
+        s.u8(6)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.id("48x48Day")?;
+        s.u32(26)?;
+        s.id("Nadeo")?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.string("TrackMania\\TM_Race")?;
+        s.u32(0)?;
+        s.u32(0x4983cc85)?;
+        s.u32(0xff58b673)?;
+        s.u8(0)?;
+        s.id("TMStadium")?;
+
+        Ok(())
+    }
+
+    fn write_chunk_4<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+        s.u32(6)?;
+
+        Ok(())
+    }
+
+    fn write_chunk_5<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+        use quick_xml::{Error, Writer};
+
+        s.byte_buffer(|s| {
+            let mut xml_writer = Writer::new(s.get_mut());
+
+            xml_writer
+                .create_element("header")
+                .with_attribute(("type", "map"))
+                .with_attribute(("exever", "3.3.0"))
+                .with_attribute(("exebuild", "2023-11-24_17_34"))
+                .with_attribute(("title", "TMStadium"))
+                .with_attribute(("lightmap", "0"))
+                .write_inner_content::<_, Error>(|xml_writer| {
+                    xml_writer
+                        .create_element("ident")
+                        .with_attribute(("uid", "clPHg9CHQjSqYP9wY4nRR6kSqM3"))
+                        .with_attribute(("name", "Empty"))
+                        .with_attribute(("author", self.author_name.as_str()))
+                        .with_attribute(("authorzone", self.author_region.as_str()))
+                        .write_empty()?;
+
+                    xml_writer
+                        .create_element("desc")
+                        .with_attribute(("envir", "Stadium"))
+                        .with_attribute(("mood", "Day"))
+                        .with_attribute(("type", "Race"))
+                        .with_attribute(("maptype", "TrackMania\\TM_Race"))
+                        .with_attribute(("mapstyle", ""))
+                        .with_attribute(("validated", "0"))
+                        .with_attribute(("nblaps", "0"))
+                        .with_attribute(("displaycost", self.cost.to_string().as_str()))
+                        .with_attribute(("mod", ""))
+                        .with_attribute(("hasghostblocks", "0"))
+                        .write_empty()?;
+
+                    xml_writer
+                        .create_element("playermodel")
+                        .with_attribute(("id", ""))
+                        .write_empty()?;
+
+                    if let Some(ref medal_times) = self.medal_times {
+                        xml_writer
+                            .create_element("times")
+                            .with_attribute(("bronze", medal_times.bronze.to_string().as_str()))
+                            .with_attribute(("silver", medal_times.silver.to_string().as_str()))
+                            .with_attribute(("gold", medal_times.gold.to_string().as_str()))
+                            .with_attribute(("authortime", medal_times.author.to_string().as_str()))
+                            .with_attribute(("authorscore", "0"))
+                            .write_empty()?;
+                    } else {
+                        xml_writer
+                            .create_element("times")
+                            .with_attribute(("bronze", "-1"))
+                            .with_attribute(("silver", "-1"))
+                            .with_attribute(("gold", "-1"))
+                            .with_attribute(("authortime", "-1"))
+                            .with_attribute(("authorscore", "0"))
+                            .write_empty()?;
+                    }
+
+                    xml_writer
+                        .create_element("deps")
+                        .write_inner_content::<_, Error>(|_| Ok(()))?;
+
+                    Ok(())
+                })
+                .unwrap();
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn write_chunk_7<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+        s.u32(1)?;
+        s.u32(34375)?;
+        s.bytes(b"<Thumbnail.jpg>")?;
+        for _ in 0..34375 {
+            s.u8(0)?;
+        }
+        s.bytes(b"</Thumbnail.jpg><Comments>")?;
+        s.u32(0)?;
+        s.bytes(b"</Comments>")?;
+
+        Ok(())
+    }
+
+    fn write_chunk_8<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+        s.u32(1)?;
+        s.u32(0)?;
+        s.string(&self.author_id)?;
+        s.string(&self.author_name)?;
+        s.string(&self.author_region)?;
+        s.u32(0)?;
 
         Ok(())
     }

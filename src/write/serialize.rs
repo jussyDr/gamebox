@@ -75,6 +75,10 @@ impl<W, I, N> Serializer<W, I, N> {
             node_state,
         }
     }
+
+    pub fn get_mut(&mut self) -> &mut W {
+        &mut self.writer
+    }
 }
 
 impl<W: Write, I, N> Serializer<W, I, N> {
@@ -137,11 +141,7 @@ impl<W: Write, I, N> Serializer<W, I, N> {
 
 impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
     pub fn id(&mut self, id: &str) -> Result<()> {
-        if !self.id_state.borrow().written_id {
-            self.u32(3)?;
-
-            self.id_state.borrow_mut().written_id = true;
-        }
+        write_id_version(self)?;
 
         match self.id_state.borrow().ids.get_index_of(id) {
             None => {
@@ -155,11 +155,7 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
     }
 
     pub fn null_id(&mut self) -> Result<()> {
-        if !self.id_state.borrow().written_id {
-            self.u32(3)?;
-
-            self.id_state.borrow_mut().written_id = true;
-        }
+        write_id_version(self)?;
 
         self.u32(0xffffffff)
     }
@@ -174,8 +170,12 @@ impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
     }
 }
 
-impl<W, I, N: NodeStateMut> Serializer<W, I, N> {
-    pub fn num_nodes(&self) -> u32 {
-        self.node_state.borrow().num_nodes
+fn write_id_version<W: Write, I: IdStateMut, N>(s: &mut Serializer<W, I, N>) -> Result<()> {
+    if !s.id_state.borrow().written_id {
+        s.u32(3)?;
+
+        s.id_state.borrow_mut().written_id = true;
     }
+
+    Ok(())
 }
