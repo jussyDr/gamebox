@@ -214,6 +214,12 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     }
 
     #[inline]
+    pub fn u64(&mut self) -> Result<u64> {
+        let bytes = self.byte_array()?;
+        Ok(u64::from_le_bytes(bytes))
+    }
+
+    #[inline]
     pub fn i16(&mut self) -> Result<i16> {
         let bytes = self.byte_array()?;
         Ok(i16::from_le_bytes(bytes))

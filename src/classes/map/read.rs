@@ -291,14 +291,14 @@ impl Map {
         let gold = d.u32()?;
         let author = d.u32()?;
         self.cost = d.u32()?;
+        let _is_multilap = d.bool32()?;
+        let _play_mode = d.u32()?; // 0
         d.u32()?; // 0
+        let _author_score = d.u32()?; // 0
+        let _editor_mode = d.u32()?; // 2
         d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 2
-        d.u32()?; // 0
-        d.u32()?; // 38
-        d.u32()?; // 1
+        let _num_cps = d.u32()?; // 38
+        let _num_laps = d.u32()?; // 1
 
         if bronze != 0xffffffff
             && silver != 0xffffffff
@@ -325,12 +325,12 @@ impl Map {
         d.u32()?; // 26
         self.author_id = d.id()?.into();
         self.name = d.string()?;
-        d.u8()?; // 8
+        let _map_kind = d.u8()?; // 8
         d.u32()?; // 0
-        d.u32()?; // 0
-        d.id()?; // "NoStadium48x48Sunrise"
+        let _password = d.u32()?; // 0
+        let _deco_id = d.id()?; // "NoStadium48x48Sunrise"
         d.u32()?; // 26
-        d.id()?; // "Nadeo"
+        let _deco_author_id = d.id()?; // "Nadeo"
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
@@ -341,10 +341,9 @@ impl Map {
         d.u32()?; // 0
         self.map_type = MapType::from_script_id(&d.string()?);
         self.map_style = d.string()?;
-        d.u32()?;
-        d.u32()?;
-        d.u8()?; // 8
-        d.id()?; // "TMStadium"
+        let _lightmap_cache_id = d.u64()?;
+        let _lightmap_version = d.u8()?; // 8
+        let _title_id = d.id()?; // "TMStadium"
 
         Ok(())
     }
@@ -443,12 +442,12 @@ impl Map {
 
     fn read_chunk_03043007<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
-        let n = d.u32()?;
+        let thumbnail_size = d.u32()?;
         d.bytes(15)?;
-        d.bytes(n as usize)?;
+        let _thumbnail = d.bytes(thumbnail_size as usize)?;
         d.bytes(16)?;
         d.bytes(10)?;
-        d.u32()?; // 0
+        let _comments = d.u32()?; // 0
         d.bytes(11)?;
 
         Ok(())
@@ -482,7 +481,7 @@ impl Map {
     ) -> Result<()> {
         d.internal_node_ref::<CollectorList>()?;
         let challenge_parameters = d.internal_node_ref::<ChallengeParameters>()?;
-        d.u32()?; // 6
+        let _map_kind = d.u32()?; // 6
 
         self.medal_times = challenge_parameters.medal_times.clone();
         self.map_type = challenge_parameters.map_type;
@@ -491,14 +490,14 @@ impl Map {
     }
 
     fn read_chunk_03043018<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 3
+        let _is_multilap = d.bool32()?; // 0
+        let _num_laps = d.u32()?; // 3
 
         Ok(())
     }
 
     fn read_chunk_03043019<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_file_ref(d)?;
+        let _mod = read_file_ref(d)?;
 
         Ok(())
     }
@@ -511,12 +510,12 @@ impl Map {
         d.u32()?; // 26
         self.author_id = d.id()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.name = d.string()?; // "$s$i$o$F90M$FA0i$FB0n$FD0d$FE0o$FF0r"
-        d.id()?; // "NoStadium48x48Sunrise"
+        let _deco_id = d.id()?; // "NoStadium48x48Sunrise"
         d.u32()?; // 26
-        d.id()?; // "Nadeo"
-        d.u32()?; // 120
-        d.u32()?; // 120
-        d.u32()?; // 120
+        let _deco_author = d.id()?; // "Nadeo"
+        let _size_x = d.u32()?; // 120
+        let _size_y = d.u32()?; // 120
+        let _size_z = d.u32()?; // 120
         d.u32()?; // 0
         d.u32()?; // 6
         let num_blocks = d.u32()?;
@@ -581,7 +580,7 @@ impl Map {
     }
 
     fn read_chunk_03043024<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_file_ref(d)?;
+        let _music = read_file_ref(d)?;
 
         Ok(())
     }
@@ -603,17 +602,14 @@ impl Map {
 
     fn read_chunk_03043028<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        d.u32()?; // 0
+        let _comments = d.u32()?; // 0
 
         Ok(())
     }
 
     fn read_chunk_03043029<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?;
+        let _password = d.bytes(16)?;
+        let _crc = d.u32()?;
 
         Ok(())
     }
