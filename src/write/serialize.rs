@@ -1,4 +1,9 @@
-use std::{cell::Cell, hash::Hash, io::Write};
+use std::{
+    any::{Any, TypeId},
+    cell::Cell,
+    hash::{DefaultHasher, Hash, Hasher},
+    io::Write,
+};
 
 use elsa::FrozenMap;
 
@@ -47,16 +52,58 @@ impl<T: IdStateRef> IdStateRef for &mut T {
     }
 }
 
+trait Node {
+    fn eq(&self, other: &dyn Node) -> bool;
+
+    fn hash(&self) -> u64;
+
+    fn as_any(&self) -> &dyn Any;
+}
+
+impl PartialEq for Box<dyn Node> {
+    fn eq(&self, other: &Self) -> bool {
+        Node::eq(self, other)
+    }
+}
+
+impl Eq for Box<dyn Node> {}
+
+impl Hash for Box<dyn Node> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_u64(Node::hash(self));
+    }
+}
+
+impl<T: 'static + Eq + Hash> Node for T {
+    fn eq(&self, other: &dyn Node) -> bool {
+        if let Some(other) = other.as_any().downcast_ref::<T>() {
+            return self == other;
+        }
+
+        false
+    }
+
+    fn hash(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        Hash::hash(&(TypeId::of::<T>(), self), &mut hasher);
+        hasher.finish()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 pub struct NodeState {
     num_nodes: Cell<u32>,
-    _nodes: FrozenMap<(), u32>,
+    nodes: FrozenMap<Box<dyn Node>, u32>,
 }
 
 impl NodeState {
     pub fn new() -> Self {
         Self {
             num_nodes: Cell::new(0),
-            _nodes: FrozenMap::new(),
+            nodes: FrozenMap::new(),
         }
     }
 
@@ -190,8 +237,32 @@ impl<W: Write, I: IdStateRef, N> Serializer<W, I, N> {
 }
 
 impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
-    pub fn node_ref<T: Eq + Hash + ClassId + WriteBody>(&mut self, _node: T) -> Result {
-        unimplemented!()
+    pub fn node_ref<T: 'static + Eq + Hash + ClassId + WriteBody + Clone>(
+        &mut self,
+        node: T,
+    ) -> Result {
+        let node_2: Box<dyn Node> = Box::new(node.clone());
+
+        match self.node_state.borrow().nodes.get_copy(&node_2) {
+            None => {
+                let index = self.node_state.borrow().num_nodes.get() + 1;
+
+                self.u32(index)?;
+
+                self.node_state.borrow().num_nodes.set(index);
+
+                self.u32(T::class_id())?;
+
+                node.write_body(self)?;
+
+                self.u32(NODE_END)?;
+
+                self.node_state.borrow().nodes.insert_copy(node_2, index);
+            }
+            Some(index) => self.u32(index)?,
+        }
+
+        Ok(())
     }
 
     pub fn unique_node_ref<T: ClassId + WriteBody>(&mut self, node: &T) -> Result {
