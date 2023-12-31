@@ -4,7 +4,7 @@ use crate::{
     classes::ghost::Ghost,
     common::{ClassId, EngineId},
     read::{
-        deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
+        deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateMut},
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
             HeaderChunkEntry, HeaderChunks, ReadBody, Sealed,
@@ -65,7 +65,7 @@ impl HeaderChunks for Map {
 }
 
 impl ReadBody for Map {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -74,7 +74,7 @@ impl ReadBody for Map {
 }
 
 impl BodyChunks for Map {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -316,7 +316,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043003<R: Read, I: IdStateMut, N>(
+    fn read_chunk_03043003<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -463,7 +463,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_0304300d<R: Read, I: IdStateMut, N>(
+    fn read_chunk_0304300d<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -474,7 +474,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043011<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043011<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -502,7 +502,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_0304301f<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0304301f<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -657,7 +657,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043040<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043040<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -777,7 +777,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043048<R: Read, I: IdStateMut, N>(
+    fn read_chunk_03043048<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -825,7 +825,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043049<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043049<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -868,7 +868,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043051<R: Read, I: IdStateMut, N>(
+    fn read_chunk_03043051<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1170,7 +1170,7 @@ impl ClassId for CollectorList {
 }
 
 impl ReadBody for CollectorList {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1179,7 +1179,7 @@ impl ReadBody for CollectorList {
 }
 
 impl BodyChunks for CollectorList {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0301b000,
@@ -1210,7 +1210,7 @@ impl ClassId for ChallengeParameters {
 }
 
 impl ReadBody for ChallengeParameters {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1219,7 +1219,7 @@ impl ReadBody for ChallengeParameters {
 }
 
 impl BodyChunks for ChallengeParameters {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1303,7 +1303,7 @@ impl ChallengeParameters {
         Ok(())
     }
 
-    fn read_chunk_0305b00d<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0305b00d<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1330,7 +1330,7 @@ impl ClassId for WaypointSpecialProperty {
 }
 
 impl ReadBody for WaypointSpecialProperty {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1339,7 +1339,7 @@ impl ReadBody for WaypointSpecialProperty {
 }
 
 impl BodyChunks for WaypointSpecialProperty {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1381,7 +1381,7 @@ impl ClassId for BlockSkin {
 }
 
 impl ReadBody for BlockSkin {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1390,7 +1390,7 @@ impl ReadBody for BlockSkin {
 }
 
 impl BodyChunks for BlockSkin {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1431,7 +1431,7 @@ impl ClassId for AnchoredObject {
 }
 
 impl ReadBody for AnchoredObject {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1440,7 +1440,7 @@ impl ReadBody for AnchoredObject {
 }
 
 impl BodyChunks for AnchoredObject {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1461,7 +1461,7 @@ impl BodyChunks for AnchoredObject {
 }
 
 impl AnchoredObject {
-    fn read_chunk_03101002<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03101002<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1497,7 +1497,7 @@ impl AnchoredObject {
         Ok(())
     }
 
-    fn read_chunk_03101004<R: Read, I: IdStateMut, N>(
+    fn read_chunk_03101004<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1507,7 +1507,7 @@ impl AnchoredObject {
         Ok(())
     }
 
-    fn read_chunk_03101005<R: Read, I: IdStateMut, N>(
+    fn read_chunk_03101005<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1528,7 +1528,7 @@ impl ClassId for ZoneGenealogy {
 }
 
 impl ReadBody for ZoneGenealogy {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1537,7 +1537,7 @@ impl ReadBody for ZoneGenealogy {
 }
 
 impl BodyChunks for ZoneGenealogy {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0311d002,
@@ -1548,7 +1548,7 @@ impl BodyChunks for ZoneGenealogy {
 }
 
 impl ZoneGenealogy {
-    fn read_chunk_0311d002<R: Read, I: IdStateMut, N>(
+    fn read_chunk_0311d002<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1571,7 +1571,7 @@ impl ClassId for TraitsMetadata {
 }
 
 impl ReadBody for TraitsMetadata {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

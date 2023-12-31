@@ -1,14 +1,14 @@
 use std::io::Read;
 
 use crate::read::{
-    deserialize::{Deserializer, IdStateMut},
+    deserialize::{Deserializer, IdStateRef},
     Result,
 };
 
 use super::Collector;
 
 impl Collector {
-    pub(crate) fn read_chunk_2e001003<R: Read, I: IdStateMut, N>(
+    pub(crate) fn read_chunk_2e001003<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -47,7 +47,7 @@ impl Collector {
         Ok(())
     }
 
-    pub(crate) fn read_chunk_2e001009<R: Read, I: IdStateMut, N>(
+    pub(crate) fn read_chunk_2e001009<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -58,7 +58,7 @@ impl Collector {
         Ok(())
     }
 
-    pub(crate) fn read_chunk_2e00100b<R: Read, I: IdStateMut, N>(
+    pub(crate) fn read_chunk_2e00100b<R: Read, I: IdStateRef, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

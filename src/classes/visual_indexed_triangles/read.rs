@@ -1,7 +1,7 @@
 use std::io::{Read, Seek};
 
 use crate::read::{
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    deserialize::{Deserializer, IdStateRef, NodeStateMut},
     readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
     Result,
 };
@@ -11,7 +11,7 @@ use super::{
 };
 
 impl ReadBody for VisualIndexedTriangles {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -20,7 +20,7 @@ impl ReadBody for VisualIndexedTriangles {
 }
 
 impl BodyChunks for VisualIndexedTriangles {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -107,7 +107,7 @@ impl Visual {
         Ok(())
     }
 
-    fn read_chunk_0900600f<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0900600f<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -155,7 +155,7 @@ impl Visual3D {
 }
 
 impl VisualIndexed {
-    fn read_chunk_0906a001<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0906a001<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -171,7 +171,7 @@ impl VisualIndexed {
 }
 
 impl BodyChunks for IndexBuffer {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09057001,
@@ -198,7 +198,7 @@ impl IndexBuffer {
 }
 
 impl ReadBody for VertexStream {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -207,7 +207,7 @@ impl ReadBody for VertexStream {
 }
 
 impl BodyChunks for VertexStream {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09056000,

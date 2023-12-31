@@ -10,7 +10,7 @@ use crate::common::{
 };
 
 use super::{
-    deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut, Take},
+    deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateMut, Take},
     BodyOptions, HeaderOptions, Result,
 };
 
@@ -167,7 +167,7 @@ fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
         if is_heavy_chunk && !read_heavy_chunks {
             d.skip(chunk_size)?;
         } else {
-            let mut d = d.take_with(chunk_size as u64, &mut id_state, ());
+            let mut d = d.take_with(chunk_size as u64, &id_state, ());
 
             let header_chunk_entry = header_chunk_entries
                 .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
@@ -203,7 +203,7 @@ fn read_folders<R: Read, I, N>(
     Ok(())
 }
 
-pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -249,7 +249,7 @@ pub struct HeaderChunkEntry<T, R> {
 }
 
 type HeaderChunkReadFn<T, R> =
-    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut IdState, ()>) -> Result<()>;
+    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &IdState, ()>) -> Result<()>;
 
 pub struct BodyChunkEntry<T, R, I, N> {
     pub id: u32,
@@ -265,7 +265,7 @@ pub type NormalBodyChunkReadFn<T, R, I, N> =
     fn(n: &mut T, d: &mut Deserializer<R, I, N>) -> Result<()>;
 
 pub type SkippableBodyChunkReadFn<T, R, I, N> =
-    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut I, &mut N>) -> Result<()>;
+    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &I, &mut N>) -> Result<()>;
 
 pub trait Sealed {
     fn read(
@@ -284,14 +284,14 @@ pub trait HeaderChunks {
 }
 
 pub trait BodyChunks {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
     where
         Self: Sized;
 }
 
 pub trait ReadBody {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()>;
