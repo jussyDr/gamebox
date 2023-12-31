@@ -44,6 +44,7 @@ impl ReadBody for Ghost {
 }
 
 impl BodyChunks for Ghost {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [

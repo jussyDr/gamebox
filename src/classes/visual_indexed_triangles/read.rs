@@ -325,7 +325,7 @@ impl VertexStream {
                         Ok(())
                     })?;
                 }
-                _ => todo!(),
+                _ => return Err("unknown vertex attribute".into()),
             }
         }
 

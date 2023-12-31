@@ -25,6 +25,7 @@ pub struct Texture {
 }
 
 impl Texture {
+    /// Path to the texture image file.
     pub fn image_path(&self) -> &Path {
         &self.image_path
     }

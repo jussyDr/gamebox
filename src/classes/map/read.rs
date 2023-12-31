@@ -33,6 +33,7 @@ impl Sealed for Map {
 }
 
 impl HeaderChunks for Map {
+    #[allow(clippy::redundant_closure)]
     fn header_chunks<R: BufRead>() -> impl Iterator<Item = HeaderChunkEntry<Self, R>> {
         [
             HeaderChunkEntry {
@@ -74,6 +75,7 @@ impl ReadBody for Map {
 }
 
 impl BodyChunks for Map {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1219,6 +1221,7 @@ impl ReadBody for ChallengeParameters {
 }
 
 impl BodyChunks for ChallengeParameters {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1339,6 +1342,7 @@ impl ReadBody for WaypointSpecialProperty {
 }
 
 impl BodyChunks for WaypointSpecialProperty {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1440,6 +1444,7 @@ impl ReadBody for AnchoredObject {
 }
 
 impl BodyChunks for AnchoredObject {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1594,7 +1599,7 @@ impl ReadBody for TraitsMetadata {
         })?;
 
         if d.u32()? != 0xfacade01 {
-            todo!()
+            return Err("expected end of node".into());
         }
 
         Ok(())
@@ -1617,7 +1622,7 @@ fn read_type<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Type> {
                 element_type: Box::new(element_type),
             })
         }
-        _ => todo!("{ty}"),
+        _ => Err("unknown script type".into()),
     }
 }
 
@@ -1664,7 +1669,7 @@ impl Direction {
             1 => Self::East,
             2 => Self::South,
             3 => Self::West,
-            _ => todo!(),
+            _ => return Err("expected direction".into()),
         };
 
         Ok(direction)
@@ -1680,7 +1685,7 @@ impl Color {
             3 => Self::Blue,
             4 => Self::Red,
             5 => Self::Black,
-            _ => todo!(),
+            _ => return Err("expected color".into()),
         };
 
         Ok(color)
@@ -1698,7 +1703,7 @@ impl PhaseOffset {
             5 => Self::Five8th,
             6 => Self::Six8th,
             7 => Self::Seven8th,
-            _ => todo!(),
+            _ => return Err("expected phase offset".into()),
         };
 
         Ok(phase_offset)

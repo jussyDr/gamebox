@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{f32::consts::FRAC_PI_4, io::Write};
 
 use crate::write::{
     serialize::{IdStateMut, NodeStateMut, Serializer},
@@ -13,6 +13,7 @@ impl Writable for Map {}
 impl Sealed for Map {}
 
 impl HeaderChunks for Map {
+    #[allow(clippy::redundant_closure)]
     fn header_chunks() -> impl Iterator<Item = HeaderChunk<Self>> {
         [
             HeaderChunk {
@@ -453,10 +454,10 @@ impl Map {
         s.u32(0x534b4950)?;
         s.buffer(|s| {
             s.f32(640.0)?;
-            s.f32(181.0193328857421875)?;
+            s.f32(181.01933)?;
             s.f32(640.0)?;
-            s.f32(0.785398185253143310546875)?;
-            s.f32(0.785398185253143310546875)?;
+            s.f32(FRAC_PI_4)?;
+            s.f32(FRAC_PI_4)?;
             s.u32(0)?;
             s.f32(90.0)?;
             s.f32(10.0)?;

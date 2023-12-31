@@ -1,3 +1,5 @@
+//! Types used for reading and writing Media* nodes.
+
 use std::{
     any::Any,
     io::{Read, Seek},
@@ -133,6 +135,7 @@ impl ReadBody for MediaClip {
 }
 
 impl BodyChunks for MediaClip {
+    #[allow(clippy::redundant_closure)]
     fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -302,7 +305,7 @@ impl MediaTrack {
                         MediaBlockEntity::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
-                    _ => todo!(),
+                    _ => return Err("unknown media block".into()),
                 };
 
                 Ok(node)

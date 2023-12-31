@@ -9,10 +9,7 @@ use crate::{
     },
 };
 
-use super::{
-    item::{ItemMaterial, Mesh},
-    visual_indexed_triangles::VisualIndexedTriangles,
-};
+use super::{item::ItemMaterial, visual_indexed_triangles::VisualIndexedTriangles};
 
 #[derive(Default)]
 pub struct StaticObjectModel;
@@ -72,9 +69,7 @@ impl ReadBody for StaticObjectModel {
 }
 
 #[derive(Default, Clone)]
-pub struct Solid2Model {
-    layers: Vec<(Mesh, ItemMaterial)>,
-}
+pub struct Solid2Model;
 
 impl ClassId for Solid2Model {
     const ENGINE: u8 = EngineId::PLUG;

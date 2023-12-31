@@ -45,10 +45,11 @@ pub mod classes {
     pub mod map;
     pub mod material;
     pub mod prefab;
-    pub mod static_object_model;
     pub mod texture;
     pub mod veget_tree_model;
-    pub mod visual_indexed_triangles;
+
+    mod static_object_model;
+    mod visual_indexed_triangles;
 
     #[doc(inline)]
     pub use ghost::Ghost;

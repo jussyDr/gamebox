@@ -117,42 +117,27 @@ impl Map {
 
     /// Intro media clip.
     pub fn intro_media(&self) -> Option<&MediaClip> {
-        match self.intro_media {
-            None => None,
-            Some(ref intro_media) => Some(intro_media),
-        }
+        self.intro_media.as_ref().map(|x| x as _)
     }
 
     /// Podium media clip.
     pub fn podium_media(&self) -> Option<&MediaClip> {
-        match self.podium_media {
-            None => None,
-            Some(ref podium_media) => Some(podium_media),
-        }
+        self.podium_media.as_ref().map(|x| x as _)
     }
 
     /// In game media clip group.
     pub fn in_game_media(&self) -> Option<&MediaClipGroup> {
-        match self.in_game_media {
-            None => None,
-            Some(ref in_game_media) => Some(in_game_media),
-        }
+        self.in_game_media.as_ref().map(|x| x as _)
     }
 
     /// End race media clip group.
     pub fn end_race_media(&self) -> Option<&MediaClipGroup> {
-        match self.end_race_media {
-            None => None,
-            Some(ref end_race_media) => Some(end_race_media),
-        }
+        self.end_race_media.as_ref().map(|x| x as _)
     }
 
     /// Ambiance media clip.
     pub fn ambiance_media(&self) -> Option<&MediaClip> {
-        match self.ambiance_media {
-            None => None,
-            Some(ref ambiance_media) => Some(ambiance_media),
-        }
+        self.ambiance_media.as_ref().map(|x| x as _)
     }
 
     /// Embedded objects.
@@ -319,6 +304,13 @@ pub struct Coord<T> {
     z: T,
 }
 
+impl<T> Coord<T> {
+    /// Convert to an array.
+    pub fn into_array(self) -> [T; 3] {
+        [self.x, self.y, self.z]
+    }
+}
+
 /// Objects embedded in a map.
 pub struct EmbeddedObjects {
     object_ids: Vec<RcStr>,
@@ -337,6 +329,7 @@ impl EmbeddedObjects {
     }
 }
 
+/// Position.
 #[derive(Default)]
 pub struct Position {
     x: f32,
@@ -344,11 +337,26 @@ pub struct Position {
     z: f32,
 }
 
+impl Position {
+    /// Convert to an array.
+    pub fn into_array(self) -> [f32; 3] {
+        [self.x, self.y, self.z]
+    }
+}
+
+/// Rotation.
 #[derive(Default)]
 pub struct Rotation {
     yaw: f32,
     pitch: f32,
     roll: f32,
+}
+
+impl Rotation {
+    /// Convert to an array.
+    pub fn into_array(self) -> [f32; 3] {
+        [self.yaw, self.pitch, self.roll]
+    }
 }
 
 /// Element color of a block or item.

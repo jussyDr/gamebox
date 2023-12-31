@@ -289,7 +289,7 @@ impl Item {
 
                 Ok(Rc::new(()))
             }
-            _ => todo!(),
+            _ => Err("unknown entity model type".into()),
         })?;
         d.u32()?; // 0xffffffff
 

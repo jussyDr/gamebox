@@ -1,3 +1,5 @@
+//! Types used for reading [Prefab] nodes.
+
 use std::io::{BufRead, Read, Seek};
 
 use crate::{

@@ -25,6 +25,7 @@ pub struct Material {
 }
 
 impl Material {
+    /// Path to the diffuse texture file.
     pub fn diffuse_texture_path(&self) -> &Path {
         &self.diffuse_texture_path
     }
@@ -350,7 +351,7 @@ impl MaterialCustom {
                 "BaseColorHueMask" => {}
                 "Normal" => {}
                 "RoughMetal" => {}
-                _ => todo!(),
+                _ => return Err("unknown texture kind".into()),
             }
 
             Ok(())

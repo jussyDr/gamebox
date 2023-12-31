@@ -63,7 +63,7 @@ mod read {
     impl FileRef {
         pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
             if d.u8()? != FILE_REF_VERSION {
-                todo!()
+                return Err("unknown file reference version".into());
             }
 
             let checksum = d.byte_array::<32>()?;
@@ -91,7 +91,7 @@ mod read {
             match FileRef::read(d)? {
                 None => Ok(None),
                 Some(FileRef::Internal(file_ref)) => Ok(Some(file_ref)),
-                Some(FileRef::External(_)) => todo!(),
+                Some(FileRef::External(_)) => Err("expected internal file reference".into()),
             }
         }
     }
@@ -100,7 +100,7 @@ mod read {
         pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
             match FileRef::read(d)? {
                 None => Ok(None),
-                Some(FileRef::Internal(_)) => todo!(),
+                Some(FileRef::Internal(_)) => Err("expected external file reference".into()),
                 Some(FileRef::External(file_ref)) => Ok(Some(file_ref)),
             }
         }
