@@ -8,7 +8,10 @@ use std::{
     rc::Rc,
 };
 
-use crate::{class::ClassId, read::Result, ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION};
+use crate::{
+    common::{ClassId, ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION},
+    read::Result,
+};
 
 use super::readable::ReadBody;
 

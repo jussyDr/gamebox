@@ -7,7 +7,10 @@ mod write;
 
 use std::rc::Rc;
 
-use crate::{class::ClassId, EngineId, RcStr};
+use crate::{
+    common::{ClassId, EngineId},
+    RcStr,
+};
 
 use self::media::{MediaClip, MediaClipGroup};
 

@@ -55,7 +55,7 @@ pub mod classes {
 
 mod common;
 
-pub use common::*;
+pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb};
 #[doc(inline)]
 pub use read::{read, read_file, Reader};
 #[doc(inline)]

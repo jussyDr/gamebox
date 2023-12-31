@@ -5,7 +5,7 @@ use std::{
 
 use serde_jsonrc::Value;
 
-use crate::{class::ClassId, FILE_SIGNATURE, NODE_END, SKIP};
+use crate::common::{ClassId, FILE_SIGNATURE, NODE_END, SKIP};
 
 use super::{
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut, Take},

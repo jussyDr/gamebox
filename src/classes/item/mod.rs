@@ -7,7 +7,10 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{class::ClassId, EngineId, Rgb};
+use crate::{
+    common::{ClassId, EngineId},
+    Rgb,
+};
 
 use super::{
     collector::Collector, static_object_model::Solid2Model, visual_indexed_triangles::Indices,

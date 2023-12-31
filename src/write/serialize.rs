@@ -1,6 +1,6 @@
 use std::{borrow::BorrowMut, collections::HashMap, io::Write};
 
-use crate::{write::Result, ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION};
+use crate::{common::ID_FLAG_BIT, common::ID_INDEX_MASK, common::ID_VERSION, write::Result};
 
 pub struct IdState {
     written_id: bool,

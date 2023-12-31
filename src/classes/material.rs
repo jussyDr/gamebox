@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    class::ClassId,
+    common::{ClassId, EngineId},
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{
@@ -15,7 +15,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    EngineId, RcPath,
+    RcPath,
 };
 
 /// Node type corresponding to GameBox files with the extension `Material.Gbx`.

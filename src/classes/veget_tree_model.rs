@@ -1,13 +1,12 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    class::ClassId,
+    common::{ClassId, EngineId},
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    EngineId,
 };
 
 use super::visual_indexed_triangles::VisualIndexedTriangles;

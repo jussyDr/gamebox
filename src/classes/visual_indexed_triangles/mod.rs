@@ -2,7 +2,7 @@ mod read;
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{class::ClassId, EngineId};
+use crate::common::{ClassId, EngineId};
 
 #[derive(Default)]
 pub struct VisualIndexedTriangles {

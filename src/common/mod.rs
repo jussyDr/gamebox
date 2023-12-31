@@ -33,30 +33,28 @@ impl Rgb {
     }
 }
 
-pub(crate) const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
+pub const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 
-pub(crate) const SKIP: u32 = 0x534b4950;
+pub const SKIP: u32 = 0x534b4950;
 
-pub(crate) const NODE_END: u32 = 0xfacade01;
+pub const NODE_END: u32 = 0xfacade01;
 
-pub(crate) const ID_VERSION: u32 = 3;
+pub const ID_VERSION: u32 = 3;
 
-pub(crate) const ID_INDEX_MASK: u32 = 0x00003fff;
+pub const ID_INDEX_MASK: u32 = 0x00003fff;
 
-pub(crate) const ID_FLAG_BIT: u32 = 0x40000000;
+pub const ID_FLAG_BIT: u32 = 0x40000000;
 
-pub(crate) mod class {
-    pub trait ClassId {
-        const ENGINE: u8;
-        const CLASS: u16;
+pub trait ClassId {
+    const ENGINE: u8;
+    const CLASS: u16;
 
-        fn class_id() -> u32 {
-            ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
-        }
+    fn class_id() -> u32 {
+        ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
     }
 }
 
-pub(crate) fn read_compact_index<R: Read, I, N>(
+pub fn read_compact_index<R: Read, I, N>(
     d: &mut Deserializer<R, I, N>,
     num_items: u32,
 ) -> Result<u32> {
@@ -71,7 +69,7 @@ pub(crate) fn read_compact_index<R: Read, I, N>(
     }
 }
 
-pub(crate) struct EngineId(u8);
+pub struct EngineId(u8);
 
 impl EngineId {
     pub const GAME: u8 = 0x03;

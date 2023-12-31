@@ -1,8 +1,8 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    class::ClassId,
     classes::ghost::Ghost,
+    common::{ClassId, EngineId},
     read::{
         deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
         readable::{
@@ -11,7 +11,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    EngineId, ExternalFileRef, FileRef, InternalFileRef,
+    ExternalFileRef, FileRef, InternalFileRef,
 };
 
 use super::{

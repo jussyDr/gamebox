@@ -1,13 +1,12 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    class::ClassId,
+    common::{ClassId, EngineId},
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    EngineId,
 };
 
 use super::{

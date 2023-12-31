@@ -4,11 +4,11 @@ use std::{
 };
 
 use crate::{
-    class::ClassId,
     classes::{
         collector::Collector,
         static_object_model::{MaterialUserInst, StaticObjectModel},
     },
+    common::{read_compact_index, ClassId, EngineId},
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{
@@ -17,7 +17,6 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
-    read_compact_index, EngineId,
 };
 
 use super::{Item, ItemEntityModel};

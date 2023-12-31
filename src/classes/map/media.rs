@@ -5,14 +5,14 @@ use std::{
 };
 
 use crate::{
-    class::ClassId,
     classes::ghost::EntRecordData,
+    common::{ClassId, EngineId},
     read::{
         deserialize::{Deserializer, IdStateMut, NodeStateMut},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    EngineId, FileRef, InternalFileRef,
+    FileRef, InternalFileRef,
 };
 
 use super::Coord;

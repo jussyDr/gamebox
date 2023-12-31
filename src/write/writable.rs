@@ -1,6 +1,9 @@
 use std::io::Write;
 
-use crate::{class::ClassId, write::serialize::IdState, FILE_SIGNATURE};
+use crate::{
+    common::{ClassId, FILE_SIGNATURE},
+    write::serialize::IdState,
+};
 
 use super::{
     serialize::{IdStateMut, NodeState, NodeStateMut, Serializer},
