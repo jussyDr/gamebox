@@ -5,7 +5,9 @@ use std::{
 
 use serde_jsonrc::Value;
 
-use crate::common::{ClassId, FILE_SIGNATURE, NODE_END, SKIP};
+use crate::common::{
+    ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
+};
 
 use super::{
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut, Take},
@@ -21,27 +23,27 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
     let mut d = Deserializer::new(reader, (), ());
 
-    if d.byte_array()? != FILE_SIGNATURE {
-        return Err("invalid file signature".into());
+    if d.byte_array()? != GAMEBOX_FILE_SIGNATURE {
+        return Err("not a gamebox file".into());
     }
 
-    if d.u16()? != 6 {
-        return Err("unsupported gbx version".into());
+    if d.u16()? != GAMEBOX_VERSION {
+        return Err("unsupported gamebox version".into());
     }
 
-    if d.u8()? != b'B' {
-        return Err("unsupported gbx format".into());
+    let format = FileFormat::read(&mut d)?;
+
+    if let FileFormat::Text = format {
+        return Err("text format is not supported".into());
     }
 
-    if d.u8()? != b'U' {
-        return Err("unsupported reference table compression".into());
+    let ref_table_compression = Compression::read(&mut d)?;
+
+    if let Compression::Compressed = ref_table_compression {
+        return Err("compressed reference table is not supported".into());
     }
 
-    let is_body_compressed = match d.u8()? {
-        b'C' => true,
-        b'U' => false,
-        _ => return Err("invalid body compression".into()),
-    };
+    let body_compression = Compression::read(&mut d)?;
 
     if d.u8()? != b'R' {
         return Err("invalid unknown byte".into());
@@ -91,40 +93,41 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
             let mut file_path = folders[folder_index as usize].clone();
             file_path.push(file_name);
 
-            node_state.set_ref(node_index as usize, file_path);
+            node_state.set_ref(node_index as usize, file_path)?;
 
             Ok(())
         })?;
     }
 
-    if is_body_compressed {
-        let body_size = d.u32()?;
-        let compressed_body_size = d.u32()?;
+    match body_compression {
+        Compression::Compressed => {
+            let body_size = d.u32()?;
+            let compressed_body_size = d.u32()?;
 
-        match body_options {
-            BodyOptions::Read { .. } => {
-                let compressed_body = d.bytes(compressed_body_size as usize)?;
+            match body_options {
+                BodyOptions::Read { .. } => {
+                    let compressed_body = d.bytes(compressed_body_size as usize)?;
 
-                let mut buf = vec![0; body_size as usize];
+                    let mut buf = vec![0; body_size as usize];
 
-                let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
+                    let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
 
-                let reader = Cursor::new(body);
+                    let reader = Cursor::new(body);
 
-                let mut d = Deserializer::new(reader, IdState::new(), node_state);
+                    let mut d = Deserializer::new(reader, IdState::new(), node_state);
 
-                T::read_body(&mut node, &mut d)?;
+                    T::read_body(&mut node, &mut d)?;
 
-                d.eof()?;
+                    d.eof()?;
+                }
+                BodyOptions::Skip => {
+                    d.skip(compressed_body_size)?;
+                }
             }
-            BodyOptions::Skip => {
-                d.skip(compressed_body_size)?;
-            }
+
+            d.eof()?;
         }
-
-        d.eof()?;
-    } else {
-        match body_options {
+        Compression::Uncompressed => match body_options {
             BodyOptions::Read { .. } => {
                 let reader = d.into_inner();
 
@@ -135,7 +138,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
                 d.eof()?;
             }
             BodyOptions::Skip => {}
-        }
+        },
     }
 
     Ok(node)

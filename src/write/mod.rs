@@ -25,7 +25,7 @@ impl From<io::Error> for Error {
 }
 
 /// Result type used when writing GameBox nodes.
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result = std::result::Result<(), Error>;
 
 /// Trait which indicates that a certain class is writable.
 ///
@@ -43,7 +43,7 @@ pub trait Writable: writable::Sealed {}
 /// write(&map, writer)?;
 /// # Ok::<(), gamebox::write::Error>(()) };
 /// ```
-pub fn write(node: &impl Writable, writer: impl Write) -> Result<()> {
+pub fn write(node: &impl Writable, writer: impl Write) -> Result {
     Writer::new().write(node, writer)
 }
 
@@ -59,7 +59,7 @@ pub fn write(node: &impl Writable, writer: impl Write) -> Result<()> {
 /// write_file(&map, "MyMap.Item.Gbx")?;
 /// # Ok::<(), gamebox::write::Error>(()) };
 /// ```
-pub fn write_file(node: &impl Writable, path: impl AsRef<Path>) -> Result<()> {
+pub fn write_file(node: &impl Writable, path: impl AsRef<Path>) -> Result {
     Writer::new().write_file(node, path)
 }
 
@@ -108,7 +108,7 @@ impl Writer {
     /// Writer::new().write(&map, writer)?;
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
-    pub fn write(&self, node: &impl Writable, writer: impl Write) -> Result<()> {
+    pub fn write(&self, node: &impl Writable, writer: impl Write) -> Result {
         write_gbx(node, writer, self.compress_body)
     }
 
@@ -124,7 +124,7 @@ impl Writer {
     /// Writer::new().write_file(&map, "MyMap.Item.Gbx")?;
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
-    pub fn write_file(&self, node: &impl Writable, path: impl AsRef<Path>) -> Result<()> {
+    pub fn write_file(&self, node: &impl Writable, path: impl AsRef<Path>) -> Result {
         let file = File::create(path)?;
         let writer = BufWriter::new(file);
         self.write(node, writer)

@@ -48,7 +48,7 @@ impl WriteBody for Map {
     fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
-    ) -> Result<()> {
+    ) -> Result {
         self.write_chunk_13(s)?;
         self.write_chunk_17(s)?;
         self.write_chunk_24(s)?;
@@ -106,7 +106,7 @@ impl WriteBody for Map {
 }
 
 impl Map {
-    fn write_chunk_2<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_2<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u8(13)?;
         s.u32(0)?;
         s.u32(0xffffffff)?;
@@ -126,7 +126,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_3<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_3<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u8(11)?;
         s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
         s.u32(26)?;
@@ -156,13 +156,13 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_4<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_4<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(6)?;
 
         Ok(())
     }
 
-    fn write_chunk_5<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_5<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         use quick_xml::{Error, Writer};
 
         s.buffer(|s| {
@@ -237,7 +237,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_7<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_7<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(1)?;
         s.u32(34375)?;
         s.bytes(b"<Thumbnail.jpg>")?;
@@ -251,7 +251,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_8<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_8<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(1)?;
         s.u32(0)?;
         s.string(&self.author_id)?;
@@ -262,10 +262,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_13<W: Write, I: IdStateMut, N>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result<()> {
+    fn write_chunk_13<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304300d)?;
         s.null_id()?;
         s.u32(0xffffffff)?;
@@ -274,10 +271,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_17<W: Write, I, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result<()> {
+    fn write_chunk_17<W: Write, I, N: NodeStateMut>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043011)?;
         s.node_index()?;
         s.u32(0x0301b000)?;
@@ -326,7 +320,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_24<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_24<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043018)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -337,7 +331,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_25<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_25<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043019)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -357,10 +351,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_31<W: Write, I: IdStateMut, N>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result<()> {
+    fn write_chunk_31<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304301f)?;
         s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
         s.u32(26)?;
@@ -379,14 +370,14 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_34<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_34<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043022)?;
         s.u32(1)?;
 
         Ok(())
     }
 
-    fn write_chunk_36<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_36<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043024)?;
         s.u8(3)?;
         s.u32(0)?;
@@ -403,7 +394,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_37<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_37<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043025)?;
         s.u32(0)?;
         s.u32(0)?;
@@ -413,14 +404,14 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_38<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_38<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043026)?;
         s.u32(0xffffffff)?;
 
         Ok(())
     }
 
-    fn write_chunk_40<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_40<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043028)?;
         s.u32(0)?;
         s.u32(0)?;
@@ -428,7 +419,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_41<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_41<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043029)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -442,14 +433,14 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_42<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_42<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304302a)?;
         s.u32(0)?;
 
         Ok(())
     }
 
-    fn write_chunk_52<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_52<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043034)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| s.u32(0))?;
@@ -457,7 +448,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_54<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_54<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043036)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -478,7 +469,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_56<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_56<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043038)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| s.u32(0))?;
@@ -486,7 +477,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_62<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_62<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304303e)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -498,7 +489,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_64<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_64<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043040)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -519,7 +510,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_66<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_66<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043042)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -534,7 +525,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_67<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_67<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043043)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -559,7 +550,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_68<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_68<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043044)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -588,10 +579,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_72<W: Write, I: IdStateMut, N>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result<()> {
+    fn write_chunk_72<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043048)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -615,7 +603,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_73<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_73<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043049)?;
         s.u32(2)?;
         s.u32(0xffffffff)?;
@@ -630,7 +618,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_75<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_75<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304304b)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -643,7 +631,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_79<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_79<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304304f)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -654,7 +642,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_80<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_80<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043050)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -668,10 +656,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_81<W: Write, I: IdStateMut, N>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result<()> {
+    fn write_chunk_81<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043051)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -683,7 +668,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_82<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_82<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043052)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -694,7 +679,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_83<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_83<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043053)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -705,7 +690,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_84<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_84<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043054)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -721,7 +706,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_85<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_85<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043055)?;
         s.u32(0x534b4950)?;
         s.buffer(|_| Ok(()))?;
@@ -729,7 +714,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_86<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_86<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043056)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -744,7 +729,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_87<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_87<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043057)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -755,7 +740,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_89<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_89<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043059)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -771,7 +756,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_90<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_90<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304305a)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -782,7 +767,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_91<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_91<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304305b)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -797,7 +782,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_92<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_92<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304305c)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| s.u32(1))?;
@@ -805,7 +790,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_93<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_93<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304305d)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -816,7 +801,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_94<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_94<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304305e)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -830,7 +815,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_95<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_95<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304305f)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| s.u32(0))?;
@@ -838,7 +823,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_96<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_96<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043060)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -849,7 +834,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_97<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_97<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043061)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -863,7 +848,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_98<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_98<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043062)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -878,7 +863,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_99<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_99<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043063)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| s.u32(0))?;
@@ -886,7 +871,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_100<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_100<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043064)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -899,7 +884,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_101<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_101<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043065)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| s.u32(0))?;
@@ -907,7 +892,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_103<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_103<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043067)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -920,7 +905,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_104<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_104<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043068)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -935,7 +920,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_105<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_105<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043069)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -946,7 +931,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_107<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result<()> {
+    fn write_chunk_107<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304306b)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {

@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use crate::{
-    common::{ClassId, FILE_SIGNATURE},
+    common::{ClassId, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION},
     write::serialize::IdState,
 };
 
@@ -16,7 +16,7 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
     node: &T,
     writer: impl Write,
     compress_body: bool,
-) -> Result<()> {
+) -> Result {
     let header_data = {
         let mut id_state = IdState::new();
         let mut header_chunks = vec![];
@@ -59,8 +59,8 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
 
     let mut s = Serializer::new(writer, (), ());
 
-    s.byte_array(FILE_SIGNATURE)?;
-    s.u16(6)?;
+    s.byte_array(GAMEBOX_FILE_SIGNATURE)?;
+    s.u16(GAMEBOX_VERSION)?;
     s.u8(b'B')?;
     s.u8(b'U')?;
 
@@ -104,12 +104,11 @@ pub struct HeaderChunk<T> {
     pub write_fn: HeaderChunkWriteFn<T>,
 }
 
-pub type HeaderChunkWriteFn<T> =
-    fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result<()>;
+pub type HeaderChunkWriteFn<T> = fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result;
 
 pub trait WriteBody {
     fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
-    ) -> Result<()>;
+    ) -> Result;
 }

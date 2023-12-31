@@ -118,7 +118,7 @@ mod write {
     use super::{FILE_REF_VERSION, INTERNAL_FILE_REF_CHECKSUM};
 
     impl FileRef {
-        pub(crate) fn write<W: Write, I, N>(&self, w: &mut Serializer<W, I, N>) -> Result<()> {
+        pub(crate) fn write<W: Write, I, N>(&self, w: &mut Serializer<W, I, N>) -> Result {
             match *self {
                 Self::Internal(ref file_ref) => file_ref.write(w),
                 Self::External(ref file_ref) => file_ref.write(w),
@@ -127,7 +127,7 @@ mod write {
     }
 
     impl InternalFileRef {
-        pub(crate) fn write<W: Write, I, N>(&self, w: &mut Serializer<W, I, N>) -> Result<()> {
+        pub(crate) fn write<W: Write, I, N>(&self, w: &mut Serializer<W, I, N>) -> Result {
             w.u8(FILE_REF_VERSION)?;
             w.byte_array(INTERNAL_FILE_REF_CHECKSUM)?;
             w.string(&self.path.to_string_lossy())?;
@@ -138,7 +138,7 @@ mod write {
     }
 
     impl ExternalFileRef {
-        pub(crate) fn write<W: Write, I, N>(&self, w: &mut Serializer<W, I, N>) -> Result<()> {
+        pub(crate) fn write<W: Write, I, N>(&self, w: &mut Serializer<W, I, N>) -> Result {
             w.u8(FILE_REF_VERSION)?;
             w.byte_array(self.checksum)?;
             w.string(&self.path.to_string_lossy())?;
