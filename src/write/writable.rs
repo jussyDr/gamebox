@@ -101,8 +101,11 @@ where
 
 pub struct HeaderChunk<T> {
     pub chunk_id: u32,
-    pub write_fn: fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result<()>,
+    pub write_fn: HeaderChunkWriteFn<T>,
 }
+
+pub type HeaderChunkWriteFn<T> =
+    fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result<()>;
 
 pub trait WriteBody {
     fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(

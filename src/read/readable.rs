@@ -115,14 +115,14 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
                 T::read_body(&mut node, &mut d)?;
 
-                d.end()?;
+                d.eof()?;
             }
             BodyOptions::Skip => {
                 d.skip(compressed_body_size)?;
             }
         }
 
-        d.end()?;
+        d.eof()?;
     } else {
         match body_options {
             BodyOptions::Read { .. } => {
@@ -132,7 +132,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
                 T::read_body(&mut node, &mut d)?;
 
-                d.end()?;
+                d.eof()?;
             }
             BodyOptions::Skip => {}
         }
@@ -172,11 +172,11 @@ fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
 
             (header_chunk_entry.read_fn)(node, &mut d)?;
 
-            d.end()?;
+            d.eof()?;
         }
     }
 
-    d.end()?;
+    d.eof()?;
 
     Ok(())
 }
@@ -232,7 +232,7 @@ pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateMut, N: NodeSta
 
                 read_fn(node, &mut d)?;
 
-                d.end()?;
+                d.eof()?;
             }
         }
     }
@@ -308,7 +308,7 @@ pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
     let class_name = object.get("ClassId").unwrap();
 
     if class_name != T::CLASS_NAME {
-        todo!()
+        return Err("class name does not match".into());
     }
 
     object.remove("ClassId");

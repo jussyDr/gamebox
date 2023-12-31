@@ -1,4 +1,9 @@
-#![warn(missing_docs, clippy::unwrap_in_result)]
+#![warn(
+    missing_docs,
+    clippy::get_unwrap,
+    clippy::todo,
+    clippy::unwrap_in_result
+)]
 
 //! A (incomplete) GameBox (.Gbx) file reader and writer for Trackmania (2020).
 //!

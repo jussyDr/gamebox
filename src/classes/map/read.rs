@@ -720,7 +720,7 @@ impl Map {
                 Ok(())
             })?;
 
-            d.end()?;
+            d.eof()?;
         }
 
         Ok(())
@@ -753,7 +753,7 @@ impl Map {
                 Ok(())
             })?;
 
-            d.end()?;
+            d.eof()?;
         }
 
         Ok(())
@@ -771,7 +771,7 @@ impl Map {
 
             d.node::<TraitsMetadata>()?;
 
-            d.end()?;
+            d.eof()?;
         }
 
         Ok(())
@@ -915,7 +915,7 @@ impl Map {
 
             d.u32()?; // 0
 
-            d.end()?;
+            d.eof()?;
         }
 
         Ok(())

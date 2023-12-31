@@ -70,14 +70,30 @@ impl NodeState {
         }
     }
 
-    pub fn set_ref(&mut self, index: usize, path: PathBuf) {
-        let entry = self.nodes.get_mut(index - 1).unwrap();
+    pub fn get_node_ref(&self, index: usize) -> Result<&Option<NodeRef<dyn Any>>> {
+        self.nodes
+            .get(index - 1)
+            .ok_or("node index out of range".into())
+    }
+
+    pub fn get_node_ref_mut(&mut self, index: usize) -> Result<&mut Option<NodeRef<dyn Any>>> {
+        self.nodes
+            .get_mut(index - 1)
+            .ok_or("node index out of range".into())
+    }
+
+    pub fn set_ref(&mut self, index: usize, path: PathBuf) -> Result<()> {
+        let entry = self.get_node_ref_mut(index)?;
 
         if entry.is_some() {
-            todo!()
+            return Err("node with the given index already exists".into());
         }
 
-        *entry = Some(NodeRef::External { path: path.into() })
+        *entry = Some(NodeRef::External {
+            path: Rc::from(path),
+        });
+
+        Ok(())
     }
 }
 
@@ -146,7 +162,7 @@ impl<T: BufRead> BufRead for Take<T> {
 
 impl<R: Seek> Seek for Take<R> {
     fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        todo!();
+        unimplemented!()
     }
 }
 
@@ -241,19 +257,13 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     }
 
     pub fn bool8(&mut self) -> Result<bool> {
-        match self.u8()? {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => todo!(),
-        }
+        let x = self.u8()?;
+        bool_from_u8(x)
     }
 
     pub fn bool32(&mut self) -> Result<bool> {
-        match self.u32()? {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => todo!(),
-        }
+        let x = self.u32()?;
+        bool_from_u8(x as u8)
     }
 
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
@@ -272,7 +282,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     pub fn string(&mut self) -> Result<String> {
         let len = self.u32()?;
         let bytes = self.bytes(len as usize)?;
-        let string = String::from_utf8(bytes).unwrap();
+        let string = String::from_utf8(bytes)?;
         Ok(string)
     }
 
@@ -297,18 +307,18 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         let len = self.u32()?;
 
         if len as usize != vec.len() {
-            todo!()
+            return Err("list sizes do not match".into());
         }
 
         vec.into_iter().map(|x| read_fn(self, x)).collect()
     }
 
-    pub fn end(&mut self) -> Result<()> {
+    pub fn eof(&mut self) -> Result<()> {
         let mut buf = [0];
 
         match self.reader.read(&mut buf) {
             Ok(0) => Ok(()),
-            _ => todo!(),
+            _ => Err("expected end of reader".into()),
         }
     }
 }
@@ -334,7 +344,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
         let index = read_id_index(self)?;
 
         if index != 0xffffffff {
-            todo!()
+            return Err("expected null id".into());
         }
 
         Ok(())
@@ -342,7 +352,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 
     pub fn id(&mut self) -> Result<Rc<str>> {
         match self.id_or_null()? {
-            None => todo!(),
+            None => Err("id is null".into()),
             Some(id) => Ok(id),
         }
     }
@@ -363,12 +373,17 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 
                 Ok(Some(id))
             } else {
-                let id = Rc::clone(self.id_state.borrow().ids.get(index as usize - 1).unwrap());
+                let id = self
+                    .id_state
+                    .borrow()
+                    .ids
+                    .get(index as usize - 1)
+                    .ok_or("no id with given index")?;
 
-                Ok(Some(id))
+                Ok(Some(Rc::clone(id)))
             }
         } else {
-            todo!()
+            Err("expected id".into())
         }
     }
 }
@@ -376,21 +391,19 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
         let index = match self.u32()? {
-            0xffffffff => todo!(),
-            index => index - 1,
+            0xffffffff => return Err("node index is null".into()),
+            index => index,
         };
 
         let node_ref = self
             .node_state
             .borrow()
-            .nodes
-            .get(index as usize)
-            .unwrap()
+            .get_node_ref(index as usize)?
             .as_ref()
-            .unwrap();
+            .ok_or("node is null")?;
 
         match node_ref {
-            NodeRef::Internal(_) => todo!(),
+            NodeRef::Internal(_) => Err("expected external node ref".into()),
             NodeRef::External { path } => Ok(Rc::clone(path)),
         }
     }
@@ -401,7 +414,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         &mut self,
     ) -> Result<Rc<T>> {
         match self.internal_node_ref_or_null()? {
-            None => todo!(),
+            None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
         }
     }
@@ -412,13 +425,13 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         match self.node_ref_or_null()? {
             None => Ok(None),
             Some(NodeRef::Internal(node_ref)) => Ok(Some(node_ref)),
-            Some(NodeRef::External { .. }) => todo!(),
+            Some(NodeRef::External { .. }) => Err("expected internal node ref".into()),
         }
     }
 
     pub fn node_ref<T: 'static + Default + ClassId + ReadBody>(&mut self) -> Result<NodeRef<T>> {
         match self.node_ref_or_null()? {
-            None => todo!(),
+            None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
         }
     }
@@ -428,17 +441,17 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
             0xffffffff => return Ok(None),
-            index => index - 1,
+            index => index,
         };
 
-        let node_ref_entry = self.node_state.borrow().nodes.get(index as usize).unwrap();
+        let node_ref_entry = self.node_state.borrow().get_node_ref(index as usize)?;
 
         match node_ref_entry {
             None => {
                 let class_id = self.u32()?;
 
                 if class_id != T::class_id() {
-                    todo!()
+                    return Err("class id does not match".into());
                 }
 
                 let mut node = T::default();
@@ -450,21 +463,23 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                 let node_ref_entry = self
                     .node_state
                     .borrow_mut()
-                    .nodes
-                    .get_mut(index as usize)
-                    .unwrap();
+                    .get_node_ref_mut(index as usize)?;
 
                 if node_ref_entry.is_some() {
-                    todo!()
+                    return Err("node set while reading node".into());
                 }
 
                 *node_ref_entry = Some(NodeRef::Internal(Rc::<T>::clone(&node)));
 
                 Ok(Some(NodeRef::Internal(node)))
             }
-            Some(NodeRef::Internal(node_ref)) => Ok(Some(NodeRef::Internal(
-                Rc::clone(node_ref).downcast().unwrap(),
-            ))),
+            Some(NodeRef::Internal(node_ref)) => {
+                let node_ref: Rc<T> = Rc::clone(node_ref)
+                    .downcast()
+                    .map_err(|_| "wrong node type")?;
+
+                Ok(Some(NodeRef::Internal(node_ref)))
+            }
             Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
                 path: Rc::clone(path),
             })),
@@ -473,7 +488,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
 
     pub fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T> {
         match self.node_or_null()? {
-            None => todo!(),
+            None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
         }
     }
@@ -486,7 +501,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         }
 
         if class_id != T::class_id() {
-            todo!()
+            return Err("class id does not match".into());
         }
 
         let mut node = T::default();
@@ -501,9 +516,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
     ) -> Result<Rc<dyn Any>> {
         match self.any_node_ref_or_null(read_fn)? {
-            None => todo!(),
+            None => Err("node is null".into()),
             Some(NodeRef::Internal(node_ref)) => Ok(node_ref),
-            Some(NodeRef::External { .. }) => todo!(),
+            Some(NodeRef::External { .. }) => Err("expected internal node ref".into()),
         }
     }
 
@@ -513,10 +528,10 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     ) -> Result<Option<NodeRef<dyn Any>>> {
         let index = match self.u32()? {
             0xffffffff => return Ok(None),
-            index => index - 1,
+            index => index,
         };
 
-        let node_ref_entry = self.node_state.borrow().nodes.get(index as usize).unwrap();
+        let node_ref_entry = self.node_state.borrow().get_node_ref(index as usize)?;
 
         match node_ref_entry {
             None => {
@@ -527,12 +542,10 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                 let node_ref_entry = self
                     .node_state
                     .borrow_mut()
-                    .nodes
-                    .get_mut(index as usize)
-                    .unwrap();
+                    .get_node_ref_mut(index as usize)?;
 
                 if node_ref_entry.is_some() {
-                    todo!()
+                    return Err("node set while reading node".into());
                 }
 
                 *node_ref_entry = Some(NodeRef::Internal(Rc::clone(&node)));
@@ -552,11 +565,19 @@ fn read_id_index<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Re
         let version = d.u32()?;
 
         if version != ID_VERSION {
-            todo!()
+            return Err("invalid id version".into());
         }
 
         d.id_state.borrow_mut().seen_id = true;
     }
 
     d.u32()
+}
+
+fn bool_from_u8(x: u8) -> Result<bool> {
+    match x {
+        0 => Ok(false),
+        1 => Ok(true),
+        _ => Err("expected boolean value".into()),
+    }
 }

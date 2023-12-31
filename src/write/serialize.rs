@@ -16,6 +16,12 @@ impl IdState {
     }
 }
 
+impl Default for IdState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub trait IdStateMut {
     fn borrow(&self) -> &IdState;
     fn borrow_mut(&mut self) -> &mut IdState;
@@ -52,6 +58,12 @@ impl NodeState {
 
     pub const fn num_nodes(&self) -> u32 {
         self.num_nodes
+    }
+}
+
+impl Default for NodeState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
