@@ -55,7 +55,7 @@ impl<T: IdStateMut> IdStateMut for &mut T {
 }
 
 pub enum NodeRef<T: ?Sized> {
-    Internal(Rc<T>),
+    Internal { node: Rc<T> },
     External { path: Rc<Path> },
 }
 
@@ -66,7 +66,7 @@ pub struct NodeState {
 impl NodeState {
     pub fn new(num_nodes: usize) -> Self {
         Self {
-            nodes: iter::repeat_with(|| None).take(num_nodes).collect(),
+            nodes: repeat_n_with(num_nodes, || None),
         }
     }
 
@@ -291,7 +291,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         n: usize,
         mut read_fn: impl FnMut(&mut Self) -> Result<T>,
     ) -> Result<Vec<T>> {
-        iter::repeat_with(|| read_fn(self)).take(n).collect()
+        repeat_n_with(n, || read_fn(self))
     }
 
     pub fn list<T>(&mut self, read_fn: impl FnMut(&mut Self) -> Result<T>) -> Result<Vec<T>> {
@@ -403,7 +403,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
             .ok_or("node is null")?;
 
         match node_ref {
-            NodeRef::Internal(_) => Err("expected external node ref".into()),
+            NodeRef::Internal { .. } => Err("expected external node ref".into()),
             NodeRef::External { path } => Ok(Rc::clone(path)),
         }
     }
@@ -424,7 +424,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     ) -> Result<Option<Rc<T>>> {
         match self.node_ref_or_null()? {
             None => Ok(None),
-            Some(NodeRef::Internal(node_ref)) => Ok(Some(node_ref)),
+            Some(NodeRef::Internal { node }) => Ok(Some(node)),
             Some(NodeRef::External { .. }) => Err("expected internal node ref".into()),
         }
     }
@@ -469,16 +469,16 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                     return Err("node set while reading node".into());
                 }
 
-                *node_ref_entry = Some(NodeRef::Internal(Rc::<T>::clone(&node)));
+                *node_ref_entry = Some(NodeRef::Internal {
+                    node: Rc::<T>::clone(&node),
+                });
 
-                Ok(Some(NodeRef::Internal(node)))
+                Ok(Some(NodeRef::Internal { node }))
             }
-            Some(NodeRef::Internal(node_ref)) => {
-                let node_ref: Rc<T> = Rc::clone(node_ref)
-                    .downcast()
-                    .map_err(|_| "wrong node type")?;
+            Some(NodeRef::Internal { node }) => {
+                let node: Rc<T> = Rc::clone(node).downcast().map_err(|_| "wrong node type")?;
 
-                Ok(Some(NodeRef::Internal(node_ref)))
+                Ok(Some(NodeRef::Internal { node }))
             }
             Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
                 path: Rc::clone(path),
@@ -517,7 +517,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     ) -> Result<Rc<dyn Any>> {
         match self.any_node_ref_or_null(read_fn)? {
             None => Err("node is null".into()),
-            Some(NodeRef::Internal(node_ref)) => Ok(node_ref),
+            Some(NodeRef::Internal { node }) => Ok(node),
             Some(NodeRef::External { .. }) => Err("expected internal node ref".into()),
         }
     }
@@ -548,11 +548,15 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                     return Err("node set while reading node".into());
                 }
 
-                *node_ref_entry = Some(NodeRef::Internal(Rc::clone(&node)));
+                *node_ref_entry = Some(NodeRef::Internal {
+                    node: Rc::clone(&node),
+                });
 
-                Ok(Some(NodeRef::Internal(node)))
+                Ok(Some(NodeRef::Internal { node }))
             }
-            Some(NodeRef::Internal(node_ref)) => Ok(Some(NodeRef::Internal(Rc::clone(node_ref)))),
+            Some(NodeRef::Internal { node }) => Ok(Some(NodeRef::Internal {
+                node: Rc::clone(node),
+            })),
             Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
                 path: Rc::clone(path),
             })),
@@ -566,6 +570,10 @@ fn bool_from_u8(x: u8) -> Result<bool> {
         1 => Ok(true),
         _ => Err("expected a boolean".into()),
     }
+}
+
+fn repeat_n_with<T, V: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -> V {
+    iter::repeat_with(repeater).take(n).collect()
 }
 
 fn read_id_index<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<u32> {

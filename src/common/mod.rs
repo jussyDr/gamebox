@@ -4,7 +4,10 @@ mod rc;
 pub use file_ref::*;
 pub use rc::*;
 
-use std::io::Read;
+use std::{
+    io::Read,
+    iter::{self, Take},
+};
 
 use crate::read::{deserialize::Deserializer, Result};
 
