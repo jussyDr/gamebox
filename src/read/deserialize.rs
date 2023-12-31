@@ -560,24 +560,24 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 }
 
+fn bool_from_u8(x: u8) -> Result<bool> {
+    match x {
+        0 => Ok(false),
+        1 => Ok(true),
+        _ => Err("expected a boolean".into()),
+    }
+}
+
 fn read_id_index<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<u32> {
     if !d.id_state.borrow().seen_id {
         let version = d.u32()?;
 
         if version != ID_VERSION {
-            return Err("invalid id version".into());
+            return Err("invalid identifier version".into());
         }
 
         d.id_state.borrow_mut().seen_id = true;
     }
 
     d.u32()
-}
-
-fn bool_from_u8(x: u8) -> Result<bool> {
-    match x {
-        0 => Ok(false),
-        1 => Ok(true),
-        _ => Err("expected boolean value".into()),
-    }
 }

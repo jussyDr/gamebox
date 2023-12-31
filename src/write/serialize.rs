@@ -122,7 +122,7 @@ impl<W: Write, I, N> Serializer<W, I, N> {
         self.bytes(s.as_bytes())
     }
 
-    pub fn byte_buffer(
+    pub fn buffer(
         &mut self,
         write_fn: impl Fn(&mut Serializer<&mut Vec<u8>, &mut I, &mut N>) -> Result<()>,
     ) -> Result<()> {
