@@ -8,7 +8,7 @@ use crate::{
 };
 
 use super::{
-    serialize::{IdStateMut, NodeState, NodeStateMut, Serializer},
+    serialize::{IdStateRef, NodeState, NodeStateMut, Serializer},
     Result,
 };
 
@@ -106,7 +106,7 @@ pub struct HeaderChunk<T> {
 pub type HeaderChunkWriteFn<T> = fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result;
 
 pub trait WriteBody {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+    fn write_body<W: Write, I: IdStateRef, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result;
