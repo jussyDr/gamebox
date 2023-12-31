@@ -1,19 +1,17 @@
-use std::{borrow::BorrowMut, io::Write};
-
-use indexmap::IndexSet;
+use std::{borrow::BorrowMut, collections::HashMap, io::Write};
 
 use crate::write::Result;
 
 pub struct IdState {
     written_id: bool,
-    ids: IndexSet<String>,
+    ids: HashMap<String, u16>,
 }
 
 impl IdState {
     pub fn new() -> Self {
         Self {
             written_id: false,
-            ids: IndexSet::new(),
+            ids: HashMap::new(),
         }
     }
 }
@@ -143,14 +141,16 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
     pub fn id(&mut self, id: &str) -> Result<()> {
         write_id_version(self)?;
 
-        match self.id_state.borrow().ids.get_index_of(id) {
+        match self.id_state.borrow().ids.get(id) {
             None => {
-                self.id_state.borrow_mut().ids.insert(id.to_owned());
+                let index = self.id_state.borrow().ids.len() as u16 + 1;
+
+                self.id_state.borrow_mut().ids.insert(id.to_owned(), index);
 
                 self.u32(0x40000000)?;
                 self.string(id)
             }
-            Some(index) => self.u32(0x40000000 | ((index as u32 + 1) & 0x00003fff)),
+            Some(&index) => self.u32(0x40000000 | ((index as u32) & 0x00003fff)),
         }
     }
 

@@ -9,7 +9,6 @@ name = "test"
 harness = false
 
 [dependencies]
-indexmap = "2.1.0"
 lzo1x-1 = "0.1.0"
 quick-xml = "0.31.0"
 serde_jsonrc = "0.1.0"
