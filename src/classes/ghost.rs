@@ -5,7 +5,7 @@ use std::io::{Read, Seek};
 use crate::{
     common::{ClassId, EngineId},
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateMut},
+        deserialize::{Deserializer, IdStateRef, NodeStateRef},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
@@ -35,7 +35,7 @@ impl ClassId for EntRecordData {
 }
 
 impl ReadBody for Ghost {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -44,7 +44,7 @@ impl ReadBody for Ghost {
 }
 
 impl BodyChunks for Ghost {
-    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -161,7 +161,7 @@ impl BodyChunks for Ghost {
 }
 
 impl Ghost {
-    fn read_chunk_0<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn read_chunk_0<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -407,7 +407,7 @@ impl Ghost2 {
 }
 
 impl ReadBody for EntRecordData {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -416,7 +416,7 @@ impl ReadBody for EntRecordData {
 }
 
 impl BodyChunks for EntRecordData {
-    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateMut>(
+    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0911f000,

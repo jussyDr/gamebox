@@ -3,7 +3,7 @@ use std::io::{BufRead, Read, Seek};
 use crate::{
     common::{ClassId, EngineId},
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateMut},
+        deserialize::{Deserializer, IdStateRef, NodeStateRef},
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
@@ -39,7 +39,7 @@ impl HeaderChunks for Prefab {
 }
 
 impl ReadBody for Prefab {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

@@ -1,6 +1,6 @@
 use std::{
     any::Any,
-    cell::Cell,
+    cell::{Cell, OnceCell},
     cmp,
     io::{self, BufRead, Read, Seek, SeekFrom},
     iter,
@@ -54,65 +54,51 @@ pub enum NodeRef<T: ?Sized> {
 }
 
 pub struct NodeState {
-    nodes: Box<[Option<NodeRef<dyn Any>>]>,
+    nodes: Box<[OnceCell<NodeRef<dyn Any>>]>,
 }
 
 impl NodeState {
     pub fn new(num_nodes: usize) -> Self {
         Self {
-            nodes: repeat_n_with(num_nodes, || None),
+            nodes: repeat_n_with(num_nodes, OnceCell::new),
         }
     }
 
-    pub fn get_node_ref(&self, index: usize) -> Result<&Option<NodeRef<dyn Any>>> {
+    pub fn get(&self, index: usize) -> Result<&OnceCell<NodeRef<dyn Any>>> {
         self.nodes
             .get(index - 1)
             .ok_or("node index out of range".into())
     }
 
-    pub fn get_node_ref_mut(&mut self, index: usize) -> Result<&mut Option<NodeRef<dyn Any>>> {
-        self.nodes
-            .get_mut(index - 1)
-            .ok_or("node index out of range".into())
+    pub fn set(&self, index: usize, node_ref: NodeRef<dyn Any>) -> Result<()> {
+        self.get(index)?
+            .set(node_ref)
+            .map_err(|_| "node already read".into())
     }
 
     pub fn set_ref(&mut self, index: usize, path: PathBuf) -> Result<()> {
-        let entry = self.get_node_ref_mut(index)?;
-
-        if entry.is_some() {
-            return Err("node with the given index already exists".into());
-        }
-
-        *entry = Some(NodeRef::External {
-            path: Rc::from(path),
-        });
-
-        Ok(())
+        self.set(
+            index,
+            NodeRef::External {
+                path: Rc::from(path),
+            },
+        )
     }
 }
 
-pub trait NodeStateMut {
+pub trait NodeStateRef {
     fn borrow(&self) -> &NodeState;
-    fn borrow_mut(&mut self) -> &mut NodeState;
 }
 
-impl NodeStateMut for NodeState {
+impl NodeStateRef for NodeState {
     fn borrow(&self) -> &NodeState {
         self
     }
-
-    fn borrow_mut(&mut self) -> &mut NodeState {
-        self
-    }
 }
 
-impl<T: NodeStateMut> NodeStateMut for &mut T {
+impl<T: NodeStateRef> NodeStateRef for &T {
     fn borrow(&self) -> &NodeState {
         (**self).borrow()
-    }
-
-    fn borrow_mut(&mut self) -> &mut NodeState {
-        (**self).borrow_mut()
     }
 }
 
@@ -183,13 +169,13 @@ impl<R, I, N> Deserializer<R, I, N> {
         &mut self.reader
     }
 
-    pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &I, &mut N> {
+    pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &I, &N> {
         let inner = Take {
             reader: &mut self.reader,
             limit,
         };
 
-        Deserializer::new(inner, &self.id_state, &mut self.node_state)
+        Deserializer::new(inner, &self.id_state, &self.node_state)
     }
 
     pub fn take_with<IS, NS>(
@@ -382,7 +368,7 @@ impl<R: Read, I: IdStateRef, N> Deserializer<R, I, N> {
     }
 }
 
-impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
+impl<R: Read, I, N: NodeStateRef> Deserializer<R, I, N> {
     pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
         let index = match self.u32()? {
             0xffffffff => return Err("node index is null".into()),
@@ -392,8 +378,8 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let node_ref = self
             .node_state
             .borrow()
-            .get_node_ref(index as usize)?
-            .as_ref()
+            .get(index as usize)?
+            .get()
             .ok_or("node is null")?;
 
         match node_ref {
@@ -403,7 +389,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     }
 }
 
-impl<R: Read + Seek, I: IdStateRef, N: NodeStateMut> Deserializer<R, I, N> {
+impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     pub fn internal_node_ref<T: 'static + Default + ClassId + ReadBody>(
         &mut self,
     ) -> Result<Rc<T>> {
@@ -438,9 +424,7 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateMut> Deserializer<R, I, N> {
             index => index,
         };
 
-        let node_ref_entry = self.node_state.borrow().get_node_ref(index as usize)?;
-
-        match node_ref_entry {
+        match self.node_state.borrow().get(index as usize)?.get() {
             None => {
                 let class_id = self.u32()?;
 
@@ -454,18 +438,12 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateMut> Deserializer<R, I, N> {
 
                 let node = Rc::new(node);
 
-                let node_ref_entry = self
-                    .node_state
-                    .borrow_mut()
-                    .get_node_ref_mut(index as usize)?;
-
-                if node_ref_entry.is_some() {
-                    return Err("node set while reading node".into());
-                }
-
-                *node_ref_entry = Some(NodeRef::Internal {
-                    node: Rc::<T>::clone(&node),
-                });
+                self.node_state.borrow().set(
+                    index as usize,
+                    NodeRef::Internal {
+                        node: Rc::<T>::clone(&node),
+                    },
+                )?;
 
                 Ok(Some(NodeRef::Internal { node }))
             }
@@ -525,26 +503,18 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateMut> Deserializer<R, I, N> {
             index => index,
         };
 
-        let node_ref_entry = self.node_state.borrow().get_node_ref(index as usize)?;
-
-        match node_ref_entry {
+        match self.node_state.borrow().get(index as usize)?.get() {
             None => {
                 let class_id = self.u32()?;
 
                 let node = read_fn(self, class_id)?;
 
-                let node_ref_entry = self
-                    .node_state
-                    .borrow_mut()
-                    .get_node_ref_mut(index as usize)?;
-
-                if node_ref_entry.is_some() {
-                    return Err("node set while reading node".into());
-                }
-
-                *node_ref_entry = Some(NodeRef::Internal {
-                    node: Rc::clone(&node),
-                });
+                self.node_state.borrow().set(
+                    index as usize,
+                    NodeRef::Internal {
+                        node: Rc::clone(&node),
+                    },
+                )?;
 
                 Ok(Some(NodeRef::Internal { node }))
             }

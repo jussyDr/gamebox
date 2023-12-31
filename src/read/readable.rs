@@ -10,7 +10,7 @@ use crate::common::{
 };
 
 use super::{
-    deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateMut, Take},
+    deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateRef, Take},
     BodyOptions, HeaderOptions, Result,
 };
 
@@ -203,7 +203,7 @@ fn read_folders<R: Read, I, N>(
     Ok(())
 }
 
-pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -265,7 +265,7 @@ pub type NormalBodyChunkReadFn<T, R, I, N> =
     fn(n: &mut T, d: &mut Deserializer<R, I, N>) -> Result<()>;
 
 pub type SkippableBodyChunkReadFn<T, R, I, N> =
-    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &I, &mut N>) -> Result<()>;
+    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &I, &N>) -> Result<()>;
 
 pub trait Sealed {
     fn read(
@@ -284,14 +284,14 @@ pub trait HeaderChunks {
 }
 
 pub trait BodyChunks {
-    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
     where
         Self: Sized;
 }
 
 pub trait ReadBody {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()>;
