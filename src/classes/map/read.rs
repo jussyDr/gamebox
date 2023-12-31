@@ -16,8 +16,9 @@ use crate::{
 
 use super::{
     media::{MediaClip, MediaClipGroup},
-    Block, BlockKind, Color, Coord, Direction, EmbeddedObjects, FreeBlock, Item, LightmapQuality,
-    Map, MedalTimes, NormalBlock, PhaseOffset, Position, Rotation,
+    Block, BlockKind, ChallengeParameters, CollectorList, Color, Coord, Direction, EmbeddedObjects,
+    FreeBlock, Item, LightmapQuality, Map, MedalTimes, NormalBlock, PhaseOffset, Position,
+    Rotation,
 };
 
 impl Readable for Map {}
@@ -307,7 +308,7 @@ impl Map {
             && gold != 0xffffffff
             && author != 0xffffffff
         {
-            self.medal_times = Some(MedalTimes {
+            self.params.medal_times = Some(MedalTimes {
                 bronze,
                 silver,
                 gold,
@@ -341,8 +342,8 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
-        self.ty = d.string()?;
-        self.style = d.string()?;
+        self.params.ty = d.string()?;
+        self.params.style = d.string()?;
         let _lightmap_cache_id = d.u64()?;
         let _lightmap_version = d.u8()?; // 8
         let _title_id = d.id()?; // "TMStadium"
@@ -398,8 +399,8 @@ impl Map {
                         todo!()
                     }
 
-                    self.ty = attributes.get_str(b"maptype").unwrap().into();
-                    self.style = attributes.get_str(b"mapstyle").unwrap().to_owned();
+                    self.params.ty = attributes.get_str(b"maptype").unwrap().into();
+                    self.params.style = attributes.get_str(b"mapstyle").unwrap().to_owned();
                     attributes.get(b"validated").unwrap();
                     attributes.get(b"nblaps").unwrap();
                     self.cost = attributes.get_u32(b"displaycost").unwrap();
@@ -423,7 +424,7 @@ impl Map {
                         && gold != 0xffffffff
                         && author != 0xffffffff
                     {
-                        self.medal_times = Some(MedalTimes {
+                        self.params.medal_times = Some(MedalTimes {
                             bronze,
                             silver,
                             gold,
@@ -481,12 +482,11 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.internal_node_ref::<CollectorList>()?;
-        let params = d.internal_node_ref::<ChallengeParameters>()?;
+        self.params = d
+            .internal_node_ref::<ChallengeParameters>()?
+            .as_ref()
+            .clone();
         let _map_kind = d.u32()?; // 6
-
-        self.medal_times = params.medal_times.clone();
-        self.ty = params.ty.clone();
-        self.style = params.style.clone();
 
         Ok(())
     }
@@ -1163,14 +1163,6 @@ impl Map {
     }
 }
 
-#[derive(Default)]
-struct CollectorList;
-
-impl ClassId for CollectorList {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x01b;
-}
-
 impl ReadBody for CollectorList {
     fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
         &mut self,
@@ -1197,18 +1189,6 @@ impl CollectorList {
 
         Ok(())
     }
-}
-
-#[derive(Default)]
-struct ChallengeParameters {
-    medal_times: Option<MedalTimes>,
-    ty: String,
-    style: String,
-}
-
-impl ClassId for ChallengeParameters {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x05b;
 }
 
 impl ReadBody for ChallengeParameters {

@@ -17,15 +17,13 @@ use self::media::{MediaClip, MediaClipGroup};
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
 pub struct Map {
-    medal_times: Option<MedalTimes>,
     cost: u32,
     id: RcStr,
     author_id: RcStr,
     name: String,
-    ty: String,
-    style: String,
     author_name: String,
     author_region: String,
+    params: ChallengeParameters,
     blocks: Vec<Block>,
     items: Vec<Item>,
     baked_blocks: Vec<Block>,
@@ -45,7 +43,7 @@ impl ClassId for Map {
 impl Map {
     /// Medal time objectives of the map.
     pub fn medal_times(&self) -> Option<&MedalTimes> {
-        self.medal_times.as_ref()
+        self.params.medal_times.as_ref()
     }
 
     /// (Display) cost of the map.
@@ -82,7 +80,7 @@ impl Map {
     ///
     /// Usually `TrackMania\TM_Race` or `TrackMania\TM_Royal`.
     pub fn ty(&self) -> &str {
-        &self.ty
+        &self.params.ty
     }
 
     /// Name of the map author.
@@ -417,4 +415,24 @@ pub enum LightmapQuality {
     VeryLow,
     /// Lowest.
     Lowest,
+}
+
+#[derive(Default)]
+struct CollectorList;
+
+impl ClassId for CollectorList {
+    const ENGINE: u8 = EngineId::GAME;
+    const CLASS: u16 = 0x01b;
+}
+
+#[derive(Clone, Default)]
+struct ChallengeParameters {
+    medal_times: Option<MedalTimes>,
+    ty: String,
+    style: String,
+}
+
+impl ClassId for ChallengeParameters {
+    const ENGINE: u8 = EngineId::GAME;
+    const CLASS: u16 = 0x05b;
 }

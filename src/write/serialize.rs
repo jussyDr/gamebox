@@ -1,8 +1,15 @@
-use std::{cell::Cell, io::Write};
+use std::{cell::Cell, hash::Hash, io::Write};
 
 use elsa::FrozenMap;
 
-use crate::{common::ID_FLAG_BIT, common::ID_INDEX_MASK, common::ID_VERSION, write::Result};
+use crate::{
+    common::ID_FLAG_BIT,
+    common::ID_INDEX_MASK,
+    common::{ClassId, ID_VERSION, NODE_END},
+    write::Result,
+};
+
+use super::writable::WriteBody;
 
 pub struct IdState {
     written_id: Cell<bool>,
@@ -42,17 +49,19 @@ impl<T: IdStateRef> IdStateRef for &mut T {
 
 pub struct NodeState {
     num_nodes: Cell<u32>,
+    _nodes: FrozenMap<(), u32>,
 }
 
 impl NodeState {
     pub fn new() -> Self {
         Self {
-            num_nodes: Cell::new(1),
+            num_nodes: Cell::new(0),
+            _nodes: FrozenMap::new(),
         }
     }
 
     pub fn num_nodes(&self) -> u32 {
-        self.num_nodes.get()
+        self.num_nodes.get() + 1
     }
 }
 
@@ -180,11 +189,23 @@ impl<W: Write, I: IdStateRef, N> Serializer<W, I, N> {
     }
 }
 
-impl<W: Write, I, N: NodeStateRef> Serializer<W, I, N> {
-    pub fn node_index(&mut self) -> Result {
-        let num_nodes = self.node_state.borrow().num_nodes.get();
-        self.u32(num_nodes)?;
-        self.node_state.borrow().num_nodes.set(num_nodes + 1);
+impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
+    pub fn node_ref<T: Eq + Hash + ClassId + WriteBody>(&mut self, _node: T) -> Result {
+        unimplemented!()
+    }
+
+    pub fn unique_node_ref<T: ClassId + WriteBody>(&mut self, node: &T) -> Result {
+        let index = self.node_state.borrow().num_nodes.get() + 1;
+
+        self.u32(index)?;
+
+        self.node_state.borrow().num_nodes.set(index);
+
+        self.u32(T::class_id())?;
+
+        node.write_body(self)?;
+
+        self.u32(NODE_END)?;
 
         Ok(())
     }

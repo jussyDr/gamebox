@@ -6,7 +6,7 @@ use crate::write::{
     Result, Writable,
 };
 
-use super::Map;
+use super::{ChallengeParameters, CollectorList, Map};
 
 impl Writable for Map {}
 
@@ -147,8 +147,8 @@ impl Map {
         s.u32(0)?;
         s.u32(0)?;
         s.u32(0)?;
-        s.string(&self.ty)?;
-        s.string(&self.style)?;
+        s.string(&self.params.ty)?;
+        s.string(&self.params.style)?;
         s.u32(0x4983cc85)?;
         s.u32(0xff58b673)?;
         s.u8(0)?;
@@ -190,8 +190,8 @@ impl Map {
                         .with_attribute(("envir", "Stadium"))
                         .with_attribute(("mood", "Day"))
                         .with_attribute(("type", "Race"))
-                        .with_attribute(("maptype", self.ty.as_str()))
-                        .with_attribute(("mapstyle", self.style.as_str()))
+                        .with_attribute(("maptype", self.params.ty.as_str()))
+                        .with_attribute(("mapstyle", self.params.style.as_str()))
                         .with_attribute(("validated", "0"))
                         .with_attribute(("nblaps", "0"))
                         .with_attribute(("displaycost", self.cost.to_string().as_str()))
@@ -204,7 +204,7 @@ impl Map {
                         .with_attribute(("id", ""))
                         .write_empty()?;
 
-                    if let Some(ref medal_times) = self.medal_times {
+                    if let Some(ref medal_times) = self.params.medal_times {
                         xml_writer
                             .create_element("times")
                             .with_attribute(("bronze", medal_times.bronze.to_string().as_str()))
@@ -272,50 +272,13 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_17<W: Write, I, N: NodeStateRef>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_17<W: Write, I: IdStateRef, N: NodeStateRef>(
+        &self,
+        s: &mut Serializer<W, I, N>,
+    ) -> Result {
         s.u32(0x03043011)?;
-        s.node_index()?;
-        s.u32(0x0301b000)?;
-        s.u32(0x0301b000)?;
-        s.u32(0)?;
-        s.u32(0xfacade01)?;
-        s.node_index()?;
-        s.u32(0x0305b000)?;
-        s.u32(0x0305b001)?;
-        s.u32(0)?;
-        s.u32(0)?;
-        s.u32(0)?;
-        s.u32(0)?;
-        s.u32(0x0305b004)?;
-        s.u32(0xffffffff)?;
-        s.u32(0xffffffff)?;
-        s.u32(0xffffffff)?;
-        s.u32(0xffffffff)?;
-        s.u32(0)?;
-        s.u32(0x0305b008)?;
-        s.u32(60000)?;
-        s.u32(0)?;
-        s.u32(0x0305b00a)?;
-        s.u32(0x534b4950)?;
-        s.buffer(|s| {
-            s.u32(0)?;
-            s.u32(0xffffffff)?;
-            s.u32(0xffffffff)?;
-            s.u32(0xffffffff)?;
-            s.u32(0xffffffff)?;
-            s.u32(60000)?;
-            s.u32(0)
-        })?;
-        s.u32(0x0305b00d)?;
-        s.u32(0xffffffff)?;
-        s.u32(0x0305b00e)?;
-        s.u32(0x534b4950)?;
-        s.buffer(|s| {
-            s.string(&self.ty)?;
-            s.string(&self.style)?;
-            s.u32(0)
-        })?;
-        s.u32(0xfacade01)?;
+        s.unique_node_ref(&CollectorList)?;
+        s.unique_node_ref(&self.params)?;
         s.u32(6)?;
 
         Ok(())
@@ -941,6 +904,103 @@ impl Map {
             s.u32(0)?;
             s.u32(0)?;
             s.u32(300000)
+        })?;
+
+        Ok(())
+    }
+}
+
+impl WriteBody for CollectorList {
+    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
+        &self,
+        s: &mut Serializer<W, I, N>,
+    ) -> Result {
+        self.write_chunk_0(s)?;
+
+        Ok(())
+    }
+}
+
+impl CollectorList {
+    fn write_chunk_0<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0301b000)?;
+        s.u32(0)?;
+
+        Ok(())
+    }
+}
+
+impl WriteBody for ChallengeParameters {
+    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
+        &self,
+        s: &mut Serializer<W, I, N>,
+    ) -> Result {
+        self.write_chunk_1(s)?;
+
+        Ok(())
+    }
+}
+
+impl ChallengeParameters {
+    fn write_chunk_1<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0305b001)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+        s.u32(0)?;
+
+        Ok(())
+    }
+
+    fn write_chunk_4<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0305b004)?;
+        s.u32(0xffffffff)?;
+        s.u32(0xffffffff)?;
+        s.u32(0xffffffff)?;
+        s.u32(0xffffffff)?;
+        s.u32(0)?;
+
+        Ok(())
+    }
+
+    fn write_chunk_8<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0305b008)?;
+        s.u32(60000)?;
+        s.u32(0)?;
+
+        Ok(())
+    }
+
+    fn write_chunk_10<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0305b00a)?;
+        s.u32(0x534b4950)?;
+        s.buffer(|s| {
+            s.u32(0)?;
+            s.u32(0xffffffff)?;
+            s.u32(0xffffffff)?;
+            s.u32(0xffffffff)?;
+            s.u32(0xffffffff)?;
+            s.u32(60000)?;
+            s.u32(0)
+        })?;
+
+        Ok(())
+    }
+
+    fn write_chunk_13<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0305b00d)?;
+        s.u32(0xffffffff)?;
+
+        Ok(())
+    }
+
+    fn write_chunk_14<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x0305b00e)?;
+        s.u32(0x534b4950)?;
+        s.buffer(|s| {
+            s.string(&self.ty)?;
+            s.string(&self.style)?;
+            s.u32(0)
         })?;
 
         Ok(())
