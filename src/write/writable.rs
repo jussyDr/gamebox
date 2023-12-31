@@ -8,7 +8,7 @@ use crate::{
 };
 
 use super::{
-    serialize::{IdStateRef, NodeState, NodeStateMut, Serializer},
+    serialize::{IdStateRef, NodeState, NodeStateRef, Serializer},
     Result,
 };
 
@@ -51,11 +51,11 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
         header_data
     };
 
-    let mut node_state = NodeState::new();
+    let node_state = NodeState::new();
     let mut body = vec![];
 
     {
-        let mut s = Serializer::new(&mut body, IdState::new(), &mut node_state);
+        let mut s = Serializer::new(&mut body, IdState::new(), &node_state);
         T::write_body(node, &mut s)?;
     }
 
@@ -106,7 +106,7 @@ pub struct HeaderChunk<T> {
 pub type HeaderChunkWriteFn<T> = fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result;
 
 pub trait WriteBody {
-    fn write_body<W: Write, I: IdStateRef, N: NodeStateMut>(
+    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result;

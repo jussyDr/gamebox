@@ -1,7 +1,7 @@
 use std::{f32::consts::FRAC_PI_4, io::Write};
 
 use crate::write::{
-    serialize::{IdStateRef, NodeStateMut, Serializer},
+    serialize::{IdStateRef, NodeStateRef, Serializer},
     writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
     Result, Writable,
 };
@@ -46,7 +46,7 @@ impl HeaderChunks for Map {
 }
 
 impl WriteBody for Map {
-    fn write_body<W: Write, I: IdStateRef, N: NodeStateMut>(
+    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result {
@@ -272,7 +272,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_17<W: Write, I, N: NodeStateMut>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_17<W: Write, I, N: NodeStateRef>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043011)?;
         s.node_index()?;
         s.u32(0x0301b000)?;

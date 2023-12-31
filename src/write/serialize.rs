@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::Cell, io::Write};
+use std::{cell::Cell, io::Write};
 
 use elsa::FrozenMap;
 
@@ -41,16 +41,18 @@ impl<T: IdStateRef> IdStateRef for &mut T {
 }
 
 pub struct NodeState {
-    num_nodes: u32,
+    num_nodes: Cell<u32>,
 }
 
 impl NodeState {
     pub fn new() -> Self {
-        Self { num_nodes: 1 }
+        Self {
+            num_nodes: Cell::new(1),
+        }
     }
 
-    pub const fn num_nodes(&self) -> u32 {
-        self.num_nodes
+    pub fn num_nodes(&self) -> u32 {
+        self.num_nodes.get()
     }
 }
 
@@ -60,9 +62,21 @@ impl Default for NodeState {
     }
 }
 
-pub trait NodeStateMut: BorrowMut<NodeState> {}
+pub trait NodeStateRef {
+    fn borrow(&self) -> &NodeState;
+}
 
-impl<T: BorrowMut<NodeState>> NodeStateMut for T {}
+impl NodeStateRef for NodeState {
+    fn borrow(&self) -> &NodeState {
+        self
+    }
+}
+
+impl<T: NodeStateRef> NodeStateRef for &T {
+    fn borrow(&self) -> &NodeState {
+        (**self).borrow()
+    }
+}
 
 pub struct Serializer<W, I, N> {
     writer: W,
@@ -166,10 +180,11 @@ impl<W: Write, I: IdStateRef, N> Serializer<W, I, N> {
     }
 }
 
-impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
+impl<W: Write, I, N: NodeStateRef> Serializer<W, I, N> {
     pub fn node_index(&mut self) -> Result {
-        self.u32(self.node_state.borrow().num_nodes)?;
-        self.node_state.borrow_mut().num_nodes += 1;
+        let num_nodes = self.node_state.borrow().num_nodes.get();
+        self.u32(num_nodes)?;
+        self.node_state.borrow().num_nodes.set(num_nodes + 1);
 
         Ok(())
     }
