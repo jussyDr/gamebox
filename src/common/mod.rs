@@ -39,6 +39,12 @@ pub(crate) const SKIP: u32 = 0x534b4950;
 
 pub(crate) const NODE_END: u32 = 0xfacade01;
 
+pub(crate) const ID_VERSION: u32 = 3;
+
+pub(crate) const ID_INDEX_MASK: u32 = 0x00003fff;
+
+pub(crate) const ID_FLAG_BIT: u32 = 0x40000000;
+
 pub(crate) mod class {
     pub trait ClassId {
         const ENGINE: u8;

@@ -1,6 +1,6 @@
 use std::{borrow::BorrowMut, collections::HashMap, io::Write};
 
-use crate::write::Result;
+use crate::{write::Result, ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION};
 
 pub struct IdState {
     written_id: bool,
@@ -147,10 +147,10 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
 
                 self.id_state.borrow_mut().ids.insert(id.to_owned(), index);
 
-                self.u32(0x40000000)?;
+                self.u32(ID_FLAG_BIT)?;
                 self.string(id)
             }
-            Some(&index) => self.u32(0x40000000 | ((index as u32) & 0x00003fff)),
+            Some(&index) => self.u32(ID_FLAG_BIT | ((index as u32) & ID_INDEX_MASK)),
         }
     }
 
@@ -172,7 +172,7 @@ impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
 
 fn write_id_version<W: Write, I: IdStateMut, N>(s: &mut Serializer<W, I, N>) -> Result<()> {
     if !s.id_state.borrow().written_id {
-        s.u32(3)?;
+        s.u32(ID_VERSION)?;
 
         s.id_state.borrow_mut().written_id = true;
     }

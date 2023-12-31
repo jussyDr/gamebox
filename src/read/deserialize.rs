@@ -8,7 +8,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::{class::ClassId, read::Result};
+use crate::{class::ClassId, read::Result, ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION};
 
 use super::readable::ReadBody;
 
@@ -328,7 +328,7 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
 
 impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     pub fn null_id(&mut self) -> Result<()> {
-        let index = self.id_index()?;
+        let index = read_id_index(self)?;
 
         if index != 0xffffffff {
             todo!()
@@ -345,14 +345,14 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     }
 
     pub fn id_or_null(&mut self) -> Result<Option<Rc<str>>> {
-        let index = self.id_index()?;
+        let index = read_id_index(self)?;
 
         if index == 0xffffffff {
             return Ok(None);
         }
 
-        if index & 0xffffc000 == 0x40000000 {
-            let index = (index & 0x00003fff) as u16;
+        if index & !ID_INDEX_MASK == ID_FLAG_BIT {
+            let index = (index & ID_INDEX_MASK) as u16;
 
             if index == 0 {
                 let id = Rc::from(self.string()?);
@@ -367,20 +367,6 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
         } else {
             todo!()
         }
-    }
-
-    fn id_index(&mut self) -> Result<u32> {
-        if !self.id_state.borrow().seen_id {
-            let version = self.u32()?;
-
-            if version != 3 {
-                todo!()
-            }
-
-            self.id_state.borrow_mut().seen_id = true;
-        }
-
-        self.u32()
     }
 }
 
@@ -556,4 +542,18 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
             })),
         }
     }
+}
+
+fn read_id_index<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<u32> {
+    if !d.id_state.borrow().seen_id {
+        let version = d.u32()?;
+
+        if version != ID_VERSION {
+            todo!()
+        }
+
+        d.id_state.borrow_mut().seen_id = true;
+    }
+
+    d.u32()
 }
