@@ -102,6 +102,8 @@ pub const ID_INDEX_MASK: u32 = 0x00003fff;
 
 pub const ID_FLAG_BIT: u32 = 0x40000000;
 
+pub const UNKNOWN_BYTE: u8 = b'R';
+
 pub trait ClassId {
     const ENGINE: u8;
     const CLASS: u16;

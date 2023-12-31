@@ -1,7 +1,9 @@
 use std::io::Write;
 
 use crate::{
-    common::{ClassId, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION},
+    common::{
+        ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
+    },
     write::serialize::IdState,
 };
 
@@ -15,7 +17,7 @@ pub trait Sealed: ClassId + HeaderChunks + WriteBody {}
 pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
     node: &T,
     writer: impl Write,
-    compress_body: bool,
+    body_compression: Compression,
 ) -> Result {
     let header_data = {
         let mut id_state = IdState::new();
@@ -61,16 +63,10 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
 
     s.byte_array(GAMEBOX_FILE_SIGNATURE)?;
     s.u16(GAMEBOX_VERSION)?;
-    s.u8(b'B')?;
-    s.u8(b'U')?;
-
-    if compress_body {
-        s.u8(b'C')?;
-    } else {
-        s.u8(b'U')?;
-    }
-
-    s.u8(b'R')?;
+    FileFormat::Binary.write(&mut s)?;
+    Compression::Uncompressed.write(&mut s)?;
+    body_compression.write(&mut s)?;
+    s.u8(UNKNOWN_BYTE)?;
     s.u32(T::class_id())?;
     s.u32(header_data.len() as u32)?;
     s.bytes(&header_data)?;
@@ -78,15 +74,18 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
 
     s.u32(0)?;
 
-    if compress_body {
-        let mut buf = vec![0; lzo1x_1::worst_compress(body.len())];
-        let compressed_body = lzo1x_1::compress_to_slice(&body, &mut buf);
+    match body_compression {
+        Compression::Compressed => {
+            let mut buf = vec![0; lzo1x_1::worst_compress(body.len())];
+            let compressed_body = lzo1x_1::compress_to_slice(&body, &mut buf);
 
-        s.u32(body.len() as u32)?;
-        s.u32(compressed_body.len() as u32)?;
-        s.bytes(compressed_body)?;
-    } else {
-        s.bytes(&body)?;
+            s.u32(body.len() as u32)?;
+            s.u32(compressed_body.len() as u32)?;
+            s.bytes(compressed_body)?;
+        }
+        Compression::Uncompressed => {
+            s.bytes(&body)?;
+        }
     }
 
     Ok(())

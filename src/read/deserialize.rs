@@ -5,7 +5,7 @@ use std::{
     io::{self, BufRead, Read, Seek, SeekFrom},
     iter,
     mem::size_of,
-    path::{Path, PathBuf},
+    path::Path,
     rc::Rc,
 };
 
@@ -74,15 +74,6 @@ impl NodeState {
         self.get(index)?
             .set(node_ref)
             .map_err(|_| "node already read".into())
-    }
-
-    pub fn set_ref(&mut self, index: usize, path: PathBuf) -> Result<()> {
-        self.set(
-            index,
-            NodeRef::External {
-                path: Rc::from(path),
-            },
-        )
     }
 }
 

@@ -9,6 +9,8 @@ use std::{
     path::Path,
 };
 
+use crate::common::Compression;
+
 use self::writable::write_gbx;
 
 /// Error while writing a GameBox node.
@@ -109,7 +111,15 @@ impl Writer {
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
     pub fn write(&self, node: &impl Writable, writer: impl Write) -> Result {
-        write_gbx(node, writer, self.compress_body)
+        write_gbx(
+            node,
+            writer,
+            if self.compress_body {
+                Compression::Compressed
+            } else {
+                Compression::Uncompressed
+            },
+        )
     }
 
     /// Write the given `node` to a file at the given `path`.

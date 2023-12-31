@@ -1,16 +1,18 @@
 use std::{
     io::{BufRead, Cursor, Read, Seek},
     path::PathBuf,
+    rc::Rc,
 };
 
 use serde_jsonrc::Value;
 
 use crate::common::{
     ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
+    UNKNOWN_BYTE,
 };
 
 use super::{
-    deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateRef, Take},
+    deserialize::{Deserializer, IdState, IdStateRef, NodeRef, NodeState, NodeStateRef, Take},
     BodyOptions, HeaderOptions, Result,
 };
 
@@ -45,7 +47,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
     let body_compression = Compression::read(&mut d)?;
 
-    if d.u8()? != b'R' {
+    if d.u8()? != UNKNOWN_BYTE {
         return Err("invalid unknown byte".into());
     }
 
@@ -74,7 +76,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
     let num_nodes = d.u32()?;
 
-    let mut node_state = NodeState::new(num_nodes as usize);
+    let node_state = NodeState::new(num_nodes as usize);
 
     let num_node_refs = d.u32()?;
 
@@ -93,7 +95,12 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
             let mut file_path = folders[folder_index as usize].clone();
             file_path.push(file_name);
 
-            node_state.set_ref(node_index as usize, file_path)?;
+            node_state.set(
+                node_index as usize,
+                NodeRef::External {
+                    path: Rc::from(file_path),
+                },
+            )?;
 
             Ok(())
         })?;
@@ -156,7 +163,7 @@ fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
         Ok((chunk_id, chunk_size))
     })?;
 
-    let mut id_state = IdState::new();
+    let id_state = IdState::new();
 
     let mut header_chunk_entries = T::header_chunks();
 
