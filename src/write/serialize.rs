@@ -52,30 +52,30 @@ impl<T: IdStateRef> IdStateRef for &mut T {
     }
 }
 
-trait Node {
-    fn eq(&self, other: &dyn Node) -> bool;
+trait CachableNode {
+    fn eq(&self, other: &dyn CachableNode) -> bool;
 
     fn hash(&self) -> u64;
 
     fn as_any(&self) -> &dyn Any;
 }
 
-impl PartialEq for Box<dyn Node> {
+impl PartialEq for dyn CachableNode {
     fn eq(&self, other: &Self) -> bool {
-        Node::eq(self, other)
+        CachableNode::eq(self, other)
     }
 }
 
-impl Eq for Box<dyn Node> {}
+impl Eq for dyn CachableNode {}
 
-impl Hash for Box<dyn Node> {
+impl Hash for dyn CachableNode {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_u64(Node::hash(self));
+        state.write_u64(CachableNode::hash(self));
     }
 }
 
-impl<T: 'static + Eq + Hash> Node for T {
-    fn eq(&self, other: &dyn Node) -> bool {
+impl<T: 'static + Eq + Hash> CachableNode for T {
+    fn eq(&self, other: &dyn CachableNode) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<T>() {
             return self == other;
         }
@@ -96,7 +96,7 @@ impl<T: 'static + Eq + Hash> Node for T {
 
 pub struct NodeState {
     num_nodes: Cell<u32>,
-    nodes: FrozenMap<Box<dyn Node>, u32>,
+    nodes: FrozenMap<Box<dyn CachableNode>, u32>,
 }
 
 impl NodeState {
@@ -237,13 +237,13 @@ impl<W: Write, I: IdStateRef, N> Serializer<W, I, N> {
 }
 
 impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
-    pub fn node_ref<T: 'static + Eq + Hash + ClassId + WriteBody + Clone>(
-        &mut self,
-        node: T,
-    ) -> Result {
-        let node_2: Box<dyn Node> = Box::new(node.clone());
-
-        match self.node_state.borrow().nodes.get_copy(&node_2) {
+    pub fn node_ref<T: 'static + Eq + Hash + ClassId + WriteBody>(&mut self, node: T) -> Result {
+        match self
+            .node_state
+            .borrow()
+            .nodes
+            .get_copy(&node as &dyn CachableNode)
+        {
             None => {
                 let index = self.node_state.borrow().num_nodes.get() + 1;
 
@@ -257,7 +257,10 @@ impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
 
                 self.u32(NODE_END)?;
 
-                self.node_state.borrow().nodes.insert_copy(node_2, index);
+                self.node_state
+                    .borrow()
+                    .nodes
+                    .insert_copy(Box::new(node), index);
             }
             Some(index) => self.u32(index)?,
         }
