@@ -4,6 +4,7 @@ use std::{
     rc::Rc,
 };
 
+use lzo::lzo1x;
 use serde_jsonrc::Value;
 
 use crate::common::{
@@ -117,7 +118,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
                     let mut buf = vec![0; body_size as usize];
 
-                    let body = lzo1x_1::decompress_to_slice(&compressed_body, &mut buf).unwrap();
+                    let body = lzo1x::decompress_safe(&compressed_body, &mut buf).unwrap();
 
                     let reader = Cursor::new(body);
 

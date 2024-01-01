@@ -1,5 +1,7 @@
 use std::io::Write;
 
+use lzo::lzo1x;
+
 use crate::{
     common::{
         ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
@@ -76,8 +78,8 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
 
     match body_compression {
         Compression::Compressed => {
-            let mut buf = vec![0; lzo1x_1::worst_compress(body.len())];
-            let compressed_body = lzo1x_1::compress_to_slice(&body, &mut buf);
+            let mut buf = vec![0; lzo1x::worst_compress_size(body.len())];
+            let compressed_body = lzo1x::compress_1(&body, &mut buf).unwrap();
 
             s.u32(body.len() as u32)?;
             s.u32(compressed_body.len() as u32)?;

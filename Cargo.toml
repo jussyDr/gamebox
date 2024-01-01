@@ -10,6 +10,6 @@ harness = false
 
 [dependencies]
 elsa = { git = "https://github.com/jussyDr/elsa" }
-lzo1x-1 = "0.1.0"
+lzo = { git = "https://github.com/jussyDr/lzo" }
 quick-xml = "0.31.0"
 serde_jsonrc = "0.1.0"
