@@ -3,7 +3,7 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
@@ -17,9 +17,8 @@ use super::visual_indexed_triangles::VisualIndexedTriangles;
 #[derive(Default)]
 pub struct VegetTreeModel;
 
-impl ClassId for VegetTreeModel {
-    const ENGINE: u8 = EngineId::META;
-    const CLASS: u16 = 0x086;
+impl Class for VegetTreeModel {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::META, 134);
 }
 
 impl Readable for VegetTreeModel {}

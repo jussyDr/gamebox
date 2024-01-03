@@ -101,15 +101,6 @@ pub const ID_FLAG_BIT: u32 = 0x40000000;
 
 pub const UNKNOWN_BYTE: u8 = b'R';
 
-pub trait ClassId {
-    const ENGINE: u8;
-    const CLASS: u16;
-
-    fn class_id() -> u32 {
-        ((Self::ENGINE as u32) << 24) | ((Self::CLASS as u32) << 12)
-    }
-}
-
 pub fn read_compact_index<R: Read, I, N>(
     d: &mut Deserializer<R, I, N>,
     num_items: u32,
@@ -125,12 +116,49 @@ pub fn read_compact_index<R: Read, I, N>(
     }
 }
 
+pub trait Class {
+    const CLASS_ID: ClassId;
+}
+
 pub struct EngineId(u8);
 
 impl EngineId {
-    pub const GAME: u8 = 0x03;
-    pub const CONTROL: u8 = 0x07;
-    pub const PLUG: u8 = 0x09;
-    pub const GAME_DATA: u8 = 0x2e;
-    pub const META: u8 = 0x2f;
+    pub const GAME: Self = Self(3);
+    pub const CONTROL: Self = Self(7);
+    pub const PLUG: Self = Self(9);
+    pub const SCRIPT: Self = Self(17);
+    pub const GAME_DATA: Self = Self(46);
+    pub const META: Self = Self(47);
+}
+
+pub struct ClassId(u32);
+
+impl ClassId {
+    pub const fn new(engine_id: EngineId, class: u16) -> Self {
+        if class & 0xf000 != 0 {
+            panic!()
+        }
+
+        Self((engine_id.0 as u32) << 24 | (class as u32) << 12)
+    }
+
+    pub const fn get(&self) -> u32 {
+        self.0
+    }
+}
+
+pub struct ChunkId(u32);
+
+impl ChunkId {
+    pub const fn new(class_id: ClassId, chunk: u16) -> Self {
+        if chunk & 0xf000 != 0 {
+            panic!()
+        }
+
+        Self(class_id.get() | chunk as u32)
+    }
+
+    pub const fn chunk(&self) -> u16 {
+        (self.0 & 0x00000fff) as u16
+    }
 }

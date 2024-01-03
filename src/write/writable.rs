@@ -4,16 +4,16 @@ use lzo::lzo1x;
 
 use crate::{
     common::{
-        ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
+        Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
     },
     serialize::{IdState, IdStateRef, NodeState, NodeStateRef, Serializer},
 };
 
 use super::{BodyCompression, FastBodyCompression, Result, SlowBodyCompression};
 
-pub trait Sealed: ClassId + HeaderChunks + WriteBody {}
+pub trait Sealed: Class + HeaderChunks + WriteBody {}
 
-pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
+pub fn write_gbx<T: Class + HeaderChunks + WriteBody>(
     node: &T,
     writer: impl Write,
     body_compression: BodyCompression,
@@ -70,7 +70,7 @@ pub fn write_gbx<T: ClassId + HeaderChunks + WriteBody>(
     };
     compression.write(&mut s)?;
     s.u8(UNKNOWN_BYTE)?;
-    s.u32(T::class_id())?;
+    s.u32(T::CLASS_ID.get())?;
     s.u32(header_data.len() as u32)?;
     s.bytes(&header_data)?;
     s.u32(node_state.num_nodes())?;

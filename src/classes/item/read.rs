@@ -8,7 +8,7 @@ use crate::{
         collector::Collector,
         static_object_model::{MaterialUserInst, StaticObjectModel},
     },
-    common::{read_compact_index, ClassId, EngineId},
+    common::{read_compact_index, Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{
@@ -401,9 +401,8 @@ impl Item {
 
 struct ItemPlacementParam;
 
-impl ClassId for ItemPlacementParam {
-    const ENGINE: u8 = EngineId::GAME_DATA;
-    const CLASS: u16 = 0x020;
+impl Class for ItemPlacementParam {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 32);
 }
 
 impl Default for ItemPlacementParam {
@@ -547,9 +546,8 @@ impl ItemEntityModel {
 
 struct ItemEntityModelEdition;
 
-impl ClassId for ItemEntityModelEdition {
-    const ENGINE: u8 = EngineId::GAME_DATA;
-    const CLASS: u16 = 0x026;
+impl Class for ItemEntityModelEdition {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 38);
 }
 
 impl Default for ItemEntityModelEdition {
@@ -641,9 +639,8 @@ impl ItemEntityModelEdition {
 
 struct Crystal;
 
-impl ClassId for Crystal {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x003;
+impl Class for Crystal {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 3);
 }
 
 impl Default for Crystal {
@@ -839,9 +836,8 @@ impl Crystal {
 #[derive(Default)]
 struct MediaClipList;
 
-impl ClassId for MediaClipList {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x189;
+impl Class for MediaClipList {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 393);
 }
 
 impl ReadBody for MediaClipList {
@@ -877,9 +873,8 @@ impl MediaClipList {
 #[derive(Default)]
 struct ItemPlacement;
 
-impl ClassId for ItemPlacement {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x187;
+impl Class for ItemPlacement {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 391);
 }
 
 impl ReadBody for ItemPlacement {

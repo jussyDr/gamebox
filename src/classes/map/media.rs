@@ -8,7 +8,7 @@ use std::{
 
 use crate::{
     classes::ghost::EntRecordData,
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
@@ -25,9 +25,8 @@ pub struct MediaClipGroup {
     clips: Vec<MediaClipWithTrigger>,
 }
 
-impl ClassId for MediaClipGroup {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x07a;
+impl Class for MediaClipGroup {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 122);
 }
 
 impl MediaClipGroup {
@@ -113,9 +112,8 @@ pub struct MediaClip {
     tracks: Vec<Rc<MediaTrack>>,
 }
 
-impl ClassId for MediaClip {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x079;
+impl Class for MediaClip {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 121);
 }
 
 impl MediaClip {
@@ -192,9 +190,8 @@ impl MediaTrack {
     }
 }
 
-impl ClassId for MediaTrack {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x078;
+impl Class for MediaTrack {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 120);
 }
 
 impl ReadBody for MediaTrack {
@@ -1144,9 +1141,8 @@ impl MediaBlockEntity {
 #[derive(Default)]
 struct EffectSimi;
 
-impl ClassId for EffectSimi {
-    const ENGINE: u8 = EngineId::CONTROL;
-    const CLASS: u16 = 0x010;
+impl Class for EffectSimi {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::CONTROL, 16);
 }
 
 impl ReadBody for EffectSimi {

@@ -3,7 +3,7 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
@@ -17,9 +17,8 @@ use super::static_object_model::StaticObjectModel;
 #[derive(Default)]
 pub struct Prefab;
 
-impl ClassId for Prefab {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x145;
+impl Class for Prefab {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 325);
 }
 
 impl Readable for Prefab {}

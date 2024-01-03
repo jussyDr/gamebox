@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     Rgb,
 };
 
@@ -69,9 +69,8 @@ impl Default for ItemMaterial {
     }
 }
 
-impl ClassId for Item {
-    const ENGINE: u8 = EngineId::GAME_DATA;
-    const CLASS: u16 = 0x002;
+impl Class for Item {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 2);
 }
 
 impl Deref for Item {
@@ -93,7 +92,6 @@ struct ItemEntityModel {
     solid_to_model: Solid2Model,
 }
 
-impl ClassId for ItemEntityModel {
-    const ENGINE: u8 = EngineId::GAME_DATA;
-    const CLASS: u16 = 0x027;
+impl Class for ItemEntityModel {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 39);
 }

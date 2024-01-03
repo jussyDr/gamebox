@@ -8,7 +8,7 @@ mod write;
 use std::rc::Rc;
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     RcStr,
 };
 
@@ -35,9 +35,8 @@ pub struct Map {
     embedded_objects: Option<EmbeddedObjects>,
 }
 
-impl ClassId for Map {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x043;
+impl Class for Map {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 67);
 }
 
 impl Map {
@@ -420,9 +419,8 @@ pub enum LightmapQuality {
 #[derive(Default)]
 struct CollectorList;
 
-impl ClassId for CollectorList {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x01b;
+impl Class for CollectorList {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 27);
 }
 
 #[derive(Clone, Default)]
@@ -432,7 +430,6 @@ struct ChallengeParameters {
     style: String,
 }
 
-impl ClassId for ChallengeParameters {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x05b;
+impl Class for ChallengeParameters {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 91);
 }

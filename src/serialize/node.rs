@@ -9,7 +9,7 @@ use std::{
 use elsa::FrozenMap;
 
 use crate::{
-    common::{ClassId, NODE_END},
+    common::{Class, NODE_END},
     write::{writable::WriteBody, Error, Result},
 };
 
@@ -103,7 +103,7 @@ impl<T: NodeStateRef> NodeStateRef for &T {
 
 impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
     /// Write a cachable node reference.
-    pub fn node_ref<T: 'static + Eq + Hash + ClassId + WriteBody>(&mut self, node: T) -> Result {
+    pub fn node_ref<T: 'static + Eq + Hash + Class + WriteBody>(&mut self, node: T) -> Result {
         match self
             .node_state
             .borrow()
@@ -125,14 +125,14 @@ impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
     }
 
     /// Write an unique non-cached node reference.
-    pub fn unique_node_ref<T: ClassId + WriteBody>(&mut self, node: &T) -> Result {
+    pub fn unique_node_ref<T: Class + WriteBody>(&mut self, node: &T) -> Result {
         write_node_ref(self, node)?;
 
         Ok(())
     }
 }
 
-fn write_node_ref<W: Write, I: IdStateRef, N: NodeStateRef, T: ClassId + WriteBody>(
+fn write_node_ref<W: Write, I: IdStateRef, N: NodeStateRef, T: Class + WriteBody>(
     s: &mut Serializer<W, I, N>,
     node: &T,
 ) -> std::result::Result<u32, Error> {
@@ -142,7 +142,7 @@ fn write_node_ref<W: Write, I: IdStateRef, N: NodeStateRef, T: ClassId + WriteBo
 
     s.node_state.borrow().num_nodes.set(index);
 
-    s.u32(T::class_id())?;
+    s.u32(T::CLASS_ID.get())?;
 
     node.write_body(s)?;
 

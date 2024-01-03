@@ -9,7 +9,7 @@ use serde_jsonrc::Value;
 
 use crate::{
     common::{
-        ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
+        Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
         UNKNOWN_BYTE,
     },
     deserialize::{Deserializer, IdState, IdStateRef, NodeRef, NodeState, NodeStateRef, Take},
@@ -17,7 +17,7 @@ use crate::{
 
 use super::{BodyOptions, HeaderOptions, Result};
 
-pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
+pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
     reader: impl BufRead + Seek,
     header_options: HeaderOptions,
     body_options: BodyOptions,
@@ -54,7 +54,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
 
     let class_id = d.u32()?;
 
-    if class_id != T::class_id() {
+    if class_id != T::CLASS_ID.get() {
         return Err("class id does not match".into());
     }
 

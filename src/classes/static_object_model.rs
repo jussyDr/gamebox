@@ -1,7 +1,7 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
@@ -14,9 +14,8 @@ use super::{item::ItemMaterial, visual_indexed_triangles::VisualIndexedTriangles
 #[derive(Default)]
 pub struct StaticObjectModel;
 
-impl ClassId for StaticObjectModel {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x159;
+impl Class for StaticObjectModel {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 345);
 }
 
 impl ReadBody for StaticObjectModel {
@@ -71,9 +70,8 @@ impl ReadBody for StaticObjectModel {
 #[derive(Default, Clone)]
 pub struct Solid2Model;
 
-impl ClassId for Solid2Model {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x0bb;
+impl Class for Solid2Model {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 187);
 }
 
 impl ReadBody for Solid2Model {
@@ -236,9 +234,8 @@ pub struct MaterialUserInst {
     material: ItemMaterial,
 }
 
-impl ClassId for MaterialUserInst {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x0fd;
+impl Class for MaterialUserInst {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 253);
 }
 
 impl ReadBody for MaterialUserInst {
@@ -326,9 +323,8 @@ impl MaterialUserInst {
 #[derive(Default)]
 struct Surface;
 
-impl ClassId for Surface {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x00c;
+impl Class for Surface {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 12);
 }
 
 impl ReadBody for Surface {

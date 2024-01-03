@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    common::ClassId,
+    common::Class,
     read::{readable::ReadBody, Result},
 };
 
@@ -97,9 +97,7 @@ impl<R: Read, I, N: NodeStateRef> Deserializer<R, I, N> {
 
 impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     /// Read an internal node reference that is not null.
-    pub fn internal_node_ref<T: 'static + Default + ClassId + ReadBody>(
-        &mut self,
-    ) -> Result<Rc<T>> {
+    pub fn internal_node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
         match self.internal_node_ref_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -107,7 +105,7 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     }
 
     /// Read an internal node reference that may be null.
-    pub fn internal_node_ref_or_null<T: 'static + Default + ClassId + ReadBody>(
+    pub fn internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<Rc<T>>> {
         match self.node_ref_or_null()? {
@@ -118,7 +116,7 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     }
 
     /// Read a node reference that may be internal or external and that is not null.
-    pub fn node_ref<T: 'static + Default + ClassId + ReadBody>(&mut self) -> Result<NodeRef<T>> {
+    pub fn node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<T>> {
         match self.node_ref_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -126,7 +124,7 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     }
 
     /// Read a node reference that may be internal or external and that may be null.
-    pub fn node_ref_or_null<T: 'static + Default + ClassId + ReadBody>(
+    pub fn node_ref_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
@@ -138,7 +136,7 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
             None => {
                 let class_id = self.u32()?;
 
-                if class_id != T::class_id() {
+                if class_id != T::CLASS_ID.get() {
                     return Err("class id does not match".into());
                 }
 
@@ -169,7 +167,7 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     }
 
     /// Read a node that is not null.
-    pub fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T> {
+    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
         match self.node_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -177,14 +175,14 @@ impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
     }
 
     /// Read a node that may be null.
-    pub fn node_or_null<T: Default + ClassId + ReadBody>(&mut self) -> Result<Option<T>> {
+    pub fn node_or_null<T: Default + Class + ReadBody>(&mut self) -> Result<Option<T>> {
         let class_id = self.u32()?;
 
         if class_id == 0xffffffff {
             return Ok(None);
         }
 
-        if class_id != T::class_id() {
+        if class_id != T::CLASS_ID.get() {
             return Err("class id does not match".into());
         }
 

@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{
@@ -31,9 +31,8 @@ impl Material {
     }
 }
 
-impl ClassId for Material {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x079;
+impl Class for Material {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 121);
 }
 
 #[derive(Default)]
@@ -41,9 +40,8 @@ struct MaterialCustom {
     diffuse_texture_path: RcPath,
 }
 
-impl ClassId for MaterialCustom {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x03a;
+impl Class for MaterialCustom {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 58);
 }
 
 impl Readable for Material {}

@@ -3,7 +3,7 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    common::{ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
@@ -18,9 +18,8 @@ pub struct Ghost {
     parent: Ghost2,
 }
 
-impl ClassId for Ghost {
-    const ENGINE: u8 = EngineId::GAME;
-    const CLASS: u16 = 0x092;
+impl Class for Ghost {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 146);
 }
 
 #[derive(Default)]
@@ -29,9 +28,8 @@ struct Ghost2;
 #[derive(Default)]
 pub(crate) struct EntRecordData;
 
-impl ClassId for EntRecordData {
-    const ENGINE: u8 = EngineId::PLUG;
-    const CLASS: u16 = 0x11f;
+impl Class for EntRecordData {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 287);
 }
 
 impl ReadBody for Ghost {
