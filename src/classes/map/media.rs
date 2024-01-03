@@ -9,8 +9,8 @@ use std::{
 use crate::{
     classes::ghost::EntRecordData,
     common::{ClassId, EngineId},
+    deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateRef},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },

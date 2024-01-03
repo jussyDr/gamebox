@@ -4,8 +4,8 @@ use std::io::{Read, Seek};
 
 use crate::{
     common::{ClassId, EngineId},
+    deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateRef},
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },

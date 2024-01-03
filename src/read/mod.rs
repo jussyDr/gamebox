@@ -1,6 +1,5 @@
 //! Reading GameBox nodes.
 
-pub(crate) mod deserialize;
 pub(crate) mod readable;
 
 use std::{

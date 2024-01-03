@@ -7,15 +7,15 @@ use std::{
 use lzo::lzo1x;
 use serde_jsonrc::Value;
 
-use crate::common::{
-    ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
-    UNKNOWN_BYTE,
+use crate::{
+    common::{
+        ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
+        UNKNOWN_BYTE,
+    },
+    deserialize::{Deserializer, IdState, IdStateRef, NodeRef, NodeState, NodeStateRef, Take},
 };
 
-use super::{
-    deserialize::{Deserializer, IdState, IdStateRef, NodeRef, NodeState, NodeStateRef, Take},
-    BodyOptions, HeaderOptions, Result,
-};
+use super::{BodyOptions, HeaderOptions, Result};
 
 pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
     reader: impl BufRead + Seek,
@@ -137,7 +137,7 @@ pub fn read_gbx<T: Default + ClassId + HeaderChunks + ReadBody>(
         }
         Compression::Uncompressed => match body_options {
             BodyOptions::Read { .. } => {
-                let reader = d.into_inner();
+                let reader = d.into_reader();
 
                 let mut d = Deserializer::new(reader, IdState::new(), node_state);
 

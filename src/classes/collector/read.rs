@@ -1,8 +1,8 @@
 use std::io::Read;
 
-use crate::read::{
+use crate::{
     deserialize::{Deserializer, IdStateRef},
-    Result,
+    read::Result,
 };
 
 use super::Collector;

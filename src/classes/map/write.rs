@@ -1,9 +1,11 @@
 use std::{f32::consts::FRAC_PI_4, io::Write};
 
-use crate::write::{
+use crate::{
     serialize::{IdStateRef, NodeStateRef, Serializer},
-    writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
-    Result, Writable,
+    write::{
+        writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
+        Result, Writable,
+    },
 };
 
 use super::{ChallengeParameters, CollectorList, Map};
@@ -167,7 +169,7 @@ impl Map {
         use quick_xml::{Error, Writer};
 
         s.buffer(|s| {
-            let mut xml_writer = Writer::new(s.get_mut());
+            let mut xml_writer = Writer::new(s.get_writer_mut());
 
             xml_writer
                 .create_element("header")

@@ -3,8 +3,8 @@ use std::io::{BufRead, Read, Seek};
 use crate::{
     classes::ghost::Ghost,
     common::{ClassId, EngineId},
+    deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateRef},
     read::{
-        deserialize::{Deserializer, IdState, IdStateRef, NodeState, NodeStateRef},
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
             HeaderChunkEntry, HeaderChunks, ReadBody, Sealed,
@@ -363,7 +363,7 @@ impl Map {
     ) -> Result<()> {
         let len = d.u32()?;
 
-        let mut xml_reader = xml::Deserializer::new(d.get_mut(), len as usize);
+        let mut xml_reader = xml::Deserializer::new(d.get_reader_mut(), len as usize);
 
         xml_reader.with_inner_content(
             b"header",

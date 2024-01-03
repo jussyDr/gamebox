@@ -54,8 +54,7 @@ mod read {
     use std::{io::Read, path::PathBuf};
 
     use crate::{
-        read::{deserialize::Deserializer, Result},
-        ExternalFileRef, FileRef, InternalFileRef,
+        deserialize::Deserializer, read::Result, ExternalFileRef, FileRef, InternalFileRef,
     };
 
     use super::{FILE_REF_VERSION, INTERNAL_FILE_REF_CHECKSUM};
@@ -110,10 +109,7 @@ mod read {
 mod write {
     use std::io::Write;
 
-    use crate::{
-        write::{serialize::Serializer, Result},
-        ExternalFileRef, FileRef, InternalFileRef,
-    };
+    use crate::{serialize::Serializer, write::Result, ExternalFileRef, FileRef, InternalFileRef};
 
     use super::{FILE_REF_VERSION, INTERNAL_FILE_REF_CHECKSUM};
 

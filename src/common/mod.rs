@@ -6,10 +6,7 @@ pub use rc::*;
 
 use std::io::{Read, Write};
 
-use crate::{
-    read::{deserialize::Deserializer, Result},
-    write::serialize::Serializer,
-};
+use crate::{deserialize::Deserializer, read::Result, serialize::Serializer};
 
 /// Color representation using red, green, and blue components.
 ///

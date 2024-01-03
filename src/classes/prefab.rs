@@ -4,8 +4,8 @@ use std::io::{BufRead, Read, Seek};
 
 use crate::{
     common::{ClassId, EngineId},
+    deserialize::{Deserializer, IdStateRef, NodeStateRef},
     read::{
-        deserialize::{Deserializer, IdStateRef, NodeStateRef},
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },

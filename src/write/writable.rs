@@ -6,13 +6,10 @@ use crate::{
     common::{
         ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
     },
-    write::serialize::IdState,
+    serialize::{IdState, IdStateRef, NodeState, NodeStateRef, Serializer},
 };
 
-use super::{
-    serialize::{IdStateRef, NodeState, NodeStateRef, Serializer},
-    BodyCompression, FastBodyCompression, Result, SlowBodyCompression,
-};
+use super::{BodyCompression, FastBodyCompression, Result, SlowBodyCompression};
 
 pub trait Sealed: ClassId + HeaderChunks + WriteBody {}
 

@@ -1,6 +1,5 @@
 //! Writing GameBox nodes.
 
-pub(crate) mod serialize;
 pub(crate) mod writable;
 
 use std::{
