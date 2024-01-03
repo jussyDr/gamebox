@@ -1,7 +1,8 @@
 use std::{
     any::{Any, TypeId},
     cell::Cell,
-    hash::{DefaultHasher, Hash, Hasher},
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
     io::Write,
 };
 
