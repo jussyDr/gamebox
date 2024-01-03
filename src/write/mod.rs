@@ -9,8 +9,6 @@ use std::{
     path::Path,
 };
 
-use crate::common::Compression;
-
 use self::writable::write_gbx;
 
 /// Error while writing a GameBox node.
@@ -67,7 +65,7 @@ pub fn write_file(node: &impl Writable, path: impl AsRef<Path>) -> Result {
 
 /// A GameBox node writer.
 pub struct Writer {
-    compress_body: bool,
+    body_compression: BodyCompression,
 }
 
 impl Writer {
@@ -81,22 +79,22 @@ impl Writer {
     /// ```
     pub fn new() -> Self {
         Self {
-            compress_body: true,
+            body_compression: BodyCompression::default(),
         }
     }
 
-    /// Set whether or not to compress the body while writing.
+    /// Sets how to compress the body while writing.
     ///
-    /// Set to `true` by default.
+    /// The default is fast compression with level 3.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use gamebox::write::Writer;
-    /// let writer = Writer::new().compress_body(false);
+    /// # use gamebox::write::{Writer, BodyCompression, FastBodyCompression};
+    /// let writer = Writer::new().body_compression(BodyCompression::Fast(FastBodyCompression::Level3));
     /// ```
-    pub fn compress_body(mut self, compress_body: bool) -> Self {
-        self.compress_body = compress_body;
+    pub fn body_compression(mut self, body_compression: BodyCompression) -> Self {
+        self.body_compression = body_compression;
         self
     }
 
@@ -111,15 +109,7 @@ impl Writer {
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
     pub fn write(&self, node: &impl Writable, writer: impl Write) -> Result {
-        write_gbx(
-            node,
-            writer,
-            if self.compress_body {
-                Compression::Compressed
-            } else {
-                Compression::Uncompressed
-            },
-        )
+        write_gbx(node, writer, self.body_compression)
     }
 
     /// Write the given `node` to a file at the given `path`.
@@ -145,4 +135,59 @@ impl Default for Writer {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Configures how the body should be compressed.
+#[derive(Clone, Copy)]
+pub enum BodyCompression {
+    /// Do not compress.
+    None,
+    /// Compress using a faster compressor but with a lower compression ratio.
+    Fast(FastBodyCompression),
+    /// Compress using a slower compressor but with a higher compression ratio.
+    Slow(SlowBodyCompression),
+}
+
+impl Default for BodyCompression {
+    fn default() -> Self {
+        Self::Fast(FastBodyCompression::default())
+    }
+}
+
+/// Configures the fast body compression.
+#[derive(Clone, Copy, Default)]
+pub enum FastBodyCompression {
+    /// Slowest but uses the least memory.
+    Level1,
+    /// Slower but uses less memory.
+    Level2,
+    /// Faster but uses more memory.
+    #[default]
+    Level3,
+    /// Fastest but uses the most memory.
+    Level4,
+}
+
+/// Configures the slow body compression.
+#[derive(Clone, Copy, Default)]
+pub enum SlowBodyCompression {
+    /// Level 1.
+    Level1,
+    /// Level 2.
+    Level2,
+    /// Level 3.
+    Level3,
+    /// Level 4.
+    Level4,
+    /// Level 5.
+    Level5,
+    /// Level 6.
+    Level6,
+    /// Level 7.
+    Level7,
+    /// Level 8.
+    #[default]
+    Level8,
+    /// Level 9.
+    Level9,
 }
