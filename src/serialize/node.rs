@@ -10,7 +10,7 @@ use elsa::FrozenMap;
 
 use crate::{
     common::{ClassId, NODE_END},
-    write::{writable::WriteBody, Result},
+    write::{writable::WriteBody, Error, Result},
 };
 
 use super::{IdStateRef, Serializer};
@@ -39,11 +39,10 @@ impl Hash for dyn CachableNode {
 
 impl<T: 'static + Eq + Hash> CachableNode for T {
     fn eq(&self, other: &dyn CachableNode) -> bool {
-        if let Some(other) = other.as_any().downcast_ref::<T>() {
-            return self == other;
+        match other.as_any().downcast_ref::<T>() {
+            None => false,
+            Some(other) => self == other,
         }
-
-        false
     }
 
     fn hash(&self) -> u64 {
@@ -112,17 +111,7 @@ impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
             .get_copy(&node as &dyn CachableNode)
         {
             None => {
-                let index = self.node_state.borrow().num_nodes.get() + 1;
-
-                self.u32(index)?;
-
-                self.node_state.borrow().num_nodes.set(index);
-
-                self.u32(T::class_id())?;
-
-                node.write_body(self)?;
-
-                self.u32(NODE_END)?;
+                let index = write_node_ref(self, &node)?;
 
                 self.node_state
                     .borrow()
@@ -137,18 +126,27 @@ impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
 
     /// Write an unique non-cached node reference.
     pub fn unique_node_ref<T: ClassId + WriteBody>(&mut self, node: &T) -> Result {
-        let index = self.node_state.borrow().num_nodes.get() + 1;
-
-        self.u32(index)?;
-
-        self.node_state.borrow().num_nodes.set(index);
-
-        self.u32(T::class_id())?;
-
-        node.write_body(self)?;
-
-        self.u32(NODE_END)?;
+        write_node_ref(self, node)?;
 
         Ok(())
     }
+}
+
+fn write_node_ref<W: Write, I: IdStateRef, N: NodeStateRef, T: ClassId + WriteBody>(
+    s: &mut Serializer<W, I, N>,
+    node: &T,
+) -> std::result::Result<u32, Error> {
+    let index = s.node_state.borrow().num_nodes.get() + 1;
+
+    s.u32(index)?;
+
+    s.node_state.borrow().num_nodes.set(index);
+
+    s.u32(T::class_id())?;
+
+    node.write_body(s)?;
+
+    s.u32(NODE_END)?;
+
+    Ok(index)
 }

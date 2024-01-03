@@ -1,10 +1,10 @@
 //! Low-level GameBox deserialization.
 
-mod id_state;
-mod node_state;
+mod id;
+mod node;
 
-pub use id_state::*;
-pub use node_state::*;
+pub use id::*;
+pub use node::*;
 
 use std::{
     cmp,
