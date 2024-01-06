@@ -237,6 +237,12 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
             _ => Err("expected end of reader".into()),
         }
     }
+
+    pub fn read_to_end(&mut self) -> Result<Vec<u8>> {
+        let mut buf = vec![];
+        self.reader.read_to_end(&mut buf)?;
+        Ok(buf)
+    }
 }
 
 impl<R: Seek, I, N> Deserializer<R, I, N> {

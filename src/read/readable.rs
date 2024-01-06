@@ -24,129 +24,47 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
 ) -> Result<T> {
     let mut node = T::default();
 
-    let mut d = Deserializer::new(reader, (), ());
+    let assume_no_header_data = matches!(
+        header_options,
+        HeaderOptions::Skip {
+            assume_size_zero: true,
+        }
+    );
 
-    if d.byte_array()? != GAMEBOX_FILE_SIGNATURE {
-        return Err("not a gamebox file".into());
-    }
+    let gbx_file = GbxFile::read(reader, assume_no_header_data)?;
 
-    if d.u16()? != GAMEBOX_VERSION {
-        return Err("unsupported gamebox version".into());
-    }
-
-    let format = FileFormat::read(&mut d)?;
-
-    if let FileFormat::Text = format {
-        return Err("text format is not supported".into());
-    }
-
-    let ref_table_compression = Compression::read(&mut d)?;
-
-    if let Compression::Compressed = ref_table_compression {
-        return Err("compressed reference table is not supported".into());
-    }
-
-    let body_compression = Compression::read(&mut d)?;
-
-    if d.u8()? != UNKNOWN_BYTE {
-        return Err("invalid unknown byte".into());
-    }
-
-    let class_id = d.u32()?;
-
-    if class_id != T::CLASS_ID.get() {
+    if gbx_file.class_id != T::CLASS_ID.get() {
         return Err("class id does not match".into());
     }
 
-    let header_data_size = d.u32()?;
-
-    match header_options {
-        HeaderOptions::Read { read_heavy_chunks } => {
-            read_header(
-                &mut node,
-                d.take_with(header_data_size as u64, (), ()),
-                read_heavy_chunks,
-            )?;
-        }
-        HeaderOptions::Skip { assume_size_zero } => {
-            if !assume_size_zero {
-                d.skip(header_data_size)?;
-            }
-        }
+    if let HeaderOptions::Read { read_heavy_chunks } = header_options {
+        read_header(
+            &mut node,
+            Deserializer::new(Cursor::new(gbx_file.header_data), (), ()),
+            read_heavy_chunks,
+        )?;
     }
 
-    let num_nodes = d.u32()?;
+    let node_state = NodeState::new(gbx_file.num_node_refs as usize);
 
-    let node_state = NodeState::new(num_nodes as usize);
-
-    let num_node_refs = d.u32()?;
-
-    if num_node_refs > 0 {
-        d.u32()?;
-        let mut folders = vec![];
-        read_folders(&mut d, PathBuf::new(), &mut folders)?;
-
-        d.repeat(num_node_refs as usize, |d| {
-            d.u32()?;
-            let file_name = d.string()?;
-            let node_index = d.u32()?;
-            d.u32()?;
-            let folder_index = d.u32()?;
-
-            let mut file_path = folders[folder_index as usize].clone();
-            file_path.push(file_name);
-
-            node_state.set(
-                node_index as usize,
-                NodeRef::External {
-                    path: Rc::from(file_path),
-                },
-            )?;
-
-            Ok(())
-        })?;
+    for (index, path) in gbx_file.external_node_refs {
+        node_state.set(
+            index as usize,
+            NodeRef::External {
+                path: Rc::from(path),
+            },
+        )?;
     }
 
-    match body_compression {
-        Compression::Compressed => {
-            let body_size = d.u32()?;
-            let compressed_body_size = d.u32()?;
+    match body_options {
+        BodyOptions::Read { .. } => {
+            let mut d = Deserializer::new(Cursor::new(gbx_file.body), IdState::new(), node_state);
 
-            match body_options {
-                BodyOptions::Read { .. } => {
-                    let compressed_body = d.bytes(compressed_body_size as usize)?;
-
-                    let mut buf = vec![0; body_size as usize];
-
-                    let body = lzo1x::decompress_safe(&compressed_body, &mut buf).unwrap();
-
-                    let reader = Cursor::new(body);
-
-                    let mut d = Deserializer::new(reader, IdState::new(), node_state);
-
-                    T::read_body(&mut node, &mut d)?;
-
-                    d.eof()?;
-                }
-                BodyOptions::Skip => {
-                    d.skip(compressed_body_size)?;
-                }
-            }
+            T::read_body(&mut node, &mut d)?;
 
             d.eof()?;
         }
-        Compression::Uncompressed => match body_options {
-            BodyOptions::Read { .. } => {
-                let reader = d.into_reader();
-
-                let mut d = Deserializer::new(reader, IdState::new(), node_state);
-
-                T::read_body(&mut node, &mut d)?;
-
-                d.eof()?;
-            }
-            BodyOptions::Skip => {}
-        },
+        BodyOptions::Skip => {}
     }
 
     Ok(node)
@@ -325,4 +243,103 @@ pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
     object.remove("ClassId");
 
     T::read(value)
+}
+
+pub struct GbxFile {
+    class_id: u32,
+    header_data: Vec<u8>,
+    num_node_refs: u32,
+    external_node_refs: Vec<(u32, PathBuf)>,
+    body: Vec<u8>,
+}
+
+impl GbxFile {
+    fn read(reader: impl Read, assume_no_header_data: bool) -> Result<Self> {
+        let mut d = Deserializer::new(reader, (), ());
+
+        if d.byte_array()? != GAMEBOX_FILE_SIGNATURE {
+            return Err("not a gamebox file".into());
+        }
+
+        if d.u16()? != GAMEBOX_VERSION {
+            return Err("unsupported gamebox version".into());
+        }
+
+        let format = FileFormat::read(&mut d)?;
+
+        if let FileFormat::Text = format {
+            return Err("text format is not supported".into());
+        }
+
+        let ref_table_compression = Compression::read(&mut d)?;
+
+        if let Compression::Compressed = ref_table_compression {
+            return Err("compressed reference table is not supported".into());
+        }
+
+        let body_compression = Compression::read(&mut d)?;
+
+        if d.u8()? != UNKNOWN_BYTE {
+            return Err("invalid unknown byte".into());
+        }
+
+        let class_id = d.u32()?;
+        let header_data_size = d.u32()?;
+
+        let header_data = if assume_no_header_data {
+            vec![]
+        } else {
+            d.bytes(header_data_size as usize)?
+        };
+
+        let num_node_refs = d.u32()?;
+        let num_external_node_refs = d.u32()?;
+
+        let external_node_refs = if num_external_node_refs > 0 {
+            d.u32()?;
+            let mut folders = vec![];
+            read_folders(&mut d, PathBuf::new(), &mut folders)?;
+
+            d.repeat(num_external_node_refs as usize, |d| {
+                d.u32()?;
+                let file_name = d.string()?;
+                let node_index = d.u32()?;
+                d.u32()?;
+                let folder_index = d.u32()?;
+
+                let mut file_path = folders[folder_index as usize].clone();
+                file_path.push(file_name);
+
+                Ok((node_index, file_path))
+            })?
+        } else {
+            vec![]
+        };
+
+        let body = match body_compression {
+            Compression::Compressed => {
+                let body_size = d.u32()?;
+                let compressed_body_size = d.u32()?;
+                let compressed_body = d.bytes(compressed_body_size as usize)?;
+                let mut body = vec![0; body_size as usize];
+                let decompressed = lzo1x::decompress_safe(&compressed_body, &mut body)
+                    .map_err(|_| "failed to decompress body")?;
+
+                if decompressed.len() != body_size as usize {
+                    return Err("decompressed body has invalid size".into());
+                }
+
+                body
+            }
+            Compression::Uncompressed => d.read_to_end()?,
+        };
+
+        Ok(Self {
+            class_id,
+            header_data,
+            num_node_refs,
+            external_node_refs,
+            body,
+        })
+    }
 }
