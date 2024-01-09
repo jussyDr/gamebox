@@ -101,6 +101,8 @@ pub const ID_FLAG_BIT: u32 = 0x40000000;
 
 pub const UNKNOWN_BYTE: u8 = b'R';
 
+pub const NULL: u32 = 0xffffffff;
+
 pub fn read_compact_index<R: Read, I, N>(
     d: &mut Deserializer<R, I, N>,
     num_items: u32,

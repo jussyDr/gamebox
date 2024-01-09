@@ -1,7 +1,7 @@
 use std::{collections::HashMap, io::Write};
 
 use crate::{
-    common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION},
+    common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION, NULL},
     write::Result,
 };
 
@@ -80,7 +80,7 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
     pub fn null_id(&mut self) -> Result {
         write_id_version(self)?;
 
-        self.u32(0xffffffff)
+        self.u32(NULL)
     }
 }
 

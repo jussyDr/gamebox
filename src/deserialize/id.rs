@@ -1,7 +1,7 @@
 use std::{io::Read, rc::Rc};
 
 use crate::{
-    common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION},
+    common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION, NULL},
     read::Result,
 };
 
@@ -28,30 +28,6 @@ impl Default for IdState {
         Self::new()
     }
 }
-
-// impl Borrow<IdState> for IdState {
-//     fn borrow(&self) -> &IdState {
-//         self
-//     }
-// }
-
-// impl BorrowMut<IdState> for IdState {
-//     fn borrow_mut(&mut self) -> &mut IdState {
-//         self
-//     }
-// }
-
-// impl Borrow<IdState> for &IdState {
-//     fn borrow(&self) -> &IdState {
-//         (**self).borrow()
-//     }
-// }
-
-// impl BorrowMut<IdState> for &mut IdState {
-//     fn borrow_mut(&mut self) -> &mut IdState {
-//         (**self).borrow_mut()
-//     }
-// }
 
 /// Can provide a mutable reference to an identifier state.
 pub trait IdStateMut {
@@ -87,7 +63,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     pub fn null_id(&mut self) -> Result<()> {
         let index = read_id_index(self)?;
 
-        if index != 0xffffffff {
+        if index != NULL {
             return Err("expected null id".into());
         }
 
@@ -106,7 +82,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     pub fn id_or_null(&mut self) -> Result<Option<Rc<str>>> {
         let index = read_id_index(self)?;
 
-        if index == 0xffffffff {
+        if index == NULL {
             return Ok(None);
         }
 

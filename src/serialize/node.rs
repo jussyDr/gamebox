@@ -63,14 +63,14 @@ impl NodeState {
     /// Create a new node state.
     pub fn new() -> Self {
         Self {
-            num_nodes: 0,
+            num_nodes: 1,
             nodes: HashMap::new(),
         }
     }
 
     /// The number of nodes written.
     pub fn num_nodes(&self) -> u32 {
-        self.num_nodes + 1
+        self.num_nodes
     }
 }
 
@@ -143,11 +143,11 @@ fn write_node_ref<W: Write, I: IdStateMut, N: NodeStateMut, T: Class + WriteBody
     s: &mut Serializer<W, I, N>,
     node: &T,
 ) -> std::result::Result<u32, Error> {
-    let index = s.node_state.borrow().num_nodes + 1;
+    let index = s.node_state.borrow().num_nodes;
 
     s.u32(index)?;
 
-    s.node_state.borrow_mut().num_nodes = index;
+    s.node_state.borrow_mut().num_nodes += 1;
 
     s.u32(T::CLASS_ID.get())?;
 

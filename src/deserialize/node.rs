@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    common::Class,
+    common::{Class, NULL},
     read::{readable::ReadBody, Result},
 };
 
@@ -88,7 +88,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read an external node reference that is not null.
     pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
         let index = match self.u32()? {
-            0xffffffff => return Err("node index is null".into()),
+            NULL => return Err("node index is null".into()),
             index => index,
         };
 
@@ -139,7 +139,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
         &mut self,
     ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
-            0xffffffff => return Ok(None),
+            NULL => return Ok(None),
             index => index,
         };
 
@@ -189,7 +189,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn node_or_null<T: Default + Class + ReadBody>(&mut self) -> Result<Option<T>> {
         let class_id = self.u32()?;
 
-        if class_id == 0xffffffff {
+        if class_id == NULL {
             return Ok(None);
         }
 
