@@ -118,6 +118,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn u8(&mut self) -> Result<u8> {
         let bytes = self.byte_array()?;
+
         Ok(u8::from_le_bytes(bytes))
     }
 
@@ -125,6 +126,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn u16(&mut self) -> Result<u16> {
         let bytes = self.byte_array()?;
+
         Ok(u16::from_le_bytes(bytes))
     }
 
@@ -132,6 +134,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn u32(&mut self) -> Result<u32> {
         let bytes = self.byte_array()?;
+
         Ok(u32::from_le_bytes(bytes))
     }
 
@@ -139,6 +142,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn u64(&mut self) -> Result<u64> {
         let bytes = self.byte_array()?;
+
         Ok(u64::from_le_bytes(bytes))
     }
 
@@ -146,6 +150,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn i16(&mut self) -> Result<i16> {
         let bytes = self.byte_array()?;
+
         Ok(i16::from_le_bytes(bytes))
     }
 
@@ -153,6 +158,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn i32(&mut self) -> Result<i32> {
         let bytes = self.byte_array()?;
+
         Ok(i32::from_le_bytes(bytes))
     }
 
@@ -160,6 +166,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn f32(&mut self) -> Result<f32> {
         let bytes = self.byte_array()?;
+
         Ok(f32::from_le_bytes(bytes))
     }
 
@@ -179,6 +186,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let mut buf = vec![0; n];
         self.reader.read_exact(&mut buf)?;
+
         Ok(buf)
     }
 
@@ -187,6 +195,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
         self.reader.read_exact(&mut array)?;
+
         Ok(array)
     }
 
@@ -195,6 +204,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         let len = self.u32()?;
         let bytes = self.bytes(len as usize)?;
         let string = String::from_utf8(bytes)?;
+
         Ok(string)
     }
 
@@ -238,9 +248,11 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         }
     }
 
+    /// Read all bytes until EOF in this source.
     pub fn read_to_end(&mut self) -> Result<Vec<u8>> {
         let mut buf = vec![];
         self.reader.read_to_end(&mut buf)?;
+
         Ok(buf)
     }
 }
@@ -249,6 +261,7 @@ impl<R: Seek, I, N> Deserializer<R, I, N> {
     /// Skip `n` bytes.
     pub fn skip(&mut self, n: u32) -> Result<()> {
         self.reader.seek(io::SeekFrom::Current(n as i64))?;
+
         Ok(())
     }
 }
@@ -259,6 +272,7 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
         let value = self.u32()?;
         self.reader
             .seek(io::SeekFrom::Current(-(size_of::<u32>() as i64)))?;
+
         Ok(value)
     }
 }

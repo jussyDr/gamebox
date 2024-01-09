@@ -1,8 +1,4 @@
-use std::{
-    borrow::{Borrow, BorrowMut},
-    io::Read,
-    rc::Rc,
-};
+use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION},
