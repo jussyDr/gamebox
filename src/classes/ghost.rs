@@ -4,7 +4,7 @@ use std::io::{Read, Seek};
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateRef, NodeStateRef},
+    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
@@ -33,7 +33,7 @@ impl Class for EntRecordData {
 }
 
 impl ReadBody for Ghost {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -43,7 +43,7 @@ impl ReadBody for Ghost {
 
 impl BodyChunks for Ghost {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -160,7 +160,7 @@ impl BodyChunks for Ghost {
 }
 
 impl Ghost {
-    fn read_chunk_0<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_chunk_0<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -237,7 +237,7 @@ impl Ghost {
         Ok(())
     }
 
-    fn read_chunk_16<R: Read, I: IdStateRef, N>(
+    fn read_chunk_16<R: Read, I: IdStateMut, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -406,7 +406,7 @@ impl Ghost2 {
 }
 
 impl ReadBody for EntRecordData {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -415,7 +415,7 @@ impl ReadBody for EntRecordData {
 }
 
 impl BodyChunks for EntRecordData {
-    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateRef>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0911f000,

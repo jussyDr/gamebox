@@ -6,7 +6,7 @@ use crate::{
     common::{
         Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
     },
-    serialize::{IdState, IdStateRef, NodeState, NodeStateRef, Serializer},
+    serialize::{IdState, IdStateMut, NodeState, NodeStateMut, Serializer},
 };
 
 use super::{BodyCompression, FastBodyCompression, Result, SlowBodyCompression};
@@ -50,11 +50,11 @@ pub fn write_gbx<T: Class + HeaderChunks + WriteBody>(
         header_data
     };
 
-    let node_state = NodeState::new();
+    let mut node_state = NodeState::new();
     let mut body = vec![];
 
     {
-        let mut s = Serializer::new(&mut body, IdState::new(), &node_state);
+        let mut s = Serializer::new(&mut body, IdState::new(), &mut node_state);
         T::write_body(node, &mut s)?;
     }
 
@@ -138,7 +138,7 @@ pub struct HeaderChunk<T> {
 pub type HeaderChunkWriteFn<T> = fn(&T, &mut Serializer<&mut Vec<u8>, &mut IdState, ()>) -> Result;
 
 pub trait WriteBody {
-    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
+    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result;

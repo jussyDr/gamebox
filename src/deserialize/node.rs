@@ -11,7 +11,7 @@ use crate::{
     read::{readable::ReadBody, Result},
 };
 
-use super::{repeat_n_with, Deserializer, IdStateRef};
+use super::{repeat_n_with, Deserializer, IdStateMut};
 
 /// Reference to a node of type `T`.
 pub enum NodeRef<T: ?Sized> {
@@ -55,25 +55,36 @@ impl NodeState {
     }
 }
 
-/// Can obtain an immutable reference to a node state.
-pub trait NodeStateRef {
+/// Can obtain a mutable reference to a node state.
+pub trait NodeStateMut {
     /// Obtain an immutable reference to a node state.
     fn borrow(&self) -> &NodeState;
+
+    /// Obtain a mutable reference to a node state.
+    fn borrow_mut(&mut self) -> &mut NodeState;
 }
 
-impl NodeStateRef for NodeState {
+impl NodeStateMut for NodeState {
     fn borrow(&self) -> &NodeState {
+        self
+    }
+
+    fn borrow_mut(&mut self) -> &mut NodeState {
         self
     }
 }
 
-impl<T: NodeStateRef> NodeStateRef for &T {
+impl<T: NodeStateMut> NodeStateMut for &mut T {
     fn borrow(&self) -> &NodeState {
         (**self).borrow()
     }
+
+    fn borrow_mut(&mut self) -> &mut NodeState {
+        (**self).borrow_mut()
+    }
 }
 
-impl<R: Read, I, N: NodeStateRef> Deserializer<R, I, N> {
+impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read an external node reference that is not null.
     pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
         let index = match self.u32()? {
@@ -95,7 +106,7 @@ impl<R: Read, I, N: NodeStateRef> Deserializer<R, I, N> {
     }
 }
 
-impl<R: Read + Seek, I: IdStateRef, N: NodeStateRef> Deserializer<R, I, N> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read an internal node reference that is not null.
     pub fn internal_node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
         match self.internal_node_ref_or_null()? {

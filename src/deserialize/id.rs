@@ -1,6 +1,8 @@
-use std::{cell::Cell, io::Read, rc::Rc};
-
-use elsa::FrozenVec;
+use std::{
+    borrow::{Borrow, BorrowMut},
+    io::Read,
+    rc::Rc,
+};
 
 use crate::{
     common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION},
@@ -11,16 +13,16 @@ use super::Deserializer;
 
 /// Identifier state.
 pub struct IdState {
-    seen_id: Cell<bool>,
-    ids: FrozenVec<Rc<str>>,
+    seen_id: bool,
+    ids: Vec<Rc<str>>,
 }
 
 impl IdState {
     /// Create a new identifier state.
     pub fn new() -> Self {
         Self {
-            seen_id: Cell::new(false),
-            ids: FrozenVec::new(),
+            seen_id: false,
+            ids: Vec::new(),
         }
     }
 }
@@ -31,25 +33,60 @@ impl Default for IdState {
     }
 }
 
-/// Can provide an immutable reference to an identifier state.
-pub trait IdStateRef {
+// impl Borrow<IdState> for IdState {
+//     fn borrow(&self) -> &IdState {
+//         self
+//     }
+// }
+
+// impl BorrowMut<IdState> for IdState {
+//     fn borrow_mut(&mut self) -> &mut IdState {
+//         self
+//     }
+// }
+
+// impl Borrow<IdState> for &IdState {
+//     fn borrow(&self) -> &IdState {
+//         (**self).borrow()
+//     }
+// }
+
+// impl BorrowMut<IdState> for &mut IdState {
+//     fn borrow_mut(&mut self) -> &mut IdState {
+//         (**self).borrow_mut()
+//     }
+// }
+
+/// Can provide a mutable reference to an identifier state.
+pub trait IdStateMut {
     /// Obtain an immutable reference to an identifier state.
     fn borrow(&self) -> &IdState;
+
+    /// Obtain a mutable reference to an identifier state.
+    fn borrow_mut(&mut self) -> &mut IdState;
 }
 
-impl IdStateRef for IdState {
+impl IdStateMut for IdState {
     fn borrow(&self) -> &IdState {
+        self
+    }
+
+    fn borrow_mut(&mut self) -> &mut IdState {
         self
     }
 }
 
-impl<T: IdStateRef> IdStateRef for &T {
+impl<T: IdStateMut> IdStateMut for &mut T {
     fn borrow(&self) -> &IdState {
         (**self).borrow()
     }
+
+    fn borrow_mut(&mut self) -> &mut IdState {
+        (**self).borrow_mut()
+    }
 }
 
-impl<R: Read, I: IdStateRef, N> Deserializer<R, I, N> {
+impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     /// Read an identifier that is null.
     pub fn null_id(&mut self) -> Result<()> {
         let index = read_id_index(self)?;
@@ -82,7 +119,7 @@ impl<R: Read, I: IdStateRef, N> Deserializer<R, I, N> {
 
             if index == 0 {
                 let id = Rc::from(self.string()?);
-                self.id_state.borrow().ids.push(Rc::clone(&id));
+                self.id_state.borrow_mut().ids.push(Rc::clone(&id));
 
                 Ok(Some(id))
             } else {
@@ -90,10 +127,10 @@ impl<R: Read, I: IdStateRef, N> Deserializer<R, I, N> {
                     .id_state
                     .borrow()
                     .ids
-                    .get_clone(index as usize - 1)
+                    .get(index as usize - 1)
                     .ok_or("no id with given index")?;
 
-                Ok(Some(id))
+                Ok(Some(Rc::clone(id)))
             }
         } else {
             Err("expected id".into())
@@ -101,13 +138,13 @@ impl<R: Read, I: IdStateRef, N> Deserializer<R, I, N> {
     }
 }
 
-fn read_id_index<R: Read, I: IdStateRef, N>(d: &mut Deserializer<R, I, N>) -> Result<u32> {
-    if !d.id_state.borrow().seen_id.get() {
+fn read_id_index<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<u32> {
+    if !d.id_state.borrow().seen_id {
         if d.u32()? != ID_VERSION {
             return Err("invalid identifier version".into());
         }
 
-        d.id_state.borrow().seen_id.set(true);
+        d.id_state.borrow_mut().seen_id = true;
     }
 
     d.u32()

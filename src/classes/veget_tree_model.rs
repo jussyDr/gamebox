@@ -4,7 +4,7 @@ use std::io::{BufRead, Read, Seek};
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateRef, NodeStateRef},
+    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
@@ -40,7 +40,7 @@ impl HeaderChunks for VegetTreeModel {
 }
 
 impl ReadBody for VegetTreeModel {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

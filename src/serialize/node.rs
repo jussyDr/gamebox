@@ -1,19 +1,16 @@
 use std::{
     any::{Any, TypeId},
-    cell::Cell,
-    collections::hash_map::DefaultHasher,
+    collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
     io::Write,
 };
-
-use elsa::FrozenMap;
 
 use crate::{
     common::{Class, NODE_END},
     write::{writable::WriteBody, Error, Result},
 };
 
-use super::{IdStateRef, Serializer};
+use super::{IdStateMut, Serializer};
 
 trait CachableNode {
     fn eq(&self, other: &dyn CachableNode) -> bool;
@@ -58,22 +55,22 @@ impl<T: 'static + Eq + Hash> CachableNode for T {
 
 /// Node state.
 pub struct NodeState {
-    num_nodes: Cell<u32>,
-    nodes: FrozenMap<Box<dyn CachableNode>, u32>,
+    num_nodes: u32,
+    nodes: HashMap<Box<dyn CachableNode>, u32>,
 }
 
 impl NodeState {
     /// Create a new node state.
     pub fn new() -> Self {
         Self {
-            num_nodes: Cell::new(0),
-            nodes: FrozenMap::new(),
+            num_nodes: 0,
+            nodes: HashMap::new(),
         }
     }
 
     /// The number of nodes written.
     pub fn num_nodes(&self) -> u32 {
-        self.num_nodes.get() + 1
+        self.num_nodes + 1
     }
 }
 
@@ -83,42 +80,52 @@ impl Default for NodeState {
     }
 }
 
-/// Can obtain a immutable reference to a node state.
-pub trait NodeStateRef {
-    /// Obtain a immutable reference to a node state.
+/// Can obtain a mutable reference to a node state.
+pub trait NodeStateMut {
+    /// Obtain an immutable reference to a node state.
     fn borrow(&self) -> &NodeState;
+
+    /// Obtain a mutable reference to a node state.
+    fn borrow_mut(&mut self) -> &mut NodeState;
 }
 
-impl NodeStateRef for NodeState {
+impl NodeStateMut for NodeState {
     fn borrow(&self) -> &NodeState {
+        self
+    }
+
+    fn borrow_mut(&mut self) -> &mut NodeState {
         self
     }
 }
 
-impl<T: NodeStateRef> NodeStateRef for &T {
+impl<T: NodeStateMut> NodeStateMut for &mut T {
     fn borrow(&self) -> &NodeState {
         (**self).borrow()
     }
+    fn borrow_mut(&mut self) -> &mut NodeState {
+        (**self).borrow_mut()
+    }
 }
 
-impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
+impl<W: Write, I: IdStateMut, N: NodeStateMut> Serializer<W, I, N> {
     /// Write a cachable node reference.
     pub fn node_ref<T: 'static + Eq + Hash + Class + WriteBody>(&mut self, node: T) -> Result {
         match self
             .node_state
             .borrow()
             .nodes
-            .get_copy(&node as &dyn CachableNode)
+            .get(&node as &dyn CachableNode)
         {
             None => {
                 let index = write_node_ref(self, &node)?;
 
                 self.node_state
-                    .borrow()
+                    .borrow_mut()
                     .nodes
-                    .insert_copy(Box::new(node), index);
+                    .insert(Box::new(node), index);
             }
-            Some(index) => self.u32(index)?,
+            Some(&index) => self.u32(index)?,
         }
 
         Ok(())
@@ -132,15 +139,15 @@ impl<W: Write, I: IdStateRef, N: NodeStateRef> Serializer<W, I, N> {
     }
 }
 
-fn write_node_ref<W: Write, I: IdStateRef, N: NodeStateRef, T: Class + WriteBody>(
+fn write_node_ref<W: Write, I: IdStateMut, N: NodeStateMut, T: Class + WriteBody>(
     s: &mut Serializer<W, I, N>,
     node: &T,
 ) -> std::result::Result<u32, Error> {
-    let index = s.node_state.borrow().num_nodes.get() + 1;
+    let index = s.node_state.borrow().num_nodes + 1;
 
     s.u32(index)?;
 
-    s.node_state.borrow().num_nodes.set(index);
+    s.node_state.borrow_mut().num_nodes = index;
 
     s.u32(T::CLASS_ID.get())?;
 

@@ -88,13 +88,13 @@ impl<R, I, N> Deserializer<R, I, N> {
     }
 
     /// Creates an adapter which will read at most `limit` bytes from it.
-    pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &I, &N> {
+    pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
         let inner = Take {
             reader: &mut self.reader,
             limit,
         };
 
-        Deserializer::new(inner, &self.id_state, &self.node_state)
+        Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
     }
 
     /// Creates an adapter with a new `id_state` and `node_state` which will read at most `limit` bytes from it.

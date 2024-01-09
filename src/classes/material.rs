@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateRef, NodeStateRef},
+    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
@@ -63,7 +63,7 @@ impl HeaderChunks for Material {
 }
 
 impl ReadBody for Material {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -73,7 +73,7 @@ impl ReadBody for Material {
 
 impl BodyChunks for Material {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -128,7 +128,7 @@ impl Material {
         Ok(())
     }
 
-    fn read_chunk_09079007<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_chunk_09079007<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -212,7 +212,7 @@ impl Material {
 }
 
 impl ReadBody for MaterialCustom {
-    fn read_body<R: Read + Seek, I: IdStateRef, N: NodeStateRef>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -222,7 +222,7 @@ impl ReadBody for MaterialCustom {
 
 impl BodyChunks for MaterialCustom {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateRef, N: NodeStateRef>(
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -277,7 +277,7 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a00a<R: Read, I: IdStateRef, N>(
+    fn read_chunk_0903a00a<R: Read, I: IdStateMut, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -296,7 +296,7 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a00c<R: Read, I: IdStateRef, N>(
+    fn read_chunk_0903a00c<R: Read, I: IdStateMut, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -332,7 +332,7 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a013<R: Read, I: IdStateRef, N: NodeStateRef>(
+    fn read_chunk_0903a013<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {

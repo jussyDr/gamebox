@@ -1,7 +1,7 @@
 use std::{f32::consts::FRAC_PI_4, io::Write};
 
 use crate::{
-    serialize::{IdStateRef, NodeStateRef, Serializer},
+    serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
         writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
         Result, Writable,
@@ -48,7 +48,7 @@ impl HeaderChunks for Map {
 }
 
 impl WriteBody for Map {
-    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
+    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result {
@@ -129,7 +129,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_3<W: Write, I: IdStateRef, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_3<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u8(11)?;
         s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
         s.u32(26)?;
@@ -265,7 +265,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_13<W: Write, I: IdStateRef, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_13<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304300d)?;
         s.null_id()?;
         s.u32(0xffffffff)?;
@@ -274,7 +274,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_17<W: Write, I: IdStateRef, N: NodeStateRef>(
+    fn write_chunk_17<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result {
@@ -317,7 +317,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_31<W: Write, I: IdStateRef, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_31<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x0304301f)?;
         s.id("clPHg9CHQjSqYP9wY4nRR6kSqM3")?;
         s.u32(26)?;
@@ -545,7 +545,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_72<W: Write, I: IdStateRef, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_72<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043048)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -622,7 +622,7 @@ impl Map {
         Ok(())
     }
 
-    fn write_chunk_81<W: Write, I: IdStateRef, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+    fn write_chunk_81<W: Write, I: IdStateMut, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043051)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -913,7 +913,7 @@ impl Map {
 }
 
 impl WriteBody for CollectorList {
-    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
+    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result {
@@ -933,7 +933,7 @@ impl CollectorList {
 }
 
 impl WriteBody for ChallengeParameters {
-    fn write_body<W: Write, I: IdStateRef, N: NodeStateRef>(
+    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
         &self,
         s: &mut Serializer<W, I, N>,
     ) -> Result {
