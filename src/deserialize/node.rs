@@ -33,7 +33,7 @@ pub struct NodeState {
 }
 
 impl NodeState {
-    /// Create a new node state.
+    /// Create a new node reference state.
     pub fn new(num_nodes: usize) -> Self {
         Self {
             nodes: repeat_n_with(num_nodes, OnceCell::new),
@@ -55,12 +55,12 @@ impl NodeState {
     }
 }
 
-/// Can obtain a mutable reference to a node state.
+/// Can obtain a mutable reference to a node reference state.
 pub trait NodeStateMut {
-    /// Obtain an immutable reference to a node state.
+    /// Obtain an immutable reference to a node reference state.
     fn borrow(&self) -> &NodeState;
 
-    /// Obtain a mutable reference to a node state.
+    /// Obtain a mutable reference to a node reference state.
     fn borrow_mut(&mut self) -> &mut NodeState;
 }
 

@@ -53,14 +53,14 @@ impl<T: 'static + Eq + Hash> CachableNode for T {
     }
 }
 
-/// Node state.
+/// Node reference state.
 pub struct NodeState {
     num_nodes: u32,
     nodes: HashMap<Box<dyn CachableNode>, u32>,
 }
 
 impl NodeState {
-    /// Create a new node state.
+    /// Create a new node reference state.
     pub fn new() -> Self {
         Self {
             num_nodes: 1,
@@ -68,7 +68,7 @@ impl NodeState {
         }
     }
 
-    /// The number of nodes written.
+    /// The number of internal node references written.
     pub fn num_nodes(&self) -> u32 {
         self.num_nodes
     }
@@ -80,12 +80,12 @@ impl Default for NodeState {
     }
 }
 
-/// Can obtain a mutable reference to a node state.
+/// Can obtain a mutable reference to a node reference state.
 pub trait NodeStateMut {
-    /// Obtain an immutable reference to a node state.
+    /// Obtain an immutable reference to a node reference state.
     fn borrow(&self) -> &NodeState;
 
-    /// Obtain a mutable reference to a node state.
+    /// Obtain a mutable reference to a node reference state.
     fn borrow_mut(&mut self) -> &mut NodeState;
 }
 
@@ -109,7 +109,7 @@ impl<T: NodeStateMut> NodeStateMut for &mut T {
 }
 
 impl<W: Write, I: IdStateMut, N: NodeStateMut> Serializer<W, I, N> {
-    /// Write a cachable node reference.
+    /// Write a cachable internal node reference.
     pub fn node_ref<T: 'static + Eq + Hash + Class + WriteBody>(&mut self, node: T) -> Result {
         match self
             .node_state
@@ -131,7 +131,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Serializer<W, I, N> {
         Ok(())
     }
 
-    /// Write an unique non-cached node reference.
+    /// Write an unique non-cached internal node reference.
     pub fn unique_node_ref<T: Class + WriteBody>(&mut self, node: &T) -> Result {
         write_node_ref(self, node)?;
 
