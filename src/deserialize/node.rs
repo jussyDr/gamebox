@@ -22,7 +22,7 @@ pub enum NodeRef<T: ?Sized> {
     },
     /// External node reference.
     External {
-        /// Path to the referenced node.
+        /// Game path to the referenced node.
         path: Rc<Path>,
     },
 }

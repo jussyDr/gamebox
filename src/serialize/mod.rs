@@ -91,7 +91,7 @@ impl<W: Write, I, N> Serializer<W, I, N> {
     }
 
     /// Write a byte buffer with contents written by the given `write_fn` and with a new `IdState` and `NodeState`.
-    pub fn something(
+    pub fn scoped_buffer(
         &mut self,
         write_fn: impl Fn(&mut Serializer<&mut Vec<u8>, IdState, NodeState>) -> Result,
     ) -> Result {

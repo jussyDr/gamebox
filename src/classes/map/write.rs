@@ -461,7 +461,7 @@ impl Map {
         s.buffer(|s| {
             s.u32(7)?;
             s.u32(0)?;
-            s.something(|s| {
+            s.scoped_buffer(|s| {
                 s.u32(10)?;
                 s.u32(0)?;
                 s.u32(0)?;
@@ -496,7 +496,7 @@ impl Map {
         s.u32(0x534b4950)?;
         s.buffer(|s| {
             s.u32(0)?;
-            s.something(|s| {
+            s.scoped_buffer(|s| {
                 s.u32(2304)?;
                 for _ in 0..2304 {
                     s.u32(0x0311d000)?;
@@ -521,7 +521,7 @@ impl Map {
         s.u32(0x534b4950)?;
         s.buffer(|s| {
             s.u32(0)?;
-            s.something(|s| {
+            s.scoped_buffer(|s| {
                 s.u32(0x11002000)?;
                 s.u32(6)?;
                 s.u8(2)?;
@@ -662,7 +662,7 @@ impl Map {
         s.buffer(|s| {
             s.u32(1)?;
             s.u32(0)?;
-            s.something(|s| {
+            s.scoped_buffer(|s| {
                 s.u32(0)?;
                 s.u32(0)?;
                 s.u32(0)
@@ -938,6 +938,11 @@ impl WriteBody for ChallengeParameters {
         s: &mut Serializer<W, I, N>,
     ) -> Result {
         self.write_chunk_1(s)?;
+        self.write_chunk_4(s)?;
+        self.write_chunk_8(s)?;
+        self.write_chunk_10(s)?;
+        self.write_chunk_13(s)?;
+        self.write_chunk_14(s)?;
 
         Ok(())
     }

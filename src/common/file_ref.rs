@@ -20,7 +20,7 @@ pub struct InternalFileRef {
 }
 
 impl InternalFileRef {
-    /// Path of the referenced game file.
+    /// Game path of the referenced file.
     pub fn path(&self) -> &Path {
         &self.path
     }
@@ -39,7 +39,7 @@ impl ExternalFileRef {
         &self.checksum
     }
 
-    /// Path of the referenced file.
+    /// Game path of the referenced file.
     pub fn path(&self) -> &Path {
         &self.path
     }
