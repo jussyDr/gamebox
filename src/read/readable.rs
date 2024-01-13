@@ -4,7 +4,6 @@ use std::{
     rc::Rc,
 };
 
-use lzo::lzo1x;
 use serde_jsonrc::Value;
 
 use crate::{
@@ -322,12 +321,7 @@ impl GbxFile {
                 let compressed_body_size = d.u32()?;
                 let compressed_body = d.bytes(compressed_body_size as usize)?;
                 let mut body = vec![0; body_size as usize];
-                let decompressed = lzo1x::decompress_safe(&compressed_body, &mut body)
-                    .map_err(|_| "failed to decompress body")?;
-
-                if decompressed.len() != body_size as usize {
-                    return Err("decompressed body has invalid size".into());
-                }
+                lzo1x::decompress(&compressed_body, &mut body);
 
                 body
             }

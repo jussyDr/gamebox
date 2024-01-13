@@ -9,6 +9,6 @@ name = "test"
 harness = false
 
 [dependencies]
-lzo = { git = "https://github.com/jussyDr/lzo" }
+lzo1x = { git = "https://github.com/jussyDr/lzo1x" }
 quick-xml = "0.31.0"
 serde_jsonrc = "0.1.0"

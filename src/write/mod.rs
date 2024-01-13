@@ -2,6 +2,8 @@
 
 pub(crate) mod writable;
 
+pub use lzo1x::CompressLevel;
+
 use std::{
     fs::File,
     io::{self, BufWriter, Write},
@@ -64,7 +66,7 @@ pub fn write_file(node: &impl Writable, path: impl AsRef<Path>) -> Result {
 
 /// A GameBox node writer.
 pub struct Writer {
-    body_compression: BodyCompression,
+    body_compression: Option<CompressLevel>,
 }
 
 impl Writer {
@@ -78,7 +80,7 @@ impl Writer {
     /// ```
     pub fn new() -> Self {
         Self {
-            body_compression: BodyCompression::default(),
+            body_compression: Some(CompressLevel::default()),
         }
     }
 
@@ -89,10 +91,10 @@ impl Writer {
     /// # Examples
     ///
     /// ```
-    /// # use gamebox::write::{Writer, BodyCompression, FastBodyCompression};
-    /// let writer = Writer::new().body_compression(BodyCompression::Fast(FastBodyCompression::Level3));
+    /// # use gamebox::write::{Writer, CompressLevel};
+    /// let writer = Writer::new().body_compression(Some(CompressLevel::default()));
     /// ```
-    pub fn body_compression(mut self, body_compression: BodyCompression) -> Self {
+    pub fn body_compression(mut self, body_compression: Option<CompressLevel>) -> Self {
         self.body_compression = body_compression;
         self
     }
@@ -134,59 +136,4 @@ impl Default for Writer {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// Configures how the body should be compressed.
-#[derive(Clone, Copy)]
-pub enum BodyCompression {
-    /// Do not compress.
-    None,
-    /// Compress using a faster compressor but with a lower compression ratio.
-    Fast(FastBodyCompression),
-    /// Compress using a slower compressor but with a higher compression ratio.
-    Slow(SlowBodyCompression),
-}
-
-impl Default for BodyCompression {
-    fn default() -> Self {
-        Self::Fast(FastBodyCompression::default())
-    }
-}
-
-/// Configures the fast body compression.
-#[derive(Clone, Copy, Default)]
-pub enum FastBodyCompression {
-    /// Slowest but uses the least memory.
-    Level1,
-    /// Slower but uses less memory.
-    Level2,
-    /// Faster but uses more memory.
-    #[default]
-    Level3,
-    /// Fastest but uses the most memory.
-    Level4,
-}
-
-/// Configures the slow body compression.
-#[derive(Clone, Copy, Default)]
-pub enum SlowBodyCompression {
-    /// Level 1.
-    Level1,
-    /// Level 2.
-    Level2,
-    /// Level 3.
-    Level3,
-    /// Level 4.
-    Level4,
-    /// Level 5.
-    Level5,
-    /// Level 6.
-    Level6,
-    /// Level 7.
-    Level7,
-    /// Level 8.
-    #[default]
-    Level8,
-    /// Level 9.
-    Level9,
 }
