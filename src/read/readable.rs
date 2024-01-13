@@ -321,7 +321,9 @@ impl GbxFile {
                 let compressed_body_size = d.u32()?;
                 let compressed_body = d.bytes(compressed_body_size as usize)?;
                 let mut body = vec![0; body_size as usize];
-                lzo1x::decompress(&compressed_body, &mut body);
+
+                lzo1x::decompress(&compressed_body, &mut body)
+                    .map_err(|_| "decompression failed")?;
 
                 body
             }
