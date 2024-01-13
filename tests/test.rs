@@ -9,10 +9,11 @@ use std::{
 
 use gamebox::{
     classes::{
-        color_table::ColorTable, map::Map, material::Material, prefab::Prefab, texture::Texture,
-        veget_tree_model::VegetTreeModel, Item,
+        color_table::ColorTable, material::Material, prefab::Prefab, texture::Texture,
+        veget_tree_model::VegetTreeModel,
     },
     read::{HeaderOptions, Readable},
+    Item, Map,
 };
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 

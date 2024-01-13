@@ -13,7 +13,7 @@
 //!
 //! ``` no_run
 //! use gamebox::{read, read_file};
-//! use gamebox::classes::Item;
+//! use gamebox::Item;
 //!
 //! # |reader: std::io::Cursor<&[u8]>| {
 //! let item1: Item = read(reader)?;
@@ -26,7 +26,7 @@
 //! ``` no_run
 //! use gamebox::{write, write_file};
 //!
-//! # |map: gamebox::classes::Map, writer: std::io::Cursor<&mut [u8]>| {
+//! # |map: gamebox::Map, writer: std::io::Cursor<&mut [u8]>| {
 //! write(&map, writer)?;
 //! write_file(&map, "MyMap.Item.Gbx")?;
 //! # Ok::<(), gamebox::write::Error>(()) };
@@ -52,17 +52,11 @@ pub mod classes {
 
     mod static_object_model;
     mod visual_indexed_triangles;
-
-    #[doc(inline)]
-    pub use ghost::Ghost;
-    #[doc(inline)]
-    pub use item::Item;
-    #[doc(inline)]
-    pub use map::Map;
 }
 
 mod common;
 
+pub use classes::{ghost::Ghost, item::Item, map::Map};
 pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb};
 #[doc(inline)]
 pub use read::{read, read_file, Reader};

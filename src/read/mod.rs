@@ -28,7 +28,7 @@ pub trait Readable: readable::Sealed {}
 ///
 /// ``` no_run
 /// # use gamebox::read;
-/// # use gamebox::classes::Item;
+/// # use gamebox::Item;
 /// # |reader: std::io::Cursor<&[u8]>| {
 /// let item: Item = read(reader)?;
 /// # Ok::<(), gamebox::read::Error>(()) };
@@ -43,7 +43,7 @@ pub fn read<T: Readable>(reader: impl BufRead + Seek) -> Result<T> {
 ///
 /// ``` no_run
 /// # use gamebox::read_file;
-/// # use gamebox::classes::Item;
+/// # use gamebox::Item;
 /// # || {
 /// let item: Item = read_file("MyItem.Item.Gbx")?;
 /// # Ok::<(), gamebox::read::Error>(()) };
@@ -97,7 +97,7 @@ impl Reader {
     ///
     /// ``` no_run
     /// # use gamebox::read::Reader;
-    /// # use gamebox::classes::Item;
+    /// # use gamebox::Item;
     /// # |reader: std::io::Cursor<&[u8]>| {
     /// let item: Item = Reader::new().read(reader)?;
     /// # Ok::<(), gamebox::read::Error>(()) };
@@ -112,7 +112,7 @@ impl Reader {
     ///
     /// ``` no_run
     /// # use gamebox::read::Reader;
-    /// # use gamebox::classes::Item;
+    /// # use gamebox::Item;
     /// # || {
     /// let item: Item = Reader::new().read_file("MyItem.Item.Gbx")?;
     /// # Ok::<(), gamebox::read::Error>(()) };

@@ -40,7 +40,7 @@ pub trait Writable: writable::Sealed {}
 ///
 /// ``` no_run
 /// # use gamebox::write;
-/// # |map: gamebox::classes::Map, writer: std::io::Cursor<&mut [u8]>| {
+/// # |map: gamebox::Map, writer: std::io::Cursor<&mut [u8]>| {
 /// write(&map, writer)?;
 /// # Ok::<(), gamebox::write::Error>(()) };
 /// ```
@@ -56,7 +56,7 @@ pub fn write(node: &impl Writable, writer: impl Write) -> Result {
 ///
 /// ``` no_run
 /// # use gamebox::write_file;
-/// # |map: gamebox::classes::Map| {
+/// # |map: gamebox::Map| {
 /// write_file(&map, "MyMap.Item.Gbx")?;
 /// # Ok::<(), gamebox::write::Error>(()) };
 /// ```
@@ -105,7 +105,7 @@ impl Writer {
     ///
     /// ``` no_run
     /// # use gamebox::write::Writer;
-    /// # |map: gamebox::classes::Map, writer: std::io::Cursor<&mut [u8]>| {
+    /// # |map: gamebox::Map, writer: std::io::Cursor<&mut [u8]>| {
     /// Writer::new().write(&map, writer)?;
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
@@ -121,7 +121,7 @@ impl Writer {
     ///
     /// ``` no_run
     /// # use gamebox::write::Writer;
-    /// # |map: gamebox::classes::Map| {
+    /// # |map: gamebox::Map| {
     /// Writer::new().write_file(&map, "MyMap.Item.Gbx")?;
     /// # Ok::<(), gamebox::write::Error>(()) };
     /// ```
