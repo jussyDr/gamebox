@@ -488,7 +488,7 @@ impl Map {
         let _thumbnail = d.bytes(thumbnail_size as usize)?;
         d.bytes(16)?;
         d.bytes(10)?;
-        let _comments = d.u32()?; // 0
+        let _comments = d.string()?;
         d.bytes(11)?;
 
         Ok(())
@@ -640,7 +640,7 @@ impl Map {
 
     fn read_chunk_03043028<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        let _comments = d.u32()?; // 0
+        let _comments = d.string()?;
 
         Ok(())
     }
@@ -676,7 +676,7 @@ impl Map {
         d.u32()?; // 0
         d.f32()?; // -1.0
         d.f32()?; // -1.0
-        d.u32()?; // 0
+        d.string()?;
 
         Ok(())
     }
