@@ -45,6 +45,16 @@ impl Map {
         self.params.validation.as_ref()
     }
 
+    /// Validation of the map.
+    pub fn validation_mut(&mut self) -> Option<&mut Validation> {
+        self.params.validation.as_mut()
+    }
+
+    /// Set the validation of the map.
+    pub fn set_validation(&mut self, validation: Option<Validation>) {
+        self.params.validation = validation
+    }
+
     /// (Display) cost of the map.
     pub fn cost(&self) -> u32 {
         self.cost
@@ -144,7 +154,6 @@ impl Map {
 }
 
 /// Validation of a map.
-#[derive(Clone)]
 pub struct Validation {
     bronze_time: u32,
     silver_time: u32,
@@ -157,6 +166,11 @@ impl Validation {
     /// Bronze medal time objective.
     pub const fn bronze_time(&self) -> u32 {
         self.bronze_time
+    }
+
+    /// Set the bronze medal time objective.
+    pub fn set_bronze_time(&mut self, bronze_time: u32) {
+        self.bronze_time = bronze_time;
     }
 
     /// Silver medal time objective.
@@ -429,7 +443,7 @@ impl Class for CollectorList {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 27);
 }
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 struct ChallengeParameters {
     validation: Option<Validation>,
     ty: String,

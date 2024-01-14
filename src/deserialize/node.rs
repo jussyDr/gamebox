@@ -249,4 +249,36 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
             })),
         }
     }
+
+    /// Read an unique internal node reference that is not null.
+    pub fn unique_internal_node_ref<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<T> {
+        let index = match self.u32()? {
+            NULL => return Err("".into()),
+            index => index,
+        };
+
+        match self.node_state.borrow().get(index as usize)?.get() {
+            None => {
+                let class_id = self.u32()?;
+
+                if class_id != T::CLASS_ID.get() {
+                    return Err("class id does not match".into());
+                }
+
+                self.node_state
+                    .borrow()
+                    .set(index as usize, NodeRef::Internal { node: Rc::new(()) })?;
+
+                let mut node = T::default();
+
+                T::read_body(&mut node, self)?;
+
+                Ok(node)
+            }
+            Some(NodeRef::Internal { .. }) => Err("".into()),
+            Some(NodeRef::External { .. }) => Err("".into()),
+        }
+    }
 }
