@@ -84,9 +84,11 @@ impl Writer {
         }
     }
 
-    /// Sets how to compress the body while writing.
+    /// Set how to compress the body.
     ///
-    /// The default is fast compression with level 3.
+    /// Set to `None` to leave the body uncompressed.
+    ///
+    /// The default is to compress the body with level 3.
     ///
     /// # Examples
     ///

@@ -22,8 +22,6 @@ pub trait Readable: readable::Sealed {}
 
 /// Read a node of type `T` from the given `reader`.
 ///
-/// It is recommended that the given `reader` is buffered for optimal performance.
-///
 /// # Examples
 ///
 /// ``` no_run
@@ -90,8 +88,6 @@ impl Reader {
     }
 
     /// Read a node of type `T` from the given `reader`.
-    ///
-    /// It is recommended that the given `reader` is buffered for optimal performance.
     ///
     /// # Examples
     ///
