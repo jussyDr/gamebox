@@ -618,7 +618,7 @@ impl Map {
     }
 
     fn read_chunk_03043024<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        let _music = ExternalFileRef::read(d)?;
+        let _music = FileRef::read(d)?;
 
         Ok(())
     }

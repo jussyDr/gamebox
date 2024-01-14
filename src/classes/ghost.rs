@@ -154,6 +154,18 @@ impl BodyChunks for Ghost {
                 id: 0x0309202a,
                 read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_42(n, d)),
             },
+            BodyChunkEntry {
+                id: 0x0309202b,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_43(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x0309202c,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_44(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x0309202d,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_45(n, d)),
+            },
         ]
         .into_iter()
     }
@@ -383,6 +395,57 @@ impl Ghost {
     fn read_chunk_42<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?;
         d.u32()?; // 7
+
+        Ok(())
+    }
+
+    fn read_chunk_43<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        d.u32()?;
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_44<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        d.u32()?;
+        d.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_45<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0
+        d.string()?; // "Trackmania date=2022-05-19_15_03 git=113018-25c17c3a2da GameVersion=3.3.0"
+        d.u32()?;
+        d.u32()?; // 14
+        d.u32()?; // 6
+        d.u32()?;
+        d.u32()?;
+        d.string()?; // "Trackmania"
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?; // 0
+        d.u32()?;
+        d.u32()?; // 16
+        d.u32()?; // 0
 
         Ok(())
     }

@@ -254,6 +254,11 @@ impl MediaTrack {
                         MediaBlockCameraGame::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
+                    0x03085000 => {
+                        let mut node = MediaBlockTime;
+                        MediaBlockTime::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x030a2000 => {
                         let mut node = MediaBlockCameraCustom;
                         MediaBlockCameraCustom::read_body(&mut node, d)?;
@@ -269,6 +274,11 @@ impl MediaTrack {
                         MediaBlockImage::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
+                    0x030a6000 => {
+                        let mut node = MediaBlockMusicEffect;
+                        MediaBlockMusicEffect::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x030a7000 => {
                         let mut node = MediaBlockSound;
                         MediaBlockSound::read_body(&mut node, d)?;
@@ -277,6 +287,11 @@ impl MediaTrack {
                     0x030a8000 => {
                         let mut node = MediaBlockText;
                         MediaBlockText::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
+                    0x030a9000 => {
+                        let mut node = MediaBlockTrails;
+                        MediaBlockTrails::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
                     0x030ab000 => {
@@ -292,6 +307,21 @@ impl MediaTrack {
                     0x03127000 => {
                         let mut node = MediaBlockToneMapping;
                         MediaBlockToneMapping::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
+                    0x03128000 => {
+                        let mut node = MediaBlockBloomHdr;
+                        MediaBlockBloomHdr::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
+                    0x03129000 => {
+                        let mut node = MediaBlockTimeSpeed;
+                        MediaBlockTimeSpeed::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
+                    0x03145000 => {
+                        let mut node = MediaBlockShoot;
+                        MediaBlockShoot::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
                     0x03165000 => {
@@ -331,14 +361,20 @@ impl MediaTrack {
                 .or_else(|node| node.downcast().map(MediaBlock::Triangles3D))
                 .or_else(|node| node.downcast().map(MediaBlock::FxColors))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraGame))
+                .or_else(|node| node.downcast().map(MediaBlock::Time))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraCustom))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraEffectShake))
                 .or_else(|node| node.downcast().map(MediaBlock::Image))
+                .or_else(|node| node.downcast().map(MediaBlock::MusicEffect))
                 .or_else(|node| node.downcast().map(MediaBlock::Sound))
                 .or_else(|node| node.downcast().map(MediaBlock::Text))
+                .or_else(|node| node.downcast().map(MediaBlock::Trails))
                 .or_else(|node| node.downcast().map(MediaBlock::TransitionFade))
                 .or_else(|node| node.downcast().map(MediaBlock::DOF))
                 .or_else(|node| node.downcast().map(MediaBlock::ToneMapping))
+                .or_else(|node| node.downcast().map(MediaBlock::BloomHdr))
+                .or_else(|node| node.downcast().map(MediaBlock::TimeSpeed))
+                .or_else(|node| node.downcast().map(MediaBlock::Shoot))
                 .or_else(|node| node.downcast().map(MediaBlock::DirtyLens))
                 .or_else(|node| node.downcast().map(MediaBlock::ColorGrading))
                 .or_else(|node| node.downcast().map(MediaBlock::Interface))
@@ -373,22 +409,34 @@ pub enum MediaBlock {
     FxColors(Rc<MediaBlockFxColors>),
     /// Player camera media block.
     CameraGame(Rc<MediaBlockCameraGame>),
+    /// Time media block.
+    Time(Rc<MediaBlockTime>),
     /// Custom camera media block.
     CameraCustom(Rc<MediaBlockCameraCustom>),
     /// Shake cam FX media block.
     CameraEffectShake(Rc<MediaBlockCameraEffectShake>),
     /// Image media block.
     Image(Rc<MediaBlockImage>),
+    /// Music volume media block.
+    MusicEffect(Rc<MediaBlockMusicEffect>),
     /// Sound FX media block.
     Sound(Rc<MediaBlockSound>),
     /// Text media block.
     Text(Rc<MediaBlockText>),
+    /// Car trails media block.
+    Trails(Rc<MediaBlockTrails>),
     /// Transition fade media block.
     TransitionFade(Rc<MediaBlockTransitionFade>),
     /// Depth of field media block.
     DOF(Rc<MediaBlockDOF>),
     /// Tone mapping media block.
     ToneMapping(Rc<MediaBlockToneMapping>),
+    /// HDR bloom media block.
+    BloomHdr(Rc<MediaBlockBloomHdr>),
+    /// Time speed media block.
+    TimeSpeed(Rc<MediaBlockTimeSpeed>),
+    /// Editing cut media block.
+    Shoot(Rc<MediaBlockShoot>),
     /// Dirty lens media block.
     DirtyLens(Rc<MediaBlockDirtyLens>),
     /// Color grading media block.
@@ -708,6 +756,43 @@ impl MediaBlockCameraGame {
     }
 }
 
+/// Time media block.
+pub struct MediaBlockTime;
+
+impl ReadBody for MediaBlockTime {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockTime {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x03085000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockTime {
+    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
 /// Custom camera media block.
 pub struct MediaBlockCameraCustom;
 
@@ -847,7 +932,47 @@ impl MediaBlockImage {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.internal_node_ref::<EffectSimi>()?;
-        InternalFileRef::read(d)?;
+        FileRef::read(d)?;
+
+        Ok(())
+    }
+}
+
+/// Music volume media block.
+pub struct MediaBlockMusicEffect;
+
+impl ReadBody for MediaBlockMusicEffect {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockMusicEffect {
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x030a6001,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_1(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockMusicEffect {
+    fn read_chunk_1<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
 
         Ok(())
     }
@@ -958,6 +1083,41 @@ impl MediaBlockText {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?;
+        d.u32()?;
+        d.u32()?;
+
+        Ok(())
+    }
+}
+
+/// Car trails media block.
+pub struct MediaBlockTrails;
+
+impl ReadBody for MediaBlockTrails {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockTrails {
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x030a9000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockTrails {
+    fn read_chunk_0<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?;
         d.u32()?;
 
@@ -1086,6 +1246,112 @@ impl MediaBlockToneMapping {
 
             Ok(())
         })?;
+
+        Ok(())
+    }
+}
+
+/// HDR bloom media block.
+pub struct MediaBlockBloomHdr;
+
+impl ReadBody for MediaBlockBloomHdr {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockBloomHdr {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x03128002,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockBloomHdr {
+    fn read_chunk_2<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
+/// Time speed media block.
+pub struct MediaBlockTimeSpeed;
+
+impl ReadBody for MediaBlockTimeSpeed {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockTimeSpeed {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x03129000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockTimeSpeed {
+    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
+/// Editing cut media block.
+pub struct MediaBlockShoot;
+
+impl ReadBody for MediaBlockShoot {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockShoot {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x03145000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockShoot {
+    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?;
+        d.u32()?;
 
         Ok(())
     }
