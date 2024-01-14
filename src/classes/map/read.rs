@@ -1042,10 +1042,7 @@ impl Map {
     }
 
     fn read_chunk_0304305d<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        if d.u32()? != 0 {
-            d.bytes(83852)?;
-        }
+        d.read_to_end()?;
 
         Ok(())
     }
@@ -1639,6 +1636,8 @@ fn read_type<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Type> {
         0 => Ok(Type::Void),
         1 => Ok(Type::Boolean),
         2 => Ok(Type::Integer),
+        3 => Ok(Type::Real),
+        5 => Ok(Type::Text),
         7 => {
             let key_type = read_type(d)?;
             let element_type = read_type(d)?;
@@ -1661,6 +1660,13 @@ fn read_value<R: Read, I, N>(d: &mut Deserializer<R, I, N>, ty: &Type) -> Result
         Type::Integer => {
             d.i32()?;
         }
+        Type::Real => {
+            d.f32()?;
+        }
+        Type::Text => {
+            let len = d.u8()?;
+            d.bytes(len as usize)?;
+        }
         Type::Array {
             key_type,
             element_type,
@@ -1682,6 +1688,8 @@ enum Type {
     Void,
     Boolean,
     Integer,
+    Real,
+    Text,
     Array {
         key_type: Box<Type>,
         element_type: Box<Type>,
