@@ -319,6 +319,11 @@ impl MediaTrack {
                         MediaBlockTimeSpeed::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
+                    0x03133000 => {
+                        let mut node = MediaBlockVehicleLight;
+                        MediaBlockVehicleLight::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x03145000 => {
                         let mut node = MediaBlockShoot;
                         MediaBlockShoot::read_body(&mut node, d)?;
@@ -374,6 +379,7 @@ impl MediaTrack {
                 .or_else(|node| node.downcast().map(MediaBlock::ToneMapping))
                 .or_else(|node| node.downcast().map(MediaBlock::BloomHdr))
                 .or_else(|node| node.downcast().map(MediaBlock::TimeSpeed))
+                .or_else(|node| node.downcast().map(MediaBlock::VehicleLight))
                 .or_else(|node| node.downcast().map(MediaBlock::Shoot))
                 .or_else(|node| node.downcast().map(MediaBlock::DirtyLens))
                 .or_else(|node| node.downcast().map(MediaBlock::ColorGrading))
@@ -435,6 +441,8 @@ pub enum MediaBlock {
     BloomHdr(Rc<MediaBlockBloomHdr>),
     /// Time speed media block.
     TimeSpeed(Rc<MediaBlockTimeSpeed>),
+    /// Vehicle lights media block.
+    VehicleLight(Rc<MediaBlockVehicleLight>),
     /// Editing cut media block.
     Shoot(Rc<MediaBlockShoot>),
     /// Dirty lens media block.
@@ -1320,6 +1328,50 @@ impl MediaBlockTimeSpeed {
 
             Ok(())
         })?;
+
+        Ok(())
+    }
+}
+
+/// Vehicle lights media block.
+pub struct MediaBlockVehicleLight;
+
+impl ReadBody for MediaBlockVehicleLight {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockVehicleLight {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
+            BodyChunkEntry {
+                id: 0x03133000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x03133001,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_1(n, d)),
+            },
+        ]
+        .into_iter()
+    }
+}
+
+impl MediaBlockVehicleLight {
+    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?;
+        d.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_1<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?;
 
         Ok(())
     }
