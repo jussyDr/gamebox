@@ -345,19 +345,33 @@ impl MediaTrack {
 
 /// A media block.
 pub enum MediaBlock {
+    /// 3D triangles media block.
     Triangles3D(Rc<MediaBlockTriangles3D>),
+    /// Colors FX media block.
     FxColors(Rc<MediaBlockFxColors>),
+    /// Player camera media block.
     CameraGame(Rc<MediaBlockCameraGame>),
+    /// Custom camera media block.
     CameraCustom(Rc<MediaBlockCameraCustom>),
+    /// Shake cam FX media block.
     CameraEffectShake(Rc<MediaBlockCameraEffectShake>),
+    /// Image media block.
     Image(Rc<MediaBlockImage>),
+    /// Text media block.
     Text(Rc<MediaBlockText>),
+    /// Transition fade media block.
     TransitionFade(Rc<MediaBlockTransitionFade>),
+    /// Depth of field media block.
     DOF(Rc<MediaBlockDOF>),
+    /// Tone mapping media block.
     ToneMapping(Rc<MediaBlockToneMapping>),
+    /// Dirty lens media block.
     DirtyLens(Rc<MediaBlockDirtyLens>),
+    /// Color grading media block.
     ColorGrading(Rc<MediaBlockColorGrading>),
+    /// Fog media block.
     Fog(Rc<MediaBlockFog>),
+    /// Ghost media block.
     Entity(Rc<MediaBlockEntity>),
 }
 
@@ -412,6 +426,7 @@ impl MediaBlockTriangles {
     }
 }
 
+/// 3D triangles media block.
 pub struct MediaBlockTriangles3D {
     parent: MediaBlockTriangles,
 }
@@ -446,6 +461,7 @@ impl BodyChunks for MediaBlockTriangles3D {
     }
 }
 
+/// Colors FX media block.
 #[derive(Default)]
 pub struct MediaBlockFxColors {
     keys: Vec<MediaBlockFxColorsKey>,
@@ -532,6 +548,7 @@ impl MediaBlockFxColors {
     }
 }
 
+/// Colors FX media block key.
 pub struct MediaBlockFxColorsKey {
     global_intensity: f32,
     /// [0.0, 1.0].
@@ -579,6 +596,7 @@ impl MediaBlockFxColorsKey {
     }
 }
 
+/// Player camera media block.
 pub struct MediaBlockCameraGame;
 
 impl ReadBody for MediaBlockCameraGame {
@@ -629,6 +647,7 @@ impl MediaBlockCameraGame {
     }
 }
 
+/// Custom camera media block.
 pub struct MediaBlockCameraCustom;
 
 impl ReadBody for MediaBlockCameraCustom {
@@ -702,6 +721,7 @@ impl MediaBlockCameraCustom {
     }
 }
 
+/// Shake cam FX media block.
 pub struct MediaBlockCameraEffectShake;
 
 impl ReadBody for MediaBlockCameraEffectShake {
@@ -737,6 +757,7 @@ impl MediaBlockCameraEffectShake {
     }
 }
 
+/// Image media block.
 pub struct MediaBlockImage;
 
 impl ReadBody for MediaBlockImage {
@@ -771,6 +792,7 @@ impl MediaBlockImage {
     }
 }
 
+/// Text media block.
 pub struct MediaBlockText;
 
 impl ReadBody for MediaBlockText {
@@ -822,6 +844,7 @@ impl MediaBlockText {
     }
 }
 
+/// Transition fade media block.
 pub struct MediaBlockTransitionFade;
 
 impl ReadBody for MediaBlockTransitionFade {
@@ -864,6 +887,7 @@ impl MediaBlockTransitionFade {
     }
 }
 
+/// Depth of field media block.
 pub struct MediaBlockDOF;
 
 impl ReadBody for MediaBlockDOF {
@@ -907,6 +931,7 @@ impl MediaBlockDOF {
     }
 }
 
+/// Tone mapping media block.
 pub struct MediaBlockToneMapping;
 
 impl ReadBody for MediaBlockToneMapping {
@@ -945,6 +970,7 @@ impl MediaBlockToneMapping {
     }
 }
 
+/// Dirty lens media block.
 pub struct MediaBlockDirtyLens;
 
 impl ReadBody for MediaBlockDirtyLens {
@@ -981,6 +1007,7 @@ impl MediaBlockDirtyLens {
     }
 }
 
+/// Color grading media block.
 pub struct MediaBlockColorGrading;
 
 impl ReadBody for MediaBlockColorGrading {
@@ -1028,6 +1055,7 @@ impl MediaBlockColorGrading {
     }
 }
 
+/// Fog media block.
 pub struct MediaBlockFog;
 
 impl ReadBody for MediaBlockFog {
@@ -1072,6 +1100,7 @@ impl MediaBlockFog {
     }
 }
 
+/// Ghost media block.
 pub struct MediaBlockEntity;
 
 impl ReadBody for MediaBlockEntity {

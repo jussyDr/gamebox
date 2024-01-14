@@ -377,11 +377,11 @@ impl Map {
             b"header",
             |attributes| {
                 if attributes.get(b"type").unwrap() != b"map" {
-                    todo!()
+                    return Err("".into());
                 }
 
                 if attributes.get(b"exever").unwrap() != b"3.3.0" {
-                    todo!()
+                    return Err("".into());
                 }
 
                 attributes.get(b"exebuild").unwrap();
@@ -402,13 +402,13 @@ impl Map {
 
                 xml_reader.with_empty(b"desc", |attributes| {
                     if attributes.get(b"envir").unwrap() != b"Stadium" {
-                        todo!()
+                        return Err("".into());
                     }
 
                     attributes.get(b"mood").unwrap();
 
                     if attributes.get(b"type").unwrap() != b"Race" {
-                        todo!()
+                        return Err("".into());
                     }
 
                     self.params.ty = attributes.get_str(b"maptype")?.unwrap().into();
