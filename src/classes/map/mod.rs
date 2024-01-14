@@ -155,43 +155,16 @@ impl Map {
 
 /// Validation of a map.
 pub struct Validation {
-    bronze_time: u32,
-    silver_time: u32,
-    gold_time: u32,
-    author_time: u32,
-    ghost: Option<Rc<Ghost>>,
-}
-
-impl Validation {
     /// Bronze medal time objective.
-    pub const fn bronze_time(&self) -> u32 {
-        self.bronze_time
-    }
-
-    /// Set the bronze medal time objective.
-    pub fn set_bronze_time(&mut self, bronze_time: u32) {
-        self.bronze_time = bronze_time;
-    }
-
+    pub bronze_time: u32,
     /// Silver medal time objective.
-    pub const fn silver_time(&self) -> u32 {
-        self.silver_time
-    }
-
+    pub silver_time: u32,
     /// Gold medal time objective.
-    pub const fn gold_time(&self) -> u32 {
-        self.gold_time
-    }
-
+    pub gold_time: u32,
     /// Author medal time objective.
-    pub const fn author_time(&self) -> u32 {
-        self.author_time
-    }
-
+    pub author_time: u32,
     /// Validation ghost used to set the author time.
-    pub fn ghost(&self) -> Option<&Ghost> {
-        self.ghost.as_ref().map(|x| x as _)
-    }
+    pub ghost: Option<Rc<Ghost>>,
 }
 
 /// Block placed inside of a `Map`.
@@ -443,7 +416,6 @@ impl Class for CollectorList {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 27);
 }
 
-#[derive(Default)]
 struct ChallengeParameters {
     validation: Option<Validation>,
     ty: String,
@@ -452,4 +424,14 @@ struct ChallengeParameters {
 
 impl Class for ChallengeParameters {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 91);
+}
+
+impl Default for ChallengeParameters {
+    fn default() -> Self {
+        Self {
+            validation: None,
+            ty: String::from("TrackMania\\TM_Race"),
+            style: String::new(),
+        }
+    }
 }
