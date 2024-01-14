@@ -17,12 +17,16 @@ use self::media::{MediaClip, MediaClipGroup};
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
 #[derive(Default)]
 pub struct Map {
-    cost: u32,
+    /// (Display) cost of the map.
+    pub cost: u32,
     id: RcStr,
-    author_id: RcStr,
+    /// Identifier of the map author.
+    pub author_id: RcStr,
     name: String,
-    author_name: String,
-    author_region: String,
+    /// Name of the map author.
+    pub author_name: String,
+    /// Region of the map author.
+    pub author_region: String,
     params: ChallengeParameters,
     blocks: Vec<Block>,
     items: Vec<Item>,
@@ -55,29 +59,9 @@ impl Map {
         self.params.validation = validation
     }
 
-    /// (Display) cost of the map.
-    pub fn cost(&self) -> u32 {
-        self.cost
-    }
-
-    /// Set the (display) cost of the map.
-    pub fn set_cost(&mut self, cost: u32) {
-        self.cost = cost;
-    }
-
     /// Identifier of the map.
     pub fn id(&self) -> &str {
         &self.id
-    }
-
-    /// Identifier of the map author.
-    pub fn author_id(&self) -> &str {
-        &self.author_id
-    }
-
-    /// Set the id of the map author.
-    pub fn set_author_id(&mut self, author_id: impl Into<RcStr>) {
-        self.author_id = author_id.into()
     }
 
     /// Name of the map.
@@ -90,26 +74,6 @@ impl Map {
     /// In most cases this will be `TrackMania\TM_Race` or `TrackMania\TM_Royal`.
     pub fn ty(&self) -> &str {
         &self.params.ty
-    }
-
-    /// Name of the map author.
-    pub fn author_name(&self) -> &str {
-        &self.author_name
-    }
-
-    /// Set the name of the map author.
-    pub fn set_author_name(&mut self, author_name: impl Into<String>) {
-        self.author_name = author_name.into()
-    }
-
-    /// Region of the map author.
-    pub fn author_region(&self) -> &str {
-        &self.author_region
-    }
-
-    /// Set the region of the map author.
-    pub fn set_author_region(&mut self, author_region: impl Into<String>) {
-        self.author_region = author_region.into()
     }
 
     /// List of blocks placed inside of this map.
