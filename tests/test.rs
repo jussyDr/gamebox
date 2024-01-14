@@ -20,6 +20,14 @@ use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, Te
 fn main() {
     let mut map = Map::default();
 
+    map.set_validation(Some(Validation {
+        bronze_time: 1000,
+        silver_time: 2000,
+        gold_time: 3000,
+        author_time: 4000,
+        ghost: None,
+    }));
+
     gamebox::write_file(
         &map,
         "C:\\Users\\Justin\\Documents\\Trackmania\\Maps\\My Maps\\Empty.Map.Gbx",

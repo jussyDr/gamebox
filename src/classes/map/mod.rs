@@ -129,9 +129,17 @@ pub struct Validation {
     pub ghost: Option<Rc<Ghost>>,
 }
 
+/// Type of a map.
 pub enum MapType {
+    /// Normal race.
+    ///
+    /// Corresponds to the script `TrackMania\\TM_Race`.
     Race,
-    Script { path: String },
+    /// Custom script.
+    Script {
+        /// Game path to the script file, for example `TrackMania\\TM_Royal`.
+        path: String,
+    },
 }
 
 impl Default for MapType {
