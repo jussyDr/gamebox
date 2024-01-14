@@ -1,6 +1,5 @@
 use std::{
     any::Any,
-    cell::OnceCell,
     io::{Read, Seek},
     path::Path,
     rc::Rc,
@@ -14,11 +13,11 @@ use crate::{
 use super::{repeat_n_with, Deserializer, IdStateMut};
 
 /// Reference to a node of type `T`.
-pub enum NodeRef<T: ?Sized> {
+pub enum NodeRef<T> {
     /// Internal node reference.
     Internal {
         /// The referenced node.
-        node: Rc<T>,
+        node: T,
     },
     /// External node reference.
     External {
@@ -29,29 +28,39 @@ pub enum NodeRef<T: ?Sized> {
 
 /// Node reference state.
 pub struct NodeState {
-    nodes: Box<[OnceCell<NodeRef<dyn Any>>]>,
+    #[allow(clippy::type_complexity)]
+    nodes: Box<[Option<NodeRef<Rc<dyn Any>>>]>,
 }
 
 impl NodeState {
     /// Create a new node reference state.
     pub fn new(num_nodes: usize) -> Self {
         Self {
-            nodes: repeat_n_with(num_nodes, OnceCell::new),
+            nodes: repeat_n_with(num_nodes, || None),
         }
     }
 
     /// Get a node reference with the given `index`.
-    pub fn get(&self, index: usize) -> Result<&OnceCell<NodeRef<dyn Any>>> {
-        self.nodes
-            .get(index - 1)
-            .ok_or("node index out of range".into())
+    pub fn get(&self, index: usize) -> Result<Option<&NodeRef<Rc<dyn Any>>>> {
+        let node_ref = self.nodes.get(index - 1).ok_or("node index out of range")?;
+
+        Ok(node_ref.as_ref())
     }
 
     /// Set a node reference at the given `index`.
-    pub fn set(&self, index: usize, node_ref: NodeRef<dyn Any>) -> Result<()> {
-        self.get(index)?
-            .set(node_ref)
-            .map_err(|_| "node already read".into())
+    pub fn set(&mut self, index: usize, node_ref: NodeRef<Rc<dyn Any>>) -> Result<()> {
+        let entry = self
+            .nodes
+            .get_mut(index - 1)
+            .ok_or("node index out of range")?;
+
+        if entry.is_some() {
+            return Err("node already read".into());
+        }
+
+        *entry = Some(node_ref);
+
+        Ok(())
     }
 }
 
@@ -96,7 +105,6 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
             .node_state
             .borrow()
             .get(index as usize)?
-            .get()
             .ok_or("node is null")?;
 
         match node_ref {
@@ -127,7 +135,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read a node reference that may be internal or external and that is not null.
-    pub fn node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<T>> {
+    pub fn node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<Rc<T>>> {
         match self.node_ref_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -137,13 +145,13 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read a node reference that may be internal or external and that may be null.
     pub fn node_ref_or_null<T: 'static + Default + Class + ReadBody>(
         &mut self,
-    ) -> Result<Option<NodeRef<T>>> {
+    ) -> Result<Option<NodeRef<Rc<T>>>> {
         let index = match self.u32()? {
             NULL => return Ok(None),
             index => index,
         };
 
-        match self.node_state.borrow().get(index as usize)?.get() {
+        match self.node_state.borrow().get(index as usize)? {
             None => {
                 let class_id = self.u32()?;
 
@@ -157,7 +165,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
 
                 let node = Rc::new(node);
 
-                self.node_state.borrow().set(
+                self.node_state.borrow_mut().set(
                     index as usize,
                     NodeRef::Internal {
                         node: Rc::<T>::clone(&node),
@@ -220,19 +228,19 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn any_node_ref_or_null(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
-    ) -> Result<Option<NodeRef<dyn Any>>> {
+    ) -> Result<Option<NodeRef<Rc<dyn Any>>>> {
         let index = match self.u32()? {
             0xffffffff => return Ok(None),
             index => index,
         };
 
-        match self.node_state.borrow().get(index as usize)?.get() {
+        match self.node_state.borrow().get(index as usize)? {
             None => {
                 let class_id = self.u32()?;
 
                 let node = read_fn(self, class_id)?;
 
-                self.node_state.borrow().set(
+                self.node_state.borrow_mut().set(
                     index as usize,
                     NodeRef::Internal {
                         node: Rc::clone(&node),
@@ -254,12 +262,43 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     pub fn unique_internal_node_ref<T: 'static + Default + Class + ReadBody>(
         &mut self,
     ) -> Result<T> {
+        match self.unique_internal_node_ref_or_null()? {
+            None => Err("".into()),
+            Some(node) => Ok(node),
+        }
+    }
+
+    /// Read an unique internal node reference that may be null.
+    pub fn unique_internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<T>> {
+        match self.unique_node_ref_or_null()? {
+            None => Ok(None),
+            Some(NodeRef::Internal { node }) => Ok(Some(node)),
+            Some(NodeRef::External { .. }) => Err("".into()),
+        }
+    }
+
+    /// Read an unique internal node reference.
+    pub fn unique_node_ref<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<NodeRef<T>> {
+        match self.unique_node_ref_or_null()? {
+            None => Err("".into()),
+            Some(node_ref) => Ok(node_ref),
+        }
+    }
+
+    /// Read an unique node reference that may be internal or external and that may be null.
+    pub fn unique_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
-            NULL => return Err("".into()),
+            NULL => return Ok(None),
             index => index,
         };
 
-        match self.node_state.borrow().get(index as usize)?.get() {
+        match self.node_state.borrow().get(index as usize)? {
             None => {
                 let class_id = self.u32()?;
 
@@ -268,17 +307,48 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
                 }
 
                 self.node_state
-                    .borrow()
+                    .borrow_mut()
                     .set(index as usize, NodeRef::Internal { node: Rc::new(()) })?;
 
                 let mut node = T::default();
 
                 T::read_body(&mut node, self)?;
 
-                Ok(node)
+                Ok(Some(NodeRef::Internal { node }))
             }
             Some(NodeRef::Internal { .. }) => Err("".into()),
-            Some(NodeRef::External { .. }) => Err("".into()),
+            Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
+                path: Rc::clone(path),
+            })),
+        }
+    }
+
+    /// Read an unique node reference that may be internal or external and that may be null.
+    pub fn any_unique_node_ref_or_null(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<Box<dyn Any>>,
+    ) -> Result<Option<NodeRef<Box<dyn Any>>>> {
+        let index = match self.u32()? {
+            0xffffffff => return Ok(None),
+            index => index,
+        };
+
+        match self.node_state.borrow().get(index as usize)? {
+            None => {
+                let class_id = self.u32()?;
+
+                self.node_state
+                    .borrow_mut()
+                    .set(index as usize, NodeRef::Internal { node: Rc::new(()) })?;
+
+                let node = read_fn(self, class_id)?;
+
+                Ok(Some(NodeRef::Internal { node }))
+            }
+            Some(NodeRef::Internal { .. }) => Err("".into()),
+            Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
+                path: Rc::clone(path),
+            })),
         }
     }
 }

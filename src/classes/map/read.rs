@@ -509,7 +509,7 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.internal_node_ref::<CollectorList>()?;
+        d.unique_internal_node_ref::<CollectorList>()?;
         self.params = d.unique_internal_node_ref::<ChallengeParameters>()?;
         let _map_kind = d.u32()?; // 6
 

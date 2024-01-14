@@ -1,7 +1,4 @@
-use std::{
-    io::{BufRead, Read, Seek},
-    rc::Rc,
-};
+use std::io::{BufRead, Read, Seek};
 
 use crate::{
     classes::{
@@ -264,13 +261,13 @@ impl Item {
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
-        d.node_ref_or_null::<ItemEntityModelEdition>()?;
-        d.any_node_ref_or_null(|d, class_id| match class_id {
+        d.unique_node_ref_or_null::<ItemEntityModelEdition>()?;
+        d.any_unique_node_ref_or_null(|d, class_id| match class_id {
             0x2e027000 => {
                 let mut node = ItemEntityModel::default();
                 read_body_chunks(&mut node, d)?;
 
-                Ok(Rc::new(node))
+                Ok(Box::new(node))
             }
             0x2f0bc000 => {
                 d.u32()?; // 1
@@ -287,7 +284,7 @@ impl Item {
                     Ok(())
                 })?;
 
-                Ok(Rc::new(()))
+                Ok(Box::new(()))
             }
             _ => Err("unknown entity model type".into()),
         })?;
@@ -311,7 +308,7 @@ impl Item {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 5
-        d.node_ref::<ItemPlacementParam>()?;
+        d.unique_node_ref::<ItemPlacementParam>()?;
 
         Ok(())
     }
@@ -340,7 +337,7 @@ impl Item {
         d.u8()?; // 0
 
         if version >= 12 {
-            d.internal_node_ref_or_null::<MediaClipList>()?;
+            d.unique_internal_node_ref_or_null::<MediaClipList>()?;
             d.u32()?; // 0xffffffff
         }
 
@@ -515,7 +512,7 @@ impl ItemPlacementParam {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.node_ref::<ItemPlacement>()?;
+        d.unique_node_ref::<ItemPlacement>()?;
 
         Ok(())
     }
@@ -538,7 +535,7 @@ impl ItemEntityModel {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 4
-        d.internal_node_ref::<StaticObjectModel>()?;
+        d.unique_internal_node_ref::<StaticObjectModel>()?;
 
         Ok(())
     }
@@ -590,7 +587,7 @@ impl ItemEntityModelEdition {
     ) -> Result<()> {
         d.u32()?; // 7
         d.u32()?; // 1
-        d.internal_node_ref::<Crystal>()?;
+        d.unique_internal_node_ref::<Crystal>()?;
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u32()?; // 0

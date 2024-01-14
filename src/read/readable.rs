@@ -44,7 +44,7 @@ pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
         )?;
     }
 
-    let node_state = NodeState::new(gbx_file.num_node_refs as usize);
+    let mut node_state = NodeState::new(gbx_file.num_node_refs as usize);
 
     for (index, path) in gbx_file.external_node_refs {
         node_state.set(
