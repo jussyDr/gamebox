@@ -1136,7 +1136,7 @@ impl Map {
         d.u32()?; // 0
         for _ in &self.items {
             if d.bool8()? {
-                InternalFileRef::read(d)?;
+                FileRef::read(d)?;
             }
         }
 

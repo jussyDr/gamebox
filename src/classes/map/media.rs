@@ -14,7 +14,7 @@ use crate::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    FileRef, InternalFileRef,
+    ExternalFileRef, FileRef, InternalFileRef,
 };
 
 use super::Coord;
@@ -262,6 +262,11 @@ impl MediaTrack {
                         MediaBlockImage::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
+                    0x030a7000 => {
+                        let mut node = MediaBlockSound;
+                        MediaBlockSound::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x030a8000 => {
                         let mut node = MediaBlockText;
                         MediaBlockText::read_body(&mut node, d)?;
@@ -316,6 +321,7 @@ impl MediaTrack {
                 .or_else(|node| node.downcast().map(MediaBlock::CameraCustom))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraEffectShake))
                 .or_else(|node| node.downcast().map(MediaBlock::Image))
+                .or_else(|node| node.downcast().map(MediaBlock::Sound))
                 .or_else(|node| node.downcast().map(MediaBlock::Text))
                 .or_else(|node| node.downcast().map(MediaBlock::TransitionFade))
                 .or_else(|node| node.downcast().map(MediaBlock::DOF))
@@ -357,6 +363,8 @@ pub enum MediaBlock {
     CameraEffectShake(Rc<MediaBlockCameraEffectShake>),
     /// Image media block.
     Image(Rc<MediaBlockImage>),
+    /// Sound FX media block.
+    Sound(Rc<MediaBlockSound>),
     /// Text media block.
     Text(Rc<MediaBlockText>),
     /// Transition fade media block.
@@ -787,6 +795,66 @@ impl MediaBlockImage {
     ) -> Result<()> {
         d.internal_node_ref::<EffectSimi>()?;
         InternalFileRef::read(d)?;
+
+        Ok(())
+    }
+}
+
+/// Sound FX media block.
+pub struct MediaBlockSound;
+
+impl ReadBody for MediaBlockSound {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockSound {
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
+            BodyChunkEntry {
+                id: 0x030a7003,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_3(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x030a7004,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_4(n, d)),
+            },
+        ]
+        .into_iter()
+    }
+}
+
+impl MediaBlockSound {
+    fn read_chunk_3<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_4<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        ExternalFileRef::read(d)?;
+        d.u32()?; // 1
+        d.list(|d| {
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
 
         Ok(())
     }
