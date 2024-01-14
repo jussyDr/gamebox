@@ -17,7 +17,7 @@ use crate::{
 use super::{
     media::{MediaClip, MediaClipGroup},
     Block, BlockKind, ChallengeParameters, CollectorList, Color, Coord, Direction, EmbeddedObjects,
-    FreeBlock, Item, LightmapQuality, Map, NormalBlock, PhaseOffset, Position, Rotation,
+    FreeBlock, Item, LightmapQuality, Map, MapType, NormalBlock, PhaseOffset, Position, Rotation,
     Validation,
 };
 
@@ -350,7 +350,10 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
-        self.params.ty = d.string()?;
+        self.params.ty = match d.string()? {
+            path if path == "TrackMania\\TM_Race" => MapType::Race,
+            path => MapType::Script { path },
+        };
         self.params.style = d.string()?;
         let _lightmap_cache_id = d.u64()?;
         let _lightmap_version = d.u8()?; // 8
@@ -407,11 +410,19 @@ impl Map {
 
                     attributes.get(b"mood").unwrap();
 
-                    if attributes.get(b"type").unwrap() != b"Race" {
-                        return Err("".into());
-                    }
+                    let has_script = match attributes.get(b"type").unwrap() {
+                        b"Race" => false,
+                        b"Script" => true,
+                        _ => return Err("".into()),
+                    };
 
-                    self.params.ty = attributes.get_str(b"maptype")?.unwrap().into();
+                    self.params.ty = match attributes.get_str(b"maptype")?.unwrap() {
+                        "TrackMania\\TM_Race" if !has_script => MapType::Race,
+                        path if has_script => MapType::Script {
+                            path: path.to_owned(),
+                        },
+                        _ => return Err("".into()),
+                    };
                     self.params.style = attributes.get_str(b"mapstyle")?.unwrap().to_owned();
                     attributes.get(b"validated").unwrap();
                     attributes.get(b"nblaps").unwrap();
@@ -1333,7 +1344,10 @@ impl ChallengeParameters {
     }
 
     fn read_chunk_0305b00e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        self.ty = d.string()?;
+        self.ty = match d.string()? {
+            path if path == "TrackMania\\TM_Race" => MapType::Race,
+            path => MapType::Script { path },
+        };
         self.style = d.string()?;
         d.u32()?; // 1
 
@@ -1436,7 +1450,7 @@ impl BlockSkin {
 
     fn read_chunk_03059003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        InternalFileRef::read(d)?;
+        FileRef::read(d)?;
 
         Ok(())
     }

@@ -1,6 +1,7 @@
 use std::{f32::consts::FRAC_PI_4, io::Write};
 
 use crate::{
+    classes::map::MapType,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
         writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
@@ -149,7 +150,10 @@ impl Map {
         s.u32(0)?;
         s.u32(0)?;
         s.u32(0)?;
-        s.string(&self.params.ty)?;
+        s.string(match self.params.ty {
+            MapType::Race => "TrackMania\\TM_Race",
+            MapType::Script { ref path } => path,
+        })?;
         s.string(&self.params.style)?;
         s.u32(0x4983cc85)?;
         s.u32(0xff58b673)?;
@@ -191,10 +195,30 @@ impl Map {
                         .create_element("desc")
                         .with_attribute(("envir", "Stadium"))
                         .with_attribute(("mood", "Day"))
-                        .with_attribute(("type", "Race"))
-                        .with_attribute(("maptype", self.params.ty.as_str()))
+                        .with_attribute((
+                            "type",
+                            if matches!(self.params.ty, MapType::Race) {
+                                "Race"
+                            } else {
+                                "Script"
+                            },
+                        ))
+                        .with_attribute((
+                            "maptype",
+                            match self.params.ty {
+                                MapType::Race => "TrackMania\\TM_Race",
+                                MapType::Script { ref path } => path,
+                            },
+                        ))
                         .with_attribute(("mapstyle", self.params.style.as_str()))
-                        .with_attribute(("validated", "0"))
+                        .with_attribute((
+                            "validated",
+                            if self.params.validation.is_some() {
+                                "1"
+                            } else {
+                                "0"
+                            },
+                        ))
                         .with_attribute(("nblaps", "0"))
                         .with_attribute(("displaycost", self.cost.to_string().as_str()))
                         .with_attribute(("mod", ""))
@@ -1014,7 +1038,10 @@ impl ChallengeParameters {
         s.u32(0x0305b00e)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
-            s.string(&self.ty)?;
+            s.string(match self.ty {
+                MapType::Race => "TrackMania\\TM_Race",
+                MapType::Script { ref path } => path,
+            })?;
             s.string(&self.style)?;
             s.u32(0)
         })?;

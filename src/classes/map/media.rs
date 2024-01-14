@@ -1128,7 +1128,7 @@ impl MediaBlockEntity {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 6
+        let version = d.u32()?; // 6 | 9
         d.internal_node_ref::<EntRecordData>()?;
         d.u32()?; // 0
         d.list(|d| {
@@ -1159,9 +1159,19 @@ impl MediaBlockEntity {
             d.u32()?;
             d.u32()?;
             d.u32()?;
+            if version >= 9 {
+                d.u32()?;
+            }
 
             Ok(())
         })?;
+        if version >= 7 {
+            d.string()?; // "Guide"
+
+            if version >= 8 {
+                d.u32()?;
+            }
+        }
 
         Ok(())
     }

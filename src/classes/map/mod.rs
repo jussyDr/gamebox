@@ -70,9 +70,7 @@ impl Map {
     }
 
     /// Type of the map.
-    ///
-    /// In most cases this will be `TrackMania\TM_Race` or `TrackMania\TM_Royal`.
-    pub fn ty(&self) -> &str {
+    pub fn ty(&self) -> &MapType {
         &self.params.ty
     }
 
@@ -129,6 +127,17 @@ pub struct Validation {
     pub author_time: u32,
     /// Validation ghost used to set the author time.
     pub ghost: Option<Rc<Ghost>>,
+}
+
+pub enum MapType {
+    Race,
+    Script { path: String },
+}
+
+impl Default for MapType {
+    fn default() -> Self {
+        Self::Race
+    }
 }
 
 /// Block placed inside of a `Map`.
@@ -380,22 +389,13 @@ impl Class for CollectorList {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 27);
 }
 
+#[derive(Default)]
 struct ChallengeParameters {
     validation: Option<Validation>,
-    ty: String,
+    ty: MapType,
     style: String,
 }
 
 impl Class for ChallengeParameters {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 91);
-}
-
-impl Default for ChallengeParameters {
-    fn default() -> Self {
-        Self {
-            validation: None,
-            ty: String::from("TrackMania\\TM_Race"),
-            style: String::new(),
-        }
-    }
 }
