@@ -5,6 +5,9 @@ use std::{
 };
 
 /// A reference counted string.
+///
+/// `RcStr` is optimized to not use heap allocated memory when empty,
+/// which is the case for the standard `Rc<str>`.
 #[derive(Clone, Default)]
 pub struct RcStr(Option<Rc<str>>);
 
@@ -57,6 +60,9 @@ impl From<String> for RcStr {
 }
 
 /// A reference counted path.
+///
+/// `RcPath` is optimized to not use heap allocated memory when empty,
+/// which is the case for the standard `Rc<Path>`.
 #[derive(Clone, Default)]
 pub struct RcPath(Option<Rc<Path>>);
 

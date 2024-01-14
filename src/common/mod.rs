@@ -19,13 +19,13 @@ pub struct Rgb {
 }
 
 impl Rgb {
-    /// Convert to an array with the form `[r, g, b]`.
+    /// Convert to an array with of form `[r, g, b]`.
     ///
     /// # Examples
     ///
     /// ```
     /// # |color: gamebox::Rgb| {
-    /// let array = color.into_array();
+    /// let [r, g, b] = color.into_array();
     /// # };
     /// ```
     pub const fn into_array(self) -> [u8; 3] {

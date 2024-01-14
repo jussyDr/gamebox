@@ -148,7 +148,7 @@ impl Default for MapType {
     }
 }
 
-/// Block placed inside of a `Map`.
+/// Block placed inside of a map.
 pub struct Block {
     id: Rc<str>,
     kind: BlockKind,
@@ -229,7 +229,7 @@ impl FreeBlock {
     }
 }
 
-/// Item placed inside of a `Map`.
+/// Item placed inside of a map.
 #[derive(Default)]
 pub struct Item {
     id: RcStr,
