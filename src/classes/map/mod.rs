@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    RcStr,
+    Ghost, RcStr,
 };
 
 use self::media::{MediaClip, MediaClipGroup};
@@ -40,9 +40,9 @@ impl Class for Map {
 }
 
 impl Map {
-    /// Medal time objectives of the map.
-    pub fn medal_times(&self) -> Option<&MedalTimes> {
-        self.params.medal_times.as_ref()
+    /// Validation of the map.
+    pub fn validation(&self) -> Option<&Validation> {
+        self.params.validation.as_ref()
     }
 
     /// (Display) cost of the map.
@@ -50,7 +50,7 @@ impl Map {
         self.cost
     }
 
-    /// Set the display cost of the map.
+    /// Set the (display) cost of the map.
     pub fn set_cost(&mut self, cost: u32) {
         self.cost = cost;
     }
@@ -65,7 +65,7 @@ impl Map {
         &self.author_id
     }
 
-    /// Sets the id of the map author.
+    /// Set the id of the map author.
     pub fn set_author_id(&mut self, author_id: impl Into<RcStr>) {
         self.author_id = author_id.into()
     }
@@ -77,7 +77,7 @@ impl Map {
 
     /// Type of the map.
     ///
-    /// Usually `TrackMania\TM_Race` or `TrackMania\TM_Royal`.
+    /// In most cases this will be `TrackMania\TM_Race` or `TrackMania\TM_Royal`.
     pub fn ty(&self) -> &str {
         &self.params.ty
     }
@@ -87,7 +87,7 @@ impl Map {
         &self.author_name
     }
 
-    /// Sets the name of the map author.
+    /// Set the name of the map author.
     pub fn set_author_name(&mut self, author_name: impl Into<String>) {
         self.author_name = author_name.into()
     }
@@ -97,7 +97,7 @@ impl Map {
         &self.author_region
     }
 
-    /// Sets the region of the map author.
+    /// Set the region of the map author.
     pub fn set_author_region(&mut self, author_region: impl Into<String>) {
         self.author_region = author_region.into()
     }
@@ -143,34 +143,40 @@ impl Map {
     }
 }
 
-/// Medal time objectives of a map.
+/// Validation of a map.
 #[derive(Clone)]
-pub struct MedalTimes {
-    bronze: u32,
-    silver: u32,
-    gold: u32,
-    author: u32,
+pub struct Validation {
+    bronze_time: u32,
+    silver_time: u32,
+    gold_time: u32,
+    author_time: u32,
+    ghost: Option<Rc<Ghost>>,
 }
 
-impl MedalTimes {
+impl Validation {
     /// Bronze medal time objective.
-    pub fn bronze(&self) -> u32 {
-        self.bronze
+    pub const fn bronze_time(&self) -> u32 {
+        self.bronze_time
     }
 
     /// Silver medal time objective.
-    pub fn silver(&self) -> u32 {
-        self.silver
+    pub const fn silver_time(&self) -> u32 {
+        self.silver_time
     }
 
     /// Gold medal time objective.
-    pub fn gold(&self) -> u32 {
-        self.gold
+    pub const fn gold_time(&self) -> u32 {
+        self.gold_time
     }
 
     /// Author medal time objective.
-    pub fn author(&self) -> u32 {
-        self.author
+    pub const fn author_time(&self) -> u32 {
+        self.author_time
+    }
+
+    /// Validation ghost used to set the author time.
+    pub fn ghost(&self) -> Option<&Ghost> {
+        self.ghost.as_ref().map(|x| x as _)
     }
 }
 
@@ -425,7 +431,7 @@ impl Class for CollectorList {
 
 #[derive(Clone, Default)]
 struct ChallengeParameters {
-    medal_times: Option<MedalTimes>,
+    validation: Option<Validation>,
     ty: String,
     style: String,
 }

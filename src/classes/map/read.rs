@@ -17,8 +17,8 @@ use crate::{
 use super::{
     media::{MediaClip, MediaClipGroup},
     Block, BlockKind, ChallengeParameters, CollectorList, Color, Coord, Direction, EmbeddedObjects,
-    FreeBlock, Item, LightmapQuality, Map, MedalTimes, NormalBlock, PhaseOffset, Position,
-    Rotation,
+    FreeBlock, Item, LightmapQuality, Map, NormalBlock, PhaseOffset, Position, Rotation,
+    Validation,
 };
 
 impl Readable for Map {}
@@ -289,10 +289,10 @@ impl Map {
     fn read_chunk_03043002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u8()?; // 13
         d.u32()?;
-        let bronze = d.u32()?;
-        let silver = d.u32()?;
-        let gold = d.u32()?;
-        let author = d.u32()?;
+        let bronze_time = d.u32()?;
+        let silver_time = d.u32()?;
+        let gold_time = d.u32()?;
+        let author_time = d.u32()?;
         self.cost = d.u32()?;
         let _is_multilap = d.bool32()?;
         let _play_mode = d.u32()?; // 0
@@ -303,17 +303,25 @@ impl Map {
         let _num_cps = d.u32()?; // 38
         let _num_laps = d.u32()?; // 1
 
-        if bronze != 0xffffffff
-            && silver != 0xffffffff
-            && gold != 0xffffffff
-            && author != 0xffffffff
+        if bronze_time != 0xffffffff
+            && silver_time != 0xffffffff
+            && gold_time != 0xffffffff
+            && author_time != 0xffffffff
         {
-            self.params.medal_times = Some(MedalTimes {
-                bronze,
-                silver,
-                gold,
-                author,
-            });
+            if let Some(validation) = &mut self.params.validation {
+                validation.bronze_time = bronze_time;
+                validation.silver_time = silver_time;
+                validation.gold_time = gold_time;
+                validation.author_time = author_time;
+            } else {
+                self.params.validation = Some(Validation {
+                    bronze_time,
+                    silver_time,
+                    gold_time,
+                    author_time,
+                    ghost: None,
+                });
+            }
         }
 
         Ok(())
@@ -413,23 +421,31 @@ impl Map {
                 });
 
                 xml_reader.with_empty(b"times", |attributes| {
-                    let bronze = attributes.get_u32_or_null(b"bronze").unwrap();
-                    let silver = attributes.get_u32_or_null(b"silver").unwrap();
-                    let gold = attributes.get_u32_or_null(b"gold").unwrap();
-                    let author = attributes.get_u32_or_null(b"authortime").unwrap();
+                    let bronze_time = attributes.get_u32_or_null(b"bronze").unwrap();
+                    let silver_time = attributes.get_u32_or_null(b"silver").unwrap();
+                    let gold_time = attributes.get_u32_or_null(b"gold").unwrap();
+                    let author_time = attributes.get_u32_or_null(b"authortime").unwrap();
                     attributes.get(b"authorscore").unwrap();
 
-                    if bronze != 0xffffffff
-                        && silver != 0xffffffff
-                        && gold != 0xffffffff
-                        && author != 0xffffffff
+                    if bronze_time != 0xffffffff
+                        && silver_time != 0xffffffff
+                        && gold_time != 0xffffffff
+                        && author_time != 0xffffffff
                     {
-                        self.params.medal_times = Some(MedalTimes {
-                            bronze,
-                            silver,
-                            gold,
-                            author,
-                        });
+                        if let Some(validation) = &mut self.params.validation {
+                            validation.bronze_time = bronze_time;
+                            validation.silver_time = silver_time;
+                            validation.gold_time = gold_time;
+                            validation.author_time = author_time;
+                        } else {
+                            self.params.validation = Some(Validation {
+                                bronze_time,
+                                silver_time,
+                                gold_time,
+                                author_time,
+                                ghost: None,
+                            });
+                        }
                     }
                 });
 
@@ -1263,24 +1279,32 @@ impl ChallengeParameters {
 
     fn read_chunk_0305b00a<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        let bronze = d.u32()?;
-        let silver = d.u32()?;
-        let gold = d.u32()?;
-        let author = d.u32()?;
+        let bronze_time = d.u32()?;
+        let silver_time = d.u32()?;
+        let gold_time = d.u32()?;
+        let author_time = d.u32()?;
         d.u32()?;
         d.u32()?; // 0
 
-        if bronze != 0xffffffff
-            && silver != 0xffffffff
-            && gold != 0xffffffff
-            && author != 0xffffffff
+        if bronze_time != 0xffffffff
+            && silver_time != 0xffffffff
+            && gold_time != 0xffffffff
+            && author_time != 0xffffffff
         {
-            self.medal_times = Some(MedalTimes {
-                bronze,
-                silver,
-                gold,
-                author,
-            });
+            if let Some(validation) = &mut self.validation {
+                validation.bronze_time = bronze_time;
+                validation.silver_time = silver_time;
+                validation.gold_time = gold_time;
+                validation.author_time = author_time;
+            } else {
+                self.validation = Some(Validation {
+                    bronze_time,
+                    silver_time,
+                    gold_time,
+                    author_time,
+                    ghost: None,
+                });
+            }
         }
 
         Ok(())
@@ -1290,7 +1314,11 @@ impl ChallengeParameters {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.internal_node_ref_or_null::<Ghost>()?;
+        let validation_ghost = d.internal_node_ref_or_null::<Ghost>()?;
+
+        if let Some(ghost) = validation_ghost {
+            self.validation.as_mut().ok_or("validation is null")?.ghost = Some(ghost);
+        }
 
         Ok(())
     }

@@ -206,13 +206,22 @@ impl Map {
                         .with_attribute(("id", ""))
                         .write_empty()?;
 
-                    if let Some(ref medal_times) = self.params.medal_times {
+                    if let Some(ref medal_times) = self.params.validation {
                         xml_writer
                             .create_element("times")
-                            .with_attribute(("bronze", medal_times.bronze.to_string().as_str()))
-                            .with_attribute(("silver", medal_times.silver.to_string().as_str()))
-                            .with_attribute(("gold", medal_times.gold.to_string().as_str()))
-                            .with_attribute(("authortime", medal_times.author.to_string().as_str()))
+                            .with_attribute((
+                                "bronze",
+                                medal_times.bronze_time.to_string().as_str(),
+                            ))
+                            .with_attribute((
+                                "silver",
+                                medal_times.silver_time.to_string().as_str(),
+                            ))
+                            .with_attribute(("gold", medal_times.gold_time.to_string().as_str()))
+                            .with_attribute((
+                                "authortime",
+                                medal_times.author_time.to_string().as_str(),
+                            ))
                             .with_attribute(("authorscore", "0"))
                             .write_empty()?;
                     } else {

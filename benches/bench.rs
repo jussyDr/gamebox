@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use gamebox::classes::Map;
+use gamebox::Map;
 use test::Bencher;
 
 #[bench]
