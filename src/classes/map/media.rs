@@ -230,6 +230,13 @@ impl MediaTrack {
         self.blocks = d.list(|d| {
             let node = d.any_internal_node_ref(|d, class_id| {
                 let node: Rc<dyn Any> = match class_id {
+                    0x0304b000 => {
+                        let mut node = MediaBlockTriangles2D {
+                            parent: MediaBlockTriangles,
+                        };
+                        MediaBlockTriangles2D::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x0304c000 => {
                         let mut node = MediaBlockTriangles3D {
                             parent: MediaBlockTriangles,
@@ -297,6 +304,11 @@ impl MediaTrack {
                         MediaBlockColorGrading::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
+                    0x03195000 => {
+                        let mut node = MediaBlockInterface;
+                        MediaBlockInterface::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x03199000 => {
                         let mut node = MediaBlockFog;
                         MediaBlockFog::read_body(&mut node, d)?;
@@ -315,7 +327,8 @@ impl MediaTrack {
 
             Ok(node
                 .downcast()
-                .map(MediaBlock::Triangles3D)
+                .map(MediaBlock::Triangles2D)
+                .or_else(|node| node.downcast().map(MediaBlock::Triangles3D))
                 .or_else(|node| node.downcast().map(MediaBlock::FxColors))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraGame))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraCustom))
@@ -328,6 +341,7 @@ impl MediaTrack {
                 .or_else(|node| node.downcast().map(MediaBlock::ToneMapping))
                 .or_else(|node| node.downcast().map(MediaBlock::DirtyLens))
                 .or_else(|node| node.downcast().map(MediaBlock::ColorGrading))
+                .or_else(|node| node.downcast().map(MediaBlock::Interface))
                 .or_else(|node| node.downcast().map(MediaBlock::Fog))
                 .or_else(|node| node.downcast().map(MediaBlock::Entity))
                 .unwrap())
@@ -351,6 +365,8 @@ impl MediaTrack {
 
 /// A media block.
 pub enum MediaBlock {
+    /// 2D triangles media block.
+    Triangles2D(Rc<MediaBlockTriangles2D>),
     /// 3D triangles media block.
     Triangles3D(Rc<MediaBlockTriangles3D>),
     /// Colors FX media block.
@@ -377,6 +393,8 @@ pub enum MediaBlock {
     DirtyLens(Rc<MediaBlockDirtyLens>),
     /// Color grading media block.
     ColorGrading(Rc<MediaBlockColorGrading>),
+    /// ManiaLink UI media block.
+    Interface(Rc<MediaBlockInterface>),
     /// Fog media block.
     Fog(Rc<MediaBlockFog>),
     /// Ghost media block.
@@ -431,6 +449,41 @@ impl MediaBlockTriangles {
         d.u32()?;
 
         Ok(())
+    }
+}
+
+/// 2D triangles media block.
+pub struct MediaBlockTriangles2D {
+    parent: MediaBlockTriangles,
+}
+
+impl ReadBody for MediaBlockTriangles2D {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockTriangles2D {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
+            BodyChunkEntry {
+                id: 0x03029001,
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    MediaBlockTriangles::read_chunk_1(&mut n.parent, d)
+                }),
+            },
+            BodyChunkEntry {
+                id: 0x03029002,
+                read_fn: BodyChunkReadFn::Skippable(|n: &mut Self, d| {
+                    MediaBlockTriangles::read_chunk_2(&mut n.parent, d)
+                }),
+            },
+        ]
+        .into_iter()
     }
 }
 
@@ -1118,6 +1171,41 @@ impl MediaBlockColorGrading {
 
             Ok(())
         })?;
+
+        Ok(())
+    }
+}
+
+/// ManiaLink UI media block.
+pub struct MediaBlockInterface;
+
+impl ReadBody for MediaBlockInterface {
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl BodyChunks for MediaBlockInterface {
+    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x03195000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockInterface {
+    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.string()?;
 
         Ok(())
     }
