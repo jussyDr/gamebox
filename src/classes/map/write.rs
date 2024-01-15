@@ -275,13 +275,11 @@ impl Map {
 
     fn write_chunk_7<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(1)?;
-        s.u32(34375)?;
+        s.u32(self.thumbnail.len() as u32)?;
         s.bytes(b"<Thumbnail.jpg>")?;
-        for _ in 0..34375 {
-            s.u8(0)?;
-        }
+        s.bytes(&self.thumbnail)?;
         s.bytes(b"</Thumbnail.jpg><Comments>")?;
-        s.u32(0)?;
+        s.string(&self.comments)?;
         s.bytes(b"</Comments>")?;
 
         Ok(())
@@ -413,7 +411,7 @@ impl Map {
     fn write_chunk_40<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x03043028)?;
         s.u32(0)?;
-        s.u32(0)?;
+        s.string(&self.comments)?;
 
         Ok(())
     }

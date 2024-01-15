@@ -27,6 +27,8 @@ pub struct Map {
     /// Region of the map author.
     pub author_region: String,
     params: ChallengeParameters,
+    thumbnail: Vec<u8>,
+    comments: String,
     size: Vec3<u32>,
     blocks: Vec<Block>,
     items: Vec<Item>,
@@ -53,6 +55,8 @@ impl Default for Map {
             author_name: String::new(),
             author_region: String::default(),
             params: ChallengeParameters::default(),
+            thumbnail: vec![],
+            comments: String::new(),
             size: Vec3 {
                 x: 48,
                 y: 40,
