@@ -211,6 +211,24 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(string)
     }
 
+    /// Read an unsigned 32-bit integer and return an error if it does not match the given `value`.
+    pub fn expect_u32(&mut self, value: u32) -> Result<()> {
+        if self.u32()? != value {
+            return Err("".into());
+        }
+
+        Ok(())
+    }
+
+    /// Read bytes and return an error if it does not match the given `bytes`.
+    pub fn expect_bytes(&mut self, bytes: &[u8]) -> Result<()> {
+        if self.bytes(bytes.len())? != bytes {
+            return Err("".into());
+        }
+
+        Ok(())
+    }
+
     /// Repeat the given `read_fn` a total of `n` times.
     pub fn repeat<T>(
         &mut self,
@@ -241,6 +259,22 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         vec.into_iter().map(|x| read_fn(self, x)).collect()
     }
 
+    /// Read from a byte buffer using the given `read_fn` with a new node reference state and id state.
+    pub fn scoped_buffer(
+        &mut self,
+        read_fn: impl FnOnce(&mut Deserializer<Take<&mut R>, IdState, NodeState>) -> Result<()>,
+    ) -> Result<()> {
+        let len = self.u32()?;
+
+        let mut d = self.take_with(len as u64, IdState::new(), NodeState::new(0));
+
+        read_fn(&mut d)?;
+
+        d.eof()?;
+
+        Ok(())
+    }
+
     /// Returns `Ok(())` if the underlying reader has no data left.
     pub fn eof(&mut self) -> Result<()> {
         let mut buf = [0];
@@ -257,37 +291,6 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         self.reader.read_to_end(&mut buf)?;
 
         Ok(buf)
-    }
-
-    pub fn expect_u32(&mut self, x: u32) -> Result<()> {
-        if self.u32()? != x {
-            return Err("".into());
-        }
-
-        Ok(())
-    }
-
-    pub fn expect_bytes(&mut self, bytes: &[u8]) -> Result<()> {
-        if self.bytes(bytes.len())? != bytes {
-            return Err("".into());
-        }
-
-        Ok(())
-    }
-
-    pub fn scoped_buffer(
-        &mut self,
-        read_fn: impl FnOnce(&mut Deserializer<Take<&mut R>, IdState, NodeState>) -> Result<()>,
-    ) -> Result<()> {
-        let len = self.u32()?;
-
-        let mut d = self.take_with(len as u64, IdState::new(), NodeState::new(0));
-
-        read_fn(&mut d)?;
-
-        d.eof()?;
-
-        Ok(())
     }
 }
 

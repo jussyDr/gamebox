@@ -20,7 +20,7 @@ impl Collector {
         d.u32()?; // 0xffffffff
         d.u32()?; // 8
         d.u16()?; // 1
-        d.string()?; // "New Item"
+        self.name = d.string()?; // "New Item"
         d.u8()?; // 3
 
         Ok(())
@@ -30,9 +30,9 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let icon_width = d.u16()?; // 64
-        let icon_height = d.u16()?; // 64
-        d.bytes(icon_width as usize * icon_height as usize * 4)?;
+        self.icon_width = d.u16()?;
+        self.icon_height = d.u16()?;
+        self.icon_data = d.bytes(self.icon_width as usize * self.icon_height as usize * 4)?;
 
         Ok(())
     }
@@ -62,7 +62,7 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let _collection = d.id_or_null()?; // "Fall"
+        self.collection = d.id_or_null()?;
         d.u32()?; // 26
         let _author = d.id()?; // "Nadeo" | "r-brwiQCRnOZ2PIHcM0Q8A"
 
@@ -73,7 +73,7 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.string()?; // "New Item"
+        self.name = d.string()?; // "New Item"
 
         Ok(())
     }
@@ -82,7 +82,7 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.string()?; // "No Description"
+        self.description = d.string()?; // "No Description"
 
         Ok(())
     }
