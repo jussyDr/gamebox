@@ -3,7 +3,7 @@ use std::io::{BufRead, Read, Seek};
 use crate::{
     classes::ghost::Ghost,
     common::{Class, ClassId, EngineId, Vec3},
-    deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
+    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
@@ -286,8 +286,13 @@ impl BodyChunks for Map {
 
 impl Map {
     fn read_chunk_03043002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u8()?; // 13
-        d.u32()?;
+        let version = d.u8()?;
+
+        if version != 13 {
+            return Err("".into());
+        }
+
+        d.expect_u32(0)?;
         let bronze_time = d.u32()?;
         let silver_time = d.u32()?;
         let gold_time = d.u32()?;
@@ -295,10 +300,10 @@ impl Map {
         self.cost = d.u32()?;
         let _is_multilap = d.bool32()?;
         let _play_mode = d.u32()?; // 0
-        d.u32()?; // 0
+        d.expect_u32(0)?;
         let _author_score = d.u32()?; // 0
         let _editor_mode = d.u32()?; // 2
-        d.u32()?; // 0
+        d.expect_u32(0)?;
         let _num_cps = d.u32()?; // 38
         let _num_laps = d.u32()?; // 1
 
@@ -330,13 +335,18 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u8()?; // 11
+        let version = d.u8()?;
+
+        if version != 11 {
+            return Err("".into());
+        }
+
         self.id = d.id()?.into();
         d.u32()?; // 26
         self.author_id = d.id()?.into();
         self.name = d.string()?;
         let _map_kind = d.u8()?; // 8
-        d.u32()?; // 0
+        d.expect_u32(0)?;
         let _password = d.u32()?; // 0
         let _deco_id = d.id()?; // "NoStadium48x48Sunrise"
         d.u32()?; // 26
@@ -362,7 +372,11 @@ impl Map {
     }
 
     fn read_chunk_03043004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 6
+        let version = d.u32()?;
+
+        if version != 6 {
+            return Err("".into());
+        }
 
         Ok(())
     }
@@ -483,19 +497,29 @@ impl Map {
     fn read_chunk_03043007<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         let thumbnail_size = d.u32()?;
-        d.bytes(15)?;
+        d.expect_bytes(b"<Thumbnail.jpg>")?;
         self.thumbnail = d.bytes(thumbnail_size as usize)?;
-        d.bytes(16)?;
-        d.bytes(10)?;
+        d.expect_bytes(b"</Thumbnail.jpg>")?;
+        d.expect_bytes(b"<Comments>")?;
         self.comments = d.string()?;
-        d.bytes(11)?;
+        d.expect_bytes(b"</Comments>")?;
 
         Ok(())
     }
 
     fn read_chunk_03043008<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        d.u32()?; // 0
+        let version = d.u32()?;
+
+        if version != 1 {
+            return Err("".into());
+        }
+
+        let author_version = d.u32()?;
+
+        if author_version != 0 {
+            return Err("".into());
+        }
+
         self.author_id = d.string()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.author_name = d.string()?; // "YannexTM"
         self.author_region = d.string()?; // "World|Europe|Switzerland|Fribourg"
@@ -556,7 +580,12 @@ impl Map {
             z: d.u32()?,
         };
         d.u32()?; // 0
-        d.u32()?; // 6
+        let blocks_version = d.u32()?;
+
+        if blocks_version != 6 {
+            return Err("".into());
+        }
+
         let num_blocks = d.u32()?;
         self.blocks = Vec::with_capacity(num_blocks as usize);
         while d.peek_u32()? & 0xffffc000 == 0x40000000 {
@@ -613,7 +642,7 @@ impl Map {
     }
 
     fn read_chunk_03043022<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
+        d.expect_u32(1)?;
 
         Ok(())
     }
@@ -690,8 +719,8 @@ impl Map {
 
     fn read_chunk_0304303e<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        d.u32()?; // 10
-        d.u32()?; // 0
+        d.expect_u32(10)?;
+        d.list(|_| Ok(()))?;
 
         Ok(())
     }
@@ -700,13 +729,15 @@ impl Map {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?; // 5 | 7
-        d.u32()?; // 0
-        let size = d.u32()?;
-        {
-            let mut d = d.take_with(size as u64, IdState::new(), NodeState::new(0));
+        let version = d.u32()?;
 
-            d.u32()?; // 10
+        if !matches!(version, 5 | 7) {
+            return Err("".into());
+        }
+
+        d.expect_u32(0)?;
+        d.scoped_buffer(|d| {
+            d.expect_u32(10)?;
             self.items = d.list(|d| {
                 let item = d.node::<AnchoredObject>()?;
 
@@ -759,15 +790,25 @@ impl Map {
                 Ok(())
             })?;
 
-            d.eof()?;
-        }
+            Ok(())
+        })?;
 
         Ok(())
     }
 
     fn read_chunk_03043042<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        d.u32()?; // 0
+        let version = d.u32()?;
+
+        if version != 1 {
+            return Err("".into());
+        }
+
+        let author_version = d.u32()?;
+
+        if author_version != 0 {
+            return Err("".into());
+        }
+
         self.author_id = d.string()?.into(); // "qYw071iWQXu9_jXI7SXEvA"
         self.author_name = d.string()?; // "YannexTM"
         self.author_region = d.string()?; // "World|Europe|Switzerland|Fribourg"
@@ -781,19 +822,15 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 0
-        let size = d.u32()?;
-
-        {
-            let mut d = d.take_with(size as u64, IdState::new(), NodeState::new(0));
-
+        d.scoped_buffer(|d| {
             d.list(|d| {
                 d.node::<ZoneGenealogy>()?;
 
                 Ok(())
             })?;
 
-            d.eof()?;
-        }
+            Ok(())
+        })?;
 
         Ok(())
     }
@@ -803,15 +840,11 @@ impl Map {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 0
-        let size = d.u32()?;
-
-        {
-            let mut d = d.take_with(size as u64, IdState::new(), NodeState::new(0));
-
+        d.scoped_buffer(|d| {
             d.node::<TraitsMetadata>()?;
 
-            d.eof()?;
-        }
+            Ok(())
+        })?;
 
         Ok(())
     }
@@ -935,11 +968,7 @@ impl Map {
     fn read_chunk_03043054<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 0
-        let size = d.u32()?;
-
-        {
-            let mut d = d.take_with(size as u64, IdState::new(), ());
-
+        d.scoped_buffer(|d| {
             let object_ids = d.list(|d| {
                 let id = d.id()?.into();
                 d.u32()?; // 26
@@ -954,8 +983,8 @@ impl Map {
 
             d.u32()?; // 0
 
-            d.eof()?;
-        }
+            Ok(())
+        })?;
 
         Ok(())
     }

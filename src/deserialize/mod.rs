@@ -13,7 +13,10 @@ use std::{
     mem::size_of,
 };
 
-use crate::read::Result;
+use crate::{
+    common::{Class, NULL},
+    read::{readable::ReadBody, Result},
+};
 
 /// Adapter which limits the amount of bytes that can be read from a given reader.
 pub struct Take<R> {
@@ -255,6 +258,37 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
 
         Ok(buf)
     }
+
+    pub fn expect_u32(&mut self, x: u32) -> Result<()> {
+        if self.u32()? != x {
+            return Err("".into());
+        }
+
+        Ok(())
+    }
+
+    pub fn expect_bytes(&mut self, bytes: &[u8]) -> Result<()> {
+        if self.bytes(bytes.len())? != bytes {
+            return Err("".into());
+        }
+
+        Ok(())
+    }
+
+    pub fn scoped_buffer(
+        &mut self,
+        read_fn: impl FnOnce(&mut Deserializer<Take<&mut R>, IdState, NodeState>) -> Result<()>,
+    ) -> Result<()> {
+        let len = self.u32()?;
+
+        let mut d = self.take_with(len as u64, IdState::new(), NodeState::new(0));
+
+        read_fn(&mut d)?;
+
+        d.eof()?;
+
+        Ok(())
+    }
 }
 
 impl<R: Seek, I, N> Deserializer<R, I, N> {
@@ -274,6 +308,35 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
             .seek(io::SeekFrom::Current(-(size_of::<u32>() as i64)))?;
 
         Ok(value)
+    }
+}
+
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
+    /// Read a node that is not null.
+    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
+        match self.node_or_null()? {
+            None => Err("node is null".into()),
+            Some(node_ref) => Ok(node_ref),
+        }
+    }
+
+    /// Read a node that may be null.
+    pub fn node_or_null<T: Default + Class + ReadBody>(&mut self) -> Result<Option<T>> {
+        let class_id = self.u32()?;
+
+        if class_id == NULL {
+            return Ok(None);
+        }
+
+        if class_id != T::CLASS_ID.get() {
+            return Err("class id does not match".into());
+        }
+
+        let mut node = T::default();
+
+        T::read_body(&mut node, self)?;
+
+        Ok(Some(node))
     }
 }
 
