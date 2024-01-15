@@ -1,11 +1,14 @@
-//! TODO
+//! Types used for reading and writing [Collector] nodes.
 
 use std::rc::Rc;
 
 mod read;
+mod write;
 
 #[derive(Default)]
-/// TODO
+/// Base class of nodes that can be displayed in an icon tree.
+///
+/// For example, the blocks, items, and macroblock classes all extend this class.
 pub struct Collector {
     name: String,
     icon_width: u16,

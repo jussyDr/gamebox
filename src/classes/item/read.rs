@@ -255,13 +255,20 @@ impl Item {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?; // 13 | 15
+        let version = d.u32()?;
+
+        if !matches!(version, 13 | 15) {
+            return Err("".into());
+        }
+
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
-        d.unique_node_ref_or_null::<ItemEntityModelEdition>()?;
+        let is_edition = d
+            .unique_node_ref_or_null::<ItemEntityModelEdition>()?
+            .is_some();
         d.any_unique_node_ref_or_null(|d, class_id| match class_id {
             0x2e027000 => {
                 let mut node = ItemEntityModel::default();
@@ -288,9 +295,10 @@ impl Item {
             }
             _ => Err("unknown entity model type".into()),
         })?;
+
         d.u32()?; // 0xffffffff
 
-        if version >= 15 {
+        if version >= 15 && !is_edition {
             d.u32()?; // 0xffffffff
         }
 
@@ -585,7 +593,12 @@ impl ItemEntityModelEdition {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 7
+        let version = d.u32()?;
+
+        if !matches!(version, 7 | 8) {
+            return Err("".into());
+        }
+
         d.u32()?; // 1
         d.unique_internal_node_ref::<Crystal>()?;
         d.u32()?; // 0
@@ -621,7 +634,9 @@ impl ItemEntityModelEdition {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0x3e8
-        d.u32()?; // 0xffffffff
+        if version == 7 {
+            d.u32()?; // 0xffffffff
+        }
 
         Ok(())
     }
