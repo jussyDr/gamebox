@@ -2,7 +2,7 @@ use std::io::{BufRead, Read, Seek};
 
 use crate::{
     classes::ghost::Ghost,
-    common::{Class, ClassId, EngineId},
+    common::{Class, ClassId, EngineId, Vec3},
     deserialize::{Deserializer, IdState, IdStateMut, NodeState, NodeStateMut},
     read::{
         readable::{
@@ -16,9 +16,8 @@ use crate::{
 
 use super::{
     media::{MediaClip, MediaClipGroup},
-    Block, BlockKind, ChallengeParameters, CollectorList, Color, Coord, Direction, EmbeddedObjects,
-    FreeBlock, Item, LightmapQuality, Map, MapType, NormalBlock, PhaseOffset, Position, Rotation,
-    Validation,
+    Block, BlockKind, ChallengeParameters, CollectorList, Color, Direction, EmbeddedObjects,
+    FreeBlock, Item, LightmapQuality, Map, MapType, NormalBlock, PhaseOffset, Rotation, Validation,
 };
 
 impl Readable for Map {}
@@ -551,9 +550,11 @@ impl Map {
         let _deco_id = d.id()?; // "NoStadium48x48Sunrise"
         d.u32()?; // 26
         let _deco_author = d.id()?; // "Nadeo"
-        let _size_x = d.u32()?; // 120
-        let _size_y = d.u32()?; // 120
-        let _size_z = d.u32()?; // 120
+        self.size = Vec3 {
+            x: d.u32()?,
+            y: d.u32()?,
+            z: d.u32()?,
+        };
         d.u32()?; // 0
         d.u32()?; // 6
         let num_blocks = d.u32()?;
@@ -591,7 +592,7 @@ impl Map {
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
-                let coord = Coord { x, y, z };
+                let coord = Vec3 { x, y, z };
 
                 let is_ghost = flags & 0x10000000 != 0;
 
@@ -841,7 +842,7 @@ impl Map {
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
-                let coord = Coord { x, y, z };
+                let coord = Vec3 { x, y, z };
 
                 let is_ghost = flags & 0x10000000 != 0;
 
@@ -1065,7 +1066,7 @@ impl Map {
                 let y = d.f32()?;
                 let z = d.f32()?;
 
-                free_block.position = Position { x, y, z };
+                free_block.position = Vec3 { x, y, z };
 
                 let yaw = d.f32()?;
                 let pitch = d.f32()?;

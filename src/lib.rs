@@ -57,6 +57,6 @@ pub mod classes {
 mod common;
 
 pub use classes::{ghost::Ghost, item::Item, map::Map};
-pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb};
+pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb, Vec3};
 pub use read::{read, read_file, Reader};
 pub use write::{write, write_file, Writer};

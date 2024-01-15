@@ -359,9 +359,9 @@ impl Map {
         s.id("48x48Day")?;
         s.u32(26)?;
         s.id("Nadeo")?;
-        s.u32(48)?;
-        s.u32(40)?;
-        s.u32(48)?;
+        s.u32(self.size.x)?;
+        s.u32(self.size.y)?;
+        s.u32(self.size.z)?;
         s.u32(0)?;
         s.u32(6)?;
         s.u32(0)?;

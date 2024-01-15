@@ -8,6 +8,29 @@ use std::io::{Read, Write};
 
 use crate::{deserialize::Deserializer, read::Result, serialize::Serializer};
 
+/// A 3-dimensional vector of type `T`.
+#[derive(Clone, Copy, Default)]
+pub struct Vec3<T> {
+    pub(crate) x: T,
+    pub(crate) y: T,
+    pub(crate) z: T,
+}
+
+impl<T: Copy> Vec3<T> {
+    // Convert to an array with of form `[x, y, z]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # |vec3: gamebox::Vec3<f32>| {
+    /// let [x, y, z] = vec3.into_array();
+    /// # };
+    /// ```
+    pub const fn into_array(self) -> [T; 3] {
+        [self.x, self.y, self.z]
+    }
+}
+
 /// Color representation using red, green, and blue components.
 ///
 /// Each component is represented as an 8-bit unsigned integer.

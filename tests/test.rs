@@ -21,10 +21,10 @@ fn main() {
     let mut map = Map::default();
 
     map.set_validation(Some(Validation {
-        bronze_time: 1000,
-        silver_time: 2000,
-        gold_time: 3000,
-        author_time: 4000,
+        bronze_time: 4000,
+        silver_time: 3000,
+        gold_time: 2000,
+        author_time: 1000,
         ghost: None,
     }));
 

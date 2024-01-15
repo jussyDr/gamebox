@@ -8,14 +8,13 @@ mod write;
 use std::rc::Rc;
 
 use crate::{
-    common::{Class, ClassId, EngineId},
+    common::{Class, ClassId, EngineId, Vec3},
     Ghost, RcStr,
 };
 
 use self::media::{MediaClip, MediaClipGroup};
 
 /// Node type corresponding to GameBox files with the extension `Map.Gbx`.
-#[derive(Default)]
 pub struct Map {
     /// (Display) cost of the map.
     pub cost: u32,
@@ -28,6 +27,7 @@ pub struct Map {
     /// Region of the map author.
     pub author_region: String,
     params: ChallengeParameters,
+    size: Vec3<u32>,
     blocks: Vec<Block>,
     items: Vec<Item>,
     baked_blocks: Vec<Block>,
@@ -41,6 +41,34 @@ pub struct Map {
 
 impl Class for Map {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 67);
+}
+
+impl Default for Map {
+    fn default() -> Self {
+        Self {
+            cost: 0,
+            id: RcStr::default(),
+            author_id: RcStr::default(),
+            name: String::new(),
+            author_name: String::new(),
+            author_region: String::default(),
+            params: ChallengeParameters::default(),
+            size: Vec3 {
+                x: 48,
+                y: 40,
+                z: 48,
+            },
+            blocks: vec![],
+            items: vec![],
+            baked_blocks: vec![],
+            intro_media: None,
+            podium_media: None,
+            in_game_media: None,
+            end_race_media: None,
+            ambiance_media: None,
+            embedded_objects: None,
+        }
+    }
 }
 
 impl Map {
@@ -189,7 +217,7 @@ pub enum BlockKind {
 /// A normal block.
 pub struct NormalBlock {
     direction: Direction,
-    coord: Coord<u8>,
+    coord: Vec3<u8>,
     is_ghost: bool,
 }
 
@@ -200,7 +228,7 @@ impl NormalBlock {
     }
 
     /// Coordinate of the block.
-    pub const fn coord(&self) -> Coord<u8> {
+    pub const fn coord(&self) -> Vec3<u8> {
         self.coord
     }
 
@@ -213,13 +241,13 @@ impl NormalBlock {
 /// A free block.
 #[derive(Default)]
 pub struct FreeBlock {
-    position: Position,
+    position: Vec3<f32>,
     rotation: Rotation,
 }
 
 impl FreeBlock {
     /// Position of the free block.
-    pub const fn position(&self) -> &Position {
+    pub const fn position(&self) -> &Vec3<f32> {
         &self.position
     }
 
@@ -267,21 +295,6 @@ pub enum Direction {
     West,
 }
 
-/// A coordinate.
-#[derive(Clone, Copy)]
-pub struct Coord<T> {
-    x: T,
-    y: T,
-    z: T,
-}
-
-impl<T> Coord<T> {
-    /// Convert to an array.
-    pub fn into_array(self) -> [T; 3] {
-        [self.x, self.y, self.z]
-    }
-}
-
 /// Objects embedded in a map.
 pub struct EmbeddedObjects {
     object_ids: Vec<RcStr>,
@@ -297,21 +310,6 @@ impl EmbeddedObjects {
     /// Embedded object data encoded as a ZIP archive.
     pub fn data(&self) -> &[u8] {
         &self.data
-    }
-}
-
-/// Position.
-#[derive(Default)]
-pub struct Position {
-    x: f32,
-    y: f32,
-    z: f32,
-}
-
-impl Position {
-    /// Convert to an array.
-    pub fn into_array(self) -> [f32; 3] {
-        [self.x, self.y, self.z]
     }
 }
 

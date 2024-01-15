@@ -8,7 +8,7 @@ use std::{
 
 use crate::{
     classes::ghost::EntRecordData,
-    common::{Class, ClassId, EngineId},
+    common::{Class, ClassId, EngineId, Vec3},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
@@ -16,8 +16,6 @@ use crate::{
     },
     ExternalFileRef, FileRef, InternalFileRef,
 };
-
-use super::Coord;
 
 /// A group of media clips.
 #[derive(Default)]
@@ -75,7 +73,7 @@ impl MediaClipGroup {
                 let y = d.u32()?;
                 let z = d.u32()?;
 
-                Ok(Coord { x, y, z })
+                Ok(Vec3 { x, y, z })
             })?;
 
             Ok(MediaClipWithTrigger {
@@ -91,7 +89,7 @@ impl MediaClipGroup {
 /// A media clip and its corresponding trigger.
 pub struct MediaClipWithTrigger {
     clip: Rc<MediaClip>,
-    trigger_coords: Vec<Coord<u32>>,
+    trigger_coords: Vec<Vec3<u32>>,
 }
 
 impl MediaClipWithTrigger {
@@ -101,7 +99,7 @@ impl MediaClipWithTrigger {
     }
 
     /// List of coordinates where this clip is triggered if its condition is met.
-    pub fn trigger_coords(&self) -> &[Coord<u32>] {
+    pub fn trigger_coords(&self) -> &[Vec3<u32>] {
         &self.trigger_coords
     }
 }
