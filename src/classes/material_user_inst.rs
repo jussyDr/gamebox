@@ -12,10 +12,10 @@ impl Class for MaterialUserInst {
 }
 
 mod read {
-    use std::io::{Read, Seek};
+    use std::io::Read;
 
     use crate::{
-        deserialize::{Deserializer, IdStateMut, NodeStateMut},
+        deserialize::{Deserializer, IdStateMut},
         read::{
             readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
             Result,
@@ -24,13 +24,13 @@ mod read {
 
     use super::MaterialUserInst;
 
-    impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MaterialUserInst {
+    impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for MaterialUserInst {
         fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
             read_body_chunks(self, d)
         }
     }
 
-    impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MaterialUserInst {
+    impl<R: Read, I: IdStateMut, N> BodyChunks<R, I, N> for MaterialUserInst {
         fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
             [
                 BodyChunkEntry {

@@ -59,13 +59,13 @@ impl HeaderChunks for Item {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Item {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Item {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Item {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Item {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -247,7 +247,7 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e002019<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e002019<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -307,7 +307,7 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e00201c<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e00201c<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -330,7 +330,7 @@ impl Item {
         Ok(())
     }
 
-    fn read_chunk_2e00201f<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e00201f<R: Read, I, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -400,13 +400,13 @@ impl Item {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemPlacementParam {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemPlacementParam {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ItemPlacementParam {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ItemPlacementParam {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -496,7 +496,7 @@ impl ItemPlacementParam {
         Ok(())
     }
 
-    fn read_chunk_2e020005<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e020005<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -506,7 +506,7 @@ impl ItemPlacementParam {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ItemEntityModel {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ItemEntityModel {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x2e027000,
@@ -517,7 +517,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Ite
 }
 
 impl ItemEntityModel {
-    fn read_chunk_2e027000<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e027000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -528,15 +528,13 @@ impl ItemEntityModel {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemEntityModelEdition {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemEntityModelEdition {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
-    for ItemEntityModelEdition
-{
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ItemEntityModelEdition {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -554,7 +552,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
 }
 
 impl ItemEntityModelEdition {
-    fn read_chunk_2e026000<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_2e026000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -614,13 +612,13 @@ impl ItemEntityModelEdition {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Crystal {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Crystal {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Crystal {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Crystal {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -650,7 +648,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Cry
 }
 
 impl Crystal {
-    fn read_chunk_09003003<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_09003003<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -801,13 +799,13 @@ impl Class for MediaClipList {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 393);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MediaClipList {
+impl<R: Read, I, N> ReadBody<R, I, N> for MediaClipList {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaClipList {
+impl<R: Read, I, N> BodyChunks<R, I, N> for MediaClipList {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09189000,
@@ -827,7 +825,7 @@ impl MediaClipList {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemPlacement {
+impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for ItemPlacement {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 10
         d.id_or_null()?; // "1x1"

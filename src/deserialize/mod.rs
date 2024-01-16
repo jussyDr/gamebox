@@ -275,6 +275,33 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
         Ok(())
     }
 
+    /// Read a node that is not null.
+    pub fn node<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<T> {
+        match self.node_or_null()? {
+            None => Err("node is null".into()),
+            Some(node_ref) => Ok(node_ref),
+        }
+    }
+
+    /// Read a node that may be null.
+    pub fn node_or_null<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<Option<T>> {
+        let class_id = self.u32()?;
+
+        if class_id == NULL {
+            return Ok(None);
+        }
+
+        if class_id != T::CLASS_ID.get() {
+            return Err("class id does not match".into());
+        }
+
+        let mut node = T::default();
+
+        T::read_body(&mut node, self)?;
+
+        Ok(Some(node))
+    }
+
     /// Returns `Ok(())` if the underlying reader has no data left.
     pub fn eof(&mut self) -> Result<()> {
         let mut buf = [0];
@@ -311,35 +338,6 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
             .seek(io::SeekFrom::Current(-(size_of::<u32>() as i64)))?;
 
         Ok(value)
-    }
-}
-
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
-    /// Read a node that is not null.
-    pub fn node<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<T> {
-        match self.node_or_null()? {
-            None => Err("node is null".into()),
-            Some(node_ref) => Ok(node_ref),
-        }
-    }
-
-    /// Read a node that may be null.
-    pub fn node_or_null<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<Option<T>> {
-        let class_id = self.u32()?;
-
-        if class_id == NULL {
-            return Ok(None);
-        }
-
-        if class_id != T::CLASS_ID.get() {
-            return Err("class id does not match".into());
-        }
-
-        let mut node = T::default();
-
-        T::read_body(&mut node, self)?;
-
-        Ok(Some(node))
     }
 }
 

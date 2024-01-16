@@ -535,7 +535,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043011<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043011<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -721,10 +721,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043040<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+    fn read_chunk_03043040<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         let version = d.u32()?;
 
         if !matches!(version, 5 | 7) {
@@ -813,10 +810,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043043<R: Read + Seek, I, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+    fn read_chunk_03043043<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.scoped_buffer(|d| {
             d.list(|d| {
@@ -831,10 +825,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043044<R: Read + Seek, I, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+    fn read_chunk_03043044<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.scoped_buffer(|d| {
             d.node::<TraitsMetadata>()?;
@@ -893,7 +884,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043049<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03043049<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1222,13 +1213,13 @@ impl Map {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for CollectorList {
+impl<R: Read, I, N> ReadBody<R, I, N> for CollectorList {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for CollectorList {
+impl<R: Read, I, N> BodyChunks<R, I, N> for CollectorList {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0301b000,
@@ -1246,13 +1237,13 @@ impl CollectorList {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ChallengeParameters {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ChallengeParameters {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ChallengeParameters {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ChallengeParameters {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1345,7 +1336,7 @@ impl ChallengeParameters {
         Ok(())
     }
 
-    fn read_chunk_0305b00d<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0305b00d<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1377,15 +1368,13 @@ impl Class for WaypointSpecialProperty {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 9);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for WaypointSpecialProperty {
+impl<R: Read, I, N> ReadBody<R, I, N> for WaypointSpecialProperty {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
-    for WaypointSpecialProperty
-{
+impl<R: Read, I, N> BodyChunks<R, I, N> for WaypointSpecialProperty {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1426,13 +1415,13 @@ impl Class for BlockSkin {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 89);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for BlockSkin {
+impl<R: Read, I, N> ReadBody<R, I, N> for BlockSkin {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for BlockSkin {
+impl<R: Read, I, N> BodyChunks<R, I, N> for BlockSkin {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
@@ -1471,13 +1460,13 @@ impl Class for AnchoredObject {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 257);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for AnchoredObject {
+impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for AnchoredObject {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for AnchoredObject {
+impl<R: Read, I: IdStateMut, N> BodyChunks<R, I, N> for AnchoredObject {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -1499,7 +1488,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Anc
 }
 
 impl AnchoredObject {
-    fn read_chunk_03101002<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_03101002<R: Read, I: IdStateMut, N>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -1535,20 +1524,14 @@ impl AnchoredObject {
         Ok(())
     }
 
-    fn read_chunk_03101004<R: Read, I: IdStateMut, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+    fn read_chunk_03101004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_03101005<R: Read, I: IdStateMut, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+    fn read_chunk_03101005<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
         d.u32()?; // 4
         d.u8()?; // 0
@@ -1564,13 +1547,13 @@ impl Class for ZoneGenealogy {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 285);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ZoneGenealogy {
+impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for ZoneGenealogy {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ZoneGenealogy {
+impl<R: Read, I: IdStateMut, N> BodyChunks<R, I, N> for ZoneGenealogy {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0311d002,
@@ -1602,7 +1585,7 @@ impl Class for TraitsMetadata {
     const CLASS_ID: ClassId = ClassId::new(EngineId::SCRIPT, 2);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for TraitsMetadata {
+impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 6
         let n = d.u8()?;

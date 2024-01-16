@@ -1,16 +1,11 @@
-use std::{
-    any::Any,
-    io::{Read, Seek},
-    path::Path,
-    rc::Rc,
-};
+use std::{any::Any, io::Read, path::Path, rc::Rc};
 
 use crate::{
     common::{Class, NULL},
     read::{readable::ReadBody, Result},
 };
 
-use super::{repeat_n_with, Deserializer, IdStateMut};
+use super::{repeat_n_with, Deserializer};
 
 /// Reference to a node of type `T`.
 pub enum NodeRef<T> {
@@ -94,27 +89,6 @@ impl<T: NodeStateMut> NodeStateMut for &mut T {
 }
 
 impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
-    /// Read an external node reference that is not null.
-    pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
-        let index = match self.u32()? {
-            NULL => return Err("node index is null".into()),
-            index => index,
-        };
-
-        let node_ref = self
-            .node_state
-            .borrow()
-            .get(index as usize)?
-            .ok_or("node is null")?;
-
-        match node_ref {
-            NodeRef::Internal { .. } => Err("expected external node ref".into()),
-            NodeRef::External { path } => Ok(Rc::clone(path)),
-        }
-    }
-}
-
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read an internal node reference that is not null.
     pub fn internal_node_ref<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
@@ -133,6 +107,25 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
             None => Ok(None),
             Some(NodeRef::Internal { node }) => Ok(Some(node)),
             Some(NodeRef::External { .. }) => Err("expected internal node ref".into()),
+        }
+    }
+
+    /// Read an external node reference that is not null.
+    pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
+        let index = match self.u32()? {
+            NULL => return Err("node index is null".into()),
+            index => index,
+        };
+
+        let node_ref = self
+            .node_state
+            .borrow()
+            .get(index as usize)?
+            .ok_or("node is null")?;
+
+        match node_ref {
+            NodeRef::Internal { .. } => Err("expected external node ref".into()),
+            NodeRef::External { path } => Ok(Rc::clone(path)),
         }
     }
 

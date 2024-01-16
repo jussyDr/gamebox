@@ -1,4 +1,4 @@
-use std::io::{Read, Seek};
+use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -20,7 +20,7 @@ impl Class for StaticObjectModel {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 345);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObjectModel {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObjectModel {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 3
         let _solid_to_model = d.internal_node_ref::<Solid2Model>()?;
@@ -73,13 +73,13 @@ impl Class for Solid2Model {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 187);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Solid2Model {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Solid2Model {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Solid2Model {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Solid2Model {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -97,7 +97,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Sol
 }
 
 impl Solid2Model {
-    fn read_chunk_090bb000<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -199,7 +199,7 @@ impl Solid2Model {
         d.u32()?; // 1
         d.u32()?; // 0
         let _materials = d.repeat(num_materials as usize, |d| {
-            let material = d.internal_node_ref::<MaterialUserInst>()?.clone();
+            d.internal_node_ref::<MaterialUserInst>()?;
             d.u32()?; // 0
 
             Ok(())
@@ -231,13 +231,13 @@ impl Class for Surface {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 12);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Surface {
+impl<R: Read, I, N> ReadBody<R, I, N> for Surface {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Surface {
+impl<R: Read, I, N> BodyChunks<R, I, N> for Surface {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0900C003,

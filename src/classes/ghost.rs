@@ -1,6 +1,6 @@
 //! Types used for reading [Ghost] nodes.
 
-use std::io::{Read, Seek};
+use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -32,13 +32,13 @@ impl Class for EntRecordData {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 287);
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Ghost {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Ghost {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Ghost {
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Ghost {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
@@ -168,7 +168,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Gho
 }
 
 impl Ghost {
-    fn read_chunk_0<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+    fn read_chunk_0<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -374,7 +374,7 @@ impl Ghost {
         Ok(())
     }
 
-    fn read_chunk_40<R: Read, I, N>(&mut self, _: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_40<R, I, N>(&mut self, _: &mut Deserializer<R, I, N>) -> Result<()> {
         Ok(())
     }
 
@@ -464,13 +464,13 @@ impl Ghost2 {
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for EntRecordData {
+impl<R: Read, I, N> ReadBody<R, I, N> for EntRecordData {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
 
-impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for EntRecordData {
+impl<R: Read, I, N> BodyChunks<R, I, N> for EntRecordData {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0911f000,
