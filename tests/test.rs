@@ -3,7 +3,6 @@
 extern crate test;
 
 use std::{
-    any::type_name,
     env, fs,
     io::Cursor,
     path::{Path, PathBuf},
@@ -33,8 +32,8 @@ fn main() {
     add_read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");
     add_read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
     add_read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
-    add_write_read_default_test::<Item>(&mut tests);
-    add_write_read_default_test::<Map>(&mut tests);
+    add_write_read_default_test::<Item>(&mut tests, "Item");
+    add_write_read_default_test::<Map>(&mut tests, "Map");
 
     test_main(&args, tests, None);
 }
@@ -86,10 +85,13 @@ fn add_read_file_tests_inner(
     }
 }
 
-fn add_write_read_default_test<T: Default + Readable + Writable>(tests: &mut Vec<TestDescAndFn>) {
+fn add_write_read_default_test<T: Default + Readable + Writable>(
+    tests: &mut Vec<TestDescAndFn>,
+    name: &str,
+) {
     let test = TestDescAndFn {
         desc: TestDesc {
-            name: TestName::DynTestName(format!("write read default {}", type_name::<T>())),
+            name: TestName::DynTestName(format!("write read default {name}")),
             ignore: false,
             ignore_message: None,
             source_file: "",

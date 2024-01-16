@@ -48,13 +48,13 @@ pub fn write_gbx<
         s.u32(header_chunks.len() as u32)?;
 
         for (chunk_id, is_heavy, chunk_data) in &header_chunks {
-            if *is_heavy {
-                s.u32(*chunk_id & 0x80000000)?;
-            } else {
-                s.u32(*chunk_id)?;
-            }
+            s.u32(*chunk_id)?;
 
-            s.u32(chunk_data.len() as u32)?;
+            if *is_heavy {
+                s.u32(chunk_data.len() as u32 | 0x80000000)?;
+            } else {
+                s.u32(chunk_data.len() as u32)?;
+            }
         }
 
         for (_, _, chunk_data) in header_chunks {
