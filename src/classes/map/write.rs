@@ -21,26 +21,32 @@ impl HeaderChunks for Map {
         [
             HeaderChunk {
                 chunk_id: 0x03043002,
+                is_heavy: false,
                 write_fn: |n, s| Self::write_chunk_2(n, s),
             },
             HeaderChunk {
                 chunk_id: 0x03043003,
+                is_heavy: false,
                 write_fn: |n, s| Self::write_chunk_3(n, s),
             },
             HeaderChunk {
                 chunk_id: 0x03043004,
+                is_heavy: false,
                 write_fn: |n, s| Self::write_chunk_4(n, s),
             },
             HeaderChunk {
                 chunk_id: 0x03043005,
+                is_heavy: true,
                 write_fn: |n, s| Self::write_chunk_5(n, s),
             },
             HeaderChunk {
                 chunk_id: 0x03043007,
+                is_heavy: true,
                 write_fn: |n, s| Self::write_chunk_7(n, s),
             },
             HeaderChunk {
                 chunk_id: 0x03043008,
+                is_heavy: false,
                 write_fn: |n, s| Self::write_chunk_8(n, s),
             },
         ]

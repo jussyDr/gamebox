@@ -29,7 +29,11 @@ pub fn write_gbx<T: Class + HeaderChunks + WriteBody>(
 
             (header_chunk.write_fn)(node, &mut s)?;
 
-            header_chunks.push((header_chunk.chunk_id, header_chunk_data));
+            header_chunks.push((
+                header_chunk.chunk_id,
+                header_chunk.is_heavy,
+                header_chunk_data,
+            ));
         }
 
         let mut header_data = vec![];
@@ -38,12 +42,17 @@ pub fn write_gbx<T: Class + HeaderChunks + WriteBody>(
 
         s.u32(header_chunks.len() as u32)?;
 
-        for (chunk_id, chunk_data) in &header_chunks {
-            s.u32(*chunk_id)?;
+        for (chunk_id, is_heavy, chunk_data) in &header_chunks {
+            if *is_heavy {
+                s.u32(*chunk_id & 0x80000000)?;
+            } else {
+                s.u32(*chunk_id)?;
+            }
+
             s.u32(chunk_data.len() as u32)?;
         }
 
-        for (_, chunk_data) in header_chunks {
+        for (_, _, chunk_data) in header_chunks {
             s.bytes(&chunk_data)?;
         }
 
@@ -100,6 +109,7 @@ where
 
 pub struct HeaderChunk<T> {
     pub chunk_id: u32,
+    pub is_heavy: bool,
     pub write_fn: HeaderChunkWriteFn<T>,
 }
 

@@ -18,22 +18,6 @@ use gamebox::{
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
 fn main() {
-    let mut map = Map::default();
-
-    map.set_validation(Some(Validation {
-        bronze_time: 4000,
-        silver_time: 3000,
-        gold_time: 2000,
-        author_time: 1000,
-        ghost: None,
-    }));
-
-    gamebox::write_file(
-        &map,
-        "C:\\Users\\Justin\\Documents\\Trackmania\\Maps\\My Maps\\Empty.Map.Gbx",
-    )
-    .unwrap();
-
     let args = env::args().collect::<Vec<_>>();
 
     let mut tests = vec![];

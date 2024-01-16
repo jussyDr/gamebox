@@ -2,8 +2,8 @@ use std::io::{BufRead, Read, Seek};
 
 use crate::{
     classes::{
-        collector::Collector,
-        static_object_model::{MaterialUserInst, StaticObjectModel},
+        collector::Collector, item::ItemPlacementParam, material_user_inst::MaterialUserInst,
+        static_object_model::StaticObjectModel,
     },
     common::{read_compact_index, Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-use super::{Item, ItemEntityModel};
+use super::{Crystal, Item, ItemEntityModel, ItemEntityModelEdition, ItemPlacement};
 
 impl Readable for Item {}
 
@@ -404,18 +404,6 @@ impl Item {
     }
 }
 
-struct ItemPlacementParam;
-
-impl Class for ItemPlacementParam {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 32);
-}
-
-impl Default for ItemPlacementParam {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl ReadBody for ItemPlacementParam {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -549,18 +537,6 @@ impl ItemEntityModel {
     }
 }
 
-struct ItemEntityModelEdition;
-
-impl Class for ItemEntityModelEdition {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 38);
-}
-
-impl Default for ItemEntityModelEdition {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl ReadBody for ItemEntityModelEdition {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
@@ -646,18 +622,6 @@ impl ItemEntityModelEdition {
         d.u32()?; // 0
 
         Ok(())
-    }
-}
-
-struct Crystal;
-
-impl Class for Crystal {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 3);
-}
-
-impl Default for Crystal {
-    fn default() -> Self {
-        Self
     }
 }
 
@@ -880,13 +844,6 @@ impl MediaClipList {
 
         Ok(())
     }
-}
-
-#[derive(Default)]
-struct ItemPlacement;
-
-impl Class for ItemPlacement {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 391);
 }
 
 impl ReadBody for ItemPlacement {

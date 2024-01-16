@@ -50,6 +50,7 @@ pub mod classes {
     pub mod texture;
     pub mod veget_tree_model;
 
+    mod material_user_inst;
     mod static_object_model;
     mod visual_indexed_triangles;
 }

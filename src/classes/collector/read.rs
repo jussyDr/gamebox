@@ -12,15 +12,15 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let _collection = d.id_or_null()?; // null
+        let _collection = d.id_or_null()?;
         d.u32()?; // 26
-        let _author = d.id()?; // "r-brwiQCRnOZ2PIHcM0Q8A"
+        let _author = d.id()?;
         d.u32()?; // 8
         d.string()?; // "Items"
         d.u32()?; // 0xffffffff
         d.u32()?; // 8
         d.u16()?; // 1
-        self.name = d.string()?; // "New Item"
+        self.name = d.string()?;
         d.u8()?; // 3
 
         Ok(())
@@ -64,7 +64,7 @@ impl Collector {
     ) -> Result<()> {
         self.collection = d.id_or_null()?;
         d.u32()?; // 26
-        let _author = d.id()?; // "Nadeo" | "r-brwiQCRnOZ2PIHcM0Q8A"
+        let _author = d.id()?;
 
         Ok(())
     }
@@ -73,7 +73,7 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        self.name = d.string()?; // "New Item"
+        self.name = d.string()?;
 
         Ok(())
     }
@@ -82,7 +82,7 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        self.description = d.string()?; // "No Description"
+        self.description = d.string()?;
 
         Ok(())
     }
