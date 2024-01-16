@@ -1,4 +1,4 @@
-use std::{any::Any, io::Read, path::Path, rc::Rc};
+use std::{any::Any, io::Read, mem::replace, path::Path, rc::Rc};
 
 use crate::{
     common::{Class, NULL},
@@ -305,17 +305,29 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
                 Ok(Some(NodeRef::Internal { node }))
             }
             Some(NodeRef::Internal { .. }) => Err("".into()),
-            Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
-                path: Rc::clone(path),
-            })),
+            Some(NodeRef::External { .. }) => {
+                let old = replace(
+                    self.node_state.borrow_mut().nodes[index]
+                        .as_mut()
+                        .ok_or("")?,
+                    NodeStateEntry::Unique,
+                );
+
+                match old {
+                    NodeStateEntry::NodeRef(NodeRef::External { path }) => {
+                        Ok(Some(NodeRef::External { path }))
+                    }
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 
     /// Read an unique node reference that may be internal or external and that may be null.
-    pub fn any_unique_node_ref_or_null(
+    pub fn any_unique_node_ref_or_null<T>(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Box<dyn Any>>,
-    ) -> Result<Option<NodeRef<Box<dyn Any>>>> {
+        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
+    ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
             0 => return Err("".into()),
             NULL => return Ok(None),
@@ -333,9 +345,21 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
                 Ok(Some(NodeRef::Internal { node }))
             }
             Some(NodeRef::Internal { .. }) => Err("".into()),
-            Some(NodeRef::External { path }) => Ok(Some(NodeRef::External {
-                path: Rc::clone(path),
-            })),
+            Some(NodeRef::External { .. }) => {
+                let old = replace(
+                    self.node_state.borrow_mut().nodes[index]
+                        .as_mut()
+                        .ok_or("")?,
+                    NodeStateEntry::Unique,
+                );
+
+                match old {
+                    NodeStateEntry::NodeRef(NodeRef::External { path }) => {
+                        Ok(Some(NodeRef::External { path }))
+                    }
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 }

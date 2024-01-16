@@ -1,4 +1,7 @@
-use std::io::{BufRead, Read, Seek};
+use std::{
+    any::Any,
+    io::{BufRead, Read, Seek},
+};
 
 use crate::{
     classes::{
@@ -265,7 +268,7 @@ impl Item {
         let is_edition = d
             .unique_node_ref_or_null::<ItemEntityModelEdition>()?
             .is_some();
-        d.any_unique_node_ref_or_null(|d, class_id| match class_id {
+        d.any_unique_node_ref_or_null::<Box<dyn Any>>(|d, class_id| match class_id {
             0x2e027000 => {
                 let mut node = ItemEntityModel::default();
                 read_body_chunks(&mut node, d)?;
