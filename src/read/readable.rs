@@ -49,7 +49,7 @@ pub fn read_gbx<
     let mut node_state = NodeState::new(gbx_file.num_node_refs as usize);
 
     for (index, path) in gbx_file.external_node_refs {
-        node_state.set(
+        node_state.set_node_ref(
             index as usize,
             NodeRef::External {
                 path: Rc::from(path),

@@ -21,10 +21,14 @@ pub enum NodeRef<T> {
     },
 }
 
+enum NodeStateEntry {
+    NodeRef(NodeRef<Rc<dyn Any>>),
+    Unique,
+}
+
 /// Node reference state.
 pub struct NodeState {
-    #[allow(clippy::type_complexity)]
-    nodes: Box<[Option<NodeRef<Rc<dyn Any>>>]>,
+    nodes: Box<[Option<NodeStateEntry>]>,
 }
 
 impl NodeState {
@@ -35,25 +39,40 @@ impl NodeState {
         }
     }
 
-    /// Get a node reference with the given `index`.
-    pub fn get(&self, index: usize) -> Result<Option<&NodeRef<Rc<dyn Any>>>> {
-        let node_ref = self.nodes.get(index).ok_or("node index out of range")?;
+    /// Get the node reference at the given `index`.
+    pub fn get_node_ref(&self, index: usize) -> Result<Option<&NodeRef<Rc<dyn Any>>>> {
+        let entry = self.nodes.get(index).ok_or("node index out of range")?;
 
-        Ok(node_ref.as_ref())
+        match entry {
+            None => Ok(None),
+            Some(NodeStateEntry::NodeRef(node_ref)) => Ok(Some(node_ref)),
+            Some(NodeStateEntry::Unique) => Err("".into()),
+        }
     }
 
     /// Set a node reference at the given `index`.
-    pub fn set(&mut self, index: usize, node_ref: NodeRef<Rc<dyn Any>>) -> Result<()> {
-        let entry = self.nodes.get_mut(index).ok_or("node index out of range")?;
-
-        if entry.is_some() {
-            return Err("node already read".into());
-        }
-
-        *entry = Some(node_ref);
-
-        Ok(())
+    pub fn set_node_ref(&mut self, index: usize, node_ref: NodeRef<Rc<dyn Any>>) -> Result<()> {
+        set_node_state_entry(self, index, NodeStateEntry::NodeRef(node_ref))
     }
+}
+
+fn set_node_state_entry(
+    node_state: &mut NodeState,
+    index: usize,
+    entry: NodeStateEntry,
+) -> Result<()> {
+    let slot = node_state
+        .nodes
+        .get_mut(index)
+        .ok_or("node index out of range")?;
+
+    if slot.is_some() {
+        return Err("node already read".into());
+    }
+
+    *slot = Some(entry);
+
+    Ok(())
 }
 
 /// Can obtain a mutable reference to a node reference state.
@@ -115,15 +134,15 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
             index => index - 1,
         };
 
-        let node_ref = self
+        let entry = self
             .node_state
             .borrow()
-            .get(index as usize)?
+            .get_node_ref(index as usize)?
             .ok_or("node is null")?;
 
-        match node_ref {
-            NodeRef::Internal { .. } => Err("expected external node ref".into()),
+        match entry {
             NodeRef::External { path } => Ok(Rc::clone(path)),
+            _ => Err("expected external node ref".into()),
         }
     }
 
@@ -144,10 +163,10 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let index = match self.u32()? {
             0 => return Err("".into()),
             NULL => return Ok(None),
-            index => index - 1,
+            index => index as usize - 1,
         };
 
-        match self.node_state.borrow().get(index as usize)? {
+        match self.node_state.borrow().get_node_ref(index)? {
             None => {
                 let class_id = self.u32()?;
 
@@ -161,8 +180,8 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 
                 let node = Rc::new(node);
 
-                self.node_state.borrow_mut().set(
-                    index as usize,
+                self.node_state.borrow_mut().set_node_ref(
+                    index,
                     NodeRef::Internal {
                         node: Rc::<T>::clone(&node),
                     },
@@ -201,17 +220,17 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let index = match self.u32()? {
             0 => return Err("".into()),
             NULL => return Ok(None),
-            index => index - 1,
+            index => index as usize - 1,
         };
 
-        match self.node_state.borrow().get(index as usize)? {
+        match self.node_state.borrow().get_node_ref(index)? {
             None => {
                 let class_id = self.u32()?;
 
                 let node = read_fn(self, class_id)?;
 
-                self.node_state.borrow_mut().set(
-                    index as usize,
+                self.node_state.borrow_mut().set_node_ref(
+                    index,
                     NodeRef::Internal {
                         node: Rc::clone(&node),
                     },
@@ -266,10 +285,10 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let index = match self.u32()? {
             0 => return Err("".into()),
             NULL => return Ok(None),
-            index => index - 1,
+            index => index as usize - 1,
         };
 
-        match self.node_state.borrow().get(index as usize)? {
+        match self.node_state.borrow().get_node_ref(index)? {
             None => {
                 let class_id = self.u32()?;
 
@@ -277,9 +296,7 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
                     return Err("class id does not match".into());
                 }
 
-                self.node_state
-                    .borrow_mut()
-                    .set(index as usize, NodeRef::Internal { node: Rc::new(()) })?;
+                set_node_state_entry(self.node_state.borrow_mut(), index, NodeStateEntry::Unique)?;
 
                 let mut node = T::default();
 
@@ -302,16 +319,14 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         let index = match self.u32()? {
             0 => return Err("".into()),
             NULL => return Ok(None),
-            index => index - 1,
+            index => index as usize - 1,
         };
 
-        match self.node_state.borrow().get(index as usize)? {
+        match self.node_state.borrow().get_node_ref(index)? {
             None => {
                 let class_id = self.u32()?;
 
-                self.node_state
-                    .borrow_mut()
-                    .set(index as usize, NodeRef::Internal { node: Rc::new(()) })?;
+                set_node_state_entry(self.node_state.borrow_mut(), index, NodeStateEntry::Unique)?;
 
                 let node = read_fn(self, class_id)?;
 
