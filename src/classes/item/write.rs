@@ -47,11 +47,8 @@ impl HeaderChunks for Item {
     }
 }
 
-impl WriteBody for Item {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Item {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         Collector::write_chunk_9(&self.parent, s)?;
         Collector::write_chunk_11(&self.parent, s)?;
         Collector::write_chunk_12(&self.parent, s)?;
@@ -249,11 +246,8 @@ impl Item {
     }
 }
 
-impl WriteBody for ItemEntityModelEdition {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for ItemEntityModelEdition {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         Self::write_chunk_0(self, s)?;
         Self::write_chunk_1(self, s)?;
 
@@ -322,11 +316,8 @@ impl ItemEntityModelEdition {
     }
 }
 
-impl WriteBody for Crystal {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Crystal {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         Self::write_chunk_3(self, s)?;
         Self::write_chunk_4(self, s)?;
         Self::write_chunk_5(self, s)?;
@@ -555,11 +546,8 @@ impl Crystal {
     }
 }
 
-impl WriteBody for ItemPlacementParam {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I, N: NodeStateMut> WriteBody<W, I, N> for ItemPlacementParam {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         Self::write_chunk_0(self, s)?;
         Self::write_chunk_1(self, s)?;
         Self::write_chunk_4(self, s)?;
@@ -620,10 +608,7 @@ impl ItemPlacementParam {
         Ok(())
     }
 
-    fn write_chunk_5<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+    fn write_chunk_5<W: Write, I, N: NodeStateMut>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x2e020005)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
@@ -636,11 +621,8 @@ impl ItemPlacementParam {
     }
 }
 
-impl WriteBody for ItemPlacement {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I, N> WriteBody<W, I, N> for ItemPlacement {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(10)?;
         s.u32(0xffffffff)?;
         s.u32(0)?;

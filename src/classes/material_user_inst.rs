@@ -113,17 +113,14 @@ mod write {
     use std::io::Write;
 
     use crate::{
-        serialize::{IdStateMut, NodeStateMut, Serializer},
+        serialize::Serializer,
         write::{writable::WriteBody, Result},
     };
 
     use super::MaterialUserInst;
 
-    impl WriteBody for MaterialUserInst {
-        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-            &self,
-            s: &mut Serializer<W, I, N>,
-        ) -> Result {
+    impl<W: Write, I, N> WriteBody<W, I, N> for MaterialUserInst {
+        fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
             Self::write_chunk_0(self, s)?;
             Self::write_chunk_1(self, s)?;
             Self::write_chunk_2(self, s)?;

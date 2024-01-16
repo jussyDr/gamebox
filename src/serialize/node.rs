@@ -10,7 +10,7 @@ use crate::{
     write::{writable::WriteBody, Error, Result},
 };
 
-use super::{IdStateMut, Serializer};
+use super::Serializer;
 
 trait CachableNode {
     fn eq(&self, other: &dyn CachableNode) -> bool;
@@ -108,9 +108,12 @@ impl<T: NodeStateMut> NodeStateMut for &mut T {
     }
 }
 
-impl<W: Write, I: IdStateMut, N: NodeStateMut> Serializer<W, I, N> {
+impl<W: Write, I, N: NodeStateMut> Serializer<W, I, N> {
     /// Write a cachable internal node reference.
-    pub fn node_ref<T: 'static + Eq + Hash + Class + WriteBody>(&mut self, node: T) -> Result {
+    pub fn node_ref<T: 'static + Eq + Hash + Class + WriteBody<W, I, N>>(
+        &mut self,
+        node: T,
+    ) -> Result {
         match self
             .node_state
             .borrow()
@@ -132,14 +135,14 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Serializer<W, I, N> {
     }
 
     /// Write an unique non-cached internal node reference.
-    pub fn unique_node_ref<T: Class + WriteBody>(&mut self, node: &T) -> Result {
+    pub fn unique_node_ref<T: Class + WriteBody<W, I, N>>(&mut self, node: &T) -> Result {
         write_node_ref(self, node)?;
 
         Ok(())
     }
 }
 
-fn write_node_ref<W: Write, I: IdStateMut, N: NodeStateMut, T: Class + WriteBody>(
+fn write_node_ref<W: Write, I, N: NodeStateMut, T: Class + WriteBody<W, I, N>>(
     s: &mut Serializer<W, I, N>,
     node: &T,
 ) -> std::result::Result<u32, Error> {

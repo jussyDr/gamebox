@@ -54,11 +54,8 @@ impl HeaderChunks for Map {
     }
 }
 
-impl WriteBody for Map {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Map {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         self.write_chunk_13(s)?;
         self.write_chunk_17(s)?;
         self.write_chunk_24(s)?;
@@ -949,11 +946,8 @@ impl Map {
     }
 }
 
-impl WriteBody for CollectorList {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I, N> WriteBody<W, I, N> for CollectorList {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         self.write_chunk_0(s)?;
 
         Ok(())
@@ -969,11 +963,8 @@ impl CollectorList {
     }
 }
 
-impl WriteBody for ChallengeParameters {
-    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
-        &self,
-        s: &mut Serializer<W, I, N>,
-    ) -> Result {
+impl<W: Write, I, N> WriteBody<W, I, N> for ChallengeParameters {
+    fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         self.write_chunk_1(s)?;
         self.write_chunk_4(s)?;
         self.write_chunk_8(s)?;
