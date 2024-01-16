@@ -59,11 +59,8 @@ impl HeaderChunks for Item {
     }
 }
 
-impl ReadBody for Item {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Item {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -403,11 +400,8 @@ impl Item {
     }
 }
 
-impl ReadBody for ItemPlacementParam {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemPlacementParam {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -534,11 +528,8 @@ impl ItemEntityModel {
     }
 }
 
-impl ReadBody for ItemEntityModelEdition {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemEntityModelEdition {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -623,11 +614,8 @@ impl ItemEntityModelEdition {
     }
 }
 
-impl ReadBody for Crystal {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Crystal {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -813,11 +801,8 @@ impl Class for MediaClipList {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 393);
 }
 
-impl ReadBody for MediaClipList {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MediaClipList {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -842,11 +827,8 @@ impl MediaClipList {
     }
 }
 
-impl ReadBody for ItemPlacement {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ItemPlacement {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 10
         d.id_or_null()?; // "1x1"
         d.list(|d| {

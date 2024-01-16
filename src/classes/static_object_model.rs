@@ -20,11 +20,8 @@ impl Class for StaticObjectModel {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 345);
 }
 
-impl ReadBody for StaticObjectModel {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObjectModel {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 3
         let _solid_to_model = d.internal_node_ref::<Solid2Model>()?;
         let b = d.bool8()?;
@@ -76,11 +73,8 @@ impl Class for Solid2Model {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 187);
 }
 
-impl ReadBody for Solid2Model {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Solid2Model {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -237,11 +231,8 @@ impl Class for Surface {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 12);
 }
 
-impl ReadBody for Surface {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Surface {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }

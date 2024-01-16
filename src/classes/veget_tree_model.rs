@@ -39,11 +39,8 @@ impl HeaderChunks for VegetTreeModel {
     }
 }
 
-impl ReadBody for VegetTreeModel {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for VegetTreeModel {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 15
         d.u32()?; // 4
         d.u32()?; // 2

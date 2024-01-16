@@ -11,12 +11,14 @@ use crate::{
         Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
         UNKNOWN_BYTE,
     },
-    deserialize::{Deserializer, IdState, IdStateMut, NodeRef, NodeState, NodeStateMut, Take},
+    deserialize::{Deserializer, IdState, NodeRef, NodeState, Take},
 };
 
 use super::{BodyOptions, HeaderOptions, Result};
 
-pub fn read_gbx<T: Default + Class + HeaderChunks + ReadBody>(
+pub fn read_gbx<
+    T: Default + Class + HeaderChunks + ReadBody<Cursor<Vec<u8>>, IdState, NodeState>,
+>(
     reader: impl BufRead + Seek,
     header_options: HeaderOptions,
     body_options: BodyOptions,
@@ -214,11 +216,8 @@ pub trait BodyChunks<R, I, N> {
         Self: Sized;
 }
 
-pub trait ReadBody {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()>;
+pub trait ReadBody<R, I, N> {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()>;
 }
 
 pub trait ReadJson {

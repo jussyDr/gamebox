@@ -39,11 +39,8 @@ impl HeaderChunks for Prefab {
     }
 }
 
-impl ReadBody for Prefab {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Prefab {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 11
         d.u32()?;
         d.u32()?;

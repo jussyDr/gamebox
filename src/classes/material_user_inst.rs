@@ -24,11 +24,8 @@ mod read {
 
     use super::MaterialUserInst;
 
-    impl ReadBody for MaterialUserInst {
-        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-            &mut self,
-            d: &mut Deserializer<R, I, N>,
-        ) -> Result<()> {
+    impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MaterialUserInst {
+        fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
             read_body_chunks(self, d)
         }
     }

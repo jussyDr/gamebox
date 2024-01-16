@@ -62,11 +62,8 @@ impl HeaderChunks for Material {
     }
 }
 
-impl ReadBody for Material {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Material {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -210,11 +207,8 @@ impl Material {
     }
 }
 
-impl ReadBody for MaterialCustom {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MaterialCustom {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }

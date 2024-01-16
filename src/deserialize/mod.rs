@@ -316,7 +316,7 @@ impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read a node that is not null.
-    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T> {
+    pub fn node<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<T> {
         match self.node_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -324,7 +324,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read a node that may be null.
-    pub fn node_or_null<T: Default + Class + ReadBody>(&mut self) -> Result<Option<T>> {
+    pub fn node_or_null<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<Option<T>> {
         let class_id = self.u32()?;
 
         if class_id == NULL {

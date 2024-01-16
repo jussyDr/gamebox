@@ -116,7 +116,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read an internal node reference that is not null.
-    pub fn internal_node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<Rc<T>> {
+    pub fn internal_node_ref<T: 'static + Default + Class + ReadBody<R, I, N>>(
+        &mut self,
+    ) -> Result<Rc<T>> {
         match self.internal_node_ref_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -124,7 +126,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read an internal node reference that may be null.
-    pub fn internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn internal_node_ref_or_null<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
     ) -> Result<Option<Rc<T>>> {
         match self.node_ref_or_null()? {
@@ -135,7 +137,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read a node reference that may be internal or external and that is not null.
-    pub fn node_ref<T: 'static + Default + Class + ReadBody>(&mut self) -> Result<NodeRef<Rc<T>>> {
+    pub fn node_ref<T: 'static + Default + Class + ReadBody<R, I, N>>(
+        &mut self,
+    ) -> Result<NodeRef<Rc<T>>> {
         match self.node_ref_or_null()? {
             None => Err("node is null".into()),
             Some(node_ref) => Ok(node_ref),
@@ -143,7 +147,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read a node reference that may be internal or external and that may be null.
-    pub fn node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn node_ref_or_null<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
     ) -> Result<Option<NodeRef<Rc<T>>>> {
         let index = match self.u32()? {
@@ -232,7 +236,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read an unique internal node reference that is not null.
-    pub fn unique_internal_node_ref<T: 'static + Default + Class + ReadBody>(
+    pub fn unique_internal_node_ref<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
     ) -> Result<T> {
         match self.unique_internal_node_ref_or_null()? {
@@ -242,7 +246,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read an unique internal node reference that may be null.
-    pub fn unique_internal_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn unique_internal_node_ref_or_null<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
     ) -> Result<Option<T>> {
         match self.unique_node_ref_or_null()? {
@@ -253,7 +257,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read an unique internal node reference.
-    pub fn unique_node_ref<T: 'static + Default + Class + ReadBody>(
+    pub fn unique_node_ref<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
     ) -> Result<NodeRef<T>> {
         match self.unique_node_ref_or_null()? {
@@ -263,7 +267,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read an unique node reference that may be internal or external and that may be null.
-    pub fn unique_node_ref_or_null<T: 'static + Default + Class + ReadBody>(
+    pub fn unique_node_ref_or_null<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,
     ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {

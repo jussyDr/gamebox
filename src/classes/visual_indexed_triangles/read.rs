@@ -12,11 +12,8 @@ use super::{
     IndexBuffer, Indices, VertexStream, Visual, Visual3D, VisualIndexed, VisualIndexedTriangles,
 };
 
-impl ReadBody for VisualIndexedTriangles {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for VisualIndexedTriangles {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -199,11 +196,8 @@ impl IndexBuffer {
     }
 }
 
-impl ReadBody for VertexStream {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for VertexStream {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }

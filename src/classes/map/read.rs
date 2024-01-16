@@ -65,11 +65,8 @@ impl HeaderChunks for Map {
     }
 }
 
-impl ReadBody for Map {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Map {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1225,11 +1222,8 @@ impl Map {
     }
 }
 
-impl ReadBody for CollectorList {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for CollectorList {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1252,11 +1246,8 @@ impl CollectorList {
     }
 }
 
-impl ReadBody for ChallengeParameters {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ChallengeParameters {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1386,11 +1377,8 @@ impl Class for WaypointSpecialProperty {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 9);
 }
 
-impl ReadBody for WaypointSpecialProperty {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for WaypointSpecialProperty {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1438,11 +1426,8 @@ impl Class for BlockSkin {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 89);
 }
 
-impl ReadBody for BlockSkin {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for BlockSkin {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1486,11 +1471,8 @@ impl Class for AnchoredObject {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 257);
 }
 
-impl ReadBody for AnchoredObject {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for AnchoredObject {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1582,11 +1564,8 @@ impl Class for ZoneGenealogy {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 285);
 }
 
-impl ReadBody for ZoneGenealogy {
-    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for ZoneGenealogy {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
     }
 }
@@ -1623,11 +1602,8 @@ impl Class for TraitsMetadata {
     const CLASS_ID: ClassId = ClassId::new(EngineId::SCRIPT, 2);
 }
 
-impl ReadBody for TraitsMetadata {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for TraitsMetadata {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 6
         let n = d.u8()?;
         let types = d.repeat(n as usize, |d| {
