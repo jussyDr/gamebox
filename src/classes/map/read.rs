@@ -956,7 +956,7 @@ impl Map {
         d.u32()?; // 1
         d.u32()?; // 0
         d.scoped_buffer(|d| {
-            let object_ids = d.list(|d| {
+            let ids = d.list(|d| {
                 let id = d.id()?.into();
                 d.u32()?; // 26
                 d.id_or_null()?;
@@ -966,7 +966,7 @@ impl Map {
             let size = d.u32()?;
             let data = d.bytes(size as usize)?;
 
-            self.embedded_objects = Some(EmbeddedObjects { object_ids, data });
+            self.embedded_objects = Some(EmbeddedObjects { ids, data });
 
             d.u32()?; // 0
 

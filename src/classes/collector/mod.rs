@@ -5,10 +5,10 @@ use std::rc::Rc;
 mod read;
 mod write;
 
-#[derive(Default)]
 /// Base class of nodes that can be displayed in an icon tree.
 ///
-/// For example, the blocks, items, and macroblock classes all extend this class.
+/// For example, the blocks, items, and macroblock classes all extend from this class.
+#[derive(Default)]
 pub struct Collector {
     name: String,
     icon_width: u16,
@@ -24,17 +24,17 @@ impl Collector {
         &self.name
     }
 
-    /// Pixel width of this collector's icon.
+    /// Width in pixels of this collector's icon.
     pub fn icon_width(&self) -> u16 {
         self.icon_width
     }
 
-    /// Pixel height of this collector's icon.
+    /// Height in pixels of this collector's icon.
     pub fn icon_height(&self) -> u16 {
         self.icon_height
     }
 
-    /// Icon data of this collector as `icon_width * icon_height` 8-bit ARGB values.
+    /// Icon data of this collector containing `icon_width * icon_height` 8-bit ARGB values.
     pub fn icon_data(&self) -> &[u8] {
         &self.icon_data
     }

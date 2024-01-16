@@ -301,14 +301,16 @@ pub enum Direction {
 
 /// Objects embedded in a map.
 pub struct EmbeddedObjects {
-    object_ids: Vec<RcStr>,
+    ids: Vec<RcStr>,
     data: Vec<u8>,
 }
 
 impl EmbeddedObjects {
     /// Identifiers of the embedded objects.
-    pub fn object_ids(&self) -> &[RcStr] {
-        &self.object_ids
+    ///
+    /// The identifier at the i-th index corresponds to the i-th file in the ZIP archive.
+    pub fn ids(&self) -> &[RcStr] {
+        &self.ids
     }
 
     /// Embedded object data encoded as a ZIP archive.
