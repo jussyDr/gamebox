@@ -3,7 +3,9 @@
 extern crate test;
 
 use std::{
+    any::type_name,
     env, fs,
+    io::Cursor,
     path::{Path, PathBuf},
 };
 
@@ -13,6 +15,7 @@ use gamebox::{
         veget_tree_model::VegetTreeModel,
     },
     read::{HeaderOptions, Readable},
+    write::Writable,
     Item, Map,
 };
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
@@ -22,30 +25,32 @@ fn main() {
 
     let mut tests = vec![];
 
-    read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
-    read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
-    read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
-    read_file_tests::<Map>(&mut tests, "tests/files/map");
-    read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
-    read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");
-    read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
-    read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
+    add_read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
+    add_read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
+    add_read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
+    add_read_file_tests::<Map>(&mut tests, "tests/files/map");
+    add_read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
+    add_read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");
+    add_read_extracted_file_tests::<Texture>(&mut tests, "tests/files/texture");
+    add_read_extracted_file_tests::<VegetTreeModel>(&mut tests, "tests/files/veget_tree_model");
+    add_write_read_default_test::<Item>(&mut tests);
+    add_write_read_default_test::<Map>(&mut tests);
 
     test_main(&args, tests, None);
 }
 
-fn read_file_tests<T: Readable>(tests: &mut Vec<TestDescAndFn>, dir_path: impl AsRef<Path>) {
-    read_file_tests_inner(tests, dir_path, read_file::<T>)
+fn add_read_file_tests<T: Readable>(tests: &mut Vec<TestDescAndFn>, dir_path: impl AsRef<Path>) {
+    add_read_file_tests_inner(tests, dir_path, read_file::<T>)
 }
 
-fn read_extracted_file_tests<T: Readable>(
+fn add_read_extracted_file_tests<T: Readable>(
     tests: &mut Vec<TestDescAndFn>,
     dir_path: impl AsRef<Path>,
 ) {
-    read_file_tests_inner(tests, dir_path, read_extracted_file::<T>)
+    add_read_file_tests_inner(tests, dir_path, read_extracted_file::<T>)
 }
 
-fn read_file_tests_inner(
+fn add_read_file_tests_inner(
     tests: &mut Vec<TestDescAndFn>,
     dir_path: impl AsRef<Path>,
     read_fn: fn(PathBuf),
@@ -57,7 +62,7 @@ fn read_file_tests_inner(
 
         let test = TestDescAndFn {
             desc: TestDesc {
-                name: TestName::DynTestName(file_name),
+                name: TestName::DynTestName(format!("read {file_name}")),
                 ignore: false,
                 ignore_message: None,
                 source_file: "",
@@ -81,6 +86,32 @@ fn read_file_tests_inner(
     }
 }
 
+fn add_write_read_default_test<T: Default + Readable + Writable>(tests: &mut Vec<TestDescAndFn>) {
+    let test = TestDescAndFn {
+        desc: TestDesc {
+            name: TestName::DynTestName(format!("write read default {}", type_name::<T>())),
+            ignore: false,
+            ignore_message: None,
+            source_file: "",
+            start_line: 0,
+            start_col: 0,
+            end_line: 0,
+            end_col: 0,
+            should_panic: ShouldPanic::No,
+            compile_fail: false,
+            no_run: false,
+            test_type: TestType::IntegrationTest,
+        },
+        testfn: TestFn::DynTestFn(Box::new(move || {
+            write_read_default::<T>();
+
+            Ok(())
+        })),
+    };
+
+    tests.push(test);
+}
+
 fn read_file<T: Readable>(path: impl AsRef<Path>) {
     gamebox::read_file::<T>(path).unwrap();
 }
@@ -92,4 +123,10 @@ fn read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
         })
         .read_file::<T>(path)
         .unwrap();
+}
+
+fn write_read_default<T: Default + Readable + Writable>() {
+    let mut buf = vec![];
+    gamebox::write(&T::default(), &mut buf).unwrap();
+    gamebox::read::<T>(Cursor::new(buf)).unwrap();
 }
