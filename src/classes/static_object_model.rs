@@ -85,10 +85,9 @@ impl ReadBody for Solid2Model {
     }
 }
 
-impl BodyChunks for Solid2Model {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Solid2Model {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x090bb000,
@@ -247,9 +246,8 @@ impl ReadBody for Surface {
     }
 }
 
-impl BodyChunks for Surface {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Surface {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0900C003,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0900c003(n, d)),

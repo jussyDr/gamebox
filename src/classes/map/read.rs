@@ -74,10 +74,9 @@ impl ReadBody for Map {
     }
 }
 
-impl BodyChunks for Map {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Map {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x0304300d,
@@ -1235,9 +1234,8 @@ impl ReadBody for CollectorList {
     }
 }
 
-impl BodyChunks for CollectorList {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for CollectorList {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0301b000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0301b000(n, d)),
@@ -1263,10 +1261,9 @@ impl ReadBody for ChallengeParameters {
     }
 }
 
-impl BodyChunks for ChallengeParameters {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ChallengeParameters {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x0305b001,
@@ -1398,10 +1395,11 @@ impl ReadBody for WaypointSpecialProperty {
     }
 }
 
-impl BodyChunks for WaypointSpecialProperty {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for WaypointSpecialProperty
+{
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x2e009000,
@@ -1449,9 +1447,8 @@ impl ReadBody for BlockSkin {
     }
 }
 
-impl BodyChunks for BlockSkin {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for BlockSkin {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03059002,
@@ -1498,10 +1495,9 @@ impl ReadBody for AnchoredObject {
     }
 }
 
-impl BodyChunks for AnchoredObject {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for AnchoredObject {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03101002,
@@ -1595,9 +1591,8 @@ impl ReadBody for ZoneGenealogy {
     }
 }
 
-impl BodyChunks for ZoneGenealogy {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ZoneGenealogy {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0311d002,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0311d002(n, d)),

@@ -128,7 +128,7 @@ fn read_folders<R: Read, I, N>(
     Ok(())
 }
 
-pub fn read_body_chunks<T: BodyChunks, R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+pub fn read_body_chunks<R: Read, I, N, T: BodyChunks<R, I, N>>(
     node: &mut T,
     d: &mut Deserializer<R, I, N>,
 ) -> Result<()> {
@@ -208,9 +208,8 @@ pub trait HeaderChunks {
         Self: Sized;
 }
 
-pub trait BodyChunks {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
+pub trait BodyChunks<R, I, N> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
     where
         Self: Sized;
 }

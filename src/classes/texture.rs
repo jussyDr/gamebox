@@ -62,9 +62,8 @@ impl ReadBody for Texture {
     }
 }
 
-impl BodyChunks for Texture {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Texture {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x09011019,

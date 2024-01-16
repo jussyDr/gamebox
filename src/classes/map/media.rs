@@ -43,9 +43,8 @@ impl ReadBody for MediaClipGroup {
     }
 }
 
-impl BodyChunks for MediaClipGroup {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaClipGroup {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0307a003,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_3(n, d)),
@@ -130,10 +129,9 @@ impl ReadBody for MediaClip {
     }
 }
 
-impl BodyChunks for MediaClip {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaClip {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x0307900d,
@@ -201,9 +199,8 @@ impl ReadBody for MediaTrack {
     }
 }
 
-impl BodyChunks for MediaTrack {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaTrack {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03078001,
@@ -520,9 +517,8 @@ impl ReadBody for MediaBlockTriangles2D {
     }
 }
 
-impl BodyChunks for MediaBlockTriangles2D {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockTriangles2D {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03029001,
@@ -555,9 +551,8 @@ impl ReadBody for MediaBlockTriangles3D {
     }
 }
 
-impl BodyChunks for MediaBlockTriangles3D {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockTriangles3D {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03029001,
@@ -591,9 +586,8 @@ impl ReadBody for MediaBlockFxColors {
     }
 }
 
-impl BodyChunks for MediaBlockFxColors {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockFxColors {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03080003,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_3(n, d)),
@@ -723,9 +717,8 @@ impl ReadBody for MediaBlockCameraGame {
     }
 }
 
-impl BodyChunks for MediaBlockCameraGame {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockCameraGame {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03084007,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_7(n, d)),
@@ -774,9 +767,8 @@ impl ReadBody for MediaBlockTime {
     }
 }
 
-impl BodyChunks for MediaBlockTime {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockTime {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03085000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -811,9 +803,10 @@ impl ReadBody for MediaBlockCameraCustom {
     }
 }
 
-impl BodyChunks for MediaBlockCameraCustom {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for MediaBlockCameraCustom
+{
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030a2006,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_6(n, d)),
@@ -885,8 +878,10 @@ impl ReadBody for MediaBlockCameraEffectShake {
     }
 }
 
-impl BodyChunks for MediaBlockCameraEffectShake {
-    fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for MediaBlockCameraEffectShake
+{
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030a4000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -921,9 +916,8 @@ impl ReadBody for MediaBlockImage {
     }
 }
 
-impl BodyChunks for MediaBlockImage {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockImage {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030a5000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -956,9 +950,8 @@ impl ReadBody for MediaBlockMusicEffect {
     }
 }
 
-impl BodyChunks for MediaBlockMusicEffect {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockMusicEffect {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030a6001,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_1(n, d)),
@@ -996,9 +989,8 @@ impl ReadBody for MediaBlockSound {
     }
 }
 
-impl BodyChunks for MediaBlockSound {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockSound {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x030a7003,
@@ -1056,9 +1048,8 @@ impl ReadBody for MediaBlockText {
     }
 }
 
-impl BodyChunks for MediaBlockText {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockText {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x030a8001,
@@ -1108,9 +1099,8 @@ impl ReadBody for MediaBlockTrails {
     }
 }
 
-impl BodyChunks for MediaBlockTrails {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockTrails {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030a9000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1143,9 +1133,10 @@ impl ReadBody for MediaBlockTransitionFade {
     }
 }
 
-impl BodyChunks for MediaBlockTransitionFade {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for MediaBlockTransitionFade
+{
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x030ab000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1186,9 +1177,8 @@ impl ReadBody for MediaBlockDOF {
     }
 }
 
-impl BodyChunks for MediaBlockDOF {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockDOF {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03126002,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2(n, d)),
@@ -1230,9 +1220,8 @@ impl ReadBody for MediaBlockToneMapping {
     }
 }
 
-impl BodyChunks for MediaBlockToneMapping {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockToneMapping {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03127004,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_4(n, d)),
@@ -1269,9 +1258,8 @@ impl ReadBody for MediaBlockBloomHdr {
     }
 }
 
-impl BodyChunks for MediaBlockBloomHdr {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockBloomHdr {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03128002,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2(n, d)),
@@ -1307,9 +1295,8 @@ impl ReadBody for MediaBlockTimeSpeed {
     }
 }
 
-impl BodyChunks for MediaBlockTimeSpeed {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockTimeSpeed {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03129000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1343,9 +1330,10 @@ impl ReadBody for MediaBlockVehicleLight {
     }
 }
 
-impl BodyChunks for MediaBlockVehicleLight {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for MediaBlockVehicleLight
+{
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03133000,
@@ -1387,9 +1375,8 @@ impl ReadBody for MediaBlockShoot {
     }
 }
 
-impl BodyChunks for MediaBlockShoot {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockShoot {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03145000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1419,9 +1406,8 @@ impl ReadBody for MediaBlockDirtyLens {
     }
 }
 
-impl BodyChunks for MediaBlockDirtyLens {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockDirtyLens {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03165000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1456,9 +1442,10 @@ impl ReadBody for MediaBlockColorGrading {
     }
 }
 
-impl BodyChunks for MediaBlockColorGrading {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for MediaBlockColorGrading
+{
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x03186000,
@@ -1504,9 +1491,8 @@ impl ReadBody for MediaBlockInterface {
     }
 }
 
-impl BodyChunks for MediaBlockInterface {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockInterface {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03195000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1539,9 +1525,8 @@ impl ReadBody for MediaBlockFog {
     }
 }
 
-impl BodyChunks for MediaBlockFog {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockFog {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x03199000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1584,9 +1569,8 @@ impl ReadBody for MediaBlockEntity {
     }
 }
 
-impl BodyChunks for MediaBlockEntity {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockEntity {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0329f000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
@@ -1665,9 +1649,8 @@ impl ReadBody for EffectSimi {
     }
 }
 
-impl BodyChunks for EffectSimi {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for EffectSimi {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x07010005,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_5(n, d)),

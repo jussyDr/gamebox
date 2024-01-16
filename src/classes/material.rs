@@ -71,10 +71,9 @@ impl ReadBody for Material {
     }
 }
 
-impl BodyChunks for Material {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Material {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x09079001,
@@ -220,10 +219,9 @@ impl ReadBody for MaterialCustom {
     }
 }
 
-impl BodyChunks for MaterialCustom {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MaterialCustom {
     #[allow(clippy::redundant_closure)]
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x0903a004,

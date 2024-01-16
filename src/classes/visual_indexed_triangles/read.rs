@@ -21,9 +21,10 @@ impl ReadBody for VisualIndexedTriangles {
     }
 }
 
-impl BodyChunks for VisualIndexedTriangles {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N>
+    for VisualIndexedTriangles
+{
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
             BodyChunkEntry {
                 id: 0x09006001,
@@ -172,9 +173,8 @@ impl VisualIndexed {
     }
 }
 
-impl BodyChunks for IndexBuffer {
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for IndexBuffer {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09057001,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09057001(n, d)),
@@ -208,9 +208,8 @@ impl ReadBody for VertexStream {
     }
 }
 
-impl BodyChunks for VertexStream {
-    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
-    ) -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for VertexStream {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x09056000,
             read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09056000(n, d)),

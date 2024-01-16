@@ -9,8 +9,8 @@ use std::{
 
 use gamebox::{
     classes::{
-        color_table::ColorTable, map::Validation, material::Material, prefab::Prefab,
-        texture::Texture, veget_tree_model::VegetTreeModel,
+        color_table::ColorTable, material::Material, prefab::Prefab, texture::Texture,
+        veget_tree_model::VegetTreeModel,
     },
     read::{HeaderOptions, Readable},
     Item, Map,
