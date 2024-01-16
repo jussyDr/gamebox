@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    common::{Class, NODE_END},
+    common::Class,
     write::{writable::WriteBody, Error, Result},
 };
 
@@ -155,8 +155,6 @@ fn write_node_ref<W: Write, I, N: NodeStateMut, T: Class + WriteBody<W, I, N>>(
     s.u32(T::CLASS_ID.get())?;
 
     node.write_body(s)?;
-
-    s.u32(NODE_END)?;
 
     Ok(index)
 }

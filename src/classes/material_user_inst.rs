@@ -113,6 +113,7 @@ mod write {
     use std::io::Write;
 
     use crate::{
+        common::NODE_END,
         serialize::Serializer,
         write::{writable::WriteBody, Result},
     };
@@ -124,6 +125,8 @@ mod write {
             Self::write_chunk_0(self, s)?;
             Self::write_chunk_1(self, s)?;
             Self::write_chunk_2(self, s)?;
+
+            s.u32(NODE_END)?;
 
             Ok(())
         }

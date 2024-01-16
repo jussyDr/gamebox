@@ -143,6 +143,8 @@ pub fn read_body_chunks<R: Read, I, N, T: BodyChunks<R, I, N>>(
             break;
         }
 
+        println!("{:08X}", chunk_id);
+
         let body_chunk_entry = body_chunk_entries
             .find(|body_chunk_entry| body_chunk_entry.id == chunk_id)
             .ok_or("unknown body chunk")?;

@@ -4,6 +4,7 @@ use crate::{
     classes::{
         collector::Collector, item::ItemPlacementParam, material_user_inst::MaterialUserInst,
     },
+    common::NODE_END,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
         writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
@@ -70,6 +71,8 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Item {
         Self::write_chunk_37(self, s)?;
         Self::write_chunk_38(self, s)?;
         Self::write_chunk_39(self, s)?;
+
+        s.u32(NODE_END)?;
 
         Ok(())
     }
@@ -251,6 +254,8 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for ItemEntity
         Self::write_chunk_0(self, s)?;
         Self::write_chunk_1(self, s)?;
 
+        s.u32(NODE_END)?;
+
         Ok(())
     }
 }
@@ -303,7 +308,6 @@ impl ItemEntityModelEdition {
 
     fn write_chunk_1<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x2e026001)?;
-        s.u32(0x0304306b)?;
         s.u32(0x534b4950)?;
         s.buffer(|s| {
             s.u32(0)?;
@@ -323,6 +327,8 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Crystal {
         Self::write_chunk_5(self, s)?;
         Self::write_chunk_6(self, s)?;
         Self::write_chunk_7(self, s)?;
+
+        s.u32(NODE_END)?;
 
         Ok(())
     }
@@ -344,9 +350,14 @@ impl Crystal {
 
     fn write_chunk_4<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
         s.u32(0x09003004)?;
-        s.u32(1)?;
-        s.u32(0)?;
-        s.u32(1)?;
+        s.u32(0x534b4950)?;
+        s.buffer(|s| {
+            s.u32(1)?;
+            s.u32(0)?;
+            s.u32(1)?;
+
+            Ok(())
+        })?;
 
         Ok(())
     }
@@ -532,6 +543,7 @@ impl Crystal {
     }
 
     fn write_chunk_7<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        s.u32(0x09003007)?;
         s.u32(0)?;
         s.u32(3)?;
         s.f32(1.0)?;
@@ -552,6 +564,8 @@ impl<W: Write, I, N: NodeStateMut> WriteBody<W, I, N> for ItemPlacementParam {
         Self::write_chunk_1(self, s)?;
         Self::write_chunk_4(self, s)?;
         Self::write_chunk_5(self, s)?;
+
+        s.u32(NODE_END)?;
 
         Ok(())
     }
