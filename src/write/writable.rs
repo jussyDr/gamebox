@@ -4,7 +4,8 @@ use lzo1x::CompressLevel;
 
 use crate::{
     common::{
-        Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, UNKNOWN_BYTE,
+        Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_FILE_VERSION,
+        HEAVY_CHUNK_MARKER_BIT, UNKNOWN_BYTE,
     },
     serialize::{IdState, NodeState, Serializer},
 };
@@ -51,7 +52,7 @@ pub fn write_gbx<
             s.u32(*chunk_id)?;
 
             if *is_heavy {
-                s.u32(chunk_data.len() as u32 | 0x80000000)?;
+                s.u32(chunk_data.len() as u32 | HEAVY_CHUNK_MARKER_BIT)?;
             } else {
                 s.u32(chunk_data.len() as u32)?;
             }
@@ -75,7 +76,7 @@ pub fn write_gbx<
     let mut s = Serializer::new(writer, (), ());
 
     s.byte_array(GAMEBOX_FILE_SIGNATURE)?;
-    s.u16(GAMEBOX_VERSION)?;
+    s.u16(GAMEBOX_FILE_VERSION)?;
     FileFormat::Binary.write(&mut s)?;
     Compression::Uncompressed.write(&mut s)?;
     let compression = match body_compression {

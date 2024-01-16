@@ -110,19 +110,21 @@ impl Compression {
 
 pub const GAMEBOX_FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 
-pub const GAMEBOX_VERSION: u16 = 6;
+pub const GAMEBOX_FILE_VERSION: u16 = 6;
 
-pub const SKIP: u32 = 0x534b4950;
+pub const UNKNOWN_BYTE: u8 = b'R';
 
-pub const NODE_END: u32 = 0xfacade01;
+pub const HEAVY_CHUNK_MARKER_BIT: u32 = 0x80000000;
+
+pub const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;
+
+pub const END_OF_NODE_MARKER: u32 = 0xfacade01;
 
 pub const ID_VERSION: u32 = 3;
 
 pub const ID_INDEX_MASK: u32 = 0x00003fff;
 
-pub const ID_FLAG_BIT: u32 = 0x40000000;
-
-pub const UNKNOWN_BYTE: u8 = b'R';
+pub const ID_MARKER_BIT: u32 = 0x40000000;
 
 pub const NULL: u32 = 0xffffffff;
 

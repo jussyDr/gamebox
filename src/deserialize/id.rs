@@ -1,7 +1,7 @@
 use std::{io::Read, rc::Rc};
 
 use crate::{
-    common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION, NULL},
+    common::{ID_INDEX_MASK, ID_MARKER_BIT, ID_VERSION, NULL},
     read::Result,
 };
 
@@ -86,7 +86,7 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
             return Ok(None);
         }
 
-        if index & !ID_INDEX_MASK == ID_FLAG_BIT {
+        if index & !ID_INDEX_MASK == ID_MARKER_BIT {
             let index = (index & ID_INDEX_MASK) as u16;
 
             if index == 0 {

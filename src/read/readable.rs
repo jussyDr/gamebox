@@ -8,8 +8,8 @@ use serde_jsonrc::Value;
 
 use crate::{
     common::{
-        Class, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_VERSION, NODE_END, SKIP,
-        UNKNOWN_BYTE,
+        Class, Compression, FileFormat, END_OF_NODE_MARKER, GAMEBOX_FILE_SIGNATURE,
+        GAMEBOX_FILE_VERSION, HEAVY_CHUNK_MARKER_BIT, SKIPPABLE_CHUNK_MARKER, UNKNOWN_BYTE,
     },
     deserialize::{Deserializer, IdState, NodeRef, NodeState, Take},
 };
@@ -88,8 +88,8 @@ fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
     let mut header_chunk_entries = T::header_chunks();
 
     for (chunk_id, chunk_size) in header_chunks {
-        let is_heavy_chunk = chunk_size & 0x80000000 != 0;
-        let chunk_size = chunk_size & 0x7FFFFFFF;
+        let is_heavy_chunk = chunk_size & HEAVY_CHUNK_MARKER_BIT != 0;
+        let chunk_size = chunk_size & !HEAVY_CHUNK_MARKER_BIT;
 
         if is_heavy_chunk && !read_heavy_chunks {
             d.skip(chunk_size)?;
@@ -139,7 +139,7 @@ pub fn read_body_chunks<R: Read, I, N, T: BodyChunks<R, I, N>>(
     loop {
         let chunk_id = d.u32()?;
 
-        if chunk_id == NODE_END {
+        if chunk_id == END_OF_NODE_MARKER {
             break;
         }
 
@@ -152,7 +152,7 @@ pub fn read_body_chunks<R: Read, I, N, T: BodyChunks<R, I, N>>(
                 read_fn(node, d)?;
             }
             BodyChunkReadFn::Skippable(read_fn) => {
-                if d.u32()? != SKIP {
+                if d.u32()? != SKIPPABLE_CHUNK_MARKER {
                     return Err("expected skippable chunk".into());
                 }
 
@@ -258,7 +258,7 @@ impl GbxFile {
             return Err("not a gamebox file".into());
         }
 
-        if d.u16()? != GAMEBOX_VERSION {
+        if d.u16()? != GAMEBOX_FILE_VERSION {
             return Err("unsupported gamebox version".into());
         }
 

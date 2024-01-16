@@ -2,7 +2,7 @@ use std::{f32::consts::FRAC_PI_4, io::Write};
 
 use crate::{
     classes::map::MapType,
-    common::NODE_END,
+    common::END_OF_NODE_MARKER,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
         writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
@@ -107,7 +107,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Map {
         self.write_chunk_105(s)?;
         self.write_chunk_107(s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }
@@ -951,7 +951,7 @@ impl<W: Write, I, N> WriteBody<W, I, N> for CollectorList {
     fn write_body(&self, s: &mut Serializer<W, I, N>) -> Result {
         self.write_chunk_0(s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }
@@ -975,7 +975,7 @@ impl<W: Write, I, N> WriteBody<W, I, N> for ChallengeParameters {
         self.write_chunk_13(s)?;
         self.write_chunk_14(s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }

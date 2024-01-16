@@ -4,7 +4,7 @@ use crate::{
     classes::{
         collector::Collector, item::ItemPlacementParam, material_user_inst::MaterialUserInst,
     },
-    common::NODE_END,
+    common::END_OF_NODE_MARKER,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
         writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
@@ -72,7 +72,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Item {
         Self::write_chunk_38(self, s)?;
         Self::write_chunk_39(self, s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }
@@ -254,7 +254,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for ItemEntity
         Self::write_chunk_0(self, s)?;
         Self::write_chunk_1(self, s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }
@@ -328,7 +328,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> WriteBody<W, I, N> for Crystal {
         Self::write_chunk_6(self, s)?;
         Self::write_chunk_7(self, s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }
@@ -565,7 +565,7 @@ impl<W: Write, I, N: NodeStateMut> WriteBody<W, I, N> for ItemPlacementParam {
         Self::write_chunk_4(self, s)?;
         Self::write_chunk_5(self, s)?;
 
-        s.u32(NODE_END)?;
+        s.u32(END_OF_NODE_MARKER)?;
 
         Ok(())
     }

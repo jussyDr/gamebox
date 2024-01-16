@@ -1,7 +1,7 @@
 use std::{collections::HashMap, io::Write};
 
 use crate::{
-    common::{ID_FLAG_BIT, ID_INDEX_MASK, ID_VERSION, NULL},
+    common::{ID_INDEX_MASK, ID_MARKER_BIT, ID_VERSION, NULL},
     write::Result,
 };
 
@@ -69,10 +69,10 @@ impl<W: Write, I: IdStateMut, N> Serializer<W, I, N> {
 
                 self.id_state.borrow_mut().ids.insert(id.to_owned(), index);
 
-                self.u32(ID_FLAG_BIT)?;
+                self.u32(ID_MARKER_BIT)?;
                 self.string(id)
             }
-            Some(&index) => self.u32(ID_FLAG_BIT | ((index as u32) & ID_INDEX_MASK)),
+            Some(&index) => self.u32(ID_MARKER_BIT | ((index as u32) & ID_INDEX_MASK)),
         }
     }
 
