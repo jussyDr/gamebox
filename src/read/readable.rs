@@ -303,13 +303,18 @@ impl GbxFile {
                 d.u32()?;
                 let file_name = d.string()?;
                 let node_index = d.u32()?;
+
+                if node_index == 0 {
+                    return Err("".into());
+                }
+
                 d.u32()?;
                 let folder_index = d.u32()?;
 
                 let mut file_path = folders[folder_index as usize].clone();
                 file_path.push(file_name);
 
-                Ok((node_index, file_path))
+                Ok((node_index - 1, file_path))
             })?
         } else {
             vec![]

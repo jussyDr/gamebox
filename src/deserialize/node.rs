@@ -37,17 +37,14 @@ impl NodeState {
 
     /// Get a node reference with the given `index`.
     pub fn get(&self, index: usize) -> Result<Option<&NodeRef<Rc<dyn Any>>>> {
-        let node_ref = self.nodes.get(index - 1).ok_or("node index out of range")?;
+        let node_ref = self.nodes.get(index).ok_or("node index out of range")?;
 
         Ok(node_ref.as_ref())
     }
 
     /// Set a node reference at the given `index`.
     pub fn set(&mut self, index: usize, node_ref: NodeRef<Rc<dyn Any>>) -> Result<()> {
-        let entry = self
-            .nodes
-            .get_mut(index - 1)
-            .ok_or("node index out of range")?;
+        let entry = self.nodes.get_mut(index).ok_or("node index out of range")?;
 
         if entry.is_some() {
             return Err("node already read".into());
@@ -113,8 +110,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     /// Read an external node reference that is not null.
     pub fn external_node_ref(&mut self) -> Result<Rc<Path>> {
         let index = match self.u32()? {
+            0 => return Err("".into()),
             NULL => return Err("node index is null".into()),
-            index => index,
+            index => index - 1,
         };
 
         let node_ref = self
@@ -144,8 +142,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         &mut self,
     ) -> Result<Option<NodeRef<Rc<T>>>> {
         let index = match self.u32()? {
+            0 => return Err("".into()),
             NULL => return Ok(None),
-            index => index,
+            index => index - 1,
         };
 
         match self.node_state.borrow().get(index as usize)? {
@@ -200,8 +199,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
     ) -> Result<Option<NodeRef<Rc<dyn Any>>>> {
         let index = match self.u32()? {
-            0xffffffff => return Ok(None),
-            index => index,
+            0 => return Err("".into()),
+            NULL => return Ok(None),
+            index => index - 1,
         };
 
         match self.node_state.borrow().get(index as usize)? {
@@ -264,8 +264,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         &mut self,
     ) -> Result<Option<NodeRef<T>>> {
         let index = match self.u32()? {
+            0 => return Err("".into()),
             NULL => return Ok(None),
-            index => index,
+            index => index - 1,
         };
 
         match self.node_state.borrow().get(index as usize)? {
@@ -299,8 +300,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         read_fn: impl Fn(&mut Self, u32) -> Result<Box<dyn Any>>,
     ) -> Result<Option<NodeRef<Box<dyn Any>>>> {
         let index = match self.u32()? {
-            0xffffffff => return Ok(None),
-            index => index,
+            0 => return Err("".into()),
+            NULL => return Ok(None),
+            index => index - 1,
         };
 
         match self.node_state.borrow().get(index as usize)? {
