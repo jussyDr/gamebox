@@ -2,7 +2,6 @@
 
 mod file_api;
 pub(crate) mod readable;
-pub(crate) mod take;
 
 pub use file_api::GbxFile;
 

@@ -7,10 +7,10 @@ use serde_jsonrc::Value;
 
 use crate::{
     common::{Class, END_OF_NODE_MARKER, HEAVY_CHUNK_MARKER_BIT, SKIPPABLE_CHUNK_MARKER},
-    deserialize::{Deserializer, IdState, NodeRef, NodeState},
+    deserialize::{Deserializer, IdState, NodeRef, NodeState, Take},
 };
 
-use super::{file_api::GbxFile, take::Take, BodyOptions, HeaderOptions, Result};
+use super::{file_api::GbxFile, BodyOptions, HeaderOptions, Result};
 
 pub fn read_gbx<
     T: Default + Class + HeaderChunks + for<'a> ReadBody<Cursor<&'a [u8]>, IdState, NodeState>,

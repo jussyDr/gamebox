@@ -2,9 +2,11 @@
 
 mod id;
 mod node;
+mod take;
 
 pub use id::*;
 pub use node::*;
+pub use take::Take;
 
 use std::{
     io::{self, Read, Seek},
@@ -14,12 +16,10 @@ use std::{
 
 use crate::{
     common::{Class, NULL},
-    read::{
-        readable::ReadBody,
-        take::{take, Take},
-        Result,
-    },
+    read::{readable::ReadBody, Result},
 };
+
+use self::take::take;
 
 /// Low-level GameBox deserializer.
 pub struct Deserializer<R, I, N> {
@@ -279,13 +279,6 @@ impl<R: Seek, I, N> Deserializer<R, I, N> {
         self.reader.seek(io::SeekFrom::Current(n as i64))?;
 
         Ok(())
-    }
-
-    /// Get the position of the underlying reader.
-    pub fn position(&mut self) -> Result<u64> {
-        let position = self.reader.stream_position()?;
-
-        Ok(position)
     }
 }
 
