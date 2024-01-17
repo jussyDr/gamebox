@@ -101,7 +101,12 @@ impl Solid2Model {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?; // 30 | 34
+        let version = d.u32()?;
+
+        if !matches!(version, 29 | 30 | 34) {
+            return Err("".into());
+        }
+
         d.null_id()?;
         let _layers = d.list(|d| {
             let mesh_index = d.u32()?;
@@ -115,7 +120,6 @@ impl Solid2Model {
 
             Ok((mesh_index, material_index))
         })?;
-
         d.u32()?; // 10
         let _meshes = d.list(|d| {
             let _visual_indexed_triangles = d.internal_node_ref::<VisualIndexedTriangles>()?;
@@ -158,7 +162,6 @@ impl Solid2Model {
         d.u32()?; // 0
         d.u32()?; // 0xd05ebb50
         d.u32()?; // 0x01d74f56
-
         d.u32()?; // 0
         d.string()?; // "Stadium\Media\Material\"
         d.u32()?; // 0
@@ -185,8 +188,6 @@ impl Solid2Model {
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
 
             Ok(())
         })?;
@@ -196,11 +197,12 @@ impl Solid2Model {
         d.u32()?; // 0
         d.u32()?; // 1
         d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
-        d.u32()?; // 1
-        d.u32()?; // 0
+        if version >= 30 {
+            d.u32()?;
+        }
         let _materials = d.repeat(num_materials as usize, |d| {
-            d.internal_node_ref::<MaterialUserInst>()?;
             d.u32()?; // 0
+            d.internal_node_ref::<MaterialUserInst>()?;
 
             Ok(())
         })?;
@@ -208,10 +210,15 @@ impl Solid2Model {
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
+        d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.f32()?; // 1.0
         d.f32()?; // 1.0
         d.u32()?; // 0xffffffff
+        if version >= 31 {
+            d.u32()?; // 0
+            d.u32()?; // 0
+        }
 
         Ok(())
     }
