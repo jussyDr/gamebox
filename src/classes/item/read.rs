@@ -542,8 +542,16 @@ impl ItemEntityModel {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 4
+        let version = d.u32()?;
+
+        if !matches!(version, 4 | 5) {
+            return Err("".into());
+        }
+
         d.unique_internal_node_ref::<StaticObjectModel>()?;
+        if version >= 5 {
+            d.u8()?; // 0
+        }
 
         Ok(())
     }
@@ -790,6 +798,46 @@ impl Crystal {
                     d.f32()?; // 32.0
                     d.f32()?; // 32.0
                     d.u32()?; // 0
+                }
+                12 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 0
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.u32()?;
+                    d.u32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.u32()?;
+                    d.f32()?;
+                    d.u32()?;
+                    d.u32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.u32()?; // 1
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
                 }
                 13 => {
                     d.u32()?; // 64
