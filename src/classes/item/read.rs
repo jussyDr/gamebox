@@ -479,13 +479,24 @@ impl ItemPlacementParam {
 
     fn read_chunk_2e020003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 3
-        d.u32()?; // 6
+        let version = d.u32()?;
+
+        if !matches!(version, 6 | 8) {
+            return Err("".into());
+        }
+
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 1
         d.u32()?; // 0
         d.u32()?; // 0
+        if version >= 8 {
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?; // 1.0
+            d.u32()?; // 0
+        }
 
         Ok(())
     }
@@ -761,15 +772,24 @@ impl Crystal {
     fn read_chunk_09003006<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         let version = d.u32()?;
 
-        if !matches!(version, 1 | 2) {
+        if !matches!(version, 0..=2) {
             return Err("".into());
         }
 
-        d.list(|d| {
-            d.u32()?;
+        if version == 0 {
+            d.list(|d| {
+                d.f32()?;
+                d.f32()?;
 
-            Ok(())
-        })?;
+                Ok(())
+            })?;
+        } else {
+            d.list(|d| {
+                d.u32()?;
+
+                Ok(())
+            })?;
+        }
         if version >= 2 {
             let len = d.u32()?;
             d.repeat(len as usize, |d| {
