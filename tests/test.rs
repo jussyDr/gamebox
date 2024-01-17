@@ -58,27 +58,14 @@ fn add_read_file_tests_inner(
 
         let file_name = entry.file_name().to_str().unwrap().to_owned();
 
-        let test = TestDescAndFn {
-            desc: TestDesc {
-                name: TestName::DynTestName(format!("read {file_name}")),
-                ignore: false,
-                ignore_message: None,
-                source_file: "",
-                start_line: 0,
-                start_col: 0,
-                end_line: 0,
-                end_col: 0,
-                should_panic: ShouldPanic::No,
-                compile_fail: false,
-                no_run: false,
-                test_type: TestType::IntegrationTest,
-            },
-            testfn: TestFn::DynTestFn(Box::new(move || {
+        let test = create_test(
+            format!("read {file_name}"),
+            Box::new(move || {
                 read_fn(entry.path());
 
                 Ok(())
-            })),
-        };
+            }),
+        );
 
         tests.push(test);
     }
@@ -88,9 +75,25 @@ fn add_write_read_default_test<T: Default + Readable + Writable>(
     tests: &mut Vec<TestDescAndFn>,
     name: &str,
 ) {
-    let test = TestDescAndFn {
+    let test = create_test(
+        format!("write read default {name}"),
+        Box::new(move || {
+            write_read_default::<T>();
+
+            Ok(())
+        }),
+    );
+
+    tests.push(test);
+}
+
+fn create_test(
+    name: String,
+    test_fn: Box<dyn FnOnce() -> Result<(), String> + Send>,
+) -> TestDescAndFn {
+    TestDescAndFn {
         desc: TestDesc {
-            name: TestName::DynTestName(format!("write read default {name}")),
+            name: TestName::DynTestName(name),
             ignore: false,
             ignore_message: None,
             source_file: "",
@@ -103,14 +106,8 @@ fn add_write_read_default_test<T: Default + Readable + Writable>(
             no_run: false,
             test_type: TestType::IntegrationTest,
         },
-        testfn: TestFn::DynTestFn(Box::new(move || {
-            write_read_default::<T>();
-
-            Ok(())
-        })),
-    };
-
-    tests.push(test);
+        testfn: TestFn::DynTestFn(test_fn),
+    }
 }
 
 fn read_file<T: Readable>(path: impl AsRef<Path>) {
