@@ -30,7 +30,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObject
             false
         };
         if !has_surface {
-            d.u32()?; // 0xffffffff
+            d.internal_node_ref_or_null::<Surface>()?;
             d.f32()?; // 1.0
             d.u32()?; // 0
             d.u32()?; // 0
@@ -281,16 +281,21 @@ impl Surface {
 
             Ok(())
         })?;
+
         d.u32()?; // 0
         d.u32()?; // 0
         d.f32()?; // 1.0
-        d.list(|d| {
-            d.u32()?;
-            d.u32()?;
+        let b = d
+            .list(|d| {
+                d.u32()?;
+                d.u32()?;
 
-            Ok(())
-        })?;
-        d.u32()?; // 0
+                Ok(())
+            })?
+            .is_empty();
+        if !b {
+            d.u32()?; // 0
+        }
         d.list(|d| {
             d.u16()?;
 
