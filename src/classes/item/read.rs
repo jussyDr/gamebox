@@ -3,7 +3,7 @@ use std::{any::Any, io::Read};
 use crate::{
     classes::{
         collector::Collector, item::ItemPlacementParam, material_user_inst::MaterialUserInst,
-        static_object_model::StaticObjectModel,
+        static_object_model::StaticObjectModel, traits_metadata::TraitsMetadata,
     },
     common::{read_compact_index, Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-use super::{Crystal, Item, ItemEntityModel, ItemEntityModelEdition, ItemPlacement};
+use super::{Crystal, Item, ItemEntityModel, ItemEntityModelEdition, ItemPlacement, TreeGenerator};
 
 impl Readable for Item {}
 
@@ -292,9 +292,11 @@ impl Item {
             _ => Err("unknown entity model type".into()),
         })?;
 
-        d.u32()?; // 0xffffffff
+        if !is_edition {
+            d.u32()?; // 0xffffffff
+        }
 
-        if version >= 15 && !is_edition {
+        if version >= 15 {
             d.u32()?; // 0xffffffff
         }
 
@@ -334,11 +336,19 @@ impl Item {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?; // 11 | 12
+        let version = d.u32()?;
+
+        if !matches!(version, 10..=12) {
+            return Err("".into());
+        }
+
         d.u32()?; // 3
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
-        d.u8()?; // 0
+
+        if version >= 11 {
+            d.u8()?; // 0
+        }
 
         if version >= 12 {
             d.unique_internal_node_ref_or_null::<MediaClipList>()?;
@@ -612,6 +622,14 @@ impl ItemEntityModelEdition {
     }
 }
 
+impl TreeGenerator {
+    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+
+        Ok(())
+    }
+}
+
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Crystal {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
@@ -622,6 +640,12 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Crystal {
     #[allow(clippy::redundant_closure)]
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [
+            BodyChunkEntry {
+                id: 0x09051000,
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                    TreeGenerator::read_chunk_0(&mut n.parent, d)
+                }),
+            },
             BodyChunkEntry {
                 id: 0x09003003,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003003(n, d)),
@@ -665,7 +689,29 @@ impl Crystal {
 
     fn read_chunk_09003004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
-        d.u32()?; // 0
+        let size = d.u32()?;
+
+        if size > 0 {
+            let mut d = d.take_with(size as u64, (), ());
+
+            d.u32()?; // 0
+            d.u32()?; // 1
+            d.u32()?; // 0
+            d.u32()?; // 1
+            d.u32()?; // 1
+            d.string()?; // "Layer1"
+            d.u32()?; // 0
+            d.u32()?; // 1
+            d.u32()?; // 0
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?; // 0
+            d.node::<TraitsMetadata>()?;
+            d.u32()?; // 0
+        }
+
         d.u32()?; // 1
 
         Ok(())
@@ -676,102 +722,62 @@ impl Crystal {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 0
-        d.u32()?; // 1
-        d.u32()?; // 0
-        d.u32()?; // 2
-        d.u32()?; // 0
-        d.id()?; // "Layer0"
-        d.string()?; // "Geometry"
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 37
-        d.u32()?; // 4
-        d.u32()?; // 3
-        d.u32()?; // 4
-        d.f32()?; // 64.0
-        d.u32()?; // 2
-        d.f32()?; // 128.0
-        d.u32()?; // 1
-        d.f32()?; // 192.0
-        d.u32()?; // 0
-        let num_groups = d.u32()?;
-        d.repeat(num_groups as usize, |d| {
+        d.list(|d| {
+            let kind = d.u32()?;
+            d.u32()?; // 2
             d.u32()?; // 0
-            d.u8()?; // 1
-            d.u32()?; // 0xffffffff
-            d.string()?; // "" | "part"
-            d.u32()?; // 0xffffffff
-            d.list(|d| {
-                d.u32()?;
-
-                Ok(())
-            })?;
-
-            Ok(())
-        })?;
-        d.u8()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 35
-        let num_vertices = d.u32()?;
-        d.repeat(num_vertices as usize, |d| {
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-
-            Ok(())
-        })?;
-        d.u32()?; // 0x330
-        d.u32()?; // 0
-        let num_faces = d.u32()?; // 0x144
-        d.list(|d| {
-            d.f32()?;
-            d.f32()?;
+            d.id()?; // "Layer0"
+            d.string()?; // "Geometry"
+            d.u32()?; // 1
+            d.u32()?; // 1
+            match kind {
+                0 => {
+                    read_mesh(d)?;
+                    d.u32()?; // 1
+                    d.u32()?; // 0 | 1
+                }
+                14 => {
+                    read_mesh(d)?;
+                }
+                15 => {
+                    d.u32()?; // 0
+                    d.u32()?; // 1
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                    d.f32()?;
+                }
+                _ => return Err("".into()),
+            }
 
             Ok(())
         })?;
-        let num_face_indices = d.u32()?;
-        d.repeat(num_face_indices as usize, |d| {
-            read_compact_index(d, num_face_indices)?;
-
-            Ok(())
-        })?;
-        d.repeat(num_faces as usize, |d| {
-            let index_count = d.u8()? + 3;
-            d.repeat(index_count as usize, |d| {
-                read_compact_index(d, num_vertices)?;
-
-                Ok(())
-            })?;
-            read_compact_index(d, 64)?;
-            read_compact_index(d, num_groups)?;
-
-            Ok(())
-        })?;
-        d.u32()?; // 0
-        d.list(|d| {
-            d.u32()?;
-
-            Ok(())
-        })?;
-        d.u32()?; // 1
-        d.u32()?; // 1
 
         Ok(())
     }
 
     fn read_chunk_09003006<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 2
+        let version = d.u32()?;
+
+        if !matches!(version, 1 | 2) {
+            return Err("".into());
+        }
+
         d.list(|d| {
             d.u32()?;
 
             Ok(())
         })?;
-        let len = d.u32()?;
-        d.repeat(len as usize, |d| {
-            read_compact_index(d, len)?;
+        if version >= 2 {
+            let len = d.u32()?;
+            d.repeat(len as usize, |d| {
+                read_compact_index(d, len)?;
 
-            Ok(())
-        })?;
+                Ok(())
+            })?;
+        }
 
         Ok(())
     }
@@ -865,4 +871,141 @@ impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for ItemPlacement {
 
         Ok(())
     }
+}
+
+fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
+    let version = d.u32()?;
+    d.u32()?; // 4
+    d.u32()?; // 3
+    d.u32()?; // 4
+    d.f32()?; // 64.0
+    d.u32()?; // 2
+    d.f32()?; // 128.0
+    d.u32()?; // 1
+    d.f32()?; // 192.0
+    d.u32()?; // 0
+    let num_groups = d.u32()?;
+    d.repeat(num_groups as usize, |d| {
+        d.u32()?; // 0
+        if version >= 36 {
+            d.u8()?; // 1
+        } else {
+            d.u32()?; // 1
+        }
+        d.u32()?; // 0xffffffff
+        d.string()?; // "" | "part"
+        d.u32()?; // 0xffffffff
+        d.list(|d| {
+            d.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    })?;
+    if version >= 34 {
+        d.u8()?; // 1
+    } else {
+        d.u32()?; // 1
+    }
+    if version >= 33 {
+        d.u32()?; // 1
+        d.u32()?; // 35
+    }
+    let num_vertices = d.u32()?;
+    d.repeat(num_vertices as usize, |d| {
+        d.f32()?;
+        d.f32()?;
+        d.f32()?;
+
+        Ok(())
+    })?;
+    let num_edges = d.u32()?;
+    if version >= 35 {
+        d.u32()?; // 0
+    } else {
+        d.repeat(num_edges as usize, |d| {
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+    }
+    let num_faces = d.u32()?;
+    if version >= 37 {
+        d.list(|d| {
+            d.f32()?;
+            d.f32()?;
+
+            Ok(())
+        })?;
+        let num_face_indices = d.u32()?;
+        d.repeat(num_face_indices as usize, |d| {
+            read_compact_index(d, num_face_indices)?;
+
+            Ok(())
+        })?;
+    }
+    d.repeat(num_faces as usize, |d| {
+        let index_count = if version >= 35 {
+            d.u8()? + 3
+        } else {
+            d.u32()? as u8
+        };
+        d.repeat(index_count as usize, |d| {
+            if version >= 34 {
+                read_compact_index(d, num_vertices)?;
+            } else {
+                d.u32()?;
+            }
+
+            Ok(())
+        })?;
+        if version <= 36 {
+            d.repeat(index_count as usize, |d| {
+                d.f32()?;
+                d.f32()?;
+
+                Ok(())
+            })?;
+        }
+        if version >= 33 {
+            read_compact_index(d, 64)?;
+            read_compact_index(d, num_groups)?;
+        } else {
+            d.u32()?;
+            d.u32()?;
+        }
+
+        Ok(())
+    })?;
+    d.u32()?; // 0
+    if version <= 35 {
+        let num_faces = d.u32()?;
+        let num_edges = d.u32()?;
+        let num_vertices = d.u32()?;
+        d.repeat(num_faces as usize, |d| {
+            d.u32()?;
+
+            Ok(())
+        })?;
+        d.repeat(num_edges as usize, |d| {
+            d.u32()?;
+
+            Ok(())
+        })?;
+        d.repeat(num_vertices as usize, |d| {
+            d.u32()?;
+
+            Ok(())
+        })?;
+        d.u32()?; // 0
+    }
+    d.list(|d| {
+        d.u32()?;
+
+        Ok(())
+    })?;
+
+    Ok(())
 }

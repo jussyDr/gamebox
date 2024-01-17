@@ -92,7 +92,11 @@ impl Default for ItemEntityModelEdition {
     }
 }
 
-struct Crystal;
+struct TreeGenerator;
+
+struct Crystal {
+    parent: TreeGenerator,
+}
 
 impl Class for Crystal {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 3);
@@ -100,7 +104,9 @@ impl Class for Crystal {
 
 impl Default for Crystal {
     fn default() -> Self {
-        Self
+        Self {
+            parent: TreeGenerator,
+        }
     }
 }
 

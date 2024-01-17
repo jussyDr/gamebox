@@ -268,7 +268,7 @@ impl ItemEntityModelEdition {
         s.u32(0x2e026000)?;
         s.u32(8)?;
         s.u32(1)?;
-        s.unique_node_ref(&Crystal)?;
+        s.unique_node_ref(&Crystal::default())?;
         s.u32(0)?;
         s.u32(0xffffffff)?;
         s.u32(0)?;

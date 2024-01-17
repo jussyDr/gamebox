@@ -368,7 +368,7 @@ impl MediaTrack {
                 .or_else(|node| node.downcast().map(MediaBlock::Interface))
                 .or_else(|node| node.downcast().map(MediaBlock::Fog))
                 .or_else(|node| node.downcast().map(MediaBlock::Entity))
-                .unwrap())
+                .map_err(|_| "")?)
         })?;
         d.u32()?; // 0xffffffff
 

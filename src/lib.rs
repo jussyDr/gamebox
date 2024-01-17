@@ -55,6 +55,7 @@ pub mod classes {
 
     mod material_user_inst;
     mod static_object_model;
+    mod traits_metadata;
     mod visual_indexed_triangles;
 }
 

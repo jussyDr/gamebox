@@ -55,8 +55,14 @@ mod read {
             &mut self,
             d: &mut Deserializer<R, I, N>,
         ) -> Result<()> {
-            d.u32()?; // 11
-            let uses_game_material = d.bool8()?;
+            let version = d.u32()?;
+
+            if !matches!(version, 10 | 11) {
+                return Err("".into());
+            }
+
+            let uses_game_material = if version >= 11 { d.bool8()? } else { true };
+
             d.id_or_null()?; // "TM_wiuehrfsd"
             d.u32()?; // 0xffffffff
             d.u32()?; // 0
