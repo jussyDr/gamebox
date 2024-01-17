@@ -7,61 +7,19 @@ pub use id::*;
 pub use node::*;
 
 use std::{
-    cmp,
-    io::{self, BufRead, Read, Seek, SeekFrom},
+    io::{self, Read, Seek},
     iter,
     mem::size_of,
 };
 
 use crate::{
     common::{Class, NULL},
-    read::{readable::ReadBody, Result},
+    read::{
+        readable::ReadBody,
+        take::{take, Take},
+        Result,
+    },
 };
-
-/// Adapter which limits the amount of bytes that can be read from a given reader.
-pub struct Take<R> {
-    reader: R,
-    limit: u64,
-}
-
-impl<R: Read> Read for Take<R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if self.limit == 0 {
-            return Ok(0);
-        }
-
-        let max = cmp::min(buf.len() as u64, self.limit) as usize;
-        let n = self.reader.read(&mut buf[..max])?;
-        assert!(n as u64 <= self.limit, "number of read bytes exceeds limit");
-        self.limit -= n as u64;
-
-        Ok(n)
-    }
-}
-
-impl<T: BufRead> BufRead for Take<T> {
-    fn fill_buf(&mut self) -> io::Result<&[u8]> {
-        if self.limit == 0 {
-            return Ok(&[]);
-        }
-
-        let buf = self.reader.fill_buf()?;
-        let cap = cmp::min(buf.len() as u64, self.limit) as usize;
-        Ok(&buf[..cap])
-    }
-
-    fn consume(&mut self, amt: usize) {
-        let amt = cmp::min(amt as u64, self.limit) as usize;
-        self.limit -= amt as u64;
-        self.reader.consume(amt);
-    }
-}
-
-impl<R: Seek> Seek for Take<R> {
-    fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        unimplemented!()
-    }
-}
 
 /// Low-level GameBox deserializer.
 pub struct Deserializer<R, I, N> {
@@ -92,12 +50,9 @@ impl<R, I, N> Deserializer<R, I, N> {
 
     /// Creates an adapter which will read at most `limit` bytes from it.
     pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
-        let inner = Take {
-            reader: &mut self.reader,
-            limit,
-        };
+        let reader = take(&mut self.reader, limit);
 
-        Deserializer::new(inner, &mut self.id_state, &mut self.node_state)
+        Deserializer::new(reader, &mut self.id_state, &mut self.node_state)
     }
 
     /// Creates an adapter with a new `id_state` and `node_state` which will read at most `limit` bytes from it.
@@ -107,12 +62,9 @@ impl<R, I, N> Deserializer<R, I, N> {
         id_state: IS,
         node_state: NS,
     ) -> Deserializer<Take<&mut R>, IS, NS> {
-        let inner = Take {
-            reader: &mut self.reader,
-            limit,
-        };
+        let reader = take(&mut self.reader, limit);
 
-        Deserializer::new(inner, id_state, node_state)
+        Deserializer::new(reader, id_state, node_state)
     }
 }
 
@@ -327,6 +279,13 @@ impl<R: Seek, I, N> Deserializer<R, I, N> {
         self.reader.seek(io::SeekFrom::Current(n as i64))?;
 
         Ok(())
+    }
+
+    /// Get the position of the underlying reader.
+    pub fn position(&mut self) -> Result<u64> {
+        let position = self.reader.stream_position()?;
+
+        Ok(position)
     }
 }
 

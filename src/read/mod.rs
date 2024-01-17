@@ -1,6 +1,8 @@
 //! Reading GameBox nodes.
 
+mod file_api;
 pub(crate) mod readable;
+pub(crate) mod take;
 
 use std::{
     fs::File,
