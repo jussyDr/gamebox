@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use std::{fs::File, io::BufReader};
+use std::fs::{self};
 
 use gamebox::{read::GbxFile, Map};
 use test::Bencher;
@@ -16,9 +16,9 @@ fn read_map(b: &mut Bencher) {
 
 #[bench]
 fn read_map_file(b: &mut Bencher) {
+    let data = fs::read("tests/files/map/Mindor.Map.Gbx").unwrap();
+
     b.iter(|| {
-        let file = File::open("tests/files/map/Mindor.Map.Gbx").unwrap();
-        let reader = BufReader::new(file);
-        GbxFile::read(reader, false).unwrap();
+        GbxFile::read(data.as_slice(), false).unwrap();
     })
 }
