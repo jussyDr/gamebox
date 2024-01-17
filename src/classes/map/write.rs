@@ -269,7 +269,7 @@ impl Map {
 
                     Ok(())
                 })
-                .unwrap();
+                .map_err(|_| "")?;
 
             Ok(())
         })?;

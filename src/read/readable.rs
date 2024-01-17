@@ -210,9 +210,9 @@ pub trait ReadJson {
 }
 
 pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
-    let mut value: Value = serde_jsonrc::from_reader(reader).unwrap();
-    let object = value.as_object_mut().unwrap();
-    let class_name = object.get("ClassId").unwrap();
+    let mut value: Value = serde_jsonrc::from_reader(reader).map_err(|_| "failed to parse JSON")?;
+    let object = value.as_object_mut().ok_or("expected an object")?;
+    let class_name = object.get("ClassId").ok_or("expected key")?;
 
     if class_name != T::CLASS_NAME {
         return Err("class name does not match".into());

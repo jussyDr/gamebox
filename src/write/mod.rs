@@ -6,24 +6,14 @@ pub use lzo1x::CompressLevel;
 
 use std::{
     fs::File,
-    io::{self, BufWriter, Write},
+    io::{BufWriter, Write},
     path::Path,
 };
 
 use self::writable::write_gbx;
 
 /// Error while writing a GameBox node.
-#[derive(Debug)]
-pub enum Error {
-    /// An I/O error.
-    Io(io::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(io_err: io::Error) -> Self {
-        Self::Io(io_err)
-    }
-}
+pub type Error = Box<dyn std::error::Error>;
 
 /// Result type used when writing GameBox nodes.
 pub type Result = std::result::Result<(), Error>;

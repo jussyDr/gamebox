@@ -388,72 +388,72 @@ impl Map {
         xml_reader.with_inner_content(
             b"header",
             |attributes| {
-                if attributes.get(b"type").unwrap() != b"map" {
+                if attributes.get(b"type")? != b"map" {
                     return Err("".into());
                 }
 
-                if attributes.get(b"exever").unwrap() != b"3.3.0" {
+                if attributes.get(b"exever")? != b"3.3.0" {
                     return Err("".into());
                 }
 
-                attributes.get(b"exebuild").unwrap();
-                attributes.get(b"title").unwrap();
-                attributes.get(b"lightmap").unwrap();
+                attributes.get(b"exebuild")?;
+                attributes.get(b"title")?;
+                attributes.get(b"lightmap")?;
 
                 Ok(())
             },
             |xml_reader| {
                 xml_reader.with_empty(b"ident", |attributes| {
-                    self.id = attributes.get_str(b"uid")?.unwrap().into();
-                    self.name = attributes.get_str(b"name")?.unwrap().into();
-                    self.author_id = attributes.get_str(b"author")?.unwrap().into();
-                    self.author_region = attributes.get_str(b"authorzone")?.unwrap().into();
+                    self.id = attributes.get_str(b"uid")?.into();
+                    self.name = attributes.get_str(b"name")?.into();
+                    self.author_id = attributes.get_str(b"author")?.into();
+                    self.author_region = attributes.get_str(b"authorzone")?.into();
 
                     Ok(())
                 })?;
 
                 xml_reader.with_empty(b"desc", |attributes| {
-                    if attributes.get(b"envir").unwrap() != b"Stadium" {
+                    if attributes.get(b"envir")? != b"Stadium" {
                         return Err("".into());
                     }
 
-                    attributes.get(b"mood").unwrap();
+                    attributes.get(b"mood")?;
 
-                    let has_script = match attributes.get(b"type").unwrap() {
+                    let has_script = match attributes.get(b"type")? {
                         b"Race" => false,
                         b"Script" => true,
                         _ => return Err("".into()),
                     };
 
-                    self.params.ty = match attributes.get_str(b"maptype")?.unwrap() {
+                    self.params.ty = match attributes.get_str(b"maptype")? {
                         "TrackMania\\TM_Race" if !has_script => MapType::Race,
                         path if has_script => MapType::Script {
                             path: path.to_owned(),
                         },
                         _ => return Err("".into()),
                     };
-                    self.params.style = attributes.get_str(b"mapstyle")?.unwrap().to_owned();
-                    attributes.get(b"validated").unwrap();
-                    attributes.get(b"nblaps").unwrap();
-                    self.cost = attributes.get_u32(b"displaycost")?.unwrap();
-                    attributes.get(b"mod").unwrap();
-                    attributes.get(b"hasghostblocks").unwrap();
+                    self.params.style = attributes.get_str(b"mapstyle")?.to_owned();
+                    attributes.get(b"validated")?;
+                    attributes.get(b"nblaps")?;
+                    self.cost = attributes.get_u32(b"displaycost")?;
+                    attributes.get(b"mod")?;
+                    attributes.get(b"hasghostblocks")?;
 
                     Ok(())
                 })?;
 
                 xml_reader.with_empty(b"playermodel", |attributes| {
-                    attributes.get(b"id").unwrap();
+                    attributes.get(b"id")?;
 
                     Ok(())
                 })?;
 
                 xml_reader.with_empty(b"times", |attributes| {
-                    let bronze_time = attributes.get_u32_or_null(b"bronze")?.unwrap();
-                    let silver_time = attributes.get_u32_or_null(b"silver")?.unwrap();
-                    let gold_time = attributes.get_u32_or_null(b"gold")?.unwrap();
-                    let author_time = attributes.get_u32_or_null(b"authortime")?.unwrap();
-                    attributes.get(b"authorscore").unwrap();
+                    let bronze_time = attributes.get_u32_or_null(b"bronze")?;
+                    let silver_time = attributes.get_u32_or_null(b"silver")?;
+                    let gold_time = attributes.get_u32_or_null(b"gold")?;
+                    let author_time = attributes.get_u32_or_null(b"authortime")?;
+                    attributes.get(b"authorscore")?;
 
                     if bronze_time != 0xffffffff
                         && silver_time != 0xffffffff
@@ -957,7 +957,7 @@ impl Map {
         d.u32()?; // 0
         d.scoped_buffer(|d| {
             let ids = d.list(|d| {
-                let id = d.id()?.into();
+                let id = d.id()?;
                 d.u32()?; // 26
                 d.id_or_null()?;
 
@@ -1599,8 +1599,9 @@ impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
             let size = d.u8()?;
             d.bytes(size as usize)?;
             let type_index = d.u8()?;
+            let ty = types.get(type_index as usize).ok_or("")?;
 
-            read_value(d, &types[type_index as usize])?;
+            read_value(d, ty)?;
 
             Ok(())
         })?;
@@ -1839,32 +1840,30 @@ mod xml {
     }
 
     impl Attributes<'_> {
-        pub fn get(&self, key: &[u8]) -> Option<&[u8]> {
+        pub fn get(&self, key: &[u8]) -> Result<&[u8]> {
             match self.map.get(key) {
-                None => None,
-                Some(value) => Some(value.as_ref()),
+                None => Err("".into()),
+                Some(value) => Ok(value.as_ref()),
             }
         }
 
-        pub fn get_u32(&self, key: &[u8]) -> Result<Option<u32>> {
+        pub fn get_u32(&self, key: &[u8]) -> Result<u32> {
+            let s = self.get_str(key)?;
+
+            Ok(s.parse().map_err(|_| "")?)
+        }
+
+        pub fn get_u32_or_null(&self, key: &[u8]) -> Result<u32> {
             match self.get_str(key)? {
-                None => Ok(None),
-                Some(s) => Ok(Some(s.parse().map_err(|_| "")?)),
+                "-1" => Ok(0xffffffff),
+                s => Ok(s.parse().map_err(|_| "")?),
             }
         }
 
-        pub fn get_u32_or_null(&self, key: &[u8]) -> Result<Option<u32>> {
-            match self.get_str(key)? {
-                None => Ok(None),
-                Some("-1") => Ok(Some(0xffffffff)),
-                Some(s) => Ok(Some(s.parse().map_err(|_| "")?)),
-            }
-        }
-
-        pub fn get_str(&self, key: &[u8]) -> Result<Option<&str>> {
+        pub fn get_str(&self, key: &[u8]) -> Result<&str> {
             match self.map.get(key) {
-                None => Ok(None),
-                Some(value) => Ok(Some(str::from_utf8(value).map_err(|_| "")?)),
+                None => Err("".into()),
+                Some(value) => Ok(str::from_utf8(value).map_err(|_| "")?),
             }
         }
     }

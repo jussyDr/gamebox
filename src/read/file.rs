@@ -57,23 +57,23 @@ impl<R: Read + Seek> GbxFile<R> {
         let mut d = Deserializer::new(reader, (), ());
 
         if d.byte_array()? != GAMEBOX_FILE_SIGNATURE {
-            return Err("not a gamebox file".into());
+            return Err("invalid file signature".into());
         }
 
         if d.u16()? != GAMEBOX_FILE_VERSION {
-            return Err("unsupported gamebox version".into());
+            return Err("unknown file version".into());
         }
 
         let format = FileFormat::read(&mut d)?;
 
         if let FileFormat::Text = format {
-            return Err("text format is not supported".into());
+            return Err("text file format not supported".into());
         }
 
         let ref_table_compression = Compression::read(&mut d)?;
 
         if let Compression::Compressed = ref_table_compression {
-            return Err("compressed reference table is not supported".into());
+            return Err("compressed reference table not supported".into());
         }
 
         let is_body_compressed = match Compression::read(&mut d)? {
@@ -114,7 +114,7 @@ impl<R: Read + Seek> GbxFile<R> {
                 d.u32()?;
                 let folder_index = d.u32()?;
 
-                let mut file_path = folders[folder_index as usize].clone();
+                let mut file_path = folders.get(folder_index as usize).ok_or("")?.clone();
                 file_path.push(file_name);
 
                 Ok((node_index - 1, file_path))
