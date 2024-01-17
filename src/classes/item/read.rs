@@ -481,7 +481,7 @@ impl ItemPlacementParam {
         d.u32()?; // 3
         let version = d.u32()?;
 
-        if !matches!(version, 6 | 8) {
+        if !matches!(version, 6 | 8 | 10) {
             return Err("".into());
         }
 
