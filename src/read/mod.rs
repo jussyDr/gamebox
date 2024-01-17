@@ -1,9 +1,9 @@
 //! Reading GameBox nodes.
 
-mod file_api;
+mod file;
 pub(crate) mod readable;
 
-pub use file_api::GbxFile;
+pub use file::GbxFile;
 
 use std::{
     fs::File,

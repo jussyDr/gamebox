@@ -10,20 +10,23 @@ use crate::{
 
 use super::Result;
 
-enum BodyData {
-    NotRead { start: u64 },
-    Read { data: Vec<u8> },
+enum BodyData<R> {
+    NotRead {
+        deserializer: Deserializer<R, (), ()>,
+    },
+    Read {
+        data: Vec<u8>,
+    },
 }
 
 /// Represents a GameBox file.
 pub struct GbxFile<R> {
-    deserializer: Deserializer<R, (), ()>,
     is_body_compressed: bool,
     class_id: u32,
     header_data: Vec<u8>,
     num_node_refs: u32,
     external_node_refs: Vec<(u32, PathBuf)>,
-    body_data: BodyData,
+    body_data: BodyData<R>,
 }
 
 impl<R> GbxFile<R> {
@@ -73,7 +76,10 @@ impl<R: Read + Seek> GbxFile<R> {
             return Err("compressed reference table is not supported".into());
         }
 
-        let body_compression = Compression::read(&mut d)?;
+        let is_body_compressed = match Compression::read(&mut d)? {
+            Compression::Compressed => true,
+            Compression::Uncompressed => false,
+        };
 
         if d.u8()? != UNKNOWN_BYTE {
             return Err("invalid unknown byte".into());
@@ -117,17 +123,9 @@ impl<R: Read + Seek> GbxFile<R> {
             vec![]
         };
 
-        let body_data = BodyData::NotRead {
-            start: d.get_reader_mut().stream_position()?,
-        };
-
-        let is_body_compressed = match body_compression {
-            Compression::Compressed => true,
-            Compression::Uncompressed => false,
-        };
+        let body_data = BodyData::NotRead { deserializer: d };
 
         Ok(Self {
-            deserializer: d,
             class_id,
             header_data,
             num_node_refs,
@@ -140,23 +138,21 @@ impl<R: Read + Seek> GbxFile<R> {
     /// Raw uncompressed body data.
     pub fn body_data(&mut self) -> Result<&[u8]> {
         match self.body_data {
-            BodyData::NotRead { start } => {
-                self.deserializer
-                    .get_reader_mut()
-                    .seek(std::io::SeekFrom::Start(start))?;
-
+            BodyData::NotRead {
+                deserializer: ref mut d,
+            } => {
                 let data = if self.is_body_compressed {
-                    let decompressed_size = self.deserializer.u32()?;
-                    let compressed_size = self.deserializer.u32()?;
-                    let data = self.deserializer.bytes(compressed_size as usize)?;
+                    let decompressed_size = d.u32()?;
+                    let compressed_size = d.u32()?;
+                    let data = d.bytes(compressed_size as usize)?;
 
                     let mut decompressed_data = vec![0; decompressed_size as usize];
                     lzo1x::decompress(&data, &mut decompressed_data)
-                        .map_err(|_| "decompression failed")?;
+                        .map_err(|_| "body decompression failed")?;
 
                     decompressed_data
                 } else {
-                    self.deserializer.read_to_end()?
+                    d.read_to_end()?
                 };
 
                 self.body_data = BodyData::Read { data };

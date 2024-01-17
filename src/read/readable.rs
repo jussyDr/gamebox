@@ -10,7 +10,7 @@ use crate::{
     deserialize::{Deserializer, IdState, NodeRef, NodeState, Take},
 };
 
-use super::{file_api::GbxFile, BodyOptions, HeaderOptions, Result};
+use super::{file::GbxFile, BodyOptions, HeaderOptions, Result};
 
 pub fn read_gbx<
     T: Default + Class + HeaderChunks + for<'a> ReadBody<Cursor<&'a [u8]>, IdState, NodeState>,
