@@ -15,7 +15,7 @@ use super::{file::GbxFile, BodyOptions, HeaderOptions, Result};
 pub fn read_gbx<
     T: Default + Class + HeaderChunks + for<'a> ReadBody<Cursor<&'a [u8]>, IdState, NodeState>,
 >(
-    reader: impl BufRead + Seek,
+    reader: impl Read,
     header_options: HeaderOptions,
     body_options: BodyOptions,
 ) -> Result<T> {
@@ -177,7 +177,7 @@ pub type SkippableBodyChunkReadFn<T, R, I, N> =
 
 pub trait Sealed {
     fn read(
-        reader: impl BufRead + Seek,
+        reader: impl Read,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self>

@@ -1,7 +1,4 @@
-use std::{
-    any::Any,
-    io::{BufRead, Read, Seek},
-};
+use std::{any::Any, io::Read};
 
 use crate::{
     classes::{
@@ -25,7 +22,7 @@ impl Readable for Item {}
 
 impl Sealed for Item {
     fn read(
-        reader: impl BufRead + Seek,
+        reader: impl Read,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

@@ -1,6 +1,6 @@
 //! Types used for reading [ColorTable] nodes.
 
-use std::io::{Read, Seek};
+use std::io::Read;
 
 use serde_jsonrc::Value;
 
@@ -28,7 +28,7 @@ impl Readable for ColorTable {}
 
 impl Sealed for ColorTable {
     fn read(
-        reader: impl Read + Seek,
+        reader: impl Read,
         _header_options: HeaderOptions,
         _body_options: BodyOptions,
     ) -> Result<Self> {

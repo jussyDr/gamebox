@@ -1,7 +1,4 @@
-use std::{
-    io::{Read, Seek},
-    path::PathBuf,
-};
+use std::{io::Read, path::PathBuf};
 
 use crate::{
     common::{Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_FILE_VERSION, UNKNOWN_BYTE},
@@ -51,7 +48,7 @@ impl<R> GbxFile<R> {
     }
 }
 
-impl<R: Read + Seek> GbxFile<R> {
+impl<R: Read> GbxFile<R> {
     /// Read a GameBox file from the given `reader`.
     pub fn read(reader: R, assume_no_header_data: bool) -> Result<Self> {
         let mut d = Deserializer::new(reader, (), ());

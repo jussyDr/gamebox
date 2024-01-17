@@ -1,9 +1,6 @@
 //! Types used for reading [Material] nodes.
 
-use std::{
-    io::{BufRead, Read, Seek},
-    path::Path,
-};
+use std::{io::Read, path::Path};
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -48,7 +45,7 @@ impl Readable for Material {}
 
 impl Sealed for Material {
     fn read(
-        reader: impl BufRead + Seek,
+        reader: impl Read,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

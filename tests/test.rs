@@ -4,7 +4,6 @@ extern crate test;
 
 use std::{
     env, fs,
-    io::Cursor,
     path::{Path, PathBuf},
 };
 
@@ -130,5 +129,5 @@ fn read_extracted_file<T: Readable>(path: impl AsRef<Path>) {
 fn write_read_default<T: Default + Readable + Writable>() {
     let mut buf = vec![];
     gamebox::write(&T::default(), &mut buf).unwrap();
-    gamebox::read::<T>(Cursor::new(buf)).unwrap();
+    gamebox::read::<T>(buf.as_slice()).unwrap();
 }

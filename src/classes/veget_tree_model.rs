@@ -1,6 +1,6 @@
 //! Types used for reading [VegetTreeModel] nodes.
 
-use std::io::{BufRead, Read, Seek};
+use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -25,7 +25,7 @@ impl Readable for VegetTreeModel {}
 
 impl Sealed for VegetTreeModel {
     fn read(
-        reader: impl BufRead + Seek,
+        reader: impl Read,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {

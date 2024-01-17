@@ -24,7 +24,7 @@ impl Readable for Map {}
 
 impl Sealed for Map {
     fn read(
-        reader: impl BufRead + Seek,
+        reader: impl Read,
         header_options: HeaderOptions,
         body_options: BodyOptions,
     ) -> Result<Self> {
