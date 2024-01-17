@@ -687,10 +687,17 @@ impl Crystal {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 2
+        let version = d.u32()?;
+
+        if version != 2 {
+            return Err("".into());
+        }
+
         d.list(|d| {
-            d.u32()?; // 0
-            d.internal_node_ref::<MaterialUserInst>()?;
+            let path = d.string()?;
+            if path.is_empty() {
+                d.internal_node_ref::<MaterialUserInst>()?;
+            }
 
             Ok(())
         })?;
@@ -746,6 +753,30 @@ impl Crystal {
                     read_mesh(d)?;
                     d.u32()?; // 1
                     d.u32()?; // 0 | 1
+                }
+                2 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 0
+                    d.u32()?; // 0
+                    d.u32()?; // 0
+                    d.f32()?;
+                }
+                3 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 0
+                    d.f32()?;
+                    d.u32()?; // 2
+                    d.u32()?; // 0
                 }
                 4 => {
                     d.list(|d| {

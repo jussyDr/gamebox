@@ -24,7 +24,7 @@ fn main() {
 
     let mut tests = vec![];
 
-    // for entry in glob("C:/Users/Justin/Documents/Trackmania/Items/**/*.Item.Gbx")
+    // for entry in glob("C:/Users/Justin/Downloads/TM-Items_V9/**/*.Item.Gbx")
     //     .expect("Failed to read glob pattern")
     // {
     //     let entry = entry.unwrap();
