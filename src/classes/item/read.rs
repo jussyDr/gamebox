@@ -5,7 +5,7 @@ use crate::{
         collector::Collector, item::ItemPlacementParam, material_user_inst::MaterialUserInst,
         static_object_model::StaticObjectModel, traits_metadata::TraitsMetadata,
     },
-    common::{read_compact_index, Class, ClassId, EngineId},
+    common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{
@@ -950,6 +950,11 @@ impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for ItemPlacement {
 
 fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
     let version = d.u32()?;
+
+    if !matches!(version, 32 | 37) {
+        return Err("".into());
+    }
+
     d.u32()?; // 4
     d.u32()?; // 3
     d.u32()?; // 4
@@ -967,7 +972,7 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
         } else {
             d.u32()?; // 1
         }
-        d.u32()?; // 0xffffffff
+        d.u32()?; // 2 | 0xffffffff
         d.string()?; // "" | "part"
         d.u32()?; // 0xffffffff
         d.list(|d| {
@@ -985,7 +990,7 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
     }
     if version >= 33 {
         d.u32()?; // 1
-        d.u32()?; // 35
+        d.u32()?;
     }
     let num_vertices = d.u32()?;
     d.repeat(num_vertices as usize, |d| {
@@ -997,7 +1002,12 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
     })?;
     let num_edges = d.u32()?;
     if version >= 35 {
-        d.u32()?; // 0
+        let num_unfaced_edges = d.u32()?;
+        d.repeat(num_unfaced_edges as usize * 2, |d| {
+            read_compact_index(d, num_unfaced_edges * 2)?;
+
+            Ok(())
+        })?;
     } else {
         d.repeat(num_edges as usize, |d| {
             d.u32()?;
@@ -1083,4 +1093,16 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
     })?;
 
     Ok(())
+}
+
+fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_items: u32) -> Result<u32> {
+    if num_items < u8::MAX as u32 {
+        let index = d.u8()?;
+        Ok(index as u32)
+    } else if num_items < u16::MAX as u32 {
+        let index = d.u16()?;
+        Ok(index as u32)
+    } else {
+        d.u32()
+    }
 }

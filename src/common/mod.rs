@@ -128,21 +128,6 @@ pub const ID_MARKER_BIT: u32 = 0x40000000;
 
 pub const NULL: u32 = 0xffffffff;
 
-pub fn read_compact_index<R: Read, I, N>(
-    d: &mut Deserializer<R, I, N>,
-    num_items: u32,
-) -> Result<u32> {
-    if num_items < u8::MAX as u32 {
-        let index = d.u8()?;
-        Ok(index as u32)
-    } else if num_items < u16::MAX as u32 {
-        let index = d.u16()?;
-        Ok(index as u32)
-    } else {
-        d.u32()
-    }
-}
-
 pub trait Class {
     const CLASS_ID: ClassId;
 }
