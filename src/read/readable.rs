@@ -28,7 +28,7 @@ pub fn read_gbx<
         }
     );
 
-    let mut gbx_file = GbxFile::new(reader, assume_no_header_data)?;
+    let mut gbx_file = GbxFile::read(reader, assume_no_header_data)?;
 
     if gbx_file.class_id() != T::CLASS_ID.get() {
         return Err("class id does not match".into());
@@ -37,7 +37,7 @@ pub fn read_gbx<
     if let HeaderOptions::Read { read_heavy_chunks } = header_options {
         read_header(
             &mut node,
-            Deserializer::new(gbx_file.header_data()?, (), ()),
+            Deserializer::new(Cursor::new(gbx_file.header_data()), (), ()),
             read_heavy_chunks,
         )?;
     }
@@ -55,7 +55,11 @@ pub fn read_gbx<
 
     match body_options {
         BodyOptions::Read { .. } => {
-            let mut d = Deserializer::new(Cursor::new(gbx_file.body()), IdState::new(), node_state);
+            let mut d = Deserializer::new(
+                Cursor::new(gbx_file.body_data()?),
+                IdState::new(),
+                node_state,
+            );
 
             T::read_body(&mut node, &mut d)?;
 
