@@ -1,6 +1,6 @@
 //! Types used for reading [Prefab] nodes.
 
-use std::io::Read;
+use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -48,7 +48,17 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Prefab {
         d.u32()?;
         d.list(|d| {
             d.u32()?; // 0
-            d.node_ref::<StaticObjectModel>()?;
+            d.any_node_ref(|d, class_id| {
+                match class_id {
+                    0x09159000 => {
+                        let mut node = StaticObjectModel;
+                        StaticObjectModel::read_body(&mut node, d)?;
+                    }
+                    _ => return Err("".into()),
+                }
+
+                Ok(Rc::new(()))
+            })?;
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0

@@ -23,10 +23,14 @@ impl Class for StaticObjectModel {
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObjectModel {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 3
-        let _solid_to_model = d.internal_node_ref::<Solid2Model>()?;
-        let b = d.bool8()?;
-        d.internal_node_ref_or_null::<Surface>()?;
-        if b {
+        d.internal_node_ref::<Solid2Model>()?;
+        let has_surface = if !d.bool8()? {
+            d.internal_node_ref_or_null::<Surface>()?.is_some()
+        } else {
+            false
+        };
+        if !has_surface {
+            d.u32()?; // 0xffffffff
             d.f32()?; // 1.0
             d.u32()?; // 0
             d.u32()?; // 0
@@ -103,7 +107,7 @@ impl Solid2Model {
     ) -> Result<()> {
         let version = d.u32()?;
 
-        if !matches!(version, 29 | 30 | 34) {
+        if !matches!(version, 29 | 30 | 32 | 34) {
             return Err("".into());
         }
 
@@ -217,6 +221,8 @@ impl Solid2Model {
         d.u32()?; // 0xffffffff
         if version >= 31 {
             d.u32()?; // 0
+        }
+        if version >= 33 {
             d.u32()?; // 0
         }
 

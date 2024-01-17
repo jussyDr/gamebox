@@ -205,10 +205,20 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
     ) -> Result<Rc<dyn Any>> {
+        match self.any_node_ref(read_fn)? {
+            NodeRef::Internal { node } => Ok(node),
+            NodeRef::External { .. } => Err("expected internal node ref".into()),
+        }
+    }
+
+    /// Read a node reference that may be internal or external and that may be null.
+    pub fn any_node_ref(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<Rc<dyn Any>>,
+    ) -> Result<NodeRef<Rc<dyn Any>>> {
         match self.any_node_ref_or_null(read_fn)? {
-            None => Err("node is null".into()),
-            Some(NodeRef::Internal { node }) => Ok(node),
-            Some(NodeRef::External { .. }) => Err("expected internal node ref".into()),
+            None => Err("".into()),
+            Some(node_ref) => Ok(node_ref),
         }
     }
 
