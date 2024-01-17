@@ -11,9 +11,7 @@ mod write;
 #[derive(Default)]
 pub struct Collector {
     name: String,
-    icon_width: u16,
-    icon_height: u16,
-    icon_data: Vec<u8>,
+    icon: Icon,
     collection: Option<Rc<str>>,
     description: String,
 }
@@ -24,21 +22,6 @@ impl Collector {
         &self.name
     }
 
-    /// Width in pixels of this collector's icon.
-    pub fn icon_width(&self) -> u16 {
-        self.icon_width
-    }
-
-    /// Height in pixels of this collector's icon.
-    pub fn icon_height(&self) -> u16 {
-        self.icon_height
-    }
-
-    /// Icon data of this collector containing `icon_width * icon_height` 8-bit ARGB values.
-    pub fn icon_data(&self) -> &[u8] {
-        &self.icon_data
-    }
-
     /// Collection this collector is part of.
     pub fn collection(&self) -> Option<&str> {
         self.collection.as_ref().map(|x| x as _)
@@ -47,5 +30,33 @@ impl Collector {
     /// Description of this collector.
     pub fn description(&self) -> &str {
         &self.description
+    }
+}
+
+/// Icon of a collector.
+pub enum Icon {
+    /// Icon is stored as raw ARGB data.
+    Argb {
+        /// Width of the icon.
+        width: u16,
+        /// Height of the icon.
+        height: u16,
+        /// Icon data as `width * height` 8-bit ARGB values.
+        data: Vec<u8>,
+    },
+    /// Icon is stored as raw WebP format.
+    WebP {
+        /// Raw WebP bytes.
+        data: Vec<u8>,
+    },
+}
+
+impl Default for Icon {
+    fn default() -> Self {
+        Self::Argb {
+            width: 0,
+            height: 0,
+            data: vec![],
+        }
     }
 }

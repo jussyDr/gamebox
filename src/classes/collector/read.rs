@@ -5,7 +5,7 @@ use crate::{
     read::Result,
 };
 
-use super::Collector;
+use super::{Collector, Icon};
 
 impl Collector {
     pub(crate) fn read_chunk_2e001003<R: Read, I: IdStateMut, N>(
@@ -30,9 +30,24 @@ impl Collector {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        self.icon_width = d.u16()?;
-        self.icon_height = d.u16()?;
-        self.icon_data = d.bytes(self.icon_width as usize * self.icon_height as usize * 4)?;
+        let icon_width = d.u16()?;
+        let icon_height = d.u16()?;
+
+        if icon_width & 0x8000 != 0 || icon_height & 0x800 != 0 {
+            d.u16()?;
+            let size = d.u32()?;
+            let data = d.bytes(size as usize)?;
+
+            self.icon = Icon::WebP { data };
+        } else {
+            let icon_data = d.bytes(icon_width as usize * icon_height as usize * 4)?;
+
+            self.icon = Icon::Argb {
+                width: icon_width,
+                height: icon_height,
+                data: icon_data,
+            };
+        }
 
         Ok(())
     }
