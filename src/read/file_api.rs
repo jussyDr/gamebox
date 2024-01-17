@@ -1,4 +1,7 @@
-use std::{io::Read, path::PathBuf};
+use std::{
+    io::{Read, Seek},
+    path::PathBuf,
+};
 
 use crate::{
     common::{Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_FILE_VERSION, UNKNOWN_BYTE},
@@ -8,15 +11,14 @@ use crate::{
 use super::Result;
 
 enum BodyData {
-    Compressed {
-        data: Vec<u8>,
-        decompressed_size: u32,
-    },
-    Decompressed(Vec<u8>),
+    NotRead { start: u64 },
+    Read { data: Vec<u8> },
 }
 
 /// Represents a GameBox file.
-pub struct GbxFile {
+pub struct GbxFile<R> {
+    deserializer: Deserializer<R, (), ()>,
+    is_body_compressed: bool,
     class_id: u32,
     header_data: Vec<u8>,
     num_node_refs: u32,
@@ -24,9 +26,31 @@ pub struct GbxFile {
     body_data: BodyData,
 }
 
-impl GbxFile {
+impl<R> GbxFile<R> {
+    /// Class identifier of the node serialized in this GameBox file.
+    pub const fn class_id(&self) -> u32 {
+        self.class_id
+    }
+
+    /// Raw header data of this GameBox file.
+    pub fn header_data(&mut self) -> &[u8] {
+        &self.header_data
+    }
+
+    /// Number of nodes that are referenced.
+    pub const fn num_node_refs(&self) -> u32 {
+        self.num_node_refs
+    }
+
+    /// The external nodes that are referenced.
+    pub fn external_node_refs(&self) -> &[(u32, PathBuf)] {
+        &self.external_node_refs
+    }
+}
+
+impl<R: Read + Seek> GbxFile<R> {
     /// Read a GameBox file from the given `reader`.
-    pub fn read(reader: impl Read, assume_no_header_data: bool) -> Result<Self> {
+    pub fn read(reader: R, assume_no_header_data: bool) -> Result<Self> {
         let mut d = Deserializer::new(reader, (), ());
 
         if d.byte_array()? != GAMEBOX_FILE_SIGNATURE {
@@ -93,69 +117,57 @@ impl GbxFile {
             vec![]
         };
 
-        let body_data = match body_compression {
-            Compression::Compressed => {
-                let decompressed_size = d.u32()?;
-                let compressed_size = d.u32()?;
-                let data = d.bytes(compressed_size as usize)?;
+        let body_data = BodyData::NotRead {
+            start: d.get_reader_mut().stream_position()?,
+        };
 
-                BodyData::Compressed {
-                    data,
-                    decompressed_size,
-                }
-            }
-            Compression::Uncompressed => BodyData::Decompressed(d.read_to_end()?),
+        let is_body_compressed = match body_compression {
+            Compression::Compressed => true,
+            Compression::Uncompressed => false,
         };
 
         Ok(Self {
+            deserializer: d,
             class_id,
             header_data,
             num_node_refs,
             external_node_refs,
+            is_body_compressed,
             body_data,
         })
-    }
-
-    /// Class identifier of the node serialized in this GameBox file.
-    pub const fn class_id(&self) -> u32 {
-        self.class_id
-    }
-
-    /// Raw header data of this GameBox file.
-    pub fn header_data(&mut self) -> &[u8] {
-        &self.header_data
-    }
-
-    /// Number of nodes that are referenced.
-    pub const fn num_node_refs(&self) -> u32 {
-        self.num_node_refs
-    }
-
-    /// The external nodes that are referenced.
-    pub fn external_node_refs(&self) -> &[(u32, PathBuf)] {
-        &self.external_node_refs
     }
 
     /// Raw uncompressed body data.
     pub fn body_data(&mut self) -> Result<&[u8]> {
         match self.body_data {
-            BodyData::Compressed {
-                ref data,
-                decompressed_size,
-            } => {
-                let mut decompressed_data = vec![0; decompressed_size as usize];
+            BodyData::NotRead { start } => {
+                self.deserializer
+                    .get_reader_mut()
+                    .seek(std::io::SeekFrom::Start(start))?;
 
-                lzo1x::decompress(data, &mut decompressed_data)
-                    .map_err(|_| "decompression failed")?;
+                let data = if self.is_body_compressed {
+                    let decompressed_size = self.deserializer.u32()?;
+                    let compressed_size = self.deserializer.u32()?;
+                    let data = self.deserializer.bytes(compressed_size as usize)?;
 
-                self.body_data = BodyData::Decompressed(decompressed_data);
+                    let mut decompressed_data = vec![0; decompressed_size as usize];
+                    lzo1x::decompress(&data, &mut decompressed_data)
+                        .map_err(|_| "decompression failed")?;
+
+                    decompressed_data
+                } else {
+                    self.deserializer.read_to_end()?
+                };
+
+                self.body_data = BodyData::Read { data };
 
                 match self.body_data {
-                    BodyData::Decompressed(ref data) => Ok(data),
-                    BodyData::Compressed { .. } => unreachable!(),
+                    BodyData::Read { ref data } => Ok(data),
+                    BodyData::NotRead { .. } => unreachable!(),
                 }
             }
-            BodyData::Decompressed(ref data) => Ok(data),
+
+            BodyData::Read { ref data } => Ok(data),
         }
     }
 }
