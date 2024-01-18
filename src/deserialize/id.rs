@@ -86,6 +86,10 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
             return Ok(None);
         }
 
+        if index == 13 || index == 26 {
+            return Ok(None);
+        }
+
         if index & !ID_INDEX_MASK == ID_MARKER_BIT {
             let index = (index & ID_INDEX_MASK) as u16;
 

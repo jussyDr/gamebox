@@ -135,6 +135,10 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Item {
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e002012(n, d)),
             },
             BodyChunkEntry {
+                id: 0x2e002013,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e002013(n, d)),
+            },
+            BodyChunkEntry {
                 id: 0x2e002015,
                 read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e002015(n, d)),
             },
@@ -242,6 +246,12 @@ impl Item {
         Ok(())
     }
 
+    fn read_chunk_2e002013<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
     fn read_chunk_2e002015<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 1
 
@@ -254,7 +264,7 @@ impl Item {
     ) -> Result<()> {
         let version = d.u32()?;
 
-        if !matches!(version, 13 | 15) {
+        if !matches!(version, 12 | 13 | 15) {
             return Err("".into());
         }
 
@@ -266,39 +276,41 @@ impl Item {
         let is_edition = d
             .unique_node_ref_or_null::<ItemEntityModelEdition>()?
             .is_some();
-        d.any_unique_node_ref_or_null::<Box<dyn Any>>(|d, class_id| match class_id {
-            0x2e027000 => {
-                let mut node = ItemEntityModel::default();
-                read_body_chunks(&mut node, d)?;
+        if version >= 13 {
+            d.any_unique_node_ref_or_null::<Box<dyn Any>>(|d, class_id| match class_id {
+                0x2e027000 => {
+                    let mut node = ItemEntityModel::default();
+                    read_body_chunks(&mut node, d)?;
 
-                Ok(Box::new(node))
-            }
-            0x2f0bc000 => {
-                d.u32()?; // 1
-                d.list(|d| {
+                    Ok(Box::new(node))
+                }
+                0x2f0bc000 => {
+                    d.u32()?; // 1
                     d.list(|d| {
-                        d.string()?; // "Type" | "Size" | "Placement" | "MatModifier"
-                        d.string()?; // "SpringTree" | "Medium" | "Wild" | "Grass"
+                        d.list(|d| {
+                            d.string()?; // "Type" | "Size" | "Placement" | "MatModifier"
+                            d.string()?; // "SpringTree" | "Medium" | "Wild" | "Grass"
+
+                            Ok(())
+                        })?;
+                        d.u32()?; // 2
+                        d.u32()?; // 1
 
                         Ok(())
                     })?;
-                    d.u32()?; // 2
-                    d.u32()?; // 1
 
-                    Ok(())
-                })?;
+                    Ok(Box::new(()))
+                }
+                _ => Err("unknown entity model type".into()),
+            })?;
 
-                Ok(Box::new(()))
+            if !is_edition {
+                d.u32()?; // 0xffffffff
             }
-            _ => Err("unknown entity model type".into()),
-        })?;
 
-        if !is_edition {
-            d.u32()?; // 0xffffffff
-        }
-
-        if version >= 15 {
-            d.u32()?; // 0xffffffff
+            if version >= 15 {
+                d.u32()?; // 0xffffffff
+            }
         }
 
         Ok(())
@@ -339,13 +351,16 @@ impl Item {
     ) -> Result<()> {
         let version = d.u32()?;
 
-        if !matches!(version, 10..=12) {
+        if !matches!(version, 8 | 10..=12) {
             return Err("".into());
         }
 
         d.u32()?; // 3
         d.u32()?; // 0
-        d.u32()?; // 0xffffffff
+
+        if version >= 10 {
+            d.u32()?; // 0xffffffff
+        }
 
         if version >= 11 {
             d.u8()?; // 0
@@ -622,7 +637,7 @@ impl ItemEntityModelEdition {
     ) -> Result<()> {
         let version = d.u32()?;
 
-        if !matches!(version, 7 | 8) {
+        if !matches!(version, 5 | 7 | 8) {
             return Err("".into());
         }
 
@@ -790,17 +805,27 @@ impl Crystal {
             d.id()?; // "Layer0"
             d.string()?; // "Geometry"
             d.u32()?; // 1
-            d.u32()?; // 1
+            let version = d.u32()?;
             match kind {
                 0 => {
                     read_mesh(d)?;
                     d.u32()?; // 1
                     d.u32()?; // 0 | 1
                 }
+                1 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id_or_null()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 0
+                    d.u32()?; // 1
+                }
                 2 => {
                     d.list(|d| {
                         d.u32()?;
-                        d.id()?;
+                        d.id_or_null()?;
 
                         Ok(())
                     })?;
@@ -812,7 +837,7 @@ impl Crystal {
                 3 => {
                     d.list(|d| {
                         d.u32()?;
-                        d.id()?;
+                        d.id_or_null()?;
 
                         Ok(())
                     })?;
@@ -824,7 +849,7 @@ impl Crystal {
                 4 => {
                     d.list(|d| {
                         d.u32()?;
-                        d.id()?;
+                        d.id_or_null()?;
 
                         Ok(())
                     })?;
@@ -833,11 +858,45 @@ impl Crystal {
                     d.f32()?; // 32.0
                     d.f32()?; // 32.0
                     d.u32()?; // 0
+                }
+                5 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id_or_null()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 0
+                    d.u32()?; // 2
+                    d.u32()?; // 0
+                    d.u32()?; // 0
+                }
+                8 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id_or_null()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 0
+                    d.u32()?; // 1
+                }
+                9 => {
+                    d.list(|d| {
+                        d.u32()?;
+                        d.id_or_null()?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 1
+                    d.u32()?;
+                    d.u32()?;
+                    d.u32()?;
                 }
                 12 => {
                     d.list(|d| {
                         d.u32()?;
-                        d.id()?;
+                        d.id_or_null()?;
 
                         Ok(())
                     })?;
@@ -860,25 +919,69 @@ impl Crystal {
                     d.f32()?;
                     d.f32()?;
                     d.f32()?;
-                    d.u32()?; // 1
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
+                    d.list(|d| {
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+                        d.f32()?;
+
+                        Ok(())
+                    })?;
                 }
                 13 => {
+                    if !matches!(version, 7 | 8) {
+                        return Err("".into());
+                    }
+
                     d.u32()?; // 64
                     d.u32()?; // 64
                     d.u32()?; // 64
-                    d.bytes(540)?;
+                    d.f32()?;
+                    d.u32()?; // 0
+                    d.u32()?; // 0
+                    d.u32()?; // 0
+                    d.u32()?; // 0
+                    if version >= 8 {
+                        d.f32()?;
+                        d.u32()?; // 0
+                        d.u32()?; // 0
+                        d.u32()?; // 0
+                        d.f32()?;
+                        d.u32()?; // 0
+                        d.u32()?; // 0
+                        d.u32()?; // 0
+                        d.f32()?;
+                        d.u32()?; // 0
+                        d.u32()?; // 0
+                        d.u32()?; // 0
+                    }
+                    d.list(|d| {
+                        d.u32()?; // 0
+                        d.list(|d| {
+                            d.u32()?;
+                            d.u32()?; // 0
+                            d.u32()?; // 0
+
+                            Ok(())
+                        })?;
+
+                        Ok(())
+                    })?;
+                    d.u32()?; // 1
+                    d.u32()?; // 1
+                    d.list(|d| {
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
                 }
                 14 => {
                     read_mesh(d)?;
@@ -886,7 +989,7 @@ impl Crystal {
                 15 => {
                     d.list(|d| {
                         d.u32()?;
-                        d.id()?;
+                        d.id_or_null()?;
 
                         Ok(())
                     })?;
@@ -901,7 +1004,7 @@ impl Crystal {
                 18 => {
                     d.list(|d| {
                         d.u32()?;
-                        d.id()?;
+                        d.id_or_null()?;
 
                         Ok(())
                     })?;
@@ -1210,10 +1313,10 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<()> {
 }
 
 fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, len: u32) -> Result<u32> {
-    if len <= u8::MAX as u32 {
+    if len < u8::MAX as u32 {
         let index = d.u8()?;
         Ok(index as u32)
-    } else if len <= u16::MAX as u32 {
+    } else if len < u16::MAX as u32 {
         let index = d.u16()?;
         Ok(index as u32)
     } else {

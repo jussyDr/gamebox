@@ -57,7 +57,7 @@ mod read {
         ) -> Result<()> {
             let version = d.u32()?;
 
-            if !matches!(version, 10 | 11) {
+            if !matches!(version, 9..=11) {
                 return Err("".into());
             }
 
@@ -66,7 +66,10 @@ mod read {
             d.id_or_null()?; // "TM_wiuehrfsd"
             d.u32()?; // 0xffffffff
             d.u32()?; // 0
-            d.u16()?; // 4 | 22
+            d.u8()?;
+            if version >= 10 {
+                d.u8()?;
+            }
             if uses_game_material {
                 let _material_ref = d.string()?;
             } else {

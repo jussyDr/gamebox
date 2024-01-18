@@ -13,7 +13,7 @@ impl Collector {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         let _collection = d.id_or_null()?;
-        d.u32()?; // 26
+        d.id_or_null()?; // "Stadium"
         let _author = d.id()?;
         d.u32()?; // 8
         d.string()?; // "Items"
@@ -78,7 +78,7 @@ impl Collector {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         self.collection = d.id_or_null()?;
-        d.u32()?; // 26
+        d.id_or_null()?;
         let _author = d.id()?;
 
         Ok(())
