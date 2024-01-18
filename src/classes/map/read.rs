@@ -5,7 +5,7 @@ use crate::{
         ghost::Ghost, traits_metadata::TraitsMetadata,
         waypoint_special_property::WaypointSpecialProperty, zone_genealogy::ZoneGenealogy,
     },
-    common::{Class, ClassId, EngineId, Vec3},
+    common::{Class, ClassId, EngineId, Vec3, ID_INDEX_MASK, ID_MARKER_BIT, NULL},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{
@@ -587,7 +587,7 @@ impl Map {
 
         let num_blocks = d.u32()?;
         self.blocks = Vec::with_capacity(num_blocks as usize);
-        while d.peek_u32()? & 0xffffc000 == 0x40000000 {
+        while d.peek_u32()? & !ID_INDEX_MASK == ID_MARKER_BIT {
             let id = d.id()?;
             let direction = d.u8()?;
             let x = d.u8()?;
@@ -595,7 +595,7 @@ impl Map {
             let z = d.u8()?;
             let flags = d.u32()?;
 
-            if flags == 0xffffffff {
+            if flags == NULL {
                 continue;
             }
 
