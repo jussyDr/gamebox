@@ -16,32 +16,12 @@ use gamebox::{
     write::Writable,
     Item, Map,
 };
-use glob::glob;
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
 fn main() {
     let args = env::args().collect::<Vec<_>>();
 
     let mut tests = vec![];
-
-    // for entry in glob("C:/Users/Justin/Downloads/TM-Items_V9/**/*.Item.Gbx")
-    //     .expect("Failed to read glob pattern")
-    // {
-    //     let entry = entry.unwrap();
-
-    //     let file_name = entry.file_name().unwrap().to_str().unwrap().to_owned();
-
-    //     let test = create_test(
-    //         format!("read {file_name}"),
-    //         Box::new(move || {
-    //             read_file::<Item>(&entry);
-
-    //             Ok(())
-    //         }),
-    //     );
-
-    //     tests.push(test);
-    // }
 
     add_read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
     add_read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
