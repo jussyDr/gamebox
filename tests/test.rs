@@ -24,8 +24,9 @@ fn main() {
     let mut tests = vec![];
 
     add_read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
-    add_read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
+    add_read_file_tests::<Item>(&mut tests, "tests/files/block");
     add_read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
+    add_read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
     add_read_file_tests::<Map>(&mut tests, "tests/files/map");
     add_read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
     add_read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");

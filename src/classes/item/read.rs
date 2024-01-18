@@ -267,14 +267,27 @@ impl Item {
         if !matches!(version, 12 | 13 | 15) {
             return Err("".into());
         }
-
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0xffffffff
         d.u32()?; // 0
         d.u32()?; // 0
         let is_edition = d
-            .unique_node_ref_or_null::<ItemEntityModelEdition>()?
+            .any_unique_node_ref_or_null(|d, class_id| {
+                match class_id {
+                    0x2e025000 => {
+                        let mut node = BlockItem::default();
+                        BlockItem::read_body(&mut node, d)?;
+                    }
+                    0x2e026000 => {
+                        let mut node = ItemEntityModelEdition;
+                        ItemEntityModelEdition::read_body(&mut node, d)?;
+                    }
+                    _ => return Err("".into()),
+                }
+
+                Ok(())
+            })?
             .is_some();
         if version >= 13 {
             d.any_unique_node_ref_or_null::<Box<dyn Any>>(|d, class_id| match class_id {
@@ -461,6 +474,93 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for ItemPlacem
     }
 }
 
+#[derive(Default)]
+struct BlockItem {
+    num_variants: u32,
+}
+
+impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for BlockItem {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for BlockItem {
+    #[allow(clippy::redundant_closure)]
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [
+            BodyChunkEntry {
+                id: 0x2e025000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e025001,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_1(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e025002,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x2e025003,
+                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_3(n, d)),
+            },
+        ]
+        .into_iter()
+    }
+}
+
+impl BlockItem {
+    fn read_chunk_0<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 0
+        d.id()?; // "GateFinish"
+        d.u32()?; // 26
+        self.num_variants = d.u32()?;
+        d.repeat(self.num_variants as usize, |d| {
+            d.u32()?; // 0
+            d.internal_node_ref_or_null::<Crystal>()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn read_chunk_1<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.read_to_end()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_2<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 0
+        d.u32()?; // 0
+
+        Ok(())
+    }
+
+    fn read_chunk_3<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 0
+        for _ in 0..self.num_variants {
+            d.u8()?;
+        }
+
+        Ok(())
+    }
+}
+
 impl ItemPlacementParam {
     fn read_chunk_2e020000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
@@ -497,7 +597,7 @@ impl ItemPlacementParam {
         d.u32()?; // 3
         let version = d.u32()?;
 
-        if !matches!(version, 6 | 8 | 10) {
+        if !matches!(version, 5 | 6 | 8 | 10) {
             return Err("".into());
         }
 
@@ -1076,10 +1176,11 @@ impl Crystal {
 
     fn read_chunk_09003007<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        d.u32()?; // 3
-        d.u32()?; // 0
-        d.f32()?; // 1.0
-        d.f32()?; // 2.0
+        d.list(|d| {
+            d.f32()?;
+
+            Ok(())
+        })?;
         d.list(|d| {
             d.u32()?;
 

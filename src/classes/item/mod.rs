@@ -20,6 +20,10 @@ pub struct Item {
     parent: Collector,
 }
 
+impl Class for Item {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 2);
+}
+
 #[derive(Clone)]
 pub struct Mesh {
     positions: Vec<[f32; 3]>,
@@ -65,10 +69,6 @@ impl Default for ItemMaterial {
             material_ref: PathBuf::default(),
         }
     }
-}
-
-impl Class for Item {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 2);
 }
 
 #[derive(Default, Clone)]
