@@ -10,7 +10,8 @@ use crate::{
 };
 
 use super::{
-    material_user_inst::MaterialUserInst, visual_indexed_triangles::VisualIndexedTriangles,
+    material_user_inst::MaterialUserInst, surface::Surface,
+    visual_indexed_triangles::VisualIndexedTriangles,
 };
 
 #[derive(Default)]
@@ -22,48 +23,15 @@ impl Class for StaticObjectModel {
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObjectModel {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 3;
+        let version = d.u32()?;
+
+        if version != 3 {
+            return Err("".into());
+        }
+
         d.internal_node_ref::<Solid2Model>()?;
-        let has_surface = if !d.bool8()? {
-            d.internal_node_ref_or_null::<Surface>()?.is_some()
-        } else {
-            false
-        };
-        if !has_surface {
+        if !d.bool8()? {
             d.internal_node_ref_or_null::<Surface>()?;
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
         }
 
         Ok(())
@@ -232,76 +200,6 @@ impl Solid2Model {
     fn read_chunk_090bb002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         d.u32()?; // 0
-
-        Ok(())
-    }
-}
-
-#[derive(Default)]
-struct Surface;
-
-impl Class for Surface {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 12);
-}
-
-impl<R: Read, I, N> ReadBody<R, I, N> for Surface {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
-    }
-}
-
-impl<R: Read, I, N> BodyChunks<R, I, N> for Surface {
-    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [BodyChunkEntry {
-            id: 0x0900C003,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0900c003(n, d)),
-        }]
-        .into_iter()
-    }
-}
-
-impl Surface {
-    fn read_chunk_0900c003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 4
-        d.u32()?; // 2
-        d.u32()?; // 7
-        d.u32()?; // 7
-        d.list(|d| {
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-
-            Ok(())
-        })?;
-        d.list(|d| {
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-
-            Ok(())
-        })?;
-
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.f32()?; // 1.0
-        let b = d
-            .list(|d| {
-                d.u32()?;
-                d.u32()?;
-
-                Ok(())
-            })?
-            .is_empty();
-        if !b {
-            d.u32()?; // 0
-        }
-        d.list(|d| {
-            d.u16()?;
-
-            Ok(())
-        })?;
-        d.u32()?; // 0xffffffff
 
         Ok(())
     }

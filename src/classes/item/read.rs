@@ -3,7 +3,7 @@ use std::{any::Any, io::Read};
 use crate::{
     classes::{
         collector::Collector, item::ItemPlacementParam, material_user_inst::MaterialUserInst,
-        static_object_model::StaticObjectModel, traits_metadata::TraitsMetadata,
+        static_object_model::StaticObjectModel, surface::Surface, traits_metadata::TraitsMetadata,
     },
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
@@ -548,7 +548,41 @@ impl ItemEntityModel {
             return Err("".into());
         }
 
-        d.unique_internal_node_ref::<StaticObjectModel>()?;
+        d.internal_node_ref::<StaticObjectModel>()?;
+        d.internal_node_ref_or_null::<Surface>()?;
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.f32()?; // 1.0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
+        d.u32()?; // 0
         if version >= 5 {
             d.u8()?; // 0
         }
@@ -876,33 +910,23 @@ impl Crystal {
 
                         Ok(())
                     })?;
-                    d.u32()?; // 2
-                    d.u32()?; // 0
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
+                    d.list(|d| {
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+                        d.u32()?;
+
+                        Ok(())
+                    })?;
                 }
                 _ => return Err("".into()),
             }
@@ -1065,7 +1089,12 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for LightUserModel {
 
 impl LightUserModel {
     fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
+        let version = d.u32()?;
+
+        if version != 1 {
+            return Err("".into());
+        }
+
         d.u32()?; // 0
         d.f32()?;
         d.f32()?;

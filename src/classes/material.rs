@@ -1,6 +1,6 @@
 //! Types used for reading [Material] nodes.
 
-use std::{io::Read, path::Path};
+use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -18,27 +18,11 @@ use crate::{
 /// Node type corresponding to GameBox files with the extension `Material.Gbx`.
 #[derive(Default)]
 pub struct Material {
-    diffuse_texture_path: RcPath,
-}
-
-impl Material {
-    /// Path to the diffuse texture file.
-    pub fn diffuse_texture_path(&self) -> &Path {
-        &self.diffuse_texture_path
-    }
+    material_custom: Option<Rc<MaterialCustom>>,
 }
 
 impl Class for Material {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 121);
-}
-
-#[derive(Default)]
-struct MaterialCustom {
-    diffuse_texture_path: RcPath,
-}
-
-impl Class for MaterialCustom {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 58);
 }
 
 impl Readable for Material {}
@@ -125,9 +109,7 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let material_custom = d.internal_node_ref::<MaterialCustom>()?;
-
-        self.diffuse_texture_path = RcPath::clone(&material_custom.diffuse_texture_path);
+        self.material_custom = d.internal_node_ref_or_null::<MaterialCustom>()?;
 
         Ok(())
     }
@@ -139,25 +121,27 @@ impl Material {
     }
 
     fn read_chunk_09079011<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; //0
+        d.u32()?; // 0
 
         Ok(())
     }
 
     fn read_chunk_09079012<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        d.string()?; // ":data:\Projects\Techno3\Media\Material\Tech3_Block_TDSN_CubeOut.Material.gbx"
-        d.u32()?; // 0x7ec30323
-        d.u32()?; // 0x803b7649
-        d.u32()?; // 0
-        d.u32()?; // 0x28002841
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 2
-        d.u32()?; // 1
-        d.f32()?; // 1.0
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0
+        if self.material_custom.is_some() {
+            d.string()?; // ":data:\Projects\Techno3\Media\Material\Tech3_Block_TDSN_CubeOut.Material.gbx"
+            d.u32()?; // 0x7ec30323
+            d.u32()?; // 0x803b7649
+            d.u32()?; // 0
+            d.u32()?; // 0x28002841
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 2
+            d.u32()?; // 1
+            d.f32()?; // 1.0
+            d.u32()?; // 0xffffffff
+            d.u32()?; // 0
+        }
 
         Ok(())
     }
@@ -170,11 +154,14 @@ impl Material {
 
     fn read_chunk_09079015<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 7
-        d.u32()?; // 5 | 6
+        d.u32()?; // 5 | 6 | 0xffffffff
         if d.bool32()? {
             d.u32()?; // 7
         }
-        d.u32()?; // 0xffffffff
+        let a = d.u32()?; // 0 | 0xffffffff
+        if a == 0 {
+            d.u32()?; // 0
+        }
 
         Ok(())
     }
@@ -202,6 +189,15 @@ impl Material {
 
         Ok(())
     }
+}
+
+#[derive(Default)]
+struct MaterialCustom {
+    diffuse_texture_path: RcPath,
+}
+
+impl Class for MaterialCustom {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 58);
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MaterialCustom {
