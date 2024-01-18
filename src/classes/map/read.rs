@@ -1,7 +1,10 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    classes::{ghost::Ghost, traits_metadata::TraitsMetadata},
+    classes::{
+        ghost::Ghost, traits_metadata::TraitsMetadata,
+        waypoint_special_property::WaypointSpecialProperty, zone_genealogy::ZoneGenealogy,
+    },
     common::{Class, ClassId, EngineId, Vec3},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
@@ -1362,53 +1365,6 @@ impl ChallengeParameters {
 }
 
 #[derive(Default)]
-struct WaypointSpecialProperty;
-
-impl Class for WaypointSpecialProperty {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 9);
-}
-
-impl<R: Read, I, N> ReadBody<R, I, N> for WaypointSpecialProperty {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
-    }
-}
-
-impl<R: Read, I, N> BodyChunks<R, I, N> for WaypointSpecialProperty {
-    #[allow(clippy::redundant_closure)]
-    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [
-            BodyChunkEntry {
-                id: 0x2e009000,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e009000(n, d)),
-            },
-            BodyChunkEntry {
-                id: 0x2e009001,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e009001(n, d)),
-            },
-        ]
-        .into_iter()
-    }
-}
-
-impl WaypointSpecialProperty {
-    fn read_chunk_2e009000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 2
-        d.string()?; // "Goal"
-        d.u32()?; // 0
-
-        Ok(())
-    }
-
-    fn read_chunk_2e009001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
-
-        Ok(())
-    }
-}
-
-#[derive(Default)]
 struct BlockSkin;
 
 impl Class for BlockSkin {
@@ -1535,44 +1491,6 @@ impl AnchoredObject {
         d.u32()?; // 1
         d.u32()?; // 4
         d.u8()?; // 0
-
-        Ok(())
-    }
-}
-
-#[derive(Default)]
-struct ZoneGenealogy;
-
-impl Class for ZoneGenealogy {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 285);
-}
-
-impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for ZoneGenealogy {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
-    }
-}
-
-impl<R: Read, I: IdStateMut, N> BodyChunks<R, I, N> for ZoneGenealogy {
-    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [BodyChunkEntry {
-            id: 0x0311d002,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0311d002(n, d)),
-        }]
-        .into_iter()
-    }
-}
-
-impl ZoneGenealogy {
-    fn read_chunk_0311d002<R: Read, I: IdStateMut, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
-        d.u32()?; // 1
-        d.id()?; // "VoidToGrass"
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.id()?; // "Grass"
 
         Ok(())
     }

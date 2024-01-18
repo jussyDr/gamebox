@@ -2,6 +2,7 @@
     missing_docs,
     clippy::get_unwrap,
     clippy::panic,
+    clippy::print_stdout,
     clippy::todo,
     clippy::unwrap_in_result,
     clippy::unwrap_used
@@ -47,6 +48,7 @@ pub mod classes {
     pub mod color_table;
     pub mod ghost;
     pub mod item;
+    pub mod macroblock;
     pub mod map;
     pub mod material;
     pub mod prefab;
@@ -59,11 +61,13 @@ pub mod classes {
     mod surface;
     mod traits_metadata;
     mod visual_indexed_triangles;
+    mod waypoint_special_property;
+    mod zone_genealogy;
 }
 
 mod common;
 
-pub use classes::{ghost::Ghost, item::Item, map::Map};
+pub use classes::{ghost::Ghost, item::Item, macroblock::Macroblock, map::Map};
 pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb, Vec3};
 pub use read::{read, read_file, Reader};
 pub use write::{write, write_file, Writer};

@@ -61,13 +61,10 @@ impl<T: IdStateMut> IdStateMut for &mut T {
 impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     /// Read an identifier that is null.
     pub fn null_id(&mut self) -> Result<()> {
-        let index = read_id_index(self)?;
-
-        if index != NULL {
-            return Err("expected null id".into());
+        match self.id_or_null()? {
+            None => Ok(()),
+            Some(_) => Err("expected NULL identifier".into()),
         }
-
-        Ok(())
     }
 
     /// Read an identifier that is not null.
@@ -80,7 +77,15 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
 
     /// Read an identifier that may be null.
     pub fn id_or_null(&mut self) -> Result<Option<Rc<str>>> {
-        let index = read_id_index(self)?;
+        if !self.id_state.borrow().seen_id {
+            if self.u32()? != ID_VERSION {
+                return Err("invalid identifier version".into());
+            }
+
+            self.id_state.borrow_mut().seen_id = true;
+        }
+
+        let index = self.u32()?;
 
         if index == NULL {
             return Ok(None);
@@ -112,16 +117,4 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
             Err("expected id".into())
         }
     }
-}
-
-fn read_id_index<R: Read, I: IdStateMut, N>(d: &mut Deserializer<R, I, N>) -> Result<u32> {
-    if !d.id_state.borrow().seen_id {
-        if d.u32()? != ID_VERSION {
-            return Err("invalid identifier version".into());
-        }
-
-        d.id_state.borrow_mut().seen_id = true;
-    }
-
-    d.u32()
 }

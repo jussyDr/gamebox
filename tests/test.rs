@@ -14,7 +14,7 @@ use gamebox::{
     },
     read::{HeaderOptions, Readable},
     write::Writable,
-    Item, Map,
+    Item, Macroblock, Map,
 };
 use test::{test_main, ShouldPanic, TestDesc, TestDescAndFn, TestFn, TestName, TestType};
 
@@ -27,6 +27,7 @@ fn main() {
     add_read_file_tests::<Item>(&mut tests, "tests/files/block");
     add_read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
     add_read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
+    add_read_file_tests::<Macroblock>(&mut tests, "tests/files/macroblock");
     add_read_file_tests::<Map>(&mut tests, "tests/files/map");
     add_read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
     add_read_extracted_file_tests::<Prefab>(&mut tests, "tests/files/prefab");
