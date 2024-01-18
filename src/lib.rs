@@ -36,6 +36,9 @@
 //! # Ok::<(), gamebox::write::Error>(()) };
 //! ```
 
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 pub mod deserialize;
 pub mod read;
 pub mod serialize;
@@ -69,5 +72,6 @@ mod common;
 
 pub use classes::{ghost::Ghost, item::Item, macroblock::Macroblock, map::Map};
 pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb, Vec3};
+use mimalloc::MiMalloc;
 pub use read::{read, read_file, Reader};
 pub use write::{write, write_file, Writer};
