@@ -8,6 +8,9 @@ rust-version = "1.75.0"
 name = "test"
 harness = false
 
+[profile.bench]
+debug = true
+
 [dependencies]
 lzo1x = { git = "https://github.com/jussyDr/lzo1x" }
 quick-xml = "0.31.0"

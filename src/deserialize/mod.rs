@@ -86,7 +86,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     }
 
     /// Read an unsigned 32-bit integer.
-    #[inline]
+    #[inline(always)]
     pub fn u32(&mut self) -> Result<u32> {
         let bytes = self.byte_array()?;
 
