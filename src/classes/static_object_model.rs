@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use crate::{
+    classes::{light_user_model::LightUserModel, static_object_model::graphic::LightBall},
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
@@ -99,7 +100,7 @@ impl Solid2Model {
             Ok(())
         })?;
         d.u32()?; // 0
-        let num_materials = d.u32()?; // 2
+        let num_materials = d.u32()?;
         if num_materials == 0 {
             d.u32()?; // 10
             d.list(|d| {
@@ -108,7 +109,7 @@ impl Solid2Model {
                 Ok(())
             })?;
         }
-        d.u32()?; // 0xffffffff
+        d.internal_node_ref_or_null::<Skel>()?;
         d.list(|d| {
             d.f32()?;
 
@@ -138,9 +139,9 @@ impl Solid2Model {
         d.string()?; // "Stadium\Media\Material\"
         d.u32()?; // 0
         d.list(|d| {
-            d.id()?; // "?Screen16x9SpotSmall"
+            d.id_or_null()?; // "?Screen16x9SpotSmall"
             d.u32()?; // 1
-            d.u32()?; // 31
+            d.node_ref::<Light>()?;
             d.f32()?; // 1.0
             d.u32()?; // 0
             d.u32()?; // 0
@@ -163,8 +164,15 @@ impl Solid2Model {
 
             Ok(())
         })?;
-        d.u32()?; // 0
-        d.u32()?; // 0
+        d.list(|d| {
+            d.internal_node_ref::<LightUserModel>()?;
+
+            Ok(())
+        })?;
+        if d.bool32()? {
+            d.u32()?; // 0
+            d.u32()?; // 0
+        }
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 1
@@ -202,5 +210,262 @@ impl Solid2Model {
         d.u32()?; // 0
 
         Ok(())
+    }
+}
+
+#[derive(Default)]
+struct Skel;
+
+impl Class for Skel {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 186);
+}
+
+impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for Skel {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl<R: Read, I: IdStateMut, N> BodyChunks<R, I, N> for Skel {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
+    where
+        Self: Sized,
+    {
+        [BodyChunkEntry {
+            id: 0x090ba000,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl Skel {
+    fn read_chunk_0<R: Read, I: IdStateMut, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        let version = d.u32()?;
+
+        if version != 19 {
+            return Err("".into());
+        }
+
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u16()?; // 0
+        d.u32()?; // 1
+        d.id()?; // "Point_001_001_001_001_001_001_006.003"
+        d.u16()?; // 0xffff
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u32()?;
+        d.u8()?;
+
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct Light;
+
+impl Class for Light {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 29);
+}
+
+impl<R: Read, I, N: NodeStateMut> ReadBody<R, I, N> for Light {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl<R: Read, I, N: NodeStateMut> BodyChunks<R, I, N> for Light {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
+    where
+        Self: Sized,
+    {
+        [
+            BodyChunkEntry {
+                id: 0x0901d003,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_3(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x0901d004,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_4(n, d)),
+            },
+        ]
+        .into_iter()
+    }
+}
+
+impl Light {
+    fn read_chunk_3<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 1
+        d.u32()?; // 0xffffffff
+        d.f32()?;
+        d.f32()?;
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+
+    fn read_chunk_4<R: Read, I, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 0
+        d.internal_node_ref::<LightBall>()?;
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0xffffffff
+        d.u32()?; // 0
+        d.u32()?; // 0xffffffff
+
+        Ok(())
+    }
+}
+
+mod graphic {
+    use std::io::Read;
+
+    use crate::{
+        common::{Class, ClassId, EngineId},
+        deserialize::Deserializer,
+        read::{
+            readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
+            Result,
+        },
+    };
+
+    #[derive(Default)]
+    struct Light;
+
+    impl Light {
+        fn read_chunk_10<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+            d.u32()?; // 0
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.u32()?;
+            d.u32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    struct LightPoint {
+        parent: Light,
+    }
+
+    impl LightPoint {
+        fn read_chunk_4<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+            d.f32()?;
+            d.u32()?; // 0
+
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    pub struct LightBall {
+        parent: LightPoint,
+    }
+
+    impl Class for LightBall {
+        const CLASS_ID: ClassId = ClassId::new(EngineId::GRAPHIC, 2);
+    }
+
+    impl<R: Read, I, N> ReadBody<R, I, N> for LightBall {
+        fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+            read_body_chunks(self, d)
+        }
+    }
+
+    impl<R: Read, I, N> BodyChunks<R, I, N> for LightBall {
+        fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>>
+        where
+            Self: Sized,
+        {
+            [
+                BodyChunkEntry {
+                    id: 0x0400100a,
+                    read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                        Light::read_chunk_10(&mut n.parent.parent, d)
+                    }),
+                },
+                BodyChunkEntry {
+                    id: 0x04003004,
+                    read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
+                        LightPoint::read_chunk_4(&mut n.parent, d)
+                    }),
+                },
+                BodyChunkEntry {
+                    id: 0x04002008,
+                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_8(n, d)),
+                },
+                BodyChunkEntry {
+                    id: 0x04002009,
+                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_9(n, d)),
+                },
+                BodyChunkEntry {
+                    id: 0x0400200a,
+                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_10(n, d)),
+                },
+            ]
+            .into_iter()
+        }
+    }
+
+    impl LightBall {
+        fn read_chunk_8<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+            d.u32()?; // 16
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?;
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?;
+            d.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_9<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+            d.f32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_10<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+            d.f32()?;
+
+            Ok(())
+        }
     }
 }

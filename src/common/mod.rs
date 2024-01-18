@@ -136,6 +136,7 @@ pub struct EngineId(u8);
 
 impl EngineId {
     pub const GAME: Self = Self(3);
+    pub const GRAPHIC: Self = Self(4);
     pub const CONTROL: Self = Self(7);
     pub const PLUG: Self = Self(9);
     pub const SCRIPT: Self = Self(17);
