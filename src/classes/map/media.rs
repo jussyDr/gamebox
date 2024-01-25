@@ -3,7 +3,7 @@
 use std::{any::Any, io::Read, rc::Rc};
 
 use crate::{
-    classes::ghost::EntRecordData,
+    classes::ent_record_data::EntRecordData,
     common::{Class, ClassId, EngineId, Vec3},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{

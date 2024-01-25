@@ -9,13 +9,20 @@ use crate::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
-    FileRef,
+    FileRef, RcStr,
 };
+
+use super::ent_record_data::EntRecordData;
 
 /// Node type corresponding to GameBox files with the extension `Ghost.Gbx`.
 #[derive(Default)]
 pub struct Ghost {
     parent: Ghost2,
+    car_model_id: RcStr,
+    player_name: String,
+    player_trigram: String,
+    player_region: String,
+    player_id: RcStr,
 }
 
 impl Class for Ghost {
@@ -24,13 +31,6 @@ impl Class for Ghost {
 
 #[derive(Default)]
 struct Ghost2;
-
-#[derive(Default)]
-pub(crate) struct EntRecordData;
-
-impl Class for EntRecordData {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 287);
-}
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Ghost {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
@@ -173,9 +173,9 @@ impl Ghost {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 0
-        d.id()?; // "CarSport"
+        self.car_model_id = d.id()?.into();
         d.u32()?;
-        d.id()?; // "Nadeo"
+        let _car_model_author = d.id()?;
         d.u32()?;
         d.u32()?;
         d.u32()?; // 0
@@ -185,15 +185,15 @@ impl Ghost {
             Ok(())
         })?;
         d.u32()?; // 0
-        d.string()?; // "htimh"
+        self.player_name = d.string()?;
         d.u32()?; // 0
         d.u32()?; // 0
         d.u32()?; // 0
         d.internal_node_ref::<EntRecordData>()?;
         d.u32()?; // 1
         d.u32()?; // 1
-        d.string()?; // "TIM"
-        d.string()?; // "World|Europe|United Kingdom"
+        self.player_trigram = d.string()?;
+        self.player_region = d.string()?;
 
         Ok(())
     }
@@ -240,7 +240,7 @@ impl Ghost {
     }
 
     fn read_chunk_15<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.string()?; // "FE_OBpuQSvmlsJFIvMBWbw"
+        let _player_id = d.string()?;
 
         Ok(())
     }
@@ -249,7 +249,7 @@ impl Ghost {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        d.id()?; // "pGjLOGmlwbkrlImXcjfyqtE7j6i"
+        let _map_id = d.id()?;
 
         Ok(())
     }
@@ -459,33 +459,6 @@ impl Ghost2 {
 
     fn read_chunk_7<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-
-        Ok(())
-    }
-}
-
-impl<R: Read, I, N> ReadBody<R, I, N> for EntRecordData {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
-    }
-}
-
-impl<R: Read, I, N> BodyChunks<R, I, N> for EntRecordData {
-    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [BodyChunkEntry {
-            id: 0x0911f000,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
-        }]
-        .into_iter()
-    }
-}
-
-impl EntRecordData {
-    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 10
-        d.u32()?;
-        let size = d.u32()?;
-        d.bytes(size as usize)?;
 
         Ok(())
     }
