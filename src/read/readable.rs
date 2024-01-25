@@ -30,7 +30,7 @@ pub fn read_gbx<
 
     let mut gbx_file = GbxFile::read(reader, assume_no_header_data)?;
 
-    if gbx_file.class_id() != T::CLASS_ID.get() {
+    if gbx_file.class_id() != T::CLASS_ID {
         return Err("class id does not match".into());
     }
 

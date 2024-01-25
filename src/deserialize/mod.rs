@@ -15,7 +15,7 @@ use std::{
 };
 
 use crate::{
-    common::{Class, NULL},
+    common::{Class, ClassId},
     read::{readable::ReadBody, Result},
 };
 
@@ -237,21 +237,22 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
 
     /// Read a node that may be null.
     pub fn node_or_null<T: Default + Class + ReadBody<R, I, N>>(&mut self) -> Result<Option<T>> {
-        let class_id = self.u32()?;
+        let class_id = ClassId::read_or_null(self)?;
 
-        if class_id == NULL {
-            return Ok(None);
+        match class_id {
+            None => Ok(None),
+            Some(class_id) => {
+                if class_id != T::CLASS_ID {
+                    return Err("class id does not match".into());
+                }
+
+                let mut node = T::default();
+
+                T::read_body(&mut node, self)?;
+
+                Ok(Some(node))
+            }
         }
-
-        if class_id != T::CLASS_ID.get() {
-            return Err("class id does not match".into());
-        }
-
-        let mut node = T::default();
-
-        T::read_body(&mut node, self)?;
-
-        Ok(Some(node))
     }
 
     /// Returns `Ok(())` if the underlying reader has no data left.

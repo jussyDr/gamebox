@@ -1,7 +1,7 @@
 use std::{any::Any, io::Read, mem::replace, path::Path, rc::Rc};
 
 use crate::{
-    common::{Class, NULL},
+    common::{Class, ClassId, NULL},
     read::{readable::ReadBody, Result},
 };
 
@@ -168,9 +168,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 
         match self.node_state.borrow().get_node_ref(index)? {
             None => {
-                let class_id = self.u32()?;
+                let class_id = ClassId::read(self)?;
 
-                if class_id != T::CLASS_ID.get() {
+                if class_id != T::CLASS_ID {
                     return Err("class id does not match".into());
                 }
 
@@ -300,9 +300,9 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
 
         match self.node_state.borrow().get_node_ref(index)? {
             None => {
-                let class_id = self.u32()?;
+                let class_id = ClassId::read(self)?;
 
-                if class_id != T::CLASS_ID.get() {
+                if class_id != T::CLASS_ID {
                     return Err("class id does not match".into());
                 }
 

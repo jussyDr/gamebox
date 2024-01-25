@@ -85,7 +85,7 @@ pub fn write_gbx<
     };
     compression.write(&mut s)?;
     s.u8(UNKNOWN_BYTE)?;
-    s.u32(T::CLASS_ID.get())?;
+    s.u32(T::CLASS_ID.as_u32())?;
     s.u32(header_data.len() as u32)?;
     s.bytes(&header_data)?;
     s.u32(node_state.num_nodes())?;

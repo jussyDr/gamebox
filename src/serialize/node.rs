@@ -152,7 +152,7 @@ fn write_node_ref<W: Write, I, N: NodeStateMut, T: Class + WriteBody<W, I, N>>(
 
     s.node_state.borrow_mut().num_nodes += 1;
 
-    s.u32(T::CLASS_ID.get())?;
+    s.u32(T::CLASS_ID.as_u32())?;
 
     node.write_body(s)?;
 

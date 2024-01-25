@@ -144,34 +144,53 @@ impl EngineId {
     pub const META: Self = Self(47);
 }
 
+#[derive(Clone, Copy, PartialEq)]
 pub struct ClassId(u32);
 
 impl ClassId {
-    pub const fn new(engine_id: EngineId, class: u16) -> Self {
+    pub const fn new(engine: EngineId, class: u16) -> Self {
         if class & 0xf000 != 0 {
             panic!()
         }
 
-        Self((engine_id.0 as u32) << 24 | (class as u32) << 12)
+        Self((engine.0 as u32) << 24 | (class as u32) << 12)
     }
 
-    pub const fn get(&self) -> u32 {
+    pub const fn as_u32(&self) -> u32 {
         self.0
     }
-}
 
-pub struct ChunkId(u32);
+    pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
+        let value = d.u32()?;
 
-impl ChunkId {
-    pub const fn new(class_id: ClassId, chunk: u16) -> Self {
-        if chunk & 0xf000 != 0 {
-            panic!()
+        if !matches!((value & 0xff000000) >> 24, 3 | 4 | 7 | 9 | 17 | 46 | 47) {
+            return Err("".into());
         }
 
-        Self(class_id.get() | chunk as u32)
+        if value & 0x00000fff != 0 {
+            return Err("".into());
+        }
+
+        Ok(Self(value))
     }
 
-    pub const fn chunk(&self) -> u16 {
-        (self.0 & 0x00000fff) as u16
+    pub(crate) fn read_or_null<R: Read, I, N>(
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<Option<Self>> {
+        let value = d.u32()?;
+
+        if value == NULL {
+            return Ok(None);
+        }
+
+        if !matches!((value & 0xff000000) >> 24, 3 | 4 | 7 | 9 | 17 | 46 | 47) {
+            return Err("".into());
+        }
+
+        if value & 0x00000fff != 0 {
+            return Err("".into());
+        }
+
+        Ok(Some(Self(value)))
     }
 }

@@ -1,7 +1,10 @@
 use std::{io::Read, path::PathBuf};
 
 use crate::{
-    common::{Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_FILE_VERSION, UNKNOWN_BYTE},
+    common::{
+        ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_FILE_VERSION,
+        UNKNOWN_BYTE,
+    },
     deserialize::Deserializer,
 };
 
@@ -19,7 +22,7 @@ enum BodyData<R> {
 /// Represents a GameBox file.
 pub struct GbxFile<R> {
     is_body_compressed: bool,
-    class_id: u32,
+    class_id: ClassId,
     header_data: Vec<u8>,
     num_node_refs: u32,
     external_node_refs: Vec<(u32, PathBuf)>,
@@ -28,7 +31,7 @@ pub struct GbxFile<R> {
 
 impl<R> GbxFile<R> {
     /// Class identifier of the node serialized in this GameBox file.
-    pub const fn class_id(&self) -> u32 {
+    pub const fn class_id(&self) -> ClassId {
         self.class_id
     }
 
@@ -82,7 +85,7 @@ impl<R: Read> GbxFile<R> {
             return Err("invalid unknown byte".into());
         }
 
-        let class_id = d.u32()?;
+        let class_id = ClassId::read(&mut d)?;
         let header_data_size = d.u32()?;
 
         let header_data = if assume_no_header_data {
