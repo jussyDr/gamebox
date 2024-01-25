@@ -1,11 +1,7 @@
 use crate::common::{Class, ClassId, EngineId};
 
-use super::item::ItemMaterial;
-
 #[derive(Default, Clone)]
-pub struct MaterialUserInst {
-    material: ItemMaterial,
-}
+pub struct MaterialUserInst;
 
 impl Class for MaterialUserInst {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 253);

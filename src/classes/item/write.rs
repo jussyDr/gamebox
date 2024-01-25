@@ -343,7 +343,7 @@ impl Crystal {
         s.u32(2)?;
         s.u32(1)?;
         s.u32(0)?;
-        s.unique_node_ref(&MaterialUserInst::default())?;
+        s.unique_node_ref(&MaterialUserInst)?;
 
         Ok(())
     }
