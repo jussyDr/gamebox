@@ -125,9 +125,13 @@ impl Crystal {
             let version = d.u32()?;
             let layer_kind = match kind {
                 0 => {
+                    if version != 1 {
+                        return Err("".into());
+                    }
+
                     let mesh = read_mesh(d, self.materials.len() as u32)?;
-                    d.u32()?; // 1
-                    d.u32()?; // 0 | 1
+                    let _is_visible = d.bool32()?;
+                    let _is_collidable = d.bool32()?;
 
                     LayerKind::Geometry(mesh)
                 }
@@ -181,6 +185,10 @@ impl Crystal {
                     LayerKind::Cubes
                 }
                 14 => {
+                    if version != 1 {
+                        return Err("".into());
+                    }
+
                     let mesh = read_mesh(d, self.materials.len() as u32)?;
 
                     LayerKind::Trigger(mesh)
@@ -261,7 +269,7 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
     d: &mut Deserializer<R, I, N>,
     kind: u32,
 ) -> Result<LayerKind> {
-    d.list(|d| {
+    let _mask = d.list(|d| {
         d.u32()?;
         d.id_or_null()?;
 
