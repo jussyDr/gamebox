@@ -1,0 +1,93 @@
+{ 
+	"ClassId" : "CGameBlockInfoGroups", 
+	"Groups" : [
+	{ "GroupId" : "RoadTechTiltCurve1", 
+		"BlockIds" : ["RoadTechTiltCurve1DownLeft", "RoadTechTiltCurve1DownRight", "RoadTechTiltCurve1UpLeft", "RoadTechTiltCurve1UpRight" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltCurve2", 
+		"BlockIds" : ["RoadTechTiltCurve2DownLeft", "RoadTechTiltCurve2DownRight", "RoadTechTiltCurve2UpLeft", "RoadTechTiltCurve2UpRight" ]
+	}, 
+	{ "GroupId" : "RoadTechSlopes", 
+		"BlockIds" : ["RoadTechSlopeBase", "RoadTechSlopeBase2", "RoadTechSlopeStraight" ]
+	}, 
+	{ "GroupId" : "RoadTechSlopes2x1", 
+		"BlockIds" : ["RoadTechSlopeStart2x1", "RoadTechSlopeEnd2x1", "RoadTechSlopeBase2x1" ]
+	}, 
+	{ "GroupId" : "RoadTechSlopesU", 
+		"BlockIds" : ["RoadTechSlopeUTop", "RoadTechSlopeUBottom", "RoadTechSlopeUBottomInGround" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltSwitch", 
+		"BlockIds" : ["RoadTechTiltSwitchLeft", "RoadTechTiltSwitchRight", "RoadTechTiltStraight" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltTransition1Up", 
+		"BlockIds" : ["RoadTechTiltTransition1UpLeft", "RoadTechTiltTransition1UpRight" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltTransition2Up", 
+		"BlockIds" : ["RoadTechTiltTransition2UpLeft", "RoadTechTiltTransition2UpRight" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltTransition1Down", 
+		"BlockIds" : ["RoadTechTiltTransition1DownLeft", "RoadTechTiltTransition1DownRight" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltTransition2Down", 
+		"BlockIds" : ["RoadTechTiltTransition2DownLeft", "RoadTechTiltTransition2DownRight" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltTransition2UpCurveIn", 
+		"BlockIds" : ["RoadTechTiltTransition2UpLeftCurveIn", "RoadTechTiltTransition2UpRightCurveIn" ]
+	}, 
+	{ "GroupId" : "RoadTechTiltTransition2DownCurveIn", 
+		"BlockIds" : ["RoadTechTiltTransition2DownRightCurveIn", "RoadTechTiltTransition2DownLeftCurveIn" ]
+	}, 
+	{ "GroupId" : "RoadTechDiagStraightX2", 
+		"BlockIds" : ["RoadTechDiagLeftStraightX2", "RoadTechDiagRightStraightX2" ]
+	}, 
+	{ "GroupId" : "RoadTechDiagStartStraightX2", 
+		"BlockIds" : ["RoadTechDiagLeftStartStraightX2", "RoadTechDiagRightStartStraightX2" ]
+	}, 
+	{ "GroupId" : "RoadTechDiagStartCurve1In", 
+		"BlockIds" : ["RoadTechDiagLeftStartCurve1In", "RoadTechDiagRightStartCurve1In" ]
+	}, 
+	{ "GroupId" : "RoadTechDiagStartCurve1Out", 
+		"BlockIds" : ["RoadTechDiagLeftStartCurve1Out", "RoadTechDiagRightStartCurve1Out" ]
+	}, 
+	{ "GroupId" : "RoadTechDiagStartCurve2In", 
+		"BlockIds" : ["RoadTechDiagLeftStartCurve2In", "RoadTechDiagRightStartCurve2In" ]
+	}, 
+	{ "GroupId" : "RoadTechDiagStartCurve2Out", 
+		"BlockIds" : ["RoadTechDiagLeftStartCurve2Out", "RoadTechDiagRightStartCurve2Out" ]
+	}, 
+	{ "GroupId" : "RoadTechCheckpointSlope", 
+		"BlockIds" : ["RoadTechCheckpointSlopeUp", "RoadTechCheckpointSlopeDown", "RoadTechCheckpointTiltLeft", "RoadTechCheckpointTiltRight" ]
+	}, 
+	{ "GroupId" : "RoadTechCheckpointTilt", }, 
+	{ "GroupId" : "RoadDirtTiltCurve1", 
+		"BlockIds" : ["RoadDirtTiltCurve1DownLeft", "RoadDirtTiltCurve1DownRight", "RoadDirtTiltCurve1UpLeft", "RoadDirtTiltCurve1UpRight" ]
+	}, 
+	{ "GroupId" : "RoadDirtTiltTransition1Up", 
+		"BlockIds" : ["RoadDirtTiltTransition1UpLeft", "RoadDirtTiltTransition1UpRight" ]
+	}, 
+	{ "GroupId" : "RoadDirtTiltTransition2Up", 
+		"BlockIds" : ["RoadDirtTiltTransition2UpLeft", "RoadDirtTiltTransition2UpRight" ]
+	}, 
+	{ "GroupId" : "RoadDirtTiltTransition1Down", 
+		"BlockIds" : ["RoadDirtTiltTransition1DownLeft", "RoadDirtTiltTransition1DownRight" ]
+	}, 
+	{ "GroupId" : "RoadDirtTiltTransition2Down", 
+		"BlockIds" : ["RoadDirtTiltTransition2DownLeft", "RoadDirtTiltTransition2DownRight" ]
+	}, 
+	{ "GroupId" : "RoadDirtCheckpointSlope", 
+		"BlockIds" : ["RoadDirtCheckpointSlopeUp", "RoadDirtCheckpointSlopeDown" ]
+	}, 
+	{ "GroupId" : "RoadDirtCheckpointTilt", 
+		"BlockIds" : ["RoadDirtCheckpointTiltLeft", "RoadDirtCheckpointTiltRight" ]
+	}, 
+	{ "GroupId" : "RoadTechToRoadIce", 
+		"BlockIds" : ["RoadTechToRoadIce", "RoadTechToRoadIceDown" ]
+	}, 
+	{ "GroupId" : "RoadTechToRoadIceSlope", 
+		"BlockIds" : ["RoadTechToRoadIceSlopeUp", "RoadTechToRoadIceSlopeDown" ]
+	}, 
+	{ "GroupId" : "RoadIceCheckpointSlope", 
+		"BlockIds" : ["RoadIceCheckpointSlopeUp", "RoadIceCheckpointSlopeDown" ]
+	}
+	]
+}

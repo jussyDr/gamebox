@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use serde_jsonrc::Value;
+use serde_jsonrc::{Map, Value};
 
 use crate::{
     common::{Class, END_OF_NODE_MARKER, HEAVY_CHUNK_MARKER_BIT, SKIPPABLE_CHUNK_MARKER},
@@ -204,7 +204,7 @@ pub trait ReadBody<R, I, N> {
 pub trait ReadJson {
     const CLASS_NAME: &'static str;
 
-    fn read(json: Value) -> Result<Self>
+    fn read(json: &Map<String, Value>) -> Result<Self>
     where
         Self: Sized;
 }
@@ -220,5 +220,5 @@ pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
 
     object.remove("ClassId");
 
-    T::read(value)
+    T::read(object)
 }

@@ -9,8 +9,9 @@ use std::{
 
 use gamebox::{
     classes::{
-        color_table::ColorTable, material::Material, prefab::Prefab, texture::Texture,
-        veget_tree_model::VegetTreeModel,
+        block_info_groups::BlockInfoGroups, block_info_tree_root::BlockInfoTreeRoot,
+        color_table::ColorTable, item_model_tree_root::ItemModelTreeRoot, material::Material,
+        prefab::Prefab, texture::Texture, veget_tree_model::VegetTreeModel,
     },
     read::{HeaderOptions, Readable},
     write::Writable,
@@ -23,10 +24,13 @@ fn main() {
 
     let mut tests = vec![];
 
-    add_read_extracted_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
+    add_read_file_tests::<BlockInfoGroups>(&mut tests, "tests/files/block_info_groups");
+    add_read_file_tests::<BlockInfoTreeRoot>(&mut tests, "tests/files/block_info_tree_root");
+    add_read_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");
     add_read_file_tests::<Item>(&mut tests, "tests/files/block");
     add_read_file_tests::<Item>(&mut tests, "tests/files/item/custom");
     add_read_extracted_file_tests::<Item>(&mut tests, "tests/files/item/game");
+    add_read_file_tests::<ItemModelTreeRoot>(&mut tests, "tests/files/item_model_tree_root");
     add_read_file_tests::<Macroblock>(&mut tests, "tests/files/macroblock");
     add_read_file_tests::<Map>(&mut tests, "tests/files/map");
     add_read_extracted_file_tests::<Material>(&mut tests, "tests/files/material");
