@@ -1,11 +1,12 @@
+mod read;
+mod write;
+
 use std::rc::Rc;
 
 use crate::{
     common::{Class, ClassId, EngineId},
     Vec3,
 };
-
-mod read;
 
 #[derive(Default)]
 pub struct Crystal {
