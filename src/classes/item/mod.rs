@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 use crate::common::{Class, ClassId, EngineId};
 
-use super::{collector::Collector, crystal::Crystal, static_object_model::Solid2Model};
+use super::{collector::Collector, crystal::Crystal, static_object_model::StaticObjectModel};
 
 /// Node type corresponding to GameBox files with the extension `Item.Gbx`.
 #[derive(Default)]
@@ -29,7 +29,7 @@ enum ItemModel {
 
 impl Default for ItemModel {
     fn default() -> Self {
-        Self::Edition(ItemEntityModelEdition)
+        Self::Edition(ItemEntityModelEdition::default())
     }
 }
 
@@ -38,25 +38,22 @@ struct BlockItem {
     variants: Vec<Option<Rc<Crystal>>>,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 struct ItemEntityModel {
-    solid_to_model: Solid2Model,
+    static_object_model: StaticObjectModel,
 }
 
 impl Class for ItemEntityModel {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 39);
 }
 
-struct ItemEntityModelEdition;
+#[derive(Default)]
+struct ItemEntityModelEdition {
+    crystal: Crystal,
+}
 
 impl Class for ItemEntityModelEdition {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 38);
-}
-
-impl Default for ItemEntityModelEdition {
-    fn default() -> Self {
-        Self
-    }
 }
 
 struct ItemPlacementParam;

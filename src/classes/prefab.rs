@@ -51,7 +51,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Prefab {
             d.any_node_ref(|d, class_id| {
                 match class_id {
                     0x09159000 => {
-                        let mut node = StaticObjectModel;
+                        let mut node = StaticObjectModel::default();
                         StaticObjectModel::read_body(&mut node, d)?;
                     }
                     _ => return Err("".into()),

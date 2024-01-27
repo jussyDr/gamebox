@@ -2,7 +2,10 @@ mod read;
 
 use std::ops::{Deref, DerefMut};
 
-use crate::common::{Class, ClassId, EngineId};
+use crate::{
+    common::{Class, ClassId, EngineId},
+    Vec2, Vec3,
+};
 
 #[derive(Default)]
 pub struct VisualIndexedTriangles {
@@ -30,7 +33,7 @@ impl DerefMut for VisualIndexedTriangles {
 #[derive(Default)]
 pub struct VisualIndexed {
     parent: Visual3D,
-    pub indices: Indices,
+    index_buffer: IndexBuffer,
 }
 
 impl Deref for VisualIndexed {
@@ -73,8 +76,8 @@ pub struct Visual {
 
 #[derive(Default, Clone)]
 pub struct VertexStream {
-    pub positions: Vec<[f32; 3]>,
-    pub texcoords: Vec<[f32; 2]>,
+    pub positions: Vec<Vec3<f32>>,
+    pub texcoords: Vec<Vec2<f32>>,
 }
 
 impl Class for VertexStream {

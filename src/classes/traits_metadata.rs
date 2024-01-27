@@ -16,8 +16,8 @@ impl Class for TraitsMetadata {
 impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 6
-        let n = d.u8()?;
-        let types = d.repeat(n as usize, |d| {
+        let num_types = d.u8()?;
+        let types = d.repeat(num_types as usize, |d| {
             let ty = read_type(d)?;
 
             Ok(ty)

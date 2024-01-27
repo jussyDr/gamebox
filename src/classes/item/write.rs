@@ -151,7 +151,7 @@ impl Item {
         s.u32(0xffffffff)?;
         s.u32(0)?;
         s.u32(0)?;
-        s.unique_node_ref(&ItemEntityModelEdition)?;
+        s.unique_node_ref(&ItemEntityModelEdition::default())?;
         s.u32(0xffffffff)?;
         s.u32(0xffffffff)?;
 

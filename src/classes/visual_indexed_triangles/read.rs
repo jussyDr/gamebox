@@ -6,6 +6,7 @@ use crate::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
+    Vec2, Vec3,
 };
 
 use super::{
@@ -159,7 +160,7 @@ impl VisualIndexed {
         let mut node = IndexBuffer::default();
         read_body_chunks(&mut node, d)?;
 
-        self.indices = node.indices;
+        self.index_buffer = node;
 
         Ok(())
     }
@@ -235,7 +236,7 @@ impl VertexStream {
                         let y = d.f32()?;
                         let z = d.f32()?;
 
-                        Ok([x, y, z])
+                        Ok(Vec3 { x, y, z })
                     })?;
                 }
                 VertexAttribute {
@@ -270,8 +271,8 @@ impl VertexStream {
                         let u = d.f32()?;
                         let v = d.f32()?;
 
-                        Ok([u, v])
-                    })?;
+                        Ok(Vec2 { x: u, y: v })
+                    })?
                 }
                 VertexAttribute {
                     kind: 11,

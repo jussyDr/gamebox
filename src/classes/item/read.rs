@@ -281,7 +281,7 @@ impl Item {
                     ItemModel::Block(node)
                 }
                 0x2e026000 => {
-                    let mut node = ItemEntityModelEdition;
+                    let mut node = ItemEntityModelEdition::default();
                     ItemEntityModelEdition::read_body(&mut node, d)?;
                     ItemModel::Edition(node)
                 }
@@ -666,7 +666,7 @@ impl ItemEntityModel {
             return Err("".into());
         }
 
-        d.internal_node_ref::<StaticObjectModel>()?;
+        self.static_object_model = d.unique_internal_node_ref::<StaticObjectModel>()?;
         d.internal_node_ref_or_null::<Surface>()?;
         d.f32()?; // 1.0
         d.u32()?; // 0
@@ -744,7 +744,7 @@ impl ItemEntityModelEdition {
         }
 
         d.u32()?; // 1
-        d.unique_internal_node_ref::<Crystal>()?;
+        self.crystal = d.unique_internal_node_ref::<Crystal>()?;
         d.u32()?; // 0
         d.u32()?; // 0xffffffff
         d.u32()?; // 0

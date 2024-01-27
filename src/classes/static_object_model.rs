@@ -16,7 +16,9 @@ use super::{
 };
 
 #[derive(Default)]
-pub struct StaticObjectModel;
+pub struct StaticObjectModel {
+    solid_to_model: Solid2Model,
+}
 
 impl Class for StaticObjectModel {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 345);
@@ -30,7 +32,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObject
             return Err("".into());
         }
 
-        d.internal_node_ref::<Solid2Model>()?;
+        self.solid_to_model = d.unique_internal_node_ref::<Solid2Model>()?;
         if !d.bool8()? {
             d.internal_node_ref_or_null::<Surface>()?;
         }
