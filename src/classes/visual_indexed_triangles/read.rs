@@ -115,7 +115,7 @@ impl Visual {
         d.u32()?; // 0
         d.u32()?; // 180
         d.u32()?; // 1
-        d.internal_node_ref::<VertexStream>()?;
+        self.vertex_stream = d.unique_internal_node_ref::<VertexStream>()?;
         d.u32()?; // 0
         d.f32()?; // 12.703503
         d.f32()?; // 15.202776

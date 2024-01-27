@@ -71,7 +71,7 @@ impl DerefMut for Visual3D {
 
 #[derive(Default)]
 pub struct Visual {
-    pub vertices: VertexStream,
+    pub vertex_stream: VertexStream,
 }
 
 #[derive(Default, Clone)]

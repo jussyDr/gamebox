@@ -14,7 +14,9 @@ use crate::{
 
 use self::media::{MediaClip, MediaClipGroup};
 
-/// Node type corresponding to GameBox files with the extension `Map.Gbx`.
+/// A map / challenge.
+///
+/// Corresponds to the file extension `Map.Gbx` or `Challenge.Gbx`.
 pub struct Map {
     /// (Display) cost of the map.
     pub cost: u32,
