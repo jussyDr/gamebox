@@ -29,18 +29,26 @@ struct Layer {
 }
 
 enum LayerKind {
-    Geometry(Mesh),
+    Geometry {
+        mesh: Mesh,
+        is_visible: bool,
+        is_collidable: bool,
+    },
     Smooth,
     Translation,
     Rotation,
-    Scale { scale: Vec3<f32> },
+    Scale {
+        scale: Vec3<f32>,
+    },
     Mirror,
     Subdivide,
     Chaos,
     Deformation,
     Cubes,
     Trigger(Mesh),
-    SpawnPosition { position: Vec3<f32> },
+    SpawnPosition {
+        position: Vec3<f32>,
+    },
     Lights,
 }
 

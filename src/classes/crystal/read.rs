@@ -130,10 +130,14 @@ impl Crystal {
                     }
 
                     let mesh = read_mesh(d, self.materials.len() as u32)?;
-                    let _is_visible = d.bool32()?;
-                    let _is_collidable = d.bool32()?;
+                    let is_visible = d.bool32()?;
+                    let is_collidable = d.bool32()?;
 
-                    LayerKind::Geometry(mesh)
+                    LayerKind::Geometry {
+                        mesh,
+                        is_visible,
+                        is_collidable,
+                    }
                 }
                 13 => {
                     if !matches!(version, 7 | 8) {
