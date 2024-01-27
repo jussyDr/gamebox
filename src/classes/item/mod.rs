@@ -3,18 +3,39 @@
 mod read;
 mod write;
 
+use std::rc::Rc;
+
 use crate::common::{Class, ClassId, EngineId};
 
-use super::{collector::Collector, static_object_model::Solid2Model};
+use super::{collector::Collector, crystal::Crystal, static_object_model::Solid2Model};
 
 /// Node type corresponding to GameBox files with the extension `Item.Gbx`.
 #[derive(Default)]
 pub struct Item {
     parent: Collector,
+    model: ItemModel,
 }
 
 impl Class for Item {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 2);
+}
+
+enum ItemModel {
+    Block(BlockItem),
+    Edition(ItemEntityModelEdition),
+    Normal(ItemEntityModel),
+    VariantList,
+}
+
+impl Default for ItemModel {
+    fn default() -> Self {
+        Self::Edition(ItemEntityModelEdition)
+    }
+}
+
+#[derive(Default)]
+struct BlockItem {
+    variants: Vec<Option<Rc<Crystal>>>,
 }
 
 #[derive(Default, Clone)]
@@ -35,24 +56,6 @@ impl Class for ItemEntityModelEdition {
 impl Default for ItemEntityModelEdition {
     fn default() -> Self {
         Self
-    }
-}
-
-struct TreeGenerator;
-
-struct Crystal {
-    parent: TreeGenerator,
-}
-
-impl Class for Crystal {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 3);
-}
-
-impl Default for Crystal {
-    fn default() -> Self {
-        Self {
-            parent: TreeGenerator,
-        }
     }
 }
 

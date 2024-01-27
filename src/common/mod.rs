@@ -8,6 +8,28 @@ use std::io::{Read, Write};
 
 use crate::{deserialize::Deserializer, read::Result, serialize::Serializer};
 
+/// A 2-dimensional vector of type `T`.
+#[derive(Clone, Copy, Default)]
+pub struct Vec2<T> {
+    pub(crate) x: T,
+    pub(crate) y: T,
+}
+
+impl<T: Copy> Vec2<T> {
+    // Convert to an array with of form `[x, y]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # |vec2: gamebox::Vec2<f32>| {
+    /// let [x, y] = vec2.into_array();
+    /// # };
+    /// ```
+    pub const fn into_array(self) -> [T; 2] {
+        [self.x, self.y]
+    }
+}
+
 /// A 3-dimensional vector of type `T`.
 #[derive(Clone, Copy, Default)]
 pub struct Vec3<T> {

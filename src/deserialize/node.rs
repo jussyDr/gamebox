@@ -334,6 +334,32 @@ impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
     }
 
     /// Read an unique node reference that may be internal or external and that may be null.
+    pub fn any_unique_internal_node_ref_or_null<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T>,
+    ) -> Result<Option<T>> {
+        let index = match self.u32()? {
+            0 => return Err("".into()),
+            NULL => return Ok(None),
+            index => index as usize - 1,
+        };
+
+        match self.node_state.borrow().get_node_ref(index)? {
+            None => {
+                let class_id = self.u32()?;
+
+                set_node_state_entry(self.node_state.borrow_mut(), index, NodeStateEntry::Unique)?;
+
+                let node = read_fn(self, class_id)?;
+
+                Ok(Some(node))
+            }
+            Some(NodeRef::Internal { .. }) => Err("".into()),
+            Some(NodeRef::External { .. }) => Err("".into()),
+        }
+    }
+
+    /// Read an unique node reference that may be internal or external and that may be null.
     pub fn any_unique_node_ref_or_null<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T>,

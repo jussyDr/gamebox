@@ -46,6 +46,7 @@ pub mod classes {
 
     pub mod collector;
     pub mod color_table;
+    pub mod crystal;
     pub mod ghost;
     pub mod item;
     pub mod macroblock;
@@ -69,6 +70,6 @@ pub mod classes {
 mod common;
 
 pub use classes::{ghost::Ghost, item::Item, macroblock::Macroblock, map::Map};
-pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb, Vec3};
+pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb, Vec2, Vec3};
 pub use read::{read, read_file, Reader};
 pub use write::{write, write_file, Writer};
