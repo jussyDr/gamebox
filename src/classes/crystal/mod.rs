@@ -32,14 +32,14 @@ enum LayerKind {
     Smooth,
     Translation,
     Rotation,
-    Scale,
+    Scale { scale: Vec3<f32> },
     Mirror,
     Subdivide,
     Chaos,
     Deformation,
     Cubes,
     Trigger(Mesh),
-    Spawnposition,
+    SpawnPosition { position: Vec3<f32> },
     Lights,
 }
 

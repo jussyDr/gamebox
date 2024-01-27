@@ -131,146 +131,6 @@ impl Crystal {
 
                     LayerKind::Geometry(mesh)
                 }
-                1 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.u32()?; // 1
-
-                    LayerKind::Smooth
-                }
-                2 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.u32()?; // 0
-                    d.u32()?; // 0
-                    d.f32()?;
-
-                    LayerKind::Translation
-                }
-                3 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.f32()?;
-                    d.u32()?; // 2
-                    d.u32()?; // 0
-
-                    LayerKind::Rotation
-                }
-                4 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.f32()?; // 32.0
-                    d.f32()?; // 32.0
-                    d.f32()?; // 32.0
-                    d.u32()?; // 0
-
-                    LayerKind::Scale
-                }
-                5 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.u32()?; // 2
-                    d.u32()?; // 0
-                    d.u32()?; // 0
-
-                    LayerKind::Mirror
-                }
-                8 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.u32()?; // 1
-
-                    LayerKind::Subdivide
-                }
-                9 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 1
-                    d.u32()?;
-                    d.u32()?;
-                    d.u32()?;
-
-                    LayerKind::Chaos
-                }
-                12 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.u32()?;
-                    d.f32()?;
-                    d.u32()?;
-                    d.u32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.list(|d| {
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-                        d.f32()?;
-
-                        Ok(())
-                    })?;
-
-                    LayerKind::Deformation
-                }
                 13 => {
                     if !matches!(version, 7 | 8) {
                         return Err("".into());
@@ -325,57 +185,8 @@ impl Crystal {
 
                     LayerKind::Trigger(mesh)
                 }
-                15 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
 
-                        Ok(())
-                    })?;
-                    d.u32()?; // 1
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-                    d.f32()?;
-
-                    LayerKind::Spawnposition
-                }
-                18 => {
-                    d.list(|d| {
-                        d.u32()?;
-                        d.id_or_null()?;
-
-                        Ok(())
-                    })?;
-                    d.u32()?; // 0
-                    d.list(|d| {
-                        d.internal_node_ref::<LightUserModel>()?;
-
-                        Ok(())
-                    })?;
-                    d.list(|d| {
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-                        d.u32()?;
-
-                        Ok(())
-                    })?;
-
-                    LayerKind::Lights
-                }
-                _ => return Err("".into()),
+                _ => read_mask_layer(d, kind)?,
             };
 
             Ok(Layer {
@@ -444,6 +255,194 @@ impl TreeGenerator {
 
         Ok(())
     }
+}
+
+fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
+    d: &mut Deserializer<R, I, N>,
+    kind: u32,
+) -> Result<LayerKind> {
+    d.list(|d| {
+        d.u32()?;
+        d.id_or_null()?;
+
+        Ok(())
+    })?;
+    let version = d.u32()?;
+
+    let layer = match kind {
+        1 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            let _intensity = d.u32()?;
+
+            LayerKind::Smooth
+        }
+        2 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            d.u32()?; // 0
+            d.u32()?; // 0
+            d.f32()?;
+
+            LayerKind::Translation
+        }
+        3 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            let _rotation = d.f32()?;
+            let _axis = d.u32()?;
+            let _independent = d.u32()?;
+
+            LayerKind::Rotation
+        }
+        4 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            let scale_x = d.f32()?;
+            let scale_y = d.f32()?;
+            let scale_z = d.f32()?;
+            let _independent = d.u32()?;
+
+            LayerKind::Scale {
+                scale: Vec3 {
+                    x: scale_x,
+                    y: scale_y,
+                    z: scale_z,
+                },
+            }
+        }
+        5 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            let _axis = d.u32()?;
+            let _distance = d.f32()?;
+            let _independent = d.u32()?;
+
+            LayerKind::Mirror
+        }
+        8 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            let _num_subdivisions = d.u32()?;
+
+            LayerKind::Subdivide
+        }
+        9 => {
+            if version != 1 {
+                return Err("".into());
+            }
+
+            let _min_distance = d.f32()?;
+            d.f32()?;
+            let _max_distance = d.f32()?;
+
+            LayerKind::Chaos
+        }
+        12 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.u32()?;
+            d.u32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.u32()?;
+            d.f32()?;
+            d.u32()?;
+            d.u32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.list(|d| {
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+                d.f32()?;
+
+                Ok(())
+            })?;
+
+            LayerKind::Deformation
+        }
+
+        15 => {
+            if version != 1 {
+                return Err("".into());
+            }
+
+            let x = d.f32()?;
+            let y = d.f32()?;
+            let z = d.f32()?;
+            let _yaw = d.f32()?;
+            let _pitch = d.f32()?;
+            let _roll = d.f32()?;
+
+            LayerKind::SpawnPosition {
+                position: Vec3 { x, y, z },
+            }
+        }
+        18 => {
+            if version != 0 {
+                return Err("".into());
+            }
+
+            d.list(|d| {
+                d.internal_node_ref::<LightUserModel>()?;
+
+                Ok(())
+            })?;
+            d.list(|d| {
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+                d.u32()?;
+
+                Ok(())
+            })?;
+
+            LayerKind::Lights
+        }
+        _ => return Err("".into()),
+    };
+
+    Ok(layer)
 }
 
 fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_materials: u32) -> Result<Mesh> {
