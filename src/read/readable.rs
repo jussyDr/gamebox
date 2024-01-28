@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use serde_jsonrc::{Map, Value};
+use serde_json::{Map, Value};
 
 use crate::{
     common::{Class, END_OF_NODE_MARKER, HEAVY_CHUNK_MARKER_BIT, SKIPPABLE_CHUNK_MARKER},
@@ -212,7 +212,7 @@ pub trait ReadJson {
 }
 
 pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
-    let mut value: Value = serde_jsonrc::from_reader(reader).map_err(|_| "failed to parse JSON")?;
+    let mut value: Value = serde_json::from_reader(reader).map_err(|_| "failed to parse JSON")?;
     let object = value.as_object_mut().ok_or("expected an object")?;
     let class_name = object.get("ClassId").ok_or("expected key")?;
 

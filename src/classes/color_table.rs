@@ -2,7 +2,7 @@
 
 use std::io::Read;
 
-use serde_jsonrc::{Map, Value};
+use serde_json::{Map, Value};
 
 use crate::{
     read::{
