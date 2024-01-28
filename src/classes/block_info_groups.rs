@@ -1,14 +1,16 @@
 use std::io::Read;
 
-use serde_json_lenient::{Map, Value};
+use serde::Deserialize;
 
 use crate::read::{
-    json::{read_json, ReadJson},
+    json::{read_json, ClassName},
     readable::Sealed,
-    BodyOptions, Error, HeaderOptions, Readable, Result,
+    BodyOptions, HeaderOptions, Readable, Result,
 };
 
+#[derive(Deserialize)]
 pub struct BlockInfoGroups {
+    #[serde(rename = "Groups")]
     groups: Vec<BlockInfoGroup>,
 }
 
@@ -24,51 +26,14 @@ impl Sealed for BlockInfoGroups {
     }
 }
 
-impl ReadJson for BlockInfoGroups {
+impl ClassName for BlockInfoGroups {
     const CLASS_NAME: &'static str = "CGameBlockInfoGroups";
-
-    fn read(json: Map<String, Value>) -> Result<Self> {
-        let groups = json
-            .get("Groups")
-            .ok_or("m")?
-            .as_array()
-            .ok_or("f")?
-            .iter()
-            .map(|value| {
-                let group_id = value
-                    .get("GroupId")
-                    .ok_or("    q")?
-                    .as_str()
-                    .ok_or("d")?
-                    .to_owned();
-
-                let block_ids = if let Some(value) = value.get("BlockIds") {
-                    value
-                        .as_array()
-                        .ok_or("a")?
-                        .iter()
-                        .map(|value| {
-                            let block_id = value.as_str().ok_or("c")?.to_owned();
-
-                            Ok::<String, Error>(block_id)
-                        })
-                        .collect::<Result<Vec<_>>>()?
-                } else {
-                    vec![]
-                };
-
-                Ok::<BlockInfoGroup, Error>(BlockInfoGroup {
-                    id: group_id,
-                    block_ids,
-                })
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        Ok(BlockInfoGroups { groups })
-    }
 }
 
+#[derive(Deserialize)]
 pub struct BlockInfoGroup {
+    #[serde(rename = "GroupId")]
     id: String,
+    #[serde(rename = "BlockIds", default)]
     block_ids: Vec<String>,
 }

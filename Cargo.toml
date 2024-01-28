@@ -14,5 +14,5 @@ debug = true
 [dependencies]
 lzo1x = "0.1.0"
 quick-xml = "0.31.0"
-serde = "1.0.196"
+serde = { version = "1.0.196", features = ["derive"] }
 serde_json_lenient = "0.1.8"

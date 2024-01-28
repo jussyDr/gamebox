@@ -5,15 +5,11 @@ use serde_json_lenient::{Map, Value};
 
 use super::Result;
 
-pub trait ReadJson {
+pub trait ClassName {
     const CLASS_NAME: &'static str;
-
-    fn read(json: Map<String, Value>) -> Result<Self>
-    where
-        Self: Sized;
 }
 
-pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
+pub fn read_json<'de, T: ClassName + Deserialize<'de>>(reader: impl Read) -> Result<T> {
     let mut de = serde_json_lenient::Deserializer::from_reader(reader);
     de.set_allow_comments(false);
 
@@ -27,5 +23,7 @@ pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
         return Err("".into());
     }
 
-    T::read(object)
+    let node: T = Deserialize::deserialize(Value::Object(object))?;
+
+    Ok(node)
 }

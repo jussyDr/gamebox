@@ -1,14 +1,15 @@
 use std::io::Read;
 
-use serde_json_lenient::{Map, Value};
+use serde::Deserialize;
 
 use crate::read::{
-    json::{read_json, ReadJson},
+    json::{read_json, ClassName},
     readable::Sealed,
     BodyOptions, HeaderOptions, Readable, Result,
 };
 
-pub struct ItemModelTreeRoot;
+#[derive(Deserialize)]
+pub struct ItemModelTreeRoot {}
 
 impl Readable for ItemModelTreeRoot {}
 
@@ -22,10 +23,6 @@ impl Sealed for ItemModelTreeRoot {
     }
 }
 
-impl ReadJson for ItemModelTreeRoot {
+impl ClassName for ItemModelTreeRoot {
     const CLASS_NAME: &'static str = "CGameItemModelTreeRoot";
-
-    fn read(json: Map<String, Value>) -> Result<Self> {
-        Ok(ItemModelTreeRoot)
-    }
 }
