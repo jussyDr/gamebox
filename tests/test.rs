@@ -9,9 +9,10 @@ use std::{
 
 use gamebox::{
     classes::{
-        block_info_groups::BlockInfoGroups, block_info_tree_root::BlockInfoTreeRoot,
-        color_table::ColorTable, item_model_tree_root::ItemModelTreeRoot, material::Material,
-        prefab::Prefab, texture::Texture, veget_tree_model::VegetTreeModel,
+        block_info_classic::BlockInfoClassic, block_info_groups::BlockInfoGroups,
+        block_info_tree_root::BlockInfoTreeRoot, color_table::ColorTable,
+        item_model_tree_root::ItemModelTreeRoot, material::Material, prefab::Prefab,
+        texture::Texture, veget_tree_model::VegetTreeModel,
     },
     read::{HeaderOptions, Readable},
     write::Writable,
@@ -24,6 +25,7 @@ fn main() {
 
     let mut tests = vec![];
 
+    add_read_extracted_file_tests::<BlockInfoClassic>(&mut tests, "tests/files/block_info_classic");
     add_read_file_tests::<BlockInfoGroups>(&mut tests, "tests/files/block_info_groups");
     add_read_file_tests::<BlockInfoTreeRoot>(&mut tests, "tests/files/block_info_tree_root");
     add_read_file_tests::<ColorTable>(&mut tests, "tests/files/color_table");

@@ -44,6 +44,7 @@ pub mod write;
 pub mod classes {
     //! GameBox classes that can be read and (optionally) written.
 
+    pub mod block_info_classic;
     pub mod block_info_groups;
     pub mod block_info_tree_root;
     pub mod collector;
