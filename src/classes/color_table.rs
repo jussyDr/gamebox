@@ -2,11 +2,12 @@
 
 use std::io::Read;
 
-use serde_json::{Map, Value};
+use serde_json_lenient::{Map, Value};
 
 use crate::{
     read::{
-        readable::{read_json, ReadJson, Sealed},
+        json::{read_json, ReadJson},
+        readable::Sealed,
         BodyOptions, Error, HeaderOptions, Readable, Result,
     },
     Rgb,
@@ -39,7 +40,7 @@ impl Sealed for ColorTable {
 impl ReadJson for ColorTable {
     const CLASS_NAME: &'static str = "CPlugMaterialColorTargetTable";
 
-    fn read(json: &Map<String, Value>) -> Result<Self> {
+    fn read(json: Map<String, Value>) -> Result<Self> {
         let colors = json
             .get("Colors")
             .ok_or("expected `Colors`")?

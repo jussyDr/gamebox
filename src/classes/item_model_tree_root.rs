@@ -1,9 +1,10 @@
 use std::io::Read;
 
-use serde_json::{Map, Value};
+use serde_json_lenient::{Map, Value};
 
 use crate::read::{
-    readable::{read_json, ReadJson, Sealed},
+    json::{read_json, ReadJson},
+    readable::Sealed,
     BodyOptions, HeaderOptions, Readable, Result,
 };
 
@@ -24,7 +25,7 @@ impl Sealed for ItemModelTreeRoot {
 impl ReadJson for ItemModelTreeRoot {
     const CLASS_NAME: &'static str = "CGameItemModelTreeRoot";
 
-    fn read(json: &Map<String, Value>) -> Result<Self> {
+    fn read(json: Map<String, Value>) -> Result<Self> {
         Ok(ItemModelTreeRoot)
     }
 }

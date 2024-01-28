@@ -1,9 +1,10 @@
 use std::io::Read;
 
-use serde_json::{Map, Value};
+use serde_json_lenient::{Map, Value};
 
 use crate::read::{
-    readable::{read_json, ReadJson, Sealed},
+    json::{read_json, ReadJson},
+    readable::Sealed,
     BodyOptions, Error, HeaderOptions, Readable, Result,
 };
 
@@ -26,7 +27,7 @@ impl Sealed for BlockInfoGroups {
 impl ReadJson for BlockInfoGroups {
     const CLASS_NAME: &'static str = "CGameBlockInfoGroups";
 
-    fn read(json: &Map<String, Value>) -> Result<Self> {
+    fn read(json: Map<String, Value>) -> Result<Self> {
         let groups = json
             .get("Groups")
             .ok_or("m")?

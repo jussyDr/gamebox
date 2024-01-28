@@ -14,4 +14,5 @@ debug = true
 [dependencies]
 lzo1x = "0.1.0"
 quick-xml = "0.31.0"
-serde_json = { path = "json" }
+serde = "1.0.196"
+serde_json_lenient = "0.1.8"

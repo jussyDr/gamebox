@@ -3,8 +3,6 @@ use std::{
     rc::Rc,
 };
 
-use serde_json::{Map, Value};
-
 use crate::{
     common::{Class, END_OF_NODE_MARKER, HEAVY_CHUNK_MARKER_BIT, SKIPPABLE_CHUNK_MARKER},
     deserialize::{Deserializer, IdState, NodeRef, NodeState, Take},
@@ -201,26 +199,4 @@ pub trait BodyChunks<R, I, N> {
 
 pub trait ReadBody<R, I, N> {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()>;
-}
-
-pub trait ReadJson {
-    const CLASS_NAME: &'static str;
-
-    fn read(json: &Map<String, Value>) -> Result<Self>
-    where
-        Self: Sized;
-}
-
-pub fn read_json<T: ReadJson>(reader: impl Read) -> Result<T> {
-    let mut value: Value = serde_json::from_reader(reader).map_err(|_| "failed to parse JSON")?;
-    let object = value.as_object_mut().ok_or("expected an object")?;
-    let class_name = object.get("ClassId").ok_or("expected key")?;
-
-    if class_name != T::CLASS_NAME {
-        return Err("class name does not match".into());
-    }
-
-    object.remove("ClassId");
-
-    T::read(object)
 }
