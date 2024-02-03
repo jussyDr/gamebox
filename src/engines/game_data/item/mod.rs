@@ -5,9 +5,12 @@ mod write;
 
 use std::rc::Rc;
 
-use crate::common::{Class, ClassId, EngineId};
+use crate::{
+    common::{Class, ClassId, EngineId},
+    engines::plug::{crystal::Crystal, static_object_model::StaticObjectModel},
+};
 
-use super::{collector::Collector, crystal::Crystal, static_object_model::StaticObjectModel};
+use super::collector::Collector;
 
 /// Node type corresponding to GameBox files with the extension `Item.Gbx`.
 #[derive(Default)]

@@ -3,9 +3,9 @@
 use std::{any::Any, io::Read, rc::Rc};
 
 use crate::{
-    classes::ent_record_data::EntRecordData,
     common::{Class, ClassId, EngineId, Vec3},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::plug::ent_record_data::EntRecordData,
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,

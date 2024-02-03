@@ -6,6 +6,7 @@ use std::{
 use crate::{
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::game_data::collector::Collector,
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
@@ -14,8 +15,6 @@ use crate::{
         BodyOptions, HeaderOptions, Readable, Result,
     },
 };
-
-use super::collector::Collector;
 
 #[derive(Default)]
 pub struct BlockInfoClassic {

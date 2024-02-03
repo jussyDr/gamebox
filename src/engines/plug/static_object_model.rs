@@ -1,7 +1,6 @@
 use std::io::Read;
 
 use crate::{
-    classes::{light_user_model::LightUserModel, static_object_model::graphic::LightBall},
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
@@ -10,8 +9,10 @@ use crate::{
     },
 };
 
+use self::graphic::LightBall;
+
 use super::{
-    material_user_inst::MaterialUserInst, surface::Surface,
+    light_user_model::LightUserModel, material_user_inst::MaterialUserInst, surface::Surface,
     visual_indexed_triangles::VisualIndexedTriangles,
 };
 
@@ -78,7 +79,7 @@ impl Solid2Model {
     ) -> Result<()> {
         let version = d.u32()?;
 
-        if !matches!(version, 29 | 30 | 31 | 32 | 34) {
+        if !matches!(version, 29..=34) {
             return Err("".into());
         }
 

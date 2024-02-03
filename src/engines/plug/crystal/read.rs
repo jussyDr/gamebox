@@ -1,12 +1,12 @@
 use std::io::Read;
 
 use crate::{
-    classes::{
-        light_user_model::LightUserModel, material_user_inst::MaterialUserInst,
-        traits_metadata::TraitsMetadata,
-    },
     common::Vec2,
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::{
+        plug::{light_user_model::LightUserModel, material_user_inst::MaterialUserInst},
+        script::traits_metadata::TraitsMetadata,
+    },
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,

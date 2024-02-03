@@ -3,12 +3,12 @@
 use std::io::Read;
 
 use crate::{
-    classes::{
-        traits_metadata::TraitsMetadata, waypoint_special_property::WaypointSpecialProperty,
-        zone_genealogy::ZoneGenealogy,
-    },
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::{
+        game_data::{collector::Collector, waypoint_special_property::WaypointSpecialProperty},
+        script::traits_metadata::TraitsMetadata,
+    },
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-use super::collector::Collector;
+use super::zone_genealogy::ZoneGenealogy;
 
 /// Node type corresponding to GameBox files with the extension `Macroblock.Gbx`.
 #[derive(Default)]

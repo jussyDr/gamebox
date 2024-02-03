@@ -1,12 +1,12 @@
 use std::io::Read;
 
 use crate::{
-    classes::{
-        collector::Collector, item::ItemPlacementParam, static_object_model::StaticObjectModel,
-        surface::Surface,
-    },
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::{
+        game_data::collector::Collector,
+        plug::{static_object_model::StaticObjectModel, surface::Surface},
+    },
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
@@ -18,6 +18,7 @@ use crate::{
 
 use super::{
     BlockItem, Crystal, Item, ItemEntityModel, ItemEntityModelEdition, ItemModel, ItemPlacement,
+    ItemPlacementParam,
 };
 
 impl Readable for Item {}

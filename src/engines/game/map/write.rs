@@ -1,7 +1,6 @@
 use std::{f32::consts::FRAC_PI_4, io::Write};
 
 use crate::{
-    classes::map::MapType,
     common::END_OF_NODE_MARKER,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
@@ -10,7 +9,7 @@ use crate::{
     },
 };
 
-use super::{ChallengeParameters, CollectorList, Map};
+use super::{ChallengeParameters, CollectorList, Map, MapType};
 
 impl Writable for Map {}
 

@@ -9,10 +9,12 @@ use std::rc::Rc;
 
 use crate::{
     common::{Class, ClassId, EngineId, Vec3},
-    Ghost, RcStr,
+    RcStr,
 };
 
 use self::media::{MediaClip, MediaClipGroup};
+
+use super::ghost::Ghost;
 
 /// A map / challenge.
 ///

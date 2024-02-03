@@ -1,8 +1,8 @@
 use std::io::Write;
 
 use crate::{
-    classes::material_user_inst::MaterialUserInst,
     common::END_OF_NODE_MARKER,
+    engines::plug::material_user_inst::MaterialUserInst,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{writable::WriteBody, Result},
 };

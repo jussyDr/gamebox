@@ -8,11 +8,13 @@ use std::{
 };
 
 use gamebox::{
-    classes::{
-        block_info_classic::BlockInfoClassic, block_info_groups::BlockInfoGroups,
-        block_info_tree_root::BlockInfoTreeRoot, color_table::ColorTable,
-        item_model_tree_root::ItemModelTreeRoot, material::Material, prefab::Prefab,
-        texture::Texture, veget_tree_model::VegetTreeModel,
+    engines::{
+        game::{
+            block_info_classic::BlockInfoClassic, block_info_groups::BlockInfoGroups,
+            block_info_tree_root::BlockInfoTreeRoot, item_model_tree_root::ItemModelTreeRoot,
+        },
+        meta::veget_tree_model::VegetTreeModel,
+        plug::{color_table::ColorTable, material::Material, prefab::Prefab, texture::Texture},
     },
     read::{HeaderOptions, Readable},
     write::Writable,

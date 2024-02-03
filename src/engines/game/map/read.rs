@@ -1,12 +1,13 @@
 use std::io::{BufRead, Read, Seek};
 
 use crate::{
-    classes::{
-        ghost::Ghost, traits_metadata::TraitsMetadata,
-        waypoint_special_property::WaypointSpecialProperty, zone_genealogy::ZoneGenealogy,
-    },
     common::{Class, ClassId, EngineId, Vec3, ID_INDEX_MASK, ID_MARKER_BIT, NULL},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::{
+        game::{ghost::Ghost, zone_genealogy::ZoneGenealogy},
+        game_data::waypoint_special_property::WaypointSpecialProperty,
+        script::traits_metadata::TraitsMetadata,
+    },
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,

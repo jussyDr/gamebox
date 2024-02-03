@@ -5,14 +5,13 @@ use std::io::Read;
 use crate::{
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::plug::ent_record_data::EntRecordData,
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
     FileRef, RcStr,
 };
-
-use super::ent_record_data::EntRecordData;
 
 /// Node type corresponding to GameBox files with the extension `Ghost.Gbx`.
 #[derive(Default)]

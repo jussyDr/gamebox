@@ -37,43 +37,17 @@
 //! ```
 
 pub mod deserialize;
+pub mod engines;
 pub mod read;
 pub mod serialize;
 pub mod write;
 
-pub mod classes {
-    //! GameBox classes that can be read and (optionally) written.
-
-    pub mod block_info_classic;
-    pub mod block_info_groups;
-    pub mod block_info_tree_root;
-    pub mod collector;
-    pub mod color_table;
-    pub mod crystal;
-    pub mod ghost;
-    pub mod item;
-    pub mod item_model_tree_root;
-    pub mod macroblock;
-    pub mod map;
-    pub mod material;
-    pub mod prefab;
-    pub mod texture;
-    pub mod veget_tree_model;
-
-    mod ent_record_data;
-    mod light_user_model;
-    mod material_user_inst;
-    mod static_object_model;
-    mod surface;
-    mod traits_metadata;
-    mod visual_indexed_triangles;
-    mod waypoint_special_property;
-    mod zone_genealogy;
-}
-
 mod common;
 
-pub use classes::{ghost::Ghost, item::Item, macroblock::Macroblock, map::Map};
 pub use common::{ExternalFileRef, FileRef, InternalFileRef, RcPath, RcStr, Rgb, Vec2, Vec3};
+pub use engines::{
+    game::{ghost::Ghost, macroblock::Macroblock, map::Map},
+    game_data::item::Item,
+};
 pub use read::{read, read_file, Reader};
 pub use write::{write, write_file, Writer};

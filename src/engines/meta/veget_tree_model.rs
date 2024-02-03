@@ -5,13 +5,12 @@ use std::io::Read;
 use crate::{
     common::{Class, ClassId, EngineId},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    engines::plug::visual_indexed_triangles::VisualIndexedTriangles,
     read::{
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
 };
-
-use super::visual_indexed_triangles::VisualIndexedTriangles;
 
 /// Node type corresponding to GameBox files with the extension `VegetTreeModel.Gbx`.
 #[derive(Default)]

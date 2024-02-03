@@ -1,17 +1,16 @@
 use std::io::Write;
 
 use crate::{
-    classes::{collector::Collector, item::ItemPlacementParam},
     common::END_OF_NODE_MARKER,
+    engines::game_data::collector::Collector,
     serialize::{IdStateMut, NodeStateMut, Serializer},
     write::{
         writable::{HeaderChunk, HeaderChunks, Sealed, WriteBody},
         Result, Writable,
     },
-    Item,
 };
 
-use super::{Crystal, ItemEntityModelEdition, ItemPlacement};
+use super::{Crystal, Item, ItemEntityModelEdition, ItemPlacement, ItemPlacementParam};
 
 impl Writable for Item {}
 
