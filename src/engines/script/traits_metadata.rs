@@ -18,7 +18,7 @@ impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
         d.u32()?; // 6
         let num_types = d.u8()?;
         let types = d.repeat(num_types as usize, |d| {
-            let ty = read_type(d)?;
+            let ty = Type::read(d)?;
 
             Ok(ty)
         })?;
@@ -39,28 +39,6 @@ impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
         }
 
         Ok(())
-    }
-}
-
-fn read_type<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Type> {
-    let ty = d.u8()?;
-
-    match ty {
-        0 => Ok(Type::Void),
-        1 => Ok(Type::Boolean),
-        2 => Ok(Type::Integer),
-        3 => Ok(Type::Real),
-        5 => Ok(Type::Text),
-        7 => {
-            let key_type = read_type(d)?;
-            let element_type = read_type(d)?;
-
-            Ok(Type::Array {
-                key_type: Box::new(key_type),
-                element_type: Box::new(element_type),
-            })
-        }
-        _ => Err("unknown script type".into()),
     }
 }
 
@@ -107,4 +85,28 @@ enum Type {
         key_type: Box<Type>,
         element_type: Box<Type>,
     },
+}
+
+impl Type {
+    fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
+        let ty = d.u8()?;
+
+        match ty {
+            0 => Ok(Type::Void),
+            1 => Ok(Type::Boolean),
+            2 => Ok(Type::Integer),
+            3 => Ok(Type::Real),
+            5 => Ok(Type::Text),
+            7 => {
+                let key_type = Self::read(d)?;
+                let element_type = Self::read(d)?;
+
+                Ok(Type::Array {
+                    key_type: Box::new(key_type),
+                    element_type: Box::new(element_type),
+                })
+            }
+            _ => Err("unknown type".into()),
+        }
+    }
 }
