@@ -44,11 +44,8 @@ pub enum Icon {
         /// Icon data as `width * height` 8-bit ARGB values.
         data: Vec<u8>,
     },
-    /// Icon is stored as raw WebP format.
-    WebP {
-        /// Raw WebP bytes.
-        data: Vec<u8>,
-    },
+    /// Icon is stored as raw WebP data.
+    WebP(Vec<u8>),
 }
 
 impl Default for Icon {

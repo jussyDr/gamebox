@@ -38,7 +38,7 @@ impl Collector {
             let size = d.u32()?;
             let data = d.bytes(size as usize)?;
 
-            self.icon = Icon::WebP { data };
+            self.icon = Icon::WebP(data);
         } else {
             let icon_data = d.bytes(icon_width as usize * icon_height as usize * 4)?;
 

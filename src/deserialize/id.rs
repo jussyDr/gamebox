@@ -63,14 +63,14 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
     pub fn null_id(&mut self) -> Result<()> {
         match self.id_or_null()? {
             None => Ok(()),
-            Some(_) => Err("expected NULL identifier".into()),
+            Some(_) => Err("expected null identifier".into()),
         }
     }
 
     /// Read an identifier that is not null.
     pub fn id(&mut self) -> Result<Rc<str>> {
         match self.id_or_null()? {
-            None => Err("id is null".into()),
+            None => Err("identifier is null".into()),
             Some(id) => Ok(id),
         }
     }
@@ -109,12 +109,12 @@ impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
                     .borrow()
                     .ids
                     .get(index as usize - 1)
-                    .ok_or("no id with given index")?;
+                    .ok_or("no identifier with given index")?;
 
                 Ok(Some(Rc::clone(id)))
             }
         } else {
-            Err("expected id".into())
+            Err("expected identifier".into())
         }
     }
 }
