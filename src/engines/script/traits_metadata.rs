@@ -7,7 +7,9 @@ use crate::{
 };
 
 #[derive(Default)]
-pub struct TraitsMetadata;
+pub struct TraitsMetadata {
+    traits: Vec<(String, Value)>,
+}
 
 impl Class for TraitsMetadata {
     const CLASS_ID: ClassId = ClassId::new(EngineId::SCRIPT, 2);
@@ -23,15 +25,15 @@ impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
             Ok(ty)
         })?;
         let n = d.u8()?;
-        d.repeat(n as usize, |d| {
+        self.traits = d.repeat(n as usize, |d| {
             let size = d.u8()?;
-            d.bytes(size as usize)?;
+            let name = d.string_of_len(size as usize)?;
             let type_index = d.u8()?;
             let ty = types.get(type_index as usize).ok_or("")?;
 
-            read_value(d, ty)?;
+            let value = read_value(d, ty)?;
 
-            Ok(())
+            Ok((name, value))
         })?;
 
         if d.u32()? != 0xfacade01 {
@@ -42,37 +44,32 @@ impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
     }
 }
 
-fn read_value<R: Read, I, N>(d: &mut Deserializer<R, I, N>, ty: &Type) -> Result<()> {
-    match ty {
-        Type::Void => {}
-        Type::Boolean => {
-            d.bool8()?;
-        }
-        Type::Integer => {
-            d.i32()?;
-        }
-        Type::Real => {
-            d.f32()?;
-        }
+fn read_value<R: Read, I, N>(d: &mut Deserializer<R, I, N>, ty: &Type) -> Result<Value> {
+    let value = match ty {
+        Type::Void => Value::Void,
+        Type::Boolean => Value::Boolean(d.bool8()?),
+        Type::Integer => Value::Integer(d.i32()?),
+        Type::Real => Value::Real(d.f32()?),
         Type::Text => {
             let len = d.u8()?;
-            d.bytes(len as usize)?;
+            Value::Text(d.string_of_len(len as usize)?)
         }
         Type::Array {
             key_type,
             element_type,
         } => {
             let len = d.u8()?;
-            d.repeat(len as usize, |d| {
-                read_value(d, key_type)?;
-                read_value(d, element_type)?;
+            let array = d.repeat(len as usize, |d| {
+                let key = read_value(d, key_type)?;
+                let value = read_value(d, element_type)?;
 
-                Ok(())
+                Ok((key, value))
             })?;
+            Value::Array(array)
         }
-    }
+    };
 
-    Ok(())
+    Ok(value)
 }
 
 enum Type {
@@ -109,4 +106,19 @@ impl Type {
             _ => Err("unknown type".into()),
         }
     }
+}
+
+pub enum Value {
+    /// Void value.
+    Void,
+    /// Boolean value.
+    Boolean(bool),
+    /// Integer value.
+    Integer(i32),
+    /// Real value.
+    Real(f32),
+    /// Text value.
+    Text(String),
+    /// Array value.
+    Array(Vec<(Value, Value)>),
 }

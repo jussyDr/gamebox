@@ -157,7 +157,12 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     /// Read a string.
     pub fn string(&mut self) -> Result<String> {
         let len = self.u32()?;
-        let bytes = self.bytes(len as usize)?;
+        self.string_of_len(len as usize)
+    }
+
+    /// Read a string of the given `len`.
+    pub fn string_of_len(&mut self, len: usize) -> Result<String> {
+        let bytes = self.bytes(len)?;
         let string = String::from_utf8(bytes)?;
 
         Ok(string)
