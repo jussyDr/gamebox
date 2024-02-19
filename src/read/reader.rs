@@ -13,11 +13,6 @@ pub struct Reader {
     skip_body: BodyOptions,
 }
 
-// read header
-// read header, skip heavy,
-// dont read header, ignore size
-// dont read header
-
 impl Reader {
     /// Create a new GameBox node reader.
     ///
