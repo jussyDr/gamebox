@@ -621,7 +621,11 @@ impl Map {
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
-                let coord = Vec3 { x, y, z };
+                let coord = Vec3 {
+                    x: x - 1,
+                    y,
+                    z: z - 1,
+                };
 
                 let is_ground = flags & 0x00001000 != 0;
 
