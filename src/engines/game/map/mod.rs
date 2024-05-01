@@ -275,6 +275,8 @@ impl FreeBlock {
 #[derive(Default)]
 pub struct Item {
     id: RcStr,
+    rotation: Rotation,
+    position: Vec3<f32>,
     elem_color: ElemColor,
     animation_offset: PhaseOffset,
 }
@@ -283,6 +285,14 @@ impl Item {
     /// Identifier of the item.
     pub fn id(&self) -> &str {
         &self.id
+    }
+
+    pub fn rotation(&self) -> &Rotation {
+        &self.rotation
+    }
+
+    pub fn position(&self) -> &Vec3<f32> {
+        &self.position
     }
 
     /// Element color of the item.

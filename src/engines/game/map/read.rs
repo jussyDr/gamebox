@@ -1459,15 +1459,19 @@ impl AnchoredObject {
         self.id = d.id()?.into(); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
         d.u32()?; // 26
         d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
+        self.rotation = Rotation {
+            yaw: d.f32()?,
+            pitch: d.f32()?,
+            roll: d.f32()?,
+        };
         d.u16()?; // 0
         d.u8()?; // 0
         d.u32()?; // 0xffffffff
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
+        self.position = Vec3 {
+            x: d.f32()?,
+            y: d.f32()?,
+            z: d.f32()?,
+        };
         d.node_or_null::<WaypointSpecialProperty>()?;
         let flags = d.u16()?; // 1
         d.u32()?;
