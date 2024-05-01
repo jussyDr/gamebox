@@ -188,7 +188,7 @@ impl Default for MapType {
 pub struct Block {
     id: Rc<str>,
     kind: BlockKind,
-    color: Color,
+    elem_color: ElemColor,
     lightmap_quality: LightmapQuality,
 }
 
@@ -204,8 +204,8 @@ impl Block {
     }
 
     /// Element color of the block.
-    pub const fn color(&self) -> Color {
-        self.color
+    pub const fn elem_color(&self) -> ElemColor {
+        self.elem_color
     }
 
     /// Lightmap quality of the block.
@@ -226,6 +226,7 @@ pub enum BlockKind {
 pub struct NormalBlock {
     direction: Direction,
     coord: Vec3<u8>,
+    is_ground: bool,
     is_ghost: bool,
 }
 
@@ -240,8 +241,13 @@ impl NormalBlock {
         self.coord
     }
 
+    /// Returns `true` if this block is a ground block.
+    pub const fn is_ground(&self) -> bool {
+        self.is_ground
+    }
+
     /// Returns `true` if this block is a ghost block.
-    pub const fn is_ghost_block(&self) -> bool {
+    pub const fn is_ghost(&self) -> bool {
         self.is_ghost
     }
 }
@@ -269,7 +275,7 @@ impl FreeBlock {
 #[derive(Default)]
 pub struct Item {
     id: RcStr,
-    color: Color,
+    elem_color: ElemColor,
     animation_offset: PhaseOffset,
 }
 
@@ -280,8 +286,8 @@ impl Item {
     }
 
     /// Element color of the item.
-    pub const fn color(&self) -> Color {
-        self.color
+    pub const fn elem_color(&self) -> ElemColor {
+        self.elem_color
     }
 
     /// Animation phase offset of the item.
@@ -340,7 +346,7 @@ impl Rotation {
 
 /// Element color of a block or item.
 #[derive(Clone, Copy, Default)]
-pub enum Color {
+pub enum ElemColor {
     /// Default.
     #[default]
     Default,

@@ -20,7 +20,7 @@ use crate::{
 
 use super::{
     media::{MediaClip, MediaClipGroup},
-    Block, BlockKind, ChallengeParameters, CollectorList, Color, Direction, EmbeddedObjects,
+    Block, BlockKind, ChallengeParameters, CollectorList, Direction, ElemColor, EmbeddedObjects,
     FreeBlock, Item, LightmapQuality, Map, MapType, NormalBlock, PhaseOffset, Rotation, Validation,
 };
 
@@ -615,13 +615,15 @@ impl Map {
                 self.blocks.push(Block {
                     id,
                     kind: BlockKind::Free(FreeBlock::default()),
-                    color: Color::default(),
+                    elem_color: ElemColor::default(),
                     lightmap_quality: LightmapQuality::default(),
                 });
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
                 let coord = Vec3 { x, y, z };
+
+                let is_ground = flags & 0x00001000 != 0;
 
                 let is_ghost = flags & 0x10000000 != 0;
 
@@ -630,9 +632,10 @@ impl Map {
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
                         coord,
+                        is_ground,
                         is_ghost,
                     }),
-                    color: Color::default(),
+                    elem_color: ElemColor::default(),
                     lightmap_quality: LightmapQuality::default(),
                 });
             }
@@ -860,13 +863,15 @@ impl Map {
                 Ok(Block {
                     id,
                     kind: BlockKind::Free(FreeBlock::default()),
-                    color: Color::default(),
+                    elem_color: ElemColor::default(),
                     lightmap_quality: LightmapQuality::default(),
                 })
             } else {
                 let direction = Direction::try_from_u8(direction)?;
 
                 let coord = Vec3 { x, y, z };
+
+                let is_ground = flags & 0x00001000 != 0;
 
                 let is_ghost = flags & 0x10000000 != 0;
 
@@ -875,9 +880,10 @@ impl Map {
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
                         coord,
+                        is_ground,
                         is_ghost,
                     }),
-                    color: Color::default(),
+                    elem_color: ElemColor::default(),
                     lightmap_quality: LightmapQuality::default(),
                 })
             }
@@ -1126,10 +1132,10 @@ impl Map {
     fn read_chunk_03043062<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
         for block in self.blocks.iter_mut().chain(self.baked_blocks.iter_mut()) {
-            block.color = Color::read(d)?;
+            block.elem_color = ElemColor::read(d)?;
         }
         for item in &mut self.items {
-            item.color = Color::read(d)?;
+            item.elem_color = ElemColor::read(d)?;
         }
 
         Ok(())
@@ -1511,19 +1517,19 @@ impl Direction {
     }
 }
 
-impl Color {
+impl ElemColor {
     fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
-        let color = match d.u8()? {
+        let elem_color = match d.u8()? {
             0 => Self::Default,
             1 => Self::White,
             2 => Self::Green,
             3 => Self::Blue,
             4 => Self::Red,
             5 => Self::Black,
-            _ => return Err("expected color".into()),
+            _ => return Err("expected element color".into()),
         };
 
-        Ok(color)
+        Ok(elem_color)
     }
 }
 
