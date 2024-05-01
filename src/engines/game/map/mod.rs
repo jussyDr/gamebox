@@ -287,11 +287,11 @@ impl Item {
         &self.id
     }
 
-    pub fn rotation(&self) -> &Rotation {
+    pub const fn rotation(&self) -> &Rotation {
         &self.rotation
     }
 
-    pub fn position(&self) -> &Vec3<f32> {
+    pub const fn position(&self) -> &Vec3<f32> {
         &self.position
     }
 
@@ -349,7 +349,7 @@ pub struct Rotation {
 
 impl Rotation {
     /// Convert to an array.
-    pub fn into_array(self) -> [f32; 3] {
+    pub const fn as_array(&self) -> [f32; 3] {
         [self.yaw, self.pitch, self.roll]
     }
 }

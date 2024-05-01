@@ -39,16 +39,8 @@ pub struct Vec3<T> {
 }
 
 impl<T: Copy> Vec3<T> {
-    // Convert to an array with of form `[x, y, z]`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # |vec3: gamebox::Vec3<f32>| {
-    /// let [x, y, z] = vec3.into_array();
-    /// # };
-    /// ```
-    pub const fn into_array(self) -> [T; 3] {
+    /// Convert to an array.
+    pub const fn as_array(&self) -> [T; 3] {
         [self.x, self.y, self.z]
     }
 }
