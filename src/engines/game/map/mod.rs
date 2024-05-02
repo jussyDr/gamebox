@@ -307,7 +307,8 @@ impl Item {
 }
 
 /// Cardinal direction.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Direction {
     /// North.
     North,
@@ -355,7 +356,8 @@ impl Rotation {
 }
 
 /// Element color of a block or item.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Default, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ElemColor {
     /// Default.
     #[default]
@@ -373,7 +375,8 @@ pub enum ElemColor {
 }
 
 /// Phase offset of an animated item.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Default, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PhaseOffset {
     /// None.
     #[default]

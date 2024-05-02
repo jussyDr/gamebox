@@ -11,8 +11,11 @@ harness = false
 [profile.bench]
 debug = true
 
+[features]
+serde = []
+
 [dependencies]
 lzo1x = "0.1.0"
 quick-xml = "0.31.0"
-serde = { version = "1.0.196", features = ["derive"] }
-serde_json_lenient = "0.1.8"
+serde = { version = "1.0.200", features = ["derive"] }
+serde_json_lenient = "0.2.1"
