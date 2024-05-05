@@ -31,7 +31,7 @@ impl<T: Copy> Vec2<T> {
 }
 
 /// A 3-dimensional vector of type `T`.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vec3<T> {
     pub(crate) x: T,
@@ -45,6 +45,8 @@ impl<T: Copy> Vec3<T> {
         [self.x, self.y, self.z]
     }
 }
+
+impl Copy for Vec3<u8> {}
 
 /// Color representation using red, green, and blue components.
 ///
