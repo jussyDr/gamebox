@@ -34,16 +34,9 @@ impl<T: Copy> Vec2<T> {
 #[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vec3<T> {
-    pub(crate) x: T,
-    pub(crate) y: T,
-    pub(crate) z: T,
-}
-
-impl<T: Copy> Vec3<T> {
-    /// Convert to an array.
-    pub const fn as_array(&self) -> [T; 3] {
-        [self.x, self.y, self.z]
-    }
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
 impl Copy for Vec3<u8> {}
