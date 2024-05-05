@@ -1478,9 +1478,11 @@ impl AnchoredObject {
         };
         d.node_or_null::<WaypointSpecialProperty>()?;
         let flags = d.u16()?; // 1
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
+        self.pivot_position = Vec3 {
+            x: d.f32()?,
+            y: d.f32()?,
+            z: d.f32()?,
+        };
         d.u32()?;
         if flags & 0x0004 != 0 {
             FileRef::read(d)?;

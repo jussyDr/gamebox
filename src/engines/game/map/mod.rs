@@ -277,6 +277,7 @@ pub struct Item {
     id: RcStr,
     rotation: Rotation,
     position: Vec3<f32>,
+    pivot_position: Vec3<f32>,
     elem_color: ElemColor,
     animation_offset: PhaseOffset,
 }
@@ -293,6 +294,10 @@ impl Item {
 
     pub const fn position(&self) -> &Vec3<f32> {
         &self.position
+    }
+
+    pub const fn pivot_position(&self) -> &Vec3<f32> {
+        &self.pivot_position
     }
 
     /// Element color of the item.
