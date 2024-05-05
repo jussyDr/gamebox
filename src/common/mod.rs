@@ -32,6 +32,7 @@ impl<T: Copy> Vec2<T> {
 
 /// A 3-dimensional vector of type `T`.
 #[derive(Clone, Copy, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vec3<T> {
     pub(crate) x: T,
     pub(crate) y: T,
