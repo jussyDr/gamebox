@@ -21,7 +21,8 @@ use crate::{
 use super::{
     media::{MediaClip, MediaClipGroup},
     Block, BlockKind, ChallengeParameters, CollectorList, Direction, ElemColor, EmbeddedObjects,
-    FreeBlock, Item, LightmapQuality, Map, MapType, NormalBlock, PhaseOffset, Rotation, Validation,
+    FreeBlock, Item, LightmapQuality, Map, MapType, NormalBlock, PhaseOffset, Validation,
+    YawPitchRoll,
 };
 
 impl Readable for Map {}
@@ -1102,7 +1103,7 @@ impl Map {
                 let pitch = d.f32()?;
                 let roll = d.f32()?;
 
-                free_block.rotation = Rotation { yaw, pitch, roll };
+                free_block.rotation = YawPitchRoll { yaw, pitch, roll };
             }
         }
 
@@ -1463,7 +1464,7 @@ impl AnchoredObject {
         self.id = d.id()?.into(); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
         d.u32()?; // 26
         d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
-        self.rotation = Rotation {
+        self.rotation = YawPitchRoll {
             yaw: d.f32()?,
             pitch: d.f32()?,
             roll: d.f32()?,

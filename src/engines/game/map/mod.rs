@@ -256,7 +256,7 @@ impl NormalBlock {
 #[derive(Default)]
 pub struct FreeBlock {
     position: Vec3<f32>,
-    rotation: Rotation,
+    rotation: YawPitchRoll,
 }
 
 impl FreeBlock {
@@ -266,7 +266,7 @@ impl FreeBlock {
     }
 
     /// Rotation of the free block.
-    pub const fn rotation(&self) -> &Rotation {
+    pub const fn rotation(&self) -> &YawPitchRoll {
         &self.rotation
     }
 }
@@ -275,7 +275,7 @@ impl FreeBlock {
 #[derive(Default)]
 pub struct Item {
     id: RcStr,
-    rotation: Rotation,
+    rotation: YawPitchRoll,
     position: Vec3<f32>,
     pivot_position: Vec3<f32>,
     elem_color: ElemColor,
@@ -288,7 +288,7 @@ impl Item {
         &self.id
     }
 
-    pub const fn rotation(&self) -> &Rotation {
+    pub const fn rotation(&self) -> &YawPitchRoll {
         &self.rotation
     }
 
@@ -345,19 +345,12 @@ impl EmbeddedObjects {
     }
 }
 
-/// Rotation.
 #[derive(Default)]
-pub struct Rotation {
-    yaw: f32,
-    pitch: f32,
-    roll: f32,
-}
-
-impl Rotation {
-    /// Convert to an array.
-    pub const fn as_array(&self) -> [f32; 3] {
-        [self.yaw, self.pitch, self.roll]
-    }
+#[repr(C)]
+pub struct YawPitchRoll {
+    pub yaw: f32,
+    pub pitch: f32,
+    pub roll: f32,
 }
 
 /// Element color of a block or item.
