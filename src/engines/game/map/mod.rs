@@ -346,7 +346,6 @@ impl EmbeddedObjects {
 }
 
 #[derive(Default)]
-#[repr(C)]
 pub struct YawPitchRoll {
     pub yaw: f32,
     pub pitch: f32,
