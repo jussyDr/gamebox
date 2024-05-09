@@ -187,6 +187,7 @@ impl Default for MapType {
 /// Block placed inside of a map.
 pub struct Block {
     id: Rc<str>,
+    variant_index: u8,
     kind: BlockKind,
     elem_color: ElemColor,
     lightmap_quality: LightmapQuality,
@@ -196,6 +197,10 @@ impl Block {
     /// Identifier of the block.
     pub fn id(&self) -> &str {
         &self.id
+    }
+
+    pub fn variant_index(&self) -> u8 {
+        self.variant_index
     }
 
     /// Kind of block.

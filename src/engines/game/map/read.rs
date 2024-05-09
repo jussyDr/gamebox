@@ -437,7 +437,9 @@ impl Map {
                         },
                         _ => return Err("".into()),
                     };
-                    self.params.style = attributes.get_str(b"mapstyle")?.to_owned();
+                    attributes
+                        .get_str(b"mapstyle")?
+                        .clone_into(&mut self.params.style);
                     attributes.get(b"validated")?;
                     attributes.get(b"nblaps")?;
                     self.cost = attributes.get_u32(b"displaycost")?;
@@ -610,11 +612,14 @@ impl Map {
                 d.internal_node_ref::<WaypointSpecialProperty>()?;
             }
 
+            let variant_index = if flags & 0x00200000 != 0 { 1 } else { 0 };
+
             let is_free = flags & 0x20000000 != 0;
 
             if is_free {
                 self.blocks.push(Block {
                     id,
+                    variant_index,
                     kind: BlockKind::Free(FreeBlock::default()),
                     elem_color: ElemColor::default(),
                     lightmap_quality: LightmapQuality::default(),
@@ -634,6 +639,7 @@ impl Map {
 
                 self.blocks.push(Block {
                     id,
+                    variant_index,
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
                         coord,
@@ -645,6 +651,8 @@ impl Map {
                 });
             }
         }
+
+        panic!();
 
         Ok(())
     }
@@ -862,11 +870,14 @@ impl Map {
             let z = d.u8()?;
             let flags = d.u32()?;
 
+            let variant_index = if flags & 0x00200000 != 0 { 1 } else { 0 };
+
             let is_free = flags & 0x20000000 != 0;
 
             if is_free {
                 Ok(Block {
                     id,
+                    variant_index,
                     kind: BlockKind::Free(FreeBlock::default()),
                     elem_color: ElemColor::default(),
                     lightmap_quality: LightmapQuality::default(),
@@ -882,6 +893,7 @@ impl Map {
 
                 Ok(Block {
                     id,
+                    variant_index,
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
                         coord,
