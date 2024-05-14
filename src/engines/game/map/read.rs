@@ -652,8 +652,6 @@ impl Map {
             }
         }
 
-        panic!();
-
         Ok(())
     }
 
