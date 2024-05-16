@@ -8,6 +8,7 @@ use crate::read::{
     BodyOptions, HeaderOptions, Readable, Result,
 };
 
+/// Block info groups.
 #[derive(Deserialize)]
 pub struct BlockInfoGroups {
     #[serde(rename = "Groups")]
@@ -30,6 +31,7 @@ impl ClassName for BlockInfoGroups {
     const CLASS_NAME: &'static str = "CGameBlockInfoGroups";
 }
 
+/// A block info group.
 #[derive(Deserialize)]
 pub struct BlockInfoGroup {
     #[serde(rename = "GroupId")]

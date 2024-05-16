@@ -7,6 +7,7 @@ use crate::{
     Vec2, Vec3,
 };
 
+/// Triangles.
 #[derive(Default)]
 pub struct VisualIndexedTriangles {
     parent: VisualIndexed,
@@ -30,6 +31,7 @@ impl DerefMut for VisualIndexedTriangles {
     }
 }
 
+/// Visual geometry that is indexed.
 #[derive(Default)]
 pub struct VisualIndexed {
     parent: Visual3D,
@@ -50,6 +52,7 @@ impl DerefMut for VisualIndexed {
     }
 }
 
+/// 3D visual.
 #[derive(Default)]
 pub struct Visual3D {
     parent: Visual,
@@ -69,14 +72,19 @@ impl DerefMut for Visual3D {
     }
 }
 
+/// Visual geometry.
 #[derive(Default)]
 pub struct Visual {
+    /// Vertex data.
     pub vertex_stream: VertexStream,
 }
 
+/// Vertex data.
 #[derive(Default, Clone)]
 pub struct VertexStream {
+    /// Position data.
     pub positions: Vec<Vec3<f32>>,
+    /// Texture coordinate data.
     pub texcoords: Vec<Vec2<f32>>,
 }
 
@@ -93,8 +101,10 @@ impl Class for IndexBuffer {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 87);
 }
 
+/// Indices.
 #[derive(Clone)]
 pub enum Indices {
+    /// Indices represented as 16-bit unsigned numbers.
     U16(Vec<u16>),
 }
 

@@ -16,6 +16,7 @@ use super::{
     visual_indexed_triangles::VisualIndexedTriangles,
 };
 
+/// A static object model.
 #[derive(Default)]
 pub struct StaticObjectModel {
     solid_to_model: Solid2Model,
@@ -42,6 +43,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObject
     }
 }
 
+/// Model from a solid.
 #[derive(Default, Clone)]
 pub struct Solid2Model;
 

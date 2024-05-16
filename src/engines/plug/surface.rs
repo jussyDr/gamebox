@@ -11,6 +11,7 @@ use crate::{
 
 use super::material::Material;
 
+/// A surface.
 #[derive(Default)]
 pub struct Surface;
 

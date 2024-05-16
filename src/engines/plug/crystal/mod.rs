@@ -11,6 +11,7 @@ use crate::{
     Vec3,
 };
 
+/// A crystal.
 #[derive(Default)]
 pub struct Crystal {
     parent: TreeGenerator,
@@ -36,6 +37,7 @@ impl Class for Crystal {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 3);
 }
 
+/// A tree generator.
 #[derive(Default)]
 pub struct TreeGenerator;
 

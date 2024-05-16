@@ -9,6 +9,7 @@ use crate::{
     },
 };
 
+/// Special waypoint property.
 #[derive(Default)]
 pub struct WaypointSpecialProperty;
 

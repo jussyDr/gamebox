@@ -16,6 +16,7 @@ use crate::{
     },
 };
 
+/// Classic block info.
 #[derive(Default)]
 pub struct BlockInfoClassic {
     parent: BlockInfo,
@@ -197,6 +198,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for BlockInfoC
     }
 }
 
+/// Block info.
 #[derive(Default)]
 pub struct BlockInfo {
     parent: Collector,

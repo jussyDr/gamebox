@@ -1,5 +1,6 @@
 use crate::common::{Class, ClassId, EngineId};
 
+/// A user-made material.
 #[derive(Default, Clone)]
 pub struct MaterialUserInst;
 
@@ -138,7 +139,7 @@ mod write {
     }
 
     impl MaterialUserInst {
-        pub fn write_chunk_0<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        fn write_chunk_0<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
             s.u32(0x090fd000)?;
             s.u32(11)?;
             s.u8(1)?;
@@ -157,7 +158,7 @@ mod write {
             Ok(())
         }
 
-        pub fn write_chunk_1<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        fn write_chunk_1<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
             s.u32(0x090fd001)?;
             s.u32(5)?;
             s.u32(0xffffffff)?;
@@ -170,7 +171,7 @@ mod write {
             Ok(())
         }
 
-        pub fn write_chunk_2<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
+        fn write_chunk_2<W: Write, I, N>(&self, s: &mut Serializer<W, I, N>) -> Result {
             s.u32(0x090fd002)?;
             s.u32(0)?;
             s.u32(0)?;

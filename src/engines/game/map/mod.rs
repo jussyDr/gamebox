@@ -199,6 +199,7 @@ impl Block {
         &self.id
     }
 
+    /// Variant index of the block.
     pub fn variant_index(&self) -> u8 {
         self.variant_index
     }
@@ -280,8 +281,8 @@ impl FreeBlock {
 #[derive(Default)]
 pub struct Item {
     id: RcStr,
-    rotation: YawPitchRoll,
     position: Vec3<f32>,
+    rotation: YawPitchRoll,
     pivot_position: Vec3<f32>,
     elem_color: ElemColor,
     animation_offset: PhaseOffset,
@@ -293,14 +294,17 @@ impl Item {
         &self.id
     }
 
-    pub const fn rotation(&self) -> &YawPitchRoll {
-        &self.rotation
-    }
-
+    /// Position of the item.
     pub const fn position(&self) -> &Vec3<f32> {
         &self.position
     }
 
+    /// Rotation of the item.
+    pub const fn rotation(&self) -> &YawPitchRoll {
+        &self.rotation
+    }
+
+    /// Pivot position of the item.
     pub const fn pivot_position(&self) -> &Vec3<f32> {
         &self.pivot_position
     }
@@ -350,10 +354,14 @@ impl EmbeddedObjects {
     }
 }
 
+/// Rotation expressed as yaw, pitch, and roll angles.
 #[derive(Default)]
 pub struct YawPitchRoll {
+    /// Yaw angle in radians.
     pub yaw: f32,
+    /// Pitch angle in radians.
     pub pitch: f32,
+    /// Roll angle in radians.
     pub roll: f32,
 }
 

@@ -9,6 +9,7 @@ use crate::{
     },
 };
 
+/// Recorded data of an entity.
 #[derive(Default)]
 pub struct EntRecordData;
 

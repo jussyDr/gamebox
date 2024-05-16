@@ -8,6 +8,7 @@ use crate::read::{
     BodyOptions, HeaderOptions, Readable, Result,
 };
 
+/// Block info tree root.
 #[derive(Deserialize)]
 pub struct BlockInfoTreeRoot {}
 

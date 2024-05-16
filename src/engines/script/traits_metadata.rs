@@ -6,6 +6,7 @@ use crate::{
     read::{readable::ReadBody, Result},
 };
 
+/// Traits metadata.
 #[derive(Default)]
 pub struct TraitsMetadata {
     traits: Vec<(String, Value)>,
@@ -108,6 +109,7 @@ impl Type {
     }
 }
 
+/// A script value.
 pub enum Value {
     /// Void value.
     Void,

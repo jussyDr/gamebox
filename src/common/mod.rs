@@ -34,8 +34,11 @@ impl<T: Copy> Vec2<T> {
 #[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vec3<T> {
+    /// X-component.
     pub x: T,
+    /// Y-component.
     pub y: T,
+    /// Z-component.
     pub z: T,
 }
 

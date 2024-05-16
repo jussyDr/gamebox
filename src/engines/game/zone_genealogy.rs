@@ -9,6 +9,7 @@ use crate::{
     },
 };
 
+/// Zone genealogy.
 #[derive(Default)]
 pub struct ZoneGenealogy;
 

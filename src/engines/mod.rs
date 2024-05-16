@@ -1,3 +1,4 @@
+/// Game engine.
 pub mod game {
     pub mod block_info_classic;
     pub mod block_info_groups;
@@ -9,16 +10,19 @@ pub mod game {
     pub mod zone_genealogy;
 }
 
+/// Game data engine.
 pub mod game_data {
     pub mod collector;
     pub mod item;
     pub mod waypoint_special_property;
 }
 
+/// Meta engine.
 pub mod meta {
     pub mod veget_tree_model;
 }
 
+/// Plug engine.
 pub mod plug {
     pub mod color_table;
     pub mod crystal;
@@ -33,6 +37,7 @@ pub mod plug {
     pub mod visual_indexed_triangles;
 }
 
+/// Script engine.
 pub mod script {
     pub mod traits_metadata;
 }
