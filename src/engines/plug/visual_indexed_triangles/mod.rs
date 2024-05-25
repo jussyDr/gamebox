@@ -2,6 +2,8 @@ mod read;
 
 use std::ops::{Deref, DerefMut};
 
+use serde_json_lenient::value::Index;
+
 use crate::{
     common::{Class, ClassId, EngineId},
     Vec2, Vec3,
@@ -109,8 +111,14 @@ impl Class for VertexStream {
 }
 
 #[derive(Default, Debug)]
-struct IndexBuffer {
+pub struct IndexBuffer {
     indices: Indices,
+}
+
+impl IndexBuffer {
+    pub fn indices(&self) -> &Indices {
+        &self.indices
+    }
 }
 
 impl Class for IndexBuffer {
