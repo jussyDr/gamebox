@@ -61,8 +61,14 @@ impl Class for ItemEntityModel {
 }
 
 #[derive(Default, Debug)]
-struct ItemEntityModelEdition {
+pub struct ItemEntityModelEdition {
     crystal: Crystal,
+}
+
+impl ItemEntityModelEdition {
+    pub fn crystal(&self) -> &Crystal {
+        &self.crystal
+    }
 }
 
 impl Class for ItemEntityModelEdition {

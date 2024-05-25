@@ -11,12 +11,24 @@ use crate::{
     Vec3,
 };
 
+use super::material_user_inst::MaterialUserInst;
+
 /// A crystal.
 #[derive(Default, Debug)]
 pub struct Crystal {
     parent: TreeGenerator,
-    materials: Vec<()>,
+    materials: Vec<Material>,
     layers: Vec<Layer>,
+}
+
+impl Crystal {
+    pub fn materials(&self) -> &[Material] {
+        &self.materials
+    }
+
+    pub fn layers(&self) -> &[Layer] {
+        &self.layers
+    }
 }
 
 impl Deref for Crystal {
@@ -41,15 +53,29 @@ impl Class for Crystal {
 #[derive(Default, Debug)]
 pub struct TreeGenerator;
 
+/// A crystal material
 #[derive(Debug)]
-struct Layer {
+pub enum Material {
+    Game,
+    Custom(Rc<MaterialUserInst>),
+}
+
+/// A crystal layer.
+#[derive(Debug)]
+pub struct Layer {
     id: Rc<str>,
     name: String,
     kind: LayerKind,
 }
 
+impl Layer {
+    pub fn kind(&self) -> &LayerKind {
+        &self.kind
+    }
+}
+
 #[derive(Debug)]
-enum LayerKind {
+pub enum LayerKind {
     Geometry {
         mesh: Mesh,
         is_visible: bool,
@@ -73,7 +99,14 @@ enum LayerKind {
     Lights,
 }
 
+/// A mesh.
 #[derive(Debug)]
-struct Mesh {
+pub struct Mesh {
     vertices: Vec<Vec3<f32>>,
+}
+
+impl Mesh {
+    pub fn vertices(&self) -> &[Vec3<f32>] {
+        &self.vertices
+    }
 }

@@ -14,7 +14,7 @@ use crate::{
     Vec3,
 };
 
-use super::{Crystal, Layer, LayerKind, Mesh, TreeGenerator};
+use super::{Crystal, Layer, LayerKind, Material, Mesh, TreeGenerator};
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Crystal {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
@@ -70,11 +70,16 @@ impl Crystal {
 
         self.materials = d.list(|d| {
             let path = d.string()?;
-            if path.is_empty() {
-                d.internal_node_ref::<MaterialUserInst>()?;
-            }
 
-            Ok(())
+            let material = if path.is_empty() {
+                let material = d.internal_node_ref::<MaterialUserInst>()?;
+
+                Material::Custom(material)
+            } else {
+                Material::Game
+            };
+
+            Ok(material)
         })?;
 
         Ok(())
