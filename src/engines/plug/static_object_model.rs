@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -20,6 +20,12 @@ use super::{
 #[derive(Default, Debug)]
 pub struct StaticObjectModel {
     solid_to_model: Solid2Model,
+}
+
+impl StaticObjectModel {
+    pub fn solid_to_model(&self) -> &Solid2Model {
+        &self.solid_to_model
+    }
 }
 
 impl Class for StaticObjectModel {
@@ -44,8 +50,16 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObject
 }
 
 /// Model from a solid.
-#[derive(Default, Clone, Debug)]
-pub struct Solid2Model;
+#[derive(Default, Debug)]
+pub struct Solid2Model {
+    meshes: Vec<Rc<VisualIndexedTriangles>>,
+}
+
+impl Solid2Model {
+    pub fn meshes(&self) -> &[Rc<VisualIndexedTriangles>] {
+        &self.meshes
+    }
+}
 
 impl Class for Solid2Model {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 187);
@@ -99,10 +113,10 @@ impl Solid2Model {
             Ok((mesh_index, material_index))
         })?;
         d.u32()?; // 10
-        let _meshes = d.list(|d| {
-            let _visual_indexed_triangles = d.internal_node_ref::<VisualIndexedTriangles>()?;
+        self.meshes = d.list(|d| {
+            let visual_indexed_triangles = d.internal_node_ref::<VisualIndexedTriangles>()?;
 
-            Ok(())
+            Ok(visual_indexed_triangles)
         })?;
         d.u32()?; // 0
         let num_materials = d.u32()?;

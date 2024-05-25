@@ -35,14 +35,14 @@ impl Class for Item {
 pub enum ItemModel {
     /// Block model.
     Block(BlockItem),
-    Normal(ItemEntityModel),
-    Edition(ItemEntityModelEdition),
+    Entity(ItemEntityModel),
+    EntityEdition(ItemEntityModelEdition),
     VariantList,
 }
 
 impl Default for ItemModel {
     fn default() -> Self {
-        Self::Edition(ItemEntityModelEdition::default())
+        Self::EntityEdition(ItemEntityModelEdition::default())
     }
 }
 
@@ -52,8 +52,14 @@ struct BlockItem {
 }
 
 #[derive(Default, Debug)]
-struct ItemEntityModel {
+pub struct ItemEntityModel {
     static_object_model: StaticObjectModel,
+}
+
+impl ItemEntityModel {
+    pub fn static_object_model(&self) -> &StaticObjectModel {
+        &self.static_object_model
+    }
 }
 
 impl Class for ItemEntityModel {

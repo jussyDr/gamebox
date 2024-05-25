@@ -284,7 +284,7 @@ impl Item {
                 0x2e026000 => {
                     let mut node = ItemEntityModelEdition::default();
                     ItemEntityModelEdition::read_body(&mut node, d)?;
-                    ItemModel::Edition(node)
+                    ItemModel::EntityEdition(node)
                 }
                 _ => return Err("".into()),
             };
@@ -298,7 +298,7 @@ impl Item {
                         let mut node = ItemEntityModel::default();
                         read_body_chunks(&mut node, d)?;
 
-                        ItemModel::Normal(node)
+                        ItemModel::Entity(node)
                     }
                     0x2f0bc000 => {
                         d.u32()?; // 1

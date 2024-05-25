@@ -38,6 +38,12 @@ pub struct VisualIndexed {
     index_buffer: IndexBuffer,
 }
 
+impl VisualIndexed {
+    pub fn index_buffer(&self) -> &IndexBuffer {
+        &self.index_buffer
+    }
+}
+
 impl Deref for VisualIndexed {
     type Target = Visual3D;
 
@@ -76,16 +82,26 @@ impl DerefMut for Visual3D {
 #[derive(Default, Debug)]
 pub struct Visual {
     /// Vertex data.
-    pub vertex_stream: VertexStream,
+    vertex_stream: VertexStream,
+}
+
+impl Visual {
+    pub fn vertex_stream(&self) -> &VertexStream {
+        &self.vertex_stream
+    }
 }
 
 /// Vertex data.
 #[derive(Default, Clone, Debug)]
 pub struct VertexStream {
-    /// Position data.
-    pub positions: Vec<Vec3<f32>>,
-    /// Texture coordinate data.
-    pub texcoords: Vec<Vec2<f32>>,
+    positions: Vec<Vec3<f32>>,
+    texcoords: Vec<Vec2<f32>>,
+}
+
+impl VertexStream {
+    pub fn positions(&self) -> &[Vec3<f32>] {
+        &self.positions
+    }
 }
 
 impl Class for VertexStream {
