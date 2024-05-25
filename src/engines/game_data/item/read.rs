@@ -2,7 +2,7 @@ use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
+    deserialize::{Deserializer, IdStateMut, NodeRef, NodeStateMut},
     engines::{
         game_data::collector::Collector,
         plug::{static_object_model::StaticObjectModel, surface::Surface},
@@ -292,7 +292,7 @@ impl Item {
             Ok(model)
         })?;
         if version >= 13 {
-            let _model = d.any_unique_node_ref_or_null(|d, class_id| {
+            let model = d.any_unique_node_ref_or_null(|d, class_id| {
                 let model = match class_id {
                     0x2e027000 => {
                         let mut node = ItemEntityModel::default();
@@ -332,6 +332,10 @@ impl Item {
 
             if version >= 15 {
                 d.u32()?; // 0xffffffff
+            }
+
+            if let Some(NodeRef::Internal { node }) = model {
+                self.model = node;
             }
         }
 
