@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// Node type corresponding to GameBox files with the extension `Material.Gbx`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Material {
     material_custom: Option<Rc<MaterialCustom>>,
 }
@@ -191,7 +191,7 @@ impl Material {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct MaterialCustom {
     diffuse_texture_path: RcPath,
 }

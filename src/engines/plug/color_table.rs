@@ -11,7 +11,7 @@ use crate::read::{
 };
 
 /// Node type corresponding to GameBox files with the extension `ColorTable.Gbx.json`.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ColorTable {}
 
 impl Readable for ColorTable {}

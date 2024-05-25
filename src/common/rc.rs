@@ -8,7 +8,7 @@ use std::{
 ///
 /// `RcStr` is optimized to not use heap allocated memory when empty,
 /// which is the case for the standard `Rc<str>`.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct RcStr(Option<Rc<str>>);
 
 impl RcStr {
@@ -63,7 +63,7 @@ impl From<String> for RcStr {
 ///
 /// `RcPath` is optimized to not use heap allocated memory when empty,
 /// which is the case for the standard `Rc<Path>`.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct RcPath(Option<Rc<Path>>);
 
 impl RcPath {

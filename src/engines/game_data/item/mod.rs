@@ -12,21 +12,31 @@ use crate::{
 
 use super::collector::Collector;
 
-/// Node type corresponding to GameBox files with the extension `Item.Gbx`.
-#[derive(Default)]
+/// Node type corresponding to GameBox files with the extension `Item.Gbx` or `Block.Gbx`.
+#[derive(Default, Debug)]
 pub struct Item {
     parent: Collector,
     model: ItemModel,
+}
+
+impl Item {
+    /// Model of the item.
+    pub fn model(&self) -> &ItemModel {
+        &self.model
+    }
 }
 
 impl Class for Item {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 2);
 }
 
-enum ItemModel {
+/// Item model.
+#[derive(Debug)]
+pub enum ItemModel {
+    /// Block model.
     Block(BlockItem),
-    Edition(ItemEntityModelEdition),
     Normal(ItemEntityModel),
+    Edition(ItemEntityModelEdition),
     VariantList,
 }
 
@@ -36,12 +46,12 @@ impl Default for ItemModel {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct BlockItem {
     variants: Vec<Option<Rc<Crystal>>>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct ItemEntityModel {
     static_object_model: StaticObjectModel,
 }
@@ -50,7 +60,7 @@ impl Class for ItemEntityModel {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 39);
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct ItemEntityModelEdition {
     crystal: Crystal,
 }

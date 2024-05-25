@@ -19,6 +19,7 @@ use super::ghost::Ghost;
 /// A map / challenge.
 ///
 /// Corresponds to the file extension `Map.Gbx` or `Challenge.Gbx`.
+#[derive(Debug)]
 pub struct Map {
     /// (Display) cost of the map.
     pub cost: u32,
@@ -152,6 +153,7 @@ impl Map {
 }
 
 /// Validation of a map.
+#[derive(Debug)]
 pub struct Validation {
     /// Bronze medal time objective.
     pub bronze_time: u32,
@@ -166,6 +168,7 @@ pub struct Validation {
 }
 
 /// Type of a map.
+#[derive(Debug)]
 pub enum MapType {
     /// Normal race.
     ///
@@ -185,6 +188,7 @@ impl Default for MapType {
 }
 
 /// Block placed inside of a map.
+#[derive(Debug)]
 pub struct Block {
     id: Rc<str>,
     variant_index: u8,
@@ -221,6 +225,7 @@ impl Block {
 }
 
 /// Either a normal or a free block.
+#[derive(Debug)]
 pub enum BlockKind {
     /// A normal block.
     Normal(NormalBlock),
@@ -229,6 +234,7 @@ pub enum BlockKind {
 }
 
 /// A normal block.
+#[derive(Debug)]
 pub struct NormalBlock {
     direction: Direction,
     coord: Vec3<u8>,
@@ -259,7 +265,7 @@ impl NormalBlock {
 }
 
 /// A free block.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FreeBlock {
     position: Vec3<f32>,
     rotation: YawPitchRoll,
@@ -278,7 +284,7 @@ impl FreeBlock {
 }
 
 /// Item placed inside of a map.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Item {
     id: RcStr,
     position: Vec3<f32>,
@@ -335,6 +341,7 @@ pub enum Direction {
 }
 
 /// Objects embedded in a map.
+#[derive(Debug)]
 pub struct EmbeddedObjects {
     ids: Vec<Rc<str>>,
     data: Vec<u8>,
@@ -355,7 +362,7 @@ impl EmbeddedObjects {
 }
 
 /// Rotation expressed as yaw, pitch, and roll angles.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct YawPitchRoll {
     /// Yaw angle in radians.
     pub yaw: f32,
@@ -408,7 +415,7 @@ pub enum PhaseOffset {
 }
 
 /// Lightmap quality of a block or item.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub enum LightmapQuality {
     /// Normal.
     #[default]
@@ -434,7 +441,7 @@ impl Class for CollectorList {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 27);
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct ChallengeParameters {
     validation: Option<Validation>,
     ty: MapType,

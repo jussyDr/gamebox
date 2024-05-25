@@ -12,7 +12,7 @@ use crate::{
 use super::material::Material;
 
 /// A surface.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Surface;
 
 impl Class for Surface {

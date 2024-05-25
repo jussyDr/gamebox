@@ -14,7 +14,7 @@ use crate::{
 use super::static_object_model::StaticObjectModel;
 
 /// Node type corresponding to GameBox files with the extension `Prefab.Gbx`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Prefab;
 
 impl Class for Prefab {

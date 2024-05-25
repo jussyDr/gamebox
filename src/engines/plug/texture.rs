@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// Node type corresponding to GameBox files with the extension `Texture.Gbx`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Texture {
     image_path: RcPath,
 }

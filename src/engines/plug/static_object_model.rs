@@ -17,7 +17,7 @@ use super::{
 };
 
 /// A static object model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct StaticObjectModel {
     solid_to_model: Solid2Model,
 }
@@ -44,7 +44,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObject
 }
 
 /// Model from a solid.
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Solid2Model;
 
 impl Class for Solid2Model {

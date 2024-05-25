@@ -9,7 +9,7 @@ use crate::read::{
 };
 
 /// Block info tree root.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct BlockInfoTreeRoot {}
 
 impl Readable for BlockInfoTreeRoot {}

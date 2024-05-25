@@ -8,7 +8,7 @@ mod write;
 /// Base class of nodes that can be displayed in an icon tree.
 ///
 /// For example, the blocks, items, and macroblock classes all extend from this class.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Collector {
     name: String,
     icon: Icon,
@@ -34,6 +34,7 @@ impl Collector {
 }
 
 /// Icon of a collector.
+#[derive(Debug)]
 pub enum Icon {
     /// Icon is stored as raw ARGB data.
     Argb {

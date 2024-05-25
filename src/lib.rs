@@ -1,4 +1,5 @@
 #![warn(
+    missing_debug_implementations,
     missing_docs,
     clippy::get_unwrap,
     clippy::panic,

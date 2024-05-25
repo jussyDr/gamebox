@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Recorded data of an entity.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct EntRecordData;
 
 impl Class for EntRecordData {

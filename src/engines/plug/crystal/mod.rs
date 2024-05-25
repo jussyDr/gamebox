@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// A crystal.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Crystal {
     parent: TreeGenerator,
     materials: Vec<()>,
@@ -38,15 +38,17 @@ impl Class for Crystal {
 }
 
 /// A tree generator.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TreeGenerator;
 
+#[derive(Debug)]
 struct Layer {
     id: Rc<str>,
     name: String,
     kind: LayerKind,
 }
 
+#[derive(Debug)]
 enum LayerKind {
     Geometry {
         mesh: Mesh,
@@ -71,6 +73,7 @@ enum LayerKind {
     Lights,
 }
 
+#[derive(Debug)]
 struct Mesh {
     vertices: Vec<Vec3<f32>>,
 }

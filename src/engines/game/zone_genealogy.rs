@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Zone genealogy.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ZoneGenealogy;
 
 impl Class for ZoneGenealogy {

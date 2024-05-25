@@ -9,7 +9,7 @@ use crate::read::{
 };
 
 /// Item model tree root.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ItemModelTreeRoot {}
 
 impl Readable for ItemModelTreeRoot {}

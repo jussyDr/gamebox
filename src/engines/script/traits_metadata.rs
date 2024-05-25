@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Traits metadata.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TraitsMetadata {
     traits: Vec<(String, Value)>,
 }
@@ -110,6 +110,7 @@ impl Type {
 }
 
 /// A script value.
+#[derive(Debug)]
 pub enum Value {
     /// Void value.
     Void,

@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Triangles.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VisualIndexedTriangles {
     parent: VisualIndexed,
 }
@@ -32,7 +32,7 @@ impl DerefMut for VisualIndexedTriangles {
 }
 
 /// Visual geometry that is indexed.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VisualIndexed {
     parent: Visual3D,
     index_buffer: IndexBuffer,
@@ -53,7 +53,7 @@ impl DerefMut for VisualIndexed {
 }
 
 /// 3D visual.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Visual3D {
     parent: Visual,
 }
@@ -73,14 +73,14 @@ impl DerefMut for Visual3D {
 }
 
 /// Visual geometry.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Visual {
     /// Vertex data.
     pub vertex_stream: VertexStream,
 }
 
 /// Vertex data.
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct VertexStream {
     /// Position data.
     pub positions: Vec<Vec3<f32>>,
@@ -92,7 +92,7 @@ impl Class for VertexStream {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 86);
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct IndexBuffer {
     indices: Indices,
 }
@@ -102,7 +102,7 @@ impl Class for IndexBuffer {
 }
 
 /// Indices.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Indices {
     /// Indices represented as 16-bit unsigned numbers.
     U16(Vec<u16>),

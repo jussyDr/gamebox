@@ -9,7 +9,7 @@ use std::io::{Read, Write};
 use crate::{deserialize::Deserializer, read::Result, serialize::Serializer};
 
 /// A 2-dimensional vector of type `T`.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct Vec2<T> {
     pub(crate) x: T,
     pub(crate) y: T,
@@ -141,11 +141,11 @@ pub const ID_MARKER_BIT: u32 = 0x40000000;
 
 pub const NULL: u32 = 0xffffffff;
 
-pub trait Class {
+pub(crate) trait Class {
     const CLASS_ID: ClassId;
 }
 
-pub struct EngineId(u8);
+pub(crate) struct EngineId(u8);
 
 impl EngineId {
     pub const GAME: Self = Self(3);
@@ -158,7 +158,7 @@ impl EngineId {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-pub struct ClassId(u32);
+pub(crate) struct ClassId(u32);
 
 impl ClassId {
     pub const fn new(engine: EngineId, class: u16) -> Self {

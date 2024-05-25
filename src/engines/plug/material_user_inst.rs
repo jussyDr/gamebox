@@ -1,7 +1,7 @@
 use crate::common::{Class, ClassId, EngineId};
 
 /// A user-made material.
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct MaterialUserInst;
 
 impl Class for MaterialUserInst {

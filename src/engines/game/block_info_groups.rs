@@ -9,7 +9,7 @@ use crate::read::{
 };
 
 /// Block info groups.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct BlockInfoGroups {
     #[serde(rename = "Groups")]
     groups: Vec<BlockInfoGroup>,
@@ -32,7 +32,7 @@ impl ClassName for BlockInfoGroups {
 }
 
 /// A block info group.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct BlockInfoGroup {
     #[serde(rename = "GroupId")]
     id: String,

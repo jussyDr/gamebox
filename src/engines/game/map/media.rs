@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// A group of media clips.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MediaClipGroup {
     clips: Vec<MediaClipWithTrigger>,
 }
@@ -79,6 +79,7 @@ impl MediaClipGroup {
 }
 
 /// A media clip and its corresponding trigger.
+#[derive(Debug)]
 pub struct MediaClipWithTrigger {
     clip: Rc<MediaClip>,
     trigger_coords: Vec<Vec3<u32>>,
@@ -97,7 +98,7 @@ impl MediaClipWithTrigger {
 }
 
 /// A media clip.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MediaClip {
     tracks: Vec<Rc<MediaTrack>>,
 }
@@ -164,7 +165,7 @@ impl MediaClip {
 }
 
 /// A media track.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MediaTrack {
     blocks: Vec<MediaBlock>,
 }
@@ -388,6 +389,7 @@ impl MediaTrack {
 }
 
 /// A media block.
+#[derive(Debug)]
 pub enum MediaBlock {
     /// 2D triangles media block.
     Triangles2D(Rc<MediaBlockTriangles2D>),
@@ -439,6 +441,7 @@ pub enum MediaBlock {
     Entity(Rc<MediaBlockEntity>),
 }
 
+#[derive(Debug)]
 struct MediaBlockTriangles;
 
 impl MediaBlockTriangles {
@@ -491,6 +494,7 @@ impl MediaBlockTriangles {
 }
 
 /// 2D triangles media block.
+#[derive(Debug)]
 pub struct MediaBlockTriangles2D {
     parent: MediaBlockTriangles,
 }
@@ -522,6 +526,7 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for MediaBlockTriangles2D {
 }
 
 /// 3D triangles media block.
+#[derive(Debug)]
 pub struct MediaBlockTriangles3D {
     parent: MediaBlockTriangles,
 }
@@ -553,7 +558,7 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for MediaBlockTriangles3D {
 }
 
 /// Colors FX media block.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MediaBlockFxColors {
     keys: Vec<MediaBlockFxColorsKey>,
 }
@@ -636,6 +641,7 @@ impl MediaBlockFxColors {
 }
 
 /// Colors FX media block key.
+#[derive(Debug)]
 pub struct MediaBlockFxColorsKey {
     global_intensity: f32,
     /// [0.0, 1.0].
@@ -684,6 +690,7 @@ impl MediaBlockFxColorsKey {
 }
 
 /// Player camera media block.
+#[derive(Debug)]
 pub struct MediaBlockCameraGame;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockCameraGame {
@@ -731,6 +738,7 @@ impl MediaBlockCameraGame {
 }
 
 /// Time media block.
+#[derive(Debug)]
 pub struct MediaBlockTime;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockTime {
@@ -764,6 +772,7 @@ impl MediaBlockTime {
 }
 
 /// Custom camera media block.
+#[derive(Debug)]
 pub struct MediaBlockCameraCustom;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockCameraCustom {
@@ -834,6 +843,7 @@ impl MediaBlockCameraCustom {
 }
 
 /// Shake cam FX media block.
+#[derive(Debug)]
 pub struct MediaBlockCameraEffectShake;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockCameraEffectShake {
@@ -867,6 +877,7 @@ impl MediaBlockCameraEffectShake {
 }
 
 /// Image media block.
+#[derive(Debug)]
 pub struct MediaBlockImage;
 
 impl<R: Read, I, N: NodeStateMut> ReadBody<R, I, N> for MediaBlockImage {
@@ -898,6 +909,7 @@ impl MediaBlockImage {
 }
 
 /// Music volume media block.
+#[derive(Debug)]
 pub struct MediaBlockMusicEffect;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockMusicEffect {
@@ -931,6 +943,7 @@ impl MediaBlockMusicEffect {
 }
 
 /// Sound FX media block.
+#[derive(Debug)]
 pub struct MediaBlockSound;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockSound {
@@ -987,6 +1000,7 @@ impl MediaBlockSound {
 }
 
 /// Text media block.
+#[derive(Debug)]
 pub struct MediaBlockText;
 
 impl<R: Read, I, N: NodeStateMut> ReadBody<R, I, N> for MediaBlockText {
@@ -1032,6 +1046,7 @@ impl MediaBlockText {
 }
 
 /// Car trails media block.
+#[derive(Debug)]
 pub struct MediaBlockTrails;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockTrails {
@@ -1060,6 +1075,7 @@ impl MediaBlockTrails {
 }
 
 /// Transition fade media block.
+#[derive(Debug)]
 pub struct MediaBlockTransitionFade;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockTransitionFade {
@@ -1096,6 +1112,7 @@ impl MediaBlockTransitionFade {
 }
 
 /// Depth of field media block.
+#[derive(Debug)]
 pub struct MediaBlockDOF;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockDOF {
@@ -1133,6 +1150,7 @@ impl MediaBlockDOF {
 }
 
 /// Tone mapping media block.
+#[derive(Debug)]
 pub struct MediaBlockToneMapping;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockToneMapping {
@@ -1168,6 +1186,7 @@ impl MediaBlockToneMapping {
 }
 
 /// HDR bloom media block.
+#[derive(Debug)]
 pub struct MediaBlockBloomHdr;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockBloomHdr {
@@ -1202,6 +1221,7 @@ impl MediaBlockBloomHdr {
 }
 
 /// Time speed media block.
+#[derive(Debug)]
 pub struct MediaBlockTimeSpeed;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockTimeSpeed {
@@ -1234,6 +1254,7 @@ impl MediaBlockTimeSpeed {
 }
 
 /// Vehicle lights media block.
+#[derive(Debug)]
 pub struct MediaBlockVehicleLight;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockVehicleLight {
@@ -1274,6 +1295,7 @@ impl MediaBlockVehicleLight {
 }
 
 /// Editing cut media block.
+#[derive(Debug)]
 pub struct MediaBlockShoot;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockShoot {
@@ -1302,6 +1324,7 @@ impl MediaBlockShoot {
 }
 
 /// Dirty lens media block.
+#[derive(Debug)]
 pub struct MediaBlockDirtyLens;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockDirtyLens {
@@ -1335,6 +1358,7 @@ impl MediaBlockDirtyLens {
 }
 
 /// Color grading media block.
+#[derive(Debug)]
 pub struct MediaBlockColorGrading;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockColorGrading {
@@ -1379,6 +1403,7 @@ impl MediaBlockColorGrading {
 }
 
 /// ManiaLink UI media block.
+#[derive(Debug)]
 pub struct MediaBlockInterface;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockInterface {
@@ -1410,6 +1435,7 @@ impl MediaBlockInterface {
 }
 
 /// Fog media block.
+#[derive(Debug)]
 pub struct MediaBlockFog;
 
 impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockFog {
@@ -1451,6 +1477,7 @@ impl MediaBlockFog {
 }
 
 /// Ghost media block.
+#[derive(Debug)]
 pub struct MediaBlockEntity;
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MediaBlockEntity {
@@ -1523,7 +1550,7 @@ impl MediaBlockEntity {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct EffectSimi;
 
 impl Class for EffectSimi {

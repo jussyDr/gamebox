@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Node type corresponding to GameBox files with the extension `Ghost.Gbx`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Ghost {
     parent: Ghost2,
     car_model_id: RcStr,
@@ -28,7 +28,7 @@ impl Class for Ghost {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 146);
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct Ghost2;
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Ghost {

@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// A user-made light model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct LightUserModel;
 
 impl Class for LightUserModel {

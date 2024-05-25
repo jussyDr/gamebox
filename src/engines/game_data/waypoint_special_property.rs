@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Special waypoint property.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct WaypointSpecialProperty;
 
 impl Class for WaypointSpecialProperty {

@@ -21,7 +21,7 @@ use crate::{
 use super::zone_genealogy::ZoneGenealogy;
 
 /// Node type corresponding to GameBox files with the extension `Macroblock.Gbx`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Macroblock {
     parent: Collector,
 }
