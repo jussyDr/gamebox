@@ -170,8 +170,10 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
 
     /// Read an unsigned 32-bit integer and return an error if it does not match the given `value`.
     pub fn expect_u32(&mut self, value: u32) -> Result<()> {
-        if self.u32()? != value {
-            return Err("".into());
+        let actual_value = self.u32()?;
+
+        if actual_value != value {
+            return Err(format!("expected {value}, got {actual_value}").into());
         }
 
         Ok(())

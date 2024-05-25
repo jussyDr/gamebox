@@ -656,7 +656,7 @@ impl Map {
     }
 
     fn read_chunk_03043022<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.expect_u32(1)?;
+        d.u32()?; // 1 | 5
 
         Ok(())
     }
