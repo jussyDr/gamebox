@@ -2,8 +2,6 @@ mod read;
 
 use std::ops::{Deref, DerefMut};
 
-use serde_json_lenient::value::Index;
-
 use crate::{
     common::{Class, ClassId, EngineId},
     Vec2, Vec3,
@@ -102,6 +100,10 @@ pub struct VertexStream {
 
 impl VertexStream {
     pub fn positions(&self) -> &[Vec3<f32>] {
+        &self.positions
+    }
+
+    pub fn texcoords(&self) -> &[Vec3<f32>] {
         &self.positions
     }
 }
