@@ -1,6 +1,6 @@
 //! Types used for reading [Material] nodes.
 
-use std::{io::Read, rc::Rc};
+use std::{io::Read, path::Path, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
@@ -18,7 +18,13 @@ use crate::{
 /// Node type corresponding to GameBox files with the extension `Material.Gbx`.
 #[derive(Default, Debug)]
 pub struct Material {
-    material_custom: Option<Rc<MaterialCustom>>,
+    custom: Option<Rc<MaterialCustom>>,
+}
+
+impl Material {
+    pub fn custom(&self) -> Option<&Rc<MaterialCustom>> {
+        self.custom.as_ref()
+    }
 }
 
 impl Class for Material {
@@ -109,7 +115,7 @@ impl Material {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        self.material_custom = d.internal_node_ref_or_null::<MaterialCustom>()?;
+        self.custom = d.internal_node_ref_or_null::<MaterialCustom>()?;
 
         Ok(())
     }
@@ -128,7 +134,7 @@ impl Material {
 
     fn read_chunk_09079012<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        if self.material_custom.is_some() {
+        if self.custom.is_some() {
             d.string()?; // ":data:\Projects\Techno3\Media\Material\Tech3_Block_TDSN_CubeOut.Material.gbx"
             d.u32()?; // 0x7ec30323
             d.u32()?; // 0x803b7649
@@ -194,6 +200,12 @@ impl Material {
 #[derive(Default, Debug)]
 struct MaterialCustom {
     diffuse_texture_path: RcPath,
+}
+
+impl MaterialCustom {
+    pub fn diffuse_texture_path(&self) -> &Path {
+        &self.diffuse_texture_path
+    }
 }
 
 impl Class for MaterialCustom {
