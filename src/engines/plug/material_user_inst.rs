@@ -8,6 +8,12 @@ pub struct MaterialUserInst {
     material: Material,
 }
 
+impl MaterialUserInst {
+    pub fn material(&self) -> &Material {
+        &self.material
+    }
+}
+
 #[derive(Debug)]
 pub enum Material {
     Game { path: String },
