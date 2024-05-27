@@ -9,6 +9,7 @@ use lzo1x::CompressLevel;
 use super::{writable::write_gbx, Result, Writable};
 
 /// A GameBox node writer.
+#[derive(Debug)]
 pub struct Writer {
     body_compression: Option<CompressLevel>,
 }
