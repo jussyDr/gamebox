@@ -52,12 +52,22 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObject
 /// Model from a solid.
 #[derive(Default, Debug)]
 pub struct Solid2Model {
+    layers: Vec<Layer>,
     meshes: Vec<Rc<VisualIndexedTriangles>>,
+    materials: Vec<Rc<MaterialUserInst>>,
 }
 
 impl Solid2Model {
+    pub fn layers(&self) -> &[Layer] {
+        &self.layers
+    }
+
     pub fn meshes(&self) -> &[Rc<VisualIndexedTriangles>] {
         &self.meshes
+    }
+
+    pub fn materials(&self) -> &[Rc<MaterialUserInst>] {
+        &self.materials
     }
 }
 
@@ -100,7 +110,7 @@ impl Solid2Model {
         }
 
         d.null_id()?;
-        let _layers = d.list(|d| {
+        self.layers = d.list(|d| {
             let mesh_index = d.u32()?;
             let material_index = d.u32()?;
             d.u32()?; // 0xffffffff
@@ -110,7 +120,10 @@ impl Solid2Model {
                 d.u32()?; // 0
             }
 
-            Ok((mesh_index, material_index))
+            Ok(Layer {
+                mesh_index,
+                material_index,
+            })
         })?;
         d.u32()?; // 10
         self.meshes = d.list(|d| {
@@ -199,11 +212,11 @@ impl Solid2Model {
         if version >= 30 {
             d.u32()?;
         }
-        let _materials = d.repeat(num_materials as usize, |d| {
+        self.materials = d.repeat(num_materials as usize, |d| {
             d.u32()?; // 0
-            d.internal_node_ref::<MaterialUserInst>()?;
+            let material = d.internal_node_ref::<MaterialUserInst>()?;
 
-            Ok(())
+            Ok(material)
         })?;
         d.u32()?; // 0
         d.u32()?; // 0
@@ -486,5 +499,21 @@ mod graphic {
 
             Ok(())
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct Layer {
+    mesh_index: u32,
+    material_index: u32,
+}
+
+impl Layer {
+    pub fn mesh_index(&self) -> u32 {
+        self.mesh_index
+    }
+
+    pub fn material_index(&self) -> u32 {
+        self.material_index
     }
 }
