@@ -203,7 +203,7 @@ pub struct MaterialCustom {
 }
 
 impl MaterialCustom {
-    pub fn diffuse_texture_path(&self) -> &Path {
+    pub fn diffuse_texture_path(&self) -> &RcPath {
         &self.diffuse_texture_path
     }
 }
@@ -352,11 +352,11 @@ impl MaterialCustom {
                 "BaseColor" => self.diffuse_texture_path = texture_ref.into(),
                 "BaseColorHueMask" => {}
                 "Normal" => {}
-                "PyBaseColor" => {}
+                "PyBaseColor" => self.diffuse_texture_path = texture_ref.into(),
                 "PyNormal" => {}
                 "PyRoughMetal" => {}
                 "PyX2" => {}
-                "PxzBaseColor" => {}
+                "PxzBaseColor" => self.diffuse_texture_path = texture_ref.into(),
                 "PxzNormal" => {}
                 "PxzRoughMetal" => {}
                 "RoughMetal" => {}
