@@ -307,12 +307,18 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a00f<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+    fn read_chunk_0903a00f<R: Read, I: IdStateMut, N>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
         d.u32()?; // 2
         d.f32()?; // -1.0
         d.f32()?; // -1.0
         d.u32()?; // 0
-        d.u32()?; // 0
+        if d.bool32()? {
+            d.id()?; // "LodNormal"
+            d.u32()?; // 0
+        }
 
         Ok(())
     }
@@ -342,11 +348,19 @@ impl MaterialCustom {
             d.u32()?; // 4
 
             match texture_kind.as_ref() {
+                "ACosSmoothPy" => {}
                 "BaseColor" => self.diffuse_texture_path = texture_ref.into(),
                 "BaseColorHueMask" => {}
                 "Normal" => {}
+                "PyBaseColor" => {}
+                "PyNormal" => {}
+                "PyRoughMetal" => {}
+                "PyX2" => {}
+                "PxzBaseColor" => {}
+                "PxzNormal" => {}
+                "PxzRoughMetal" => {}
                 "RoughMetal" => {}
-                _ => return Err("unknown texture kind".into()),
+                _ => return Err(format!("unknown texture kind '{texture_kind}'").into()),
             }
 
             Ok(())
