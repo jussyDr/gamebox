@@ -103,8 +103,8 @@ impl VertexStream {
         &self.positions
     }
 
-    pub fn texcoords(&self) -> &[Vec3<f32>] {
-        &self.positions
+    pub fn texcoords(&self) -> &[Vec2<f32>] {
+        &self.texcoords
     }
 }
 
