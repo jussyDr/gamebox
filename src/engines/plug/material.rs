@@ -198,7 +198,7 @@ impl Material {
 }
 
 #[derive(Default, Debug)]
-struct MaterialCustom {
+pub struct MaterialCustom {
     diffuse_texture_path: RcPath,
 }
 
