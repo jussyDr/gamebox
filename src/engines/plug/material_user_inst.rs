@@ -1,8 +1,26 @@
+use std::rc::Rc;
+
 use crate::common::{Class, ClassId, EngineId};
 
 /// A user-made material.
-#[derive(Default, Clone, Debug)]
-pub struct MaterialUserInst;
+#[derive(Default, Debug)]
+pub struct MaterialUserInst {
+    material: Material,
+}
+
+#[derive(Debug)]
+pub enum Material {
+    Game { path: String },
+    Custom { id: Rc<str> },
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Self::Game {
+            path: String::new(),
+        }
+    }
+}
 
 impl Class for MaterialUserInst {
     const CLASS_ID: ClassId = ClassId::new(EngineId::PLUG, 253);
@@ -19,7 +37,7 @@ mod read {
         },
     };
 
-    use super::MaterialUserInst;
+    use super::{Material, MaterialUserInst};
 
     impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for MaterialUserInst {
         fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
@@ -68,9 +86,11 @@ mod read {
                 d.u8()?;
             }
             if uses_game_material {
-                let _material_ref = d.string()?;
+                let path = d.string()?;
+                self.material = Material::Game { path };
             } else {
-                let _id = d.id()?;
+                let id = d.id()?;
+                self.material = Material::Custom { id };
             }
             d.list(|d| {
                 d.id()?; // "TargetColor"
