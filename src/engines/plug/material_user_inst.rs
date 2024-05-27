@@ -1,6 +1,9 @@
 use std::rc::Rc;
 
-use crate::common::{Class, ClassId, EngineId};
+use crate::{
+    common::{Class, ClassId, EngineId},
+    Rgb,
+};
 
 /// A user-made material.
 #[derive(Default, Debug)]
@@ -17,7 +20,7 @@ impl MaterialUserInst {
 #[derive(Debug)]
 pub enum Material {
     Game { path: String },
-    Custom { id: Rc<str> },
+    Custom { id: Rc<str>, color: Rgb },
 }
 
 impl Default for Material {
@@ -41,6 +44,7 @@ mod read {
             readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
             Result,
         },
+        Rgb,
     };
 
     use super::{Material, MaterialUserInst};
@@ -96,7 +100,10 @@ mod read {
                 self.material = Material::Game { path };
             } else {
                 let id = d.id()?;
-                self.material = Material::Custom { id };
+                self.material = Material::Custom {
+                    id,
+                    color: Rgb { r: 0, g: 0, b: 0 },
+                };
             }
             d.list(|d| {
                 d.id()?; // "TargetColor"
@@ -105,11 +112,19 @@ mod read {
 
                 Ok(())
             })?;
-            let _color = d.list(|d| d.u32())?;
+            let color_values = d.list(|d| d.u32())?;
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0
             d.u32()?; // 0xffffffff
+
+            if let Material::Custom { color, .. } = &mut self.material {
+                *color = Rgb {
+                    r: color_values[0] as u8,
+                    g: color_values[1] as u8,
+                    b: color_values[2] as u8,
+                };
+            }
 
             Ok(())
         }
