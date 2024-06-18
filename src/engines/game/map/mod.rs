@@ -363,6 +363,7 @@ impl EmbeddedObjects {
 
 /// Rotation expressed as yaw, pitch, and roll angles.
 #[derive(Default, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct YawPitchRoll {
     /// Yaw angle in radians.
     pub yaw: f32,
