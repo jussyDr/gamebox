@@ -118,12 +118,14 @@ mod read {
             d.u32()?; // 0
             d.u32()?; // 0xffffffff
 
-            if let Material::Custom { color, .. } = &mut self.material {
-                *color = Rgb {
-                    r: color_values[0] as u8,
-                    g: color_values[1] as u8,
-                    b: color_values[2] as u8,
-                };
+            if !color_values.is_empty() {
+                if let Material::Custom { color, .. } = &mut self.material {
+                    *color = Rgb {
+                        r: color_values[0] as u8,
+                        g: color_values[1] as u8,
+                        b: color_values[2] as u8,
+                    };
+                }
             }
 
             Ok(())
