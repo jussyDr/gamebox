@@ -10,11 +10,24 @@ use crate::{
 };
 
 /// Special waypoint property.
-#[derive(Default, Debug)]
-pub struct WaypointSpecialProperty;
+#[derive(Debug)]
+pub enum WaypointSpecialProperty {
+    Checkpoint { group: u32 },
+    Goal { order: u32 },
+    LinkedCheckpoint { group: u32 },
+    Spawn { order: u32 },
+    StartFinish { order: u32 },
+    Custom { tag: String },
+}
 
 impl Class for WaypointSpecialProperty {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME_DATA, 9);
+}
+
+impl Default for WaypointSpecialProperty {
+    fn default() -> Self {
+        Self::Checkpoint { group: 0 }
+    }
 }
 
 impl<R: Read, I, N> ReadBody<R, I, N> for WaypointSpecialProperty {
@@ -43,8 +56,20 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for WaypointSpecialProperty {
 impl WaypointSpecialProperty {
     fn read_chunk_2e009000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 2
-        d.string()?; // "Goal"
-        d.u32()?; // 0
+        *self = match d.string()?.as_str() {
+            "Checkpoint" => Self::Checkpoint { group: d.u32()? },
+            "Goal" => Self::Goal { order: d.u32()? },
+            "LinkedCheckpoint" => Self::LinkedCheckpoint { group: d.u32()? },
+            "Spawn" => Self::Spawn { order: d.u32()? },
+            "StartFinish" => Self::StartFinish { order: d.u32()? },
+            tag => {
+                d.u32()?;
+
+                Self::Custom {
+                    tag: tag.to_owned(),
+                }
+            }
+        };
 
         Ok(())
     }

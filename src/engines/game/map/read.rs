@@ -4,7 +4,7 @@ use crate::{
     common::{Class, ClassId, EngineId, Vec3, ID_INDEX_MASK, ID_MARKER_BIT, NULL},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     engines::{
-        game::{ghost::Ghost, zone_genealogy::ZoneGenealogy},
+        game::{ghost::Ghost, map::BlockSkin, zone_genealogy::ZoneGenealogy},
         game_data::waypoint_special_property::WaypointSpecialProperty,
         script::traits_metadata::TraitsMetadata,
     },
@@ -603,14 +603,18 @@ impl Map {
                 continue;
             }
 
-            if flags & 0x00008000 != 0 {
+            let skin = if flags & 0x00008000 != 0 {
                 d.id()?; // "Nadeo"
-                d.internal_node_ref_or_null::<BlockSkin>()?;
-            }
+                d.internal_node_ref_or_null::<BlockSkin>()?
+            } else {
+                None
+            };
 
-            if flags & 0x00100000 != 0 {
-                d.internal_node_ref::<WaypointSpecialProperty>()?;
-            }
+            let waypoint_property = if flags & 0x00100000 != 0 {
+                Some(d.internal_node_ref::<WaypointSpecialProperty>()?)
+            } else {
+                None
+            };
 
             let variant_index = if flags & 0x00200000 != 0 { 1 } else { 0 };
 
@@ -619,6 +623,8 @@ impl Map {
             if is_free {
                 self.blocks.push(Block {
                     id,
+                    skin,
+                    waypoint_property,
                     variant_index,
                     kind: BlockKind::Free(FreeBlock::default()),
                     elem_color: ElemColor::default(),
@@ -639,6 +645,8 @@ impl Map {
 
                 self.blocks.push(Block {
                     id,
+                    skin,
+                    waypoint_property,
                     variant_index,
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
@@ -875,6 +883,8 @@ impl Map {
             if is_free {
                 Ok(Block {
                     id,
+                    skin: None,
+                    waypoint_property: None,
                     variant_index,
                     kind: BlockKind::Free(FreeBlock::default()),
                     elem_color: ElemColor::default(),
@@ -891,6 +901,8 @@ impl Map {
 
                 Ok(Block {
                     id,
+                    skin: None,
+                    waypoint_property: None,
                     variant_index,
                     kind: BlockKind::Normal(NormalBlock {
                         direction,
@@ -1386,13 +1398,6 @@ impl ChallengeParameters {
     }
 }
 
-#[derive(Default)]
-struct BlockSkin;
-
-impl Class for BlockSkin {
-    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 89);
-}
-
 impl<R: Read, I, N> ReadBody<R, I, N> for BlockSkin {
     fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         read_body_chunks(self, d)
@@ -1417,8 +1422,8 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for BlockSkin {
 
 impl BlockSkin {
     fn read_chunk_03059002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.string()?; // "!4"
-        FileRef::read(d)?;
+        d.string()?;
+        self.background = FileRef::read(d)?;
         InternalFileRef::read(d)?;
 
         Ok(())
@@ -1426,7 +1431,7 @@ impl BlockSkin {
 
     fn read_chunk_03059003<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        FileRef::read(d)?;
+        self.foreground = FileRef::read(d)?;
 
         Ok(())
     }

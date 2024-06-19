@@ -9,7 +9,8 @@ use std::rc::Rc;
 
 use crate::{
     common::{Class, ClassId, EngineId, Vec3},
-    RcStr,
+    engines::game_data::waypoint_special_property::WaypointSpecialProperty,
+    FileRef, RcStr,
 };
 
 use self::media::{MediaClip, MediaClipGroup};
@@ -191,6 +192,8 @@ impl Default for MapType {
 #[derive(Debug)]
 pub struct Block {
     id: Rc<str>,
+    skin: Option<Rc<BlockSkin>>,
+    waypoint_property: Option<Rc<WaypointSpecialProperty>>,
     variant_index: u8,
     kind: BlockKind,
     elem_color: ElemColor,
@@ -201,6 +204,16 @@ impl Block {
     /// Identifier of the block.
     pub fn id(&self) -> &str {
         &self.id
+    }
+
+    /// Skin of the block.
+    pub fn skin(&self) -> Option<&Rc<BlockSkin>> {
+        self.skin.as_ref()
+    }
+
+    /// Waypoint property of the block.
+    pub fn waypoint_property(&self) -> Option<&Rc<WaypointSpecialProperty>> {
+        self.waypoint_property.as_ref()
     }
 
     /// Variant index of the block.
@@ -451,4 +464,14 @@ struct ChallengeParameters {
 
 impl Class for ChallengeParameters {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 91);
+}
+
+#[derive(Default, Debug)]
+pub struct BlockSkin {
+    pub background: Option<FileRef>,
+    pub foreground: Option<FileRef>,
+}
+
+impl Class for BlockSkin {
+    const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 89);
 }
