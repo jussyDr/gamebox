@@ -1188,9 +1188,9 @@ impl Map {
 
     fn read_chunk_03043065<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for _ in &self.items {
+        for item in &mut self.items {
             if d.bool8()? {
-                FileRef::read(d)?;
+                item.foreground_skin = FileRef::read(d)?;
             }
         }
 
@@ -1476,7 +1476,7 @@ impl AnchoredObject {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 8
-        self.id = d.id()?.into(); // "Rocks\RPG Rocks\RockB\9\Rocher2.9.4.Item.Gbx"
+        self.id = d.id()?.into();
         d.u32()?; // 26
         d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
         self.rotation = YawPitchRoll {
@@ -1492,8 +1492,8 @@ impl AnchoredObject {
             y: d.f32()?,
             z: d.f32()?,
         };
-        d.node_or_null::<WaypointSpecialProperty>()?;
-        let flags = d.u16()?; // 1
+        self.waypoint_property = d.node_or_null::<WaypointSpecialProperty>()?;
+        let flags = d.u16()?;
         self.pivot_position = Vec3 {
             x: d.f32()?,
             y: d.f32()?,
@@ -1501,7 +1501,7 @@ impl AnchoredObject {
         };
         d.u32()?;
         if flags & 0x0004 != 0 {
-            FileRef::read(d)?;
+            self.background_skin = FileRef::read(d)?;
         }
         d.u32()?;
         d.u32()?;

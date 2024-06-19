@@ -301,10 +301,13 @@ impl FreeBlock {
 pub struct Item {
     id: RcStr,
     position: Vec3<f32>,
-    rotation: YawPitchRoll,
     pivot_position: Vec3<f32>,
+    rotation: YawPitchRoll,
     elem_color: ElemColor,
     animation_offset: PhaseOffset,
+    waypoint_property: Option<WaypointSpecialProperty>,
+    background_skin: Option<FileRef>,
+    foreground_skin: Option<FileRef>,
 }
 
 impl Item {
@@ -318,14 +321,14 @@ impl Item {
         &self.position
     }
 
-    /// Rotation of the item.
-    pub const fn rotation(&self) -> &YawPitchRoll {
-        &self.rotation
-    }
-
     /// Pivot position of the item.
     pub const fn pivot_position(&self) -> &Vec3<f32> {
         &self.pivot_position
+    }
+
+    /// Rotation of the item.
+    pub const fn rotation(&self) -> &YawPitchRoll {
+        &self.rotation
     }
 
     /// Element color of the item.
@@ -336,6 +339,21 @@ impl Item {
     /// Animation phase offset of the item.
     pub const fn animation_offset(&self) -> PhaseOffset {
         self.animation_offset
+    }
+
+    /// Waypoint property of the item.
+    pub const fn waypoint_property(&self) -> Option<&WaypointSpecialProperty> {
+        self.waypoint_property.as_ref()
+    }
+
+    /// Background skin of the item.
+    pub const fn background_skin(&self) -> Option<&FileRef> {
+        self.background_skin.as_ref()
+    }
+
+    /// Foreground skin of the item.
+    pub const fn foreground_skin(&self) -> Option<&FileRef> {
+        self.foreground_skin.as_ref()
     }
 }
 
@@ -466,9 +484,12 @@ impl Class for ChallengeParameters {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 91);
 }
 
+/// Skin of a block.
 #[derive(Default, Debug)]
 pub struct BlockSkin {
+    /// Background skin.
     pub background: Option<FileRef>,
+    /// Foreground skin.
     pub foreground: Option<FileRef>,
 }
 
