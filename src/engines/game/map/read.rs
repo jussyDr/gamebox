@@ -1,10 +1,17 @@
-use std::io::{BufRead, Read, Seek};
+use std::{
+    io::{BufRead, Read, Seek},
+    iter,
+};
 
 use crate::{
     common::{Class, ClassId, EngineId, Vec3, ID_INDEX_MASK, ID_MARKER_BIT, NULL},
     deserialize::{Deserializer, IdStateMut, NodeStateMut},
     engines::{
-        game::{ghost::Ghost, map::BlockSkin, zone_genealogy::ZoneGenealogy},
+        game::{
+            ghost::Ghost,
+            map::{BlockSkin, Macroblock},
+            zone_genealogy::ZoneGenealogy,
+        },
         game_data::waypoint_special_property::WaypointSpecialProperty,
         script::traits_metadata::TraitsMetadata,
     },
@@ -1223,18 +1230,65 @@ impl Map {
 
     fn read_chunk_03043069<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.u32()?; // 0
-        for _ in &self.blocks {
-            d.u32()?;
-        }
-        for _ in &self.items {
-            d.u32()?;
-        }
+        let block_macroblock_indices = d.repeat(self.blocks.len(), |d| d.u32())?;
+        let item_macroblock_indices = d.repeat(self.items.len(), |d| d.u32())?;
         d.list(|d| {
-            d.u32()?;
-            d.u32()?;
+            let _index = d.u32()?;
+            let _flags = d.u32()?;
 
             Ok(())
         })?;
+
+        let num_macroblocks = block_macroblock_indices
+            .iter()
+            .copied()
+            .filter(|&macroblock_index| macroblock_index != 0xffffffff)
+            .max()
+            .map(|macroblock_index| macroblock_index + 1)
+            .unwrap_or(0)
+            .max(
+                item_macroblock_indices
+                    .iter()
+                    .copied()
+                    .filter(|&macroblock_index| macroblock_index != 0xffffffff)
+                    .max()
+                    .map(|macroblock_index| macroblock_index + 1)
+                    .unwrap_or(0),
+            );
+
+        self.macroblocks = iter::repeat_with(Macroblock::default)
+            .take(num_macroblocks as usize)
+            .collect();
+
+        for (block_index, &macroblock_index) in block_macroblock_indices.iter().enumerate() {
+            if macroblock_index != 0xffffffff {
+                self.macroblocks[macroblock_index as usize]
+                    .blocks
+                    .push(self.blocks[block_index].clone());
+            }
+        }
+
+        for (item_index, &macroblock_index) in item_macroblock_indices.iter().enumerate() {
+            if macroblock_index != 0xffffffff {
+                self.macroblocks[macroblock_index as usize]
+                    .items
+                    .push(self.items[item_index].clone());
+            }
+        }
+
+        let mut block_index = 0;
+        self.blocks.retain(|_| {
+            let retain = block_macroblock_indices[block_index] == 0xffffffff;
+            block_index += 1;
+            retain
+        });
+
+        let mut item_index = 0;
+        self.items.retain(|_| {
+            let retain = item_macroblock_indices[item_index] == 0xffffffff;
+            item_index += 1;
+            retain
+        });
 
         Ok(())
     }

@@ -45,6 +45,7 @@ pub struct Map {
     end_race_media: Option<Rc<MediaClipGroup>>,
     ambiance_media: Option<Rc<MediaClip>>,
     embedded_objects: Option<EmbeddedObjects>,
+    macroblocks: Vec<Macroblock>,
 }
 
 impl Class for Map {
@@ -77,6 +78,7 @@ impl Default for Map {
             end_race_media: None,
             ambiance_media: None,
             embedded_objects: None,
+            macroblocks: vec![],
         }
     }
 }
@@ -189,7 +191,7 @@ impl Default for MapType {
 }
 
 /// Block placed inside of a map.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Block {
     id: Rc<str>,
     skin: Option<Rc<BlockSkin>>,
@@ -238,7 +240,7 @@ impl Block {
 }
 
 /// Either a normal or a free block.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum BlockKind {
     /// A normal block.
     Normal(NormalBlock),
@@ -247,7 +249,7 @@ pub enum BlockKind {
 }
 
 /// A normal block.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct NormalBlock {
     direction: Direction,
     coord: Vec3<u8>,
@@ -278,7 +280,7 @@ impl NormalBlock {
 }
 
 /// A free block.
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct FreeBlock {
     position: Vec3<f32>,
     rotation: YawPitchRoll,
@@ -297,7 +299,7 @@ impl FreeBlock {
 }
 
 /// Item placed inside of a map.
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct Item {
     id: RcStr,
     position: Vec3<f32>,
@@ -502,4 +504,23 @@ pub struct BlockSkin {
 
 impl Class for BlockSkin {
     const CLASS_ID: ClassId = ClassId::new(EngineId::GAME, 89);
+}
+
+/// Macroblock placed inside of a map.
+#[derive(Default, Debug)]
+pub struct Macroblock {
+    blocks: Vec<Block>,
+    items: Vec<Item>,
+}
+
+impl Macroblock {
+    /// Blocks of the macroblock.
+    pub fn blocks(&self) -> &[Block] {
+        &self.blocks
+    }
+
+    /// Items of the macroblock.
+    pub fn items(&self) -> &[Item] {
+        &self.items
+    }
 }

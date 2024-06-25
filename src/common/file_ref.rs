@@ -7,7 +7,7 @@ const INTERNAL_FILE_REF_CHECKSUM: [u8; 32] = [
 ];
 
 /// Reference to a file.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum FileRef {
     /// Reference to an internal game file.
     Internal(InternalFileRef),
@@ -16,7 +16,7 @@ pub enum FileRef {
 }
 
 /// Reference to an internal game file.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct InternalFileRef {
     pub(crate) path: PathBuf,
 }
@@ -29,7 +29,7 @@ impl InternalFileRef {
 }
 
 /// Reference to an external file.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ExternalFileRef {
     checksum: [u8; 32],
     path: PathBuf,

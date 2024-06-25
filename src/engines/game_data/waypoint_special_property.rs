@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Special waypoint property.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum WaypointSpecialProperty {
     Checkpoint { group: u32 },
     Goal { order: u32 },
