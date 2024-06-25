@@ -404,6 +404,13 @@ pub struct YawPitchRoll {
     pub roll: f32,
 }
 
+impl YawPitchRoll {
+    /// Convert into an array of the form `[yaw, pitch, roll]`.
+    pub fn into_array(self) -> [f32; 3] {
+        [self.yaw, self.pitch, self.roll]
+    }
+}
+
 /// Element color of a block or item.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
