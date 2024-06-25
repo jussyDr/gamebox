@@ -9,13 +9,23 @@ use std::io::{Read, Write};
 use crate::{deserialize::Deserializer, read::Result, serialize::Serializer};
 
 /// A 2-dimensional vector of type `T`.
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vec2<T> {
     /// X-component.
     pub x: T,
     /// Y-component.
     pub y: T,
 }
+
+impl<T> Vec2<T> {
+    /// Convert the vector to an array of the form `[x, y]`.
+    pub fn into_array(self) -> [T; 2] {
+        [self.x, self.y]
+    }
+}
+
+impl Copy for Vec2<u8> {}
 
 /// A 3-dimensional vector of type `T`.
 #[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
@@ -27,6 +37,13 @@ pub struct Vec3<T> {
     pub y: T,
     /// Z-component.
     pub z: T,
+}
+
+impl<T> Vec3<T> {
+    /// Convert the vector to an array of the form `[x, y, z]`.
+    pub fn into_array(self) -> [T; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 impl Copy for Vec3<u8> {}
