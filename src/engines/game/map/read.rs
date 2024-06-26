@@ -1014,9 +1014,11 @@ impl Map {
                 Ok(id)
             })?;
             let size = d.u32()?;
-            let data = d.bytes(size as usize)?;
+            if size > 0 {
+                let data = d.bytes(size as usize)?;
 
-            self.embedded_objects = Some(EmbeddedObjects { ids, data });
+                self.embedded_objects = Some(EmbeddedObjects { ids, data });
+            }
 
             d.u32()?; // 0
 
