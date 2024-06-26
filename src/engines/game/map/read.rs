@@ -869,7 +869,7 @@ impl Map {
         Ok(())
     }
 
-    fn read_chunk_03043048<R: Read, I: IdStateMut, N>(
+    fn read_chunk_03043048<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
@@ -877,11 +877,17 @@ impl Map {
         d.u32()?; // 6
         self.baked_blocks = d.list(|d| {
             let info_id = d.id()?;
+
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;
             let z = d.u8()?;
             let flags = d.u32()?;
+
+            if flags & 0x00008000 != 0 {
+                d.id()?; // "Nadeo"
+                d.internal_node_ref::<BlockSkin>()?;
+            }
 
             let variant_index = if flags & 0x00200000 != 0 { 1 } else { 0 };
 

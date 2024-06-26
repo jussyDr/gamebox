@@ -242,6 +242,11 @@ impl MediaTrack {
                         MediaBlockTime::read_body(&mut node, d)?;
                         Rc::new(node)
                     }
+                    0x030a1000 => {
+                        let mut node = MediaBlockCameraPath;
+                        MediaBlockCameraPath::read_body(&mut node, d)?;
+                        Rc::new(node)
+                    }
                     0x030a2000 => {
                         let mut node = MediaBlockCameraCustom;
                         MediaBlockCameraCustom::read_body(&mut node, d)?;
@@ -350,6 +355,7 @@ impl MediaTrack {
                 .or_else(|node| node.downcast().map(MediaBlock::FxColors))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraGame))
                 .or_else(|node| node.downcast().map(MediaBlock::Time))
+                .or_else(|node| node.downcast().map(MediaBlock::CameraPath))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraCustom))
                 .or_else(|node| node.downcast().map(MediaBlock::CameraEffectShake))
                 .or_else(|node| node.downcast().map(MediaBlock::Image))
@@ -401,6 +407,8 @@ pub enum MediaBlock {
     CameraGame(Rc<MediaBlockCameraGame>),
     /// Time media block.
     Time(Rc<MediaBlockTime>),
+    /// Path camera media block.
+    CameraPath(Rc<MediaBlockCameraPath>),
     /// Custom camera media block.
     CameraCustom(Rc<MediaBlockCameraCustom>),
     /// Shake cam FX media block.
@@ -761,6 +769,61 @@ impl MediaBlockTime {
     fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
         d.list(|d| {
             d.u32()?;
+            d.u32()?;
+            d.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+}
+
+/// Path camera media block.
+#[derive(Debug)]
+pub struct MediaBlockCameraPath;
+
+impl<R: Read, I, N> ReadBody<R, I, N> for MediaBlockCameraPath {
+    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        read_body_chunks(self, d)
+    }
+}
+
+impl<R: Read, I, N> BodyChunks<R, I, N> for MediaBlockCameraPath {
+    fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
+        [BodyChunkEntry {
+            id: 0x030a1003,
+            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_3(n, d)),
+        }]
+        .into_iter()
+    }
+}
+
+impl MediaBlockCameraPath {
+    fn read_chunk_3<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
+        d.u32()?; // 5
+        d.list(|d| {
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.u32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
+            d.f32()?;
             d.u32()?;
             d.u32()?;
 
@@ -1488,10 +1551,16 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MediaBlockEn
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MediaBlockEntity {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
-        [BodyChunkEntry {
-            id: 0x0329f000,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
-        }]
+        [
+            BodyChunkEntry {
+                id: 0x0329f000,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+            },
+            BodyChunkEntry {
+                id: 0x0329f002,
+                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2(n, d)),
+            },
+        ]
         .into_iter()
     }
 }
@@ -1501,7 +1570,12 @@ impl MediaBlockEntity {
         &mut self,
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?; // 6 | 9
+        let version = d.u32()?; // 6 | 9 | 11
+
+        if !matches!(version, 6 | 9 | 11) {
+            return Err("".into());
+        }
+
         d.internal_node_ref::<EntRecordData>()?;
         d.u32()?; // 0
         d.list(|d| {
@@ -1513,6 +1587,9 @@ impl MediaBlockEntity {
         d.u32()?;
         d.u32()?;
         d.u32()?;
+        if version >= 11 {
+            d.u32()?;
+        }
         d.id()?;
         d.u32()?;
         d.id()?;
@@ -1525,6 +1602,9 @@ impl MediaBlockEntity {
             Ok(())
         })?;
         d.u32()?;
+        if version >= 11 {
+            d.u32()?; // 0
+        }
         d.list(|d| {
             d.u32()?;
             d.u32()?;
@@ -1540,11 +1620,23 @@ impl MediaBlockEntity {
         })?;
         if version >= 7 {
             d.string()?; // "Guide"
-
-            if version >= 8 {
-                d.u32()?;
-            }
         }
+        if version >= 8 {
+            d.u32()?;
+        }
+        if version >= 11 {
+            d.u32()?;
+            d.u32()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_2<R: Read, I: IdStateMut, N: NodeStateMut>(
+        &mut self,
+        d: &mut Deserializer<R, I, N>,
+    ) -> Result<()> {
+        d.u32()?; // 0
 
         Ok(())
     }
