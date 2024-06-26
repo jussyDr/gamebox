@@ -254,6 +254,7 @@ pub struct NormalBlock {
     direction: Direction,
     coord: Vec3<u8>,
     is_ground: bool,
+    is_air_variant: bool,
     is_ghost: bool,
 }
 
@@ -271,6 +272,11 @@ impl NormalBlock {
     /// Returns `true` if this block is a ground block.
     pub const fn is_ground(&self) -> bool {
         self.is_ground
+    }
+
+    /// Returns `true` if this block is an air variant.
+    pub const fn is_air_variant(&self) -> bool {
+        self.is_air_variant
     }
 
     /// Returns `true` if this block is a ghost block.

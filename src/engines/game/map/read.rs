@@ -648,6 +648,8 @@ impl Map {
 
                 let is_ground = flags & 0x00001000 != 0;
 
+                let is_air_variant = flags & 0x00200000 != 0;
+
                 let is_ghost = flags & 0x10000000 != 0;
 
                 self.blocks.push(Block {
@@ -659,6 +661,7 @@ impl Map {
                         direction,
                         coord,
                         is_ground,
+                        is_air_variant,
                         is_ghost,
                     }),
                     elem_color: ElemColor::default(),
@@ -910,6 +913,8 @@ impl Map {
 
                 let is_ground = flags & 0x00001000 != 0;
 
+                let is_air_variant = flags & 0x00200000 != 0;
+
                 let is_ghost = flags & 0x10000000 != 0;
 
                 Ok(Block {
@@ -921,6 +926,7 @@ impl Map {
                         direction,
                         coord,
                         is_ground,
+                        is_air_variant,
                         is_ghost,
                     }),
                     elem_color: ElemColor::default(),
