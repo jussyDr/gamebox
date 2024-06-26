@@ -599,7 +599,7 @@ impl Map {
         let num_blocks = d.u32()?;
         self.blocks = Vec::with_capacity(num_blocks as usize);
         while d.peek_u32()? & !ID_INDEX_MASK == ID_MARKER_BIT {
-            let id = d.id()?;
+            let info_id = d.id()?;
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;
@@ -629,7 +629,7 @@ impl Map {
 
             if is_free {
                 self.blocks.push(Block {
-                    id,
+                    info_id,
                     skin,
                     waypoint_property,
                     variant_index,
@@ -651,7 +651,7 @@ impl Map {
                 let is_ghost = flags & 0x10000000 != 0;
 
                 self.blocks.push(Block {
-                    id,
+                    info_id,
                     skin,
                     waypoint_property,
                     variant_index,
@@ -876,7 +876,7 @@ impl Map {
         d.u32()?; // 0
         d.u32()?; // 6
         self.baked_blocks = d.list(|d| {
-            let id = d.id()?;
+            let info_id = d.id()?;
             let direction = d.u8()?;
             let x = d.u8()?;
             let y = d.u8()?;
@@ -889,7 +889,7 @@ impl Map {
 
             if is_free {
                 Ok(Block {
-                    id,
+                    info_id,
                     skin: None,
                     waypoint_property: None,
                     variant_index,
@@ -907,7 +907,7 @@ impl Map {
                 let is_ghost = flags & 0x10000000 != 0;
 
                 Ok(Block {
-                    id,
+                    info_id,
                     skin: None,
                     waypoint_property: None,
                     variant_index,
@@ -1530,7 +1530,7 @@ impl AnchoredObject {
         d: &mut Deserializer<R, I, N>,
     ) -> Result<()> {
         d.u32()?; // 8
-        self.id = d.id()?.into();
+        self.model_id = d.id()?.into();
         d.u32()?; // 26
         d.id_or_null()?; // "qYw071iWQXu9_jXI7SXEvA"
         self.rotation = YawPitchRoll {

@@ -193,7 +193,7 @@ impl Default for MapType {
 /// Block placed inside of a map.
 #[derive(Clone, Debug)]
 pub struct Block {
-    id: Rc<str>,
+    info_id: Rc<str>,
     skin: Option<Rc<BlockSkin>>,
     waypoint_property: Option<Rc<WaypointSpecialProperty>>,
     variant_index: u8,
@@ -203,9 +203,9 @@ pub struct Block {
 }
 
 impl Block {
-    /// Identifier of the block.
-    pub fn id(&self) -> &str {
-        &self.id
+    /// Identifier of the corresponding block info.
+    pub fn info_id(&self) -> &str {
+        &self.info_id
     }
 
     /// Skin of the block.
@@ -301,7 +301,7 @@ impl FreeBlock {
 /// Item placed inside of a map.
 #[derive(Clone, Default, Debug)]
 pub struct Item {
-    id: RcStr,
+    model_id: RcStr,
     position: Vec3<f32>,
     pivot_position: Vec3<f32>,
     rotation: YawPitchRoll,
@@ -313,9 +313,9 @@ pub struct Item {
 }
 
 impl Item {
-    /// Identifier of the item.
-    pub fn id(&self) -> &str {
-        &self.id
+    /// Identifier of the corresponding item model.
+    pub fn model_id(&self) -> &str {
+        &self.model_id
     }
 
     /// Position of the item.
