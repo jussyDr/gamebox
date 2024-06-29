@@ -2,7 +2,7 @@ use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::Deserializer,
+    read::Reader,
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
@@ -18,8 +18,8 @@ impl Class for LightUserModel {
 }
 
 impl<R: Read, I, N> ReadBody<R, I, N> for LightUserModel {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -30,33 +30,33 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for LightUserModel {
     {
         [BodyChunkEntry {
             id: 0x090f9000,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+            read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0(n, r)),
         }]
         .into_iter()
     }
 }
 
 impl LightUserModel {
-    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        let version = d.u32()?;
+    fn read_chunk_0<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        let version = r.u32()?;
 
         if version != 1 {
             return Err("".into());
         }
 
-        d.u32()?; // 0
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
-        d.f32()?;
+        r.u32()?; // 0
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        r.f32()?;
 
         Ok(())
     }

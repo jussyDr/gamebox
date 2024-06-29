@@ -5,18 +5,14 @@ use crate::{
         ClassId, Compression, FileFormat, GAMEBOX_FILE_SIGNATURE, GAMEBOX_FILE_VERSION,
         UNKNOWN_BYTE,
     },
-    deserialize::Deserializer,
+    read::Reader,
 };
 
 use super::Result;
 
 enum BodyData<R> {
-    NotRead {
-        deserializer: Deserializer<R, (), ()>,
-    },
-    Read {
-        data: Vec<u8>,
-    },
+    NotRead { Reader: Reader<R, (), ()> },
+    Read { data: Vec<u8> },
 }
 
 /// Represents a GameBox file.
@@ -54,7 +50,7 @@ impl<R> GbxFile<R> {
 impl<R: Read> GbxFile<R> {
     /// Read a GameBox file from the given `reader`.
     pub fn read(reader: R, assume_no_header_data: bool) -> Result<Self> {
-        let mut d = Deserializer::new(reader, (), ());
+        let mut d = Reader::new(reader, (), ());
 
         if d.byte_array()? != GAMEBOX_FILE_SIGNATURE {
             return Err("invalid file signature".into());
@@ -123,7 +119,7 @@ impl<R: Read> GbxFile<R> {
             vec![]
         };
 
-        let body_data = BodyData::NotRead { deserializer: d };
+        let body_data = BodyData::NotRead { Reader: d };
 
         Ok(Self {
             class_id,
@@ -138,9 +134,7 @@ impl<R: Read> GbxFile<R> {
     /// Raw uncompressed body data.
     pub fn body_data(&mut self) -> Result<&[u8]> {
         match self.body_data {
-            BodyData::NotRead {
-                deserializer: ref mut d,
-            } => {
+            BodyData::NotRead { Reader: ref mut d } => {
                 let data = if self.is_body_compressed {
                     let decompressed_size = d.u32()?;
                     let compressed_size = d.u32()?;
@@ -169,7 +163,7 @@ impl<R: Read> GbxFile<R> {
 }
 
 fn read_folders<R: Read, I, N>(
-    d: &mut Deserializer<R, I, N>,
+    d: &mut Reader<R, I, N>,
     path: PathBuf,
     folders: &mut Vec<PathBuf>,
 ) -> Result<()> {

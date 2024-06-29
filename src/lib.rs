@@ -37,7 +37,6 @@
 //! # Ok::<(), gamebox::write::Error>(()) };
 //! ```
 
-pub mod deserialize;
 pub mod engines;
 pub mod read;
 pub mod serialize;
@@ -50,5 +49,5 @@ pub use engines::{
     game::{ghost::Ghost, macroblock::Macroblock, map::Map},
     game_data::item::Item,
 };
-pub use read::{read, read_file, Reader};
+pub use read::{read, read_file, ReadConfig};
 pub use write::{write, write_file, Writer};

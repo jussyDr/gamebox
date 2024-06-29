@@ -2,7 +2,7 @@ use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::Deserializer,
+    read::Reader,
     read::{readable::ReadBody, Result},
 };
 
@@ -17,27 +17,27 @@ impl Class for TraitsMetadata {
 }
 
 impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 6
-        let num_types = d.u8()?;
-        let types = d.repeat(num_types as usize, |d| {
-            let ty = Type::read(d)?;
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 6
+        let num_types = r.u8()?;
+        let types = r.repeat(num_types as usize, |r| {
+            let ty = Type::read(r)?;
 
             Ok(ty)
         })?;
-        let n = d.u8()?;
-        self.traits = d.repeat(n as usize, |d| {
-            let size = d.u8()?;
-            let name = d.string_of_len(size as usize)?;
-            let type_index = d.u8()?;
+        let n = r.u8()?;
+        self.traits = r.repeat(n as usize, |r| {
+            let size = r.u8()?;
+            let name = r.string_of_len(size as usize)?;
+            let type_index = r.u8()?;
             let ty = types.get(type_index as usize).ok_or("")?;
 
-            let value = read_value(d, ty)?;
+            let value = read_value(r, ty)?;
 
             Ok((name, value))
         })?;
 
-        if d.u32()? != 0xfacade01 {
+        if r.u32()? != 0xfacade01 {
             return Err("expected end of node".into());
         }
 
@@ -45,24 +45,24 @@ impl<R: Read, I, N> ReadBody<R, I, N> for TraitsMetadata {
     }
 }
 
-fn read_value<R: Read, I, N>(d: &mut Deserializer<R, I, N>, ty: &Type) -> Result<Value> {
+fn read_value<R: Read, I, N>(r: &mut Reader<R, I, N>, ty: &Type) -> Result<Value> {
     let value = match ty {
         Type::Void => Value::Void,
-        Type::Boolean => Value::Boolean(d.bool8()?),
-        Type::Integer => Value::Integer(d.i32()?),
-        Type::Real => Value::Real(d.f32()?),
+        Type::Boolean => Value::Boolean(r.bool8()?),
+        Type::Integer => Value::Integer(r.i32()?),
+        Type::Real => Value::Real(r.f32()?),
         Type::Text => {
-            let len = d.u8()?;
-            Value::Text(d.string_of_len(len as usize)?)
+            let len = r.u8()?;
+            Value::Text(r.string_of_len(len as usize)?)
         }
         Type::Array {
             key_type,
             element_type,
         } => {
-            let len = d.u8()?;
-            let array = d.repeat(len as usize, |d| {
-                let key = read_value(d, key_type)?;
-                let value = read_value(d, element_type)?;
+            let len = r.u8()?;
+            let array = r.repeat(len as usize, |r| {
+                let key = read_value(r, key_type)?;
+                let value = read_value(r, element_type)?;
 
                 Ok((key, value))
             })?;
@@ -86,8 +86,8 @@ enum Type {
 }
 
 impl Type {
-    fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
-        let ty = d.u8()?;
+    fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Self> {
+        let ty = r.u8()?;
 
         match ty {
             0 => Ok(Type::Void),
@@ -96,8 +96,8 @@ impl Type {
             3 => Ok(Type::Real),
             5 => Ok(Type::Text),
             7 => {
-                let key_type = Self::read(d)?;
-                let element_type = Self::read(d)?;
+                let key_type = Self::read(r)?;
+                let element_type = Self::read(r)?;
 
                 Ok(Type::Array {
                     key_type: Box::new(key_type),

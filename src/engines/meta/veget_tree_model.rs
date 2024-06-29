@@ -4,12 +4,12 @@ use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     engines::plug::visual_indexed_triangles::VisualIndexedTriangles,
     read::{
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
+    read::{IdStateMut, NodeStateMut, Reader},
 };
 
 /// Node type corresponding to GameBox files with the extension `VegetTreeModel.Gbx`.
@@ -39,100 +39,100 @@ impl HeaderChunks for VegetTreeModel {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for VegetTreeModel {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 15
-        d.u32()?; // 4
-        d.u32()?; // 2
-        d.u32()?; // 1
-        d.u32()?; // 3
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 1
-        d.u32()?; // 2
-        d.u32()?; // 3
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u8()?; // 0
-        d.u32()?; // 4
-        d.u32()?; // 5
-        d.u32()?; // 6
-        d.u32()?; // 7
-        d.u32()?; // 8
-        d.u32()?; // 9
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u8()?; // 0
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 10
-        d.u32()?; // 11
-        d.u32()?; // 12
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u8()?; // 1
-        d.u32()?; // 3
-        d.id()?; // "FallTree_bark"
-        d.id()?; // "ItemBase_bark"
-        d.id()?; // "FallTree_leaf"
-        d.u32()?; // 3
-        d.u16()?; // 0
-        d.internal_node_ref::<VisualIndexedTriangles>()?;
-        d.u8()?; // 0
-        d.u16()?; // 1
-        d.internal_node_ref::<VisualIndexedTriangles>()?;
-        d.u8()?; // 0
-        d.u16()?; // 2
-        d.internal_node_ref::<VisualIndexedTriangles>()?;
-        d.u8()?; // 0
-        d.u16()?; // 3
-        d.u32()?; // 0
-        d.internal_node_ref::<VisualIndexedTriangles>()?;
-        d.u8()?; // 0
-        d.u16()?; // 1
-        d.internal_node_ref::<VisualIndexedTriangles>()?;
-        d.u8()?; // 0
-        d.u16()?; // 2
-        d.internal_node_ref::<VisualIndexedTriangles>()?;
-        d.u32()?; // 0x48000000
-        d.u32()?; // 0x142
-        d.u32()?; // 0x20342c8
-        d.u32()?; // 0x9d967f90
-        d.u32()?; // 0x01d638cf
-        d.f32()?; // 1.0
-        d.f32()?; // 0.1
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 7
-        d.u32()?; // 7
-        d.list(|d| {
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 15
+        r.u32()?; // 4
+        r.u32()?; // 2
+        r.u32()?; // 1
+        r.u32()?; // 3
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 1
+        r.u32()?; // 2
+        r.u32()?; // 3
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u8()?; // 0
+        r.u32()?; // 4
+        r.u32()?; // 5
+        r.u32()?; // 6
+        r.u32()?; // 7
+        r.u32()?; // 8
+        r.u32()?; // 9
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u8()?; // 0
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 10
+        r.u32()?; // 11
+        r.u32()?; // 12
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u8()?; // 1
+        r.u32()?; // 3
+        r.id()?; // "FallTree_bark"
+        r.id()?; // "ItemBase_bark"
+        r.id()?; // "FallTree_leaf"
+        r.u32()?; // 3
+        r.u16()?; // 0
+        r.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u8()?; // 0
+        r.u16()?; // 1
+        r.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u8()?; // 0
+        r.u16()?; // 2
+        r.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u8()?; // 0
+        r.u16()?; // 3
+        r.u32()?; // 0
+        r.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u8()?; // 0
+        r.u16()?; // 1
+        r.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u8()?; // 0
+        r.u16()?; // 2
+        r.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u32()?; // 0x48000000
+        r.u32()?; // 0x142
+        r.u32()?; // 0x20342c8
+        r.u32()?; // 0x9d967f90
+        r.u32()?; // 0x01d638cf
+        r.f32()?; // 1.0
+        r.f32()?; // 0.1
+        r.u32()?; // 1
+        r.u32()?; // 1
+        r.u32()?; // 7
+        r.u32()?; // 7
+        r.list(|r| {
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
 
             Ok(())
         })?;
-        d.list(|d| {
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
+        r.list(|r| {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         })?;
-        d.u32()?; // 0
-        d.u32()?; // 25
-        d.u32()?; // 26
-        d.u32()?; // 2
-        d.u32()?; // 2
-        d.u32()?; // 0x3e19999a
-        d.u32()?; // 0x12c
-        d.u32()?; // 14
-        d.bytes(116)?;
+        r.u32()?; // 0
+        r.u32()?; // 25
+        r.u32()?; // 26
+        r.u32()?; // 2
+        r.u32()?; // 2
+        r.u32()?; // 0x3e19999a
+        r.u32()?; // 0x12c
+        r.u32()?; // 14
+        r.bytes(116)?;
 
         Ok(())
     }

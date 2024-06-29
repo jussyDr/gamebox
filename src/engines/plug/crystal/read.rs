@@ -2,7 +2,6 @@ use std::io::Read;
 
 use crate::{
     common::Vec2,
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     engines::{
         plug::{light_user_model::LightUserModel, material_user_inst::MaterialUserInst},
         script::traits_metadata::TraitsMetadata,
@@ -11,14 +10,15 @@ use crate::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
+    read::{IdStateMut, NodeStateMut, Reader},
     Vec3,
 };
 
 use super::{Crystal, Layer, LayerKind, Material, Mesh, TreeGenerator};
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Crystal {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -28,29 +28,29 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Crystal {
         [
             BodyChunkEntry {
                 id: 0x09051000,
-                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
-                    TreeGenerator::read_chunk_0(&mut n.parent, d)
+                read_fn: BodyChunkReadFn::Normal(|n: &mut Self, r| {
+                    TreeGenerator::read_chunk_0(&mut n.parent, r)
                 }),
             },
             BodyChunkEntry {
                 id: 0x09003003,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003003(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09003003(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09003004,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_09003004(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_09003004(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09003005,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003005(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09003005(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09003006,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003006(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09003006(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09003007,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09003007(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09003007(n, r)),
             },
         ]
         .into_iter()
@@ -60,19 +60,19 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Crystal {
 impl Crystal {
     fn read_chunk_09003003<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?;
+        let version = r.u32()?;
 
         if version != 2 {
             return Err("".into());
         }
 
-        self.materials = d.list(|d| {
-            let path = d.string()?;
+        self.materials = r.list(|r| {
+            let path = r.string()?;
 
             let material = if path.is_empty() {
-                let material = d.internal_node_ref::<MaterialUserInst>()?;
+                let material = r.internal_node_ref::<MaterialUserInst>()?;
 
                 Material::Custom(material)
             } else {
@@ -85,58 +85,58 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        let size = d.u32()?;
+    fn read_chunk_09003004<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 1
+        let size = r.u32()?;
 
         if size > 0 {
-            let mut d = d.take_with(size as u64, (), ());
+            let mut d = r.take_with(size as u64, (), ());
 
-            d.u32()?; // 0
-            d.u32()?; // 1
-            d.u32()?; // 0
-            d.u32()?; // 1
-            d.u32()?; // 1
-            d.string()?; // "Layer1"
-            d.u32()?; // 0
-            d.u32()?; // 1
-            d.u32()?; // 0
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?; // 0
-            d.node::<TraitsMetadata>()?;
-            d.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 1
+            r.u32()?; // 0
+            r.u32()?; // 1
+            r.u32()?; // 1
+            r.string()?; // "Layer1"
+            r.u32()?; // 0
+            r.u32()?; // 1
+            r.u32()?; // 0
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?; // 0
+            r.node::<TraitsMetadata>()?;
+            r.u32()?; // 0
         }
 
-        d.u32()?; // 1
+        r.u32()?; // 1
 
         Ok(())
     }
 
     fn read_chunk_09003005<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 0
-        self.layers = d.list(|d| {
-            let kind = d.u32()?;
-            d.u32()?; // 2
-            d.u32()?; // 0
-            let layer_id = d.id()?; // "Layer0"
-            let layer_name = d.string()?; // "Geometry"
-            d.u32()?; // 1
-            let version = d.u32()?;
+        r.u32()?; // 0
+        self.layers = r.list(|r| {
+            let kind = r.u32()?;
+            r.u32()?; // 2
+            r.u32()?; // 0
+            let layer_id = r.id()?; // "Layer0"
+            let layer_name = r.string()?; // "Geometry"
+            r.u32()?; // 1
+            let version = r.u32()?;
             let layer_kind = match kind {
                 0 => {
                     if version != 1 {
                         return Err("".into());
                     }
 
-                    let mesh = read_mesh(d, self.materials.len() as u32)?;
-                    let is_visible = d.bool32()?;
-                    let is_collidable = d.bool32()?;
+                    let mesh = read_mesh(r, self.materials.len() as u32)?;
+                    let is_visible = r.bool32()?;
+                    let is_collidable = r.bool32()?;
 
                     LayerKind::Geometry {
                         mesh,
@@ -149,44 +149,44 @@ impl Crystal {
                         return Err("".into());
                     }
 
-                    d.u32()?; // 64
-                    d.u32()?; // 64
-                    d.u32()?; // 64
-                    d.f32()?;
-                    d.u32()?; // 0
-                    d.u32()?; // 0
-                    d.u32()?; // 0
-                    d.u32()?; // 0
+                    r.u32()?; // 64
+                    r.u32()?; // 64
+                    r.u32()?; // 64
+                    r.f32()?;
+                    r.u32()?; // 0
+                    r.u32()?; // 0
+                    r.u32()?; // 0
+                    r.u32()?; // 0
                     if version >= 8 {
-                        d.f32()?;
-                        d.u32()?; // 0
-                        d.u32()?; // 0
-                        d.u32()?; // 0
-                        d.f32()?;
-                        d.u32()?; // 0
-                        d.u32()?; // 0
-                        d.u32()?; // 0
-                        d.f32()?;
-                        d.u32()?; // 0
-                        d.u32()?; // 0
-                        d.u32()?; // 0
+                        r.f32()?;
+                        r.u32()?; // 0
+                        r.u32()?; // 0
+                        r.u32()?; // 0
+                        r.f32()?;
+                        r.u32()?; // 0
+                        r.u32()?; // 0
+                        r.u32()?; // 0
+                        r.f32()?;
+                        r.u32()?; // 0
+                        r.u32()?; // 0
+                        r.u32()?; // 0
                     }
-                    d.list(|d| {
-                        d.u32()?; // 0
-                        d.list(|d| {
-                            d.u32()?;
-                            d.u32()?; // 0
-                            d.u32()?; // 0
+                    r.list(|r| {
+                        r.u32()?; // 0
+                        r.list(|r| {
+                            r.u32()?;
+                            r.u32()?; // 0
+                            r.u32()?; // 0
 
                             Ok(())
                         })?;
 
                         Ok(())
                     })?;
-                    d.u32()?; // 1
-                    d.u32()?; // 1
-                    d.list(|d| {
-                        d.u32()?;
+                    r.u32()?; // 1
+                    r.u32()?; // 1
+                    r.list(|r| {
+                        r.u32()?;
 
                         Ok(())
                     })?;
@@ -198,12 +198,12 @@ impl Crystal {
                         return Err("".into());
                     }
 
-                    let mesh = read_mesh(d, self.materials.len() as u32)?;
+                    let mesh = read_mesh(r, self.materials.len() as u32)?;
 
                     LayerKind::Trigger(mesh)
                 }
 
-                _ => read_mask_layer(d, kind)?,
+                _ => read_mask_layer(r, kind)?,
             };
 
             Ok(Layer {
@@ -216,31 +216,31 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003006<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        let version = d.u32()?;
+    fn read_chunk_09003006<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        let version = r.u32()?;
 
         if !matches!(version, 0..=2) {
             return Err("".into());
         }
 
         if version == 0 {
-            d.list(|d| {
-                d.f32()?;
-                d.f32()?;
+            r.list(|r| {
+                r.f32()?;
+                r.f32()?;
 
                 Ok(())
             })?;
         } else {
-            d.list(|d| {
-                d.u32()?;
+            r.list(|r| {
+                r.u32()?;
 
                 Ok(())
             })?;
         }
         if version >= 2 {
-            let len = d.u32()?;
-            d.repeat(len as usize, |d| {
-                read_compact_index(d, len)?;
+            let len = r.u32()?;
+            r.repeat(len as usize, |r| {
+                read_compact_index(r, len)?;
 
                 Ok(())
             })?;
@@ -249,15 +249,15 @@ impl Crystal {
         Ok(())
     }
 
-    fn read_chunk_09003007<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.list(|d| {
-            d.f32()?;
+    fn read_chunk_09003007<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
+        r.list(|r| {
+            r.f32()?;
 
             Ok(())
         })?;
-        d.list(|d| {
-            d.u32()?;
+        r.list(|r| {
+            r.u32()?;
 
             Ok(())
         })?;
@@ -267,24 +267,24 @@ impl Crystal {
 }
 
 impl TreeGenerator {
-    fn read_chunk_0<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
+    fn read_chunk_0<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 1
 
         Ok(())
     }
 }
 
 fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
-    d: &mut Deserializer<R, I, N>,
+    r: &mut Reader<R, I, N>,
     kind: u32,
 ) -> Result<LayerKind> {
-    let _mask = d.list(|d| {
-        d.u32()?;
-        d.id_or_null()?;
+    let _mask = r.list(|r| {
+        r.u32()?;
+        r.id_or_null()?;
 
         Ok(())
     })?;
-    let version = d.u32()?;
+    let version = r.u32()?;
 
     let layer = match kind {
         1 => {
@@ -292,7 +292,7 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let _intensity = d.u32()?;
+            let _intensity = r.u32()?;
 
             LayerKind::Smooth
         }
@@ -301,9 +301,9 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?;
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?;
 
             LayerKind::Translation
         }
@@ -312,9 +312,9 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let _rotation = d.f32()?;
-            let _axis = d.u32()?;
-            let _independent = d.u32()?;
+            let _rotation = r.f32()?;
+            let _axis = r.u32()?;
+            let _independent = r.u32()?;
 
             LayerKind::Rotation
         }
@@ -323,10 +323,10 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let scale_x = d.f32()?;
-            let scale_y = d.f32()?;
-            let scale_z = d.f32()?;
-            let _independent = d.u32()?;
+            let scale_x = r.f32()?;
+            let scale_y = r.f32()?;
+            let scale_z = r.f32()?;
+            let _independent = r.u32()?;
 
             LayerKind::Scale {
                 scale: Vec3 {
@@ -341,9 +341,9 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let _axis = d.u32()?;
-            let _distance = d.f32()?;
-            let _independent = d.u32()?;
+            let _axis = r.u32()?;
+            let _distance = r.f32()?;
+            let _independent = r.u32()?;
 
             LayerKind::Mirror
         }
@@ -352,7 +352,7 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let _num_subdivisions = d.u32()?;
+            let _num_subdivisions = r.u32()?;
 
             LayerKind::Subdivide
         }
@@ -361,9 +361,9 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let _min_distance = d.f32()?;
-            d.f32()?;
-            let _max_distance = d.f32()?;
+            let _min_distance = r.f32()?;
+            r.f32()?;
+            let _max_distance = r.f32()?;
 
             LayerKind::Chaos
         }
@@ -372,37 +372,37 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.u32()?;
-            d.u32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.u32()?;
-            d.f32()?;
-            d.u32()?;
-            d.u32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.list(|d| {
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
-                d.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.u32()?;
+            r.f32()?;
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.list(|r| {
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
 
                 Ok(())
             })?;
@@ -415,12 +415,12 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            let x = d.f32()?;
-            let y = d.f32()?;
-            let z = d.f32()?;
-            let _yaw = d.f32()?;
-            let _pitch = d.f32()?;
-            let _roll = d.f32()?;
+            let x = r.f32()?;
+            let y = r.f32()?;
+            let z = r.f32()?;
+            let _yaw = r.f32()?;
+            let _pitch = r.f32()?;
+            let _roll = r.f32()?;
 
             LayerKind::SpawnPosition {
                 position: Vec3 { x, y, z },
@@ -431,25 +431,25 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
                 return Err("".into());
             }
 
-            d.list(|d| {
-                d.internal_node_ref::<LightUserModel>()?;
+            r.list(|r| {
+                r.internal_node_ref::<LightUserModel>()?;
 
                 Ok(())
             })?;
-            d.list(|d| {
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
-                d.u32()?;
+            r.list(|r| {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
 
                 Ok(())
             })?;
@@ -462,34 +462,34 @@ fn read_mask_layer<R: Read, I: IdStateMut, N: NodeStateMut>(
     Ok(layer)
 }
 
-fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_materials: u32) -> Result<Mesh> {
-    let version = d.u32()?;
+fn read_mesh<R: Read, I, N>(r: &mut Reader<R, I, N>, num_materials: u32) -> Result<Mesh> {
+    let version = r.u32()?;
 
     if !matches!(version, 32 | 37) {
         return Err("".into());
     }
 
-    d.u32()?; // 4
-    d.u32()?; // 3
-    d.u32()?; // 4
-    d.f32()?; // 64.0
-    d.u32()?; // 2
-    d.f32()?; // 128.0
-    d.u32()?; // 1
-    d.f32()?; // 192.0
-    d.u32()?; // 0
-    let groups = d.list(|d| {
-        d.u32()?; // 0
+    r.u32()?; // 4
+    r.u32()?; // 3
+    r.u32()?; // 4
+    r.f32()?; // 64.0
+    r.u32()?; // 2
+    r.f32()?; // 128.0
+    r.u32()?; // 1
+    r.f32()?; // 192.0
+    r.u32()?; // 0
+    let groups = r.list(|r| {
+        r.u32()?; // 0
         if version >= 36 {
-            d.u8()?; // 1
+            r.u8()?; // 1
         } else {
-            d.u32()?; // 1
+            r.u32()?; // 1
         }
-        d.u32()?; // 2 | 0xffffffff
-        d.string()?; // "" | "part"
-        d.u32()?; // 0xffffffff
-        d.list(|d| {
-            d.u32()?;
+        r.u32()?; // 2 | 0xffffffff
+        r.string()?; // "" | "part"
+        r.u32()?; // 0xffffffff
+        r.list(|r| {
+            r.u32()?;
 
             Ok(())
         })?;
@@ -497,112 +497,112 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_materials: u32) -
         Ok(())
     })?;
     if version >= 34 {
-        d.u8()?; // 1
+        r.u8()?; // 1
     } else {
-        d.u32()?; // 1
+        r.u32()?; // 1
     }
     if version >= 33 {
-        d.u32()?; // 1
-        d.u32()?;
+        r.u32()?; // 1
+        r.u32()?;
     }
-    let vertices = d.list(|d| {
-        let x = d.f32()?;
-        let y = d.f32()?;
-        let z = d.f32()?;
+    let vertices = r.list(|r| {
+        let x = r.f32()?;
+        let y = r.f32()?;
+        let z = r.f32()?;
 
         Ok(Vec3 { x, y, z })
     })?;
-    let num_edges = d.u32()?;
+    let num_edges = r.u32()?;
     let _edges = if version >= 35 {
-        d.list(|d| {
-            read_compact_index(d, vertices.len() as u32)?;
-            read_compact_index(d, vertices.len() as u32)?;
+        r.list(|r| {
+            read_compact_index(r, vertices.len() as u32)?;
+            read_compact_index(r, vertices.len() as u32)?;
 
             Ok(())
         })?
     } else {
-        d.repeat(num_edges as usize, |d| {
-            d.u32()?;
-            d.u32()?;
+        r.repeat(num_edges as usize, |r| {
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         })?
     };
-    let num_faces = d.u32()?;
+    let num_faces = r.u32()?;
     if version >= 37 {
-        let _texcoords = d.list(|d| {
-            let u = d.f32()?;
-            let v = d.f32()?;
+        let _texcoords = r.list(|r| {
+            let u = r.f32()?;
+            let v = r.f32()?;
 
             Ok(Vec2 { x: u, y: v })
         })?;
-        let num_face_indices = d.u32()?;
-        let _face_indices = d.repeat(num_face_indices as usize, |d| {
-            read_compact_index(d, num_face_indices)?;
+        let num_face_indices = r.u32()?;
+        let _face_indices = r.repeat(num_face_indices as usize, |r| {
+            read_compact_index(r, num_face_indices)?;
 
             Ok(())
         })?;
     }
-    d.repeat(num_faces as usize, |d| {
+    r.repeat(num_faces as usize, |r| {
         let index_count = if version >= 35 {
-            d.u8()? + 3
+            r.u8()? + 3
         } else {
-            d.u32()? as u8
+            r.u32()? as u8
         };
-        let _indices = d.repeat(index_count as usize, |d| {
+        let _indices = r.repeat(index_count as usize, |r| {
             let index = if version >= 34 {
-                read_compact_index(d, vertices.len() as u32)?
+                read_compact_index(r, vertices.len() as u32)?
             } else {
-                d.u32()?
+                r.u32()?
             };
 
             Ok(index)
         })?;
         if version <= 36 {
-            let _texcoords = d.repeat(index_count as usize, |d| {
-                let u = d.f32()?;
-                let v = d.f32()?;
+            let _texcoords = r.repeat(index_count as usize, |r| {
+                let u = r.f32()?;
+                let v = r.f32()?;
 
                 Ok(Vec2 { x: u, y: v })
             })?;
         }
         let _material_index = if version >= 33 {
-            read_compact_index(d, num_materials)?
+            read_compact_index(r, num_materials)?
         } else {
-            d.u32()?
+            r.u32()?
         };
         let _group_index = if version >= 33 {
-            read_compact_index(d, groups.len() as u32)?
+            read_compact_index(r, groups.len() as u32)?
         } else {
-            d.u32()?
+            r.u32()?
         };
 
         Ok(())
     })?;
-    d.u32()?; // 0
+    r.u32()?; // 0
     if version <= 35 {
-        let num_faces = d.u32()?;
-        let num_edges = d.u32()?;
-        let num_vertices = d.u32()?;
-        d.repeat(num_faces as usize, |d| {
-            d.u32()?;
+        let num_faces = r.u32()?;
+        let num_edges = r.u32()?;
+        let num_vertices = r.u32()?;
+        r.repeat(num_faces as usize, |r| {
+            r.u32()?;
 
             Ok(())
         })?;
-        d.repeat(num_edges as usize, |d| {
-            d.u32()?;
+        r.repeat(num_edges as usize, |r| {
+            r.u32()?;
 
             Ok(())
         })?;
-        d.repeat(num_vertices as usize, |d| {
-            d.u32()?;
+        r.repeat(num_vertices as usize, |r| {
+            r.u32()?;
 
             Ok(())
         })?;
-        d.u32()?; // 0
+        r.u32()?; // 0
     }
-    d.list(|d| {
-        d.u32()?;
+    r.list(|r| {
+        r.u32()?;
 
         Ok(())
     })?;
@@ -610,14 +610,14 @@ fn read_mesh<R: Read, I, N>(d: &mut Deserializer<R, I, N>, num_materials: u32) -
     Ok(Mesh { vertices })
 }
 
-fn read_compact_index<R: Read, I, N>(d: &mut Deserializer<R, I, N>, len: u32) -> Result<u32> {
+fn read_compact_index<R: Read, I, N>(r: &mut Reader<R, I, N>, len: u32) -> Result<u32> {
     if len < u8::MAX as u32 {
-        let index = d.u8()?;
+        let index = r.u8()?;
         Ok(index as u32)
     } else if len < u16::MAX as u32 {
-        let index = d.u16()?;
+        let index = r.u16()?;
         Ok(index as u32)
     } else {
-        d.u32()
+        r.u32()
     }
 }

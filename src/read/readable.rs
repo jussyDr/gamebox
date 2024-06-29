@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     common::{Class, END_OF_NODE_MARKER, HEAVY_CHUNK_MARKER_BIT, SKIPPABLE_CHUNK_MARKER},
-    deserialize::{Deserializer, IdState, NodeRef, NodeState, Take},
+    read::{IdState, NodeRef, NodeState, Reader, Take},
 };
 
 use super::{file::GbxFile, BodyOptions, HeaderOptions, Result};
@@ -35,7 +35,7 @@ pub fn read_gbx<
     if let HeaderOptions::Read { read_heavy_chunks } = header_options {
         read_header(
             &mut node,
-            Deserializer::new(Cursor::new(gbx_file.header_data()), (), ()),
+            Reader::new(Cursor::new(gbx_file.header_data()), (), ()),
             read_heavy_chunks,
         )?;
     }
@@ -53,15 +53,15 @@ pub fn read_gbx<
 
     match body_options {
         BodyOptions::Read { .. } => {
-            let mut d = Deserializer::new(
+            let mut r = Reader::new(
                 Cursor::new(gbx_file.body_data()?),
                 IdState::new(),
                 node_state,
             );
 
-            T::read_body(&mut node, &mut d)?;
+            T::read_body(&mut node, &mut r)?;
 
-            d.eof()?;
+            r.eof()?;
         }
         BodyOptions::Skip => {}
     }
@@ -71,12 +71,12 @@ pub fn read_gbx<
 
 fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
     node: &mut T,
-    mut d: Deserializer<R, I, N>,
+    mut r: Reader<R, I, N>,
     read_heavy_chunks: bool,
 ) -> Result<()> {
-    let header_chunks = d.list(|d| {
-        let chunk_id = d.u32()?;
-        let chunk_size = d.u32()?;
+    let header_chunks = r.list(|r| {
+        let chunk_id = r.u32()?;
+        let chunk_size = r.u32()?;
 
         Ok((chunk_id, chunk_size))
     })?;
@@ -90,33 +90,33 @@ fn read_header<T: HeaderChunks, R: BufRead + Seek, I, N>(
         let chunk_size = chunk_size & !HEAVY_CHUNK_MARKER_BIT;
 
         if is_heavy_chunk && !read_heavy_chunks {
-            d.skip(chunk_size)?;
+            r.skip(chunk_size)?;
         } else {
-            let mut d = d.take_with(chunk_size as u64, &mut id_state, ());
+            let mut r = r.take_with(chunk_size as u64, &mut id_state, ());
 
             let header_chunk_entry = header_chunk_entries
                 .find(|header_chunk_entry| header_chunk_entry.id == chunk_id)
                 .ok_or("unknown header chunk")?;
 
-            (header_chunk_entry.read_fn)(node, &mut d)?;
+            (header_chunk_entry.read_fn)(node, &mut r)?;
 
-            d.eof()?;
+            r.eof()?;
         }
     }
 
-    d.eof()?;
+    r.eof()?;
 
     Ok(())
 }
 
 pub fn read_body_chunks<R: Read, I, N, T: BodyChunks<R, I, N>>(
     node: &mut T,
-    d: &mut Deserializer<R, I, N>,
+    r: &mut Reader<R, I, N>,
 ) -> Result<()> {
     let mut body_chunk_entries = T::body_chunks();
 
     loop {
-        let chunk_id = d.u32()?;
+        let chunk_id = r.u32()?;
 
         if chunk_id == END_OF_NODE_MARKER {
             break;
@@ -128,20 +128,20 @@ pub fn read_body_chunks<R: Read, I, N, T: BodyChunks<R, I, N>>(
 
         match body_chunk_entry.read_fn {
             BodyChunkReadFn::Normal(read_fn) => {
-                read_fn(node, d)?;
+                read_fn(node, r)?;
             }
             BodyChunkReadFn::Skippable(read_fn) => {
-                if d.u32()? != SKIPPABLE_CHUNK_MARKER {
+                if r.u32()? != SKIPPABLE_CHUNK_MARKER {
                     return Err("expected skippable chunk".into());
                 }
 
-                let chunk_size = d.u32()?;
+                let chunk_size = r.u32()?;
 
-                let mut d = d.take(chunk_size as u64);
+                let mut r = r.take(chunk_size as u64);
 
-                read_fn(node, &mut d)?;
+                read_fn(node, &mut r)?;
 
-                d.eof()?;
+                r.eof()?;
             }
         }
     }
@@ -155,7 +155,7 @@ pub struct HeaderChunkEntry<T, R> {
 }
 
 type HeaderChunkReadFn<T, R> =
-    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut IdState, ()>) -> Result<()>;
+    fn(n: &mut T, r: &mut Reader<Take<&mut R>, &mut IdState, ()>) -> Result<()>;
 
 pub struct BodyChunkEntry<T, R, I, N> {
     pub id: u32,
@@ -167,11 +167,10 @@ pub enum BodyChunkReadFn<T, R, I, N> {
     Skippable(SkippableBodyChunkReadFn<T, R, I, N>),
 }
 
-pub type NormalBodyChunkReadFn<T, R, I, N> =
-    fn(n: &mut T, d: &mut Deserializer<R, I, N>) -> Result<()>;
+pub type NormalBodyChunkReadFn<T, R, I, N> = fn(n: &mut T, r: &mut Reader<R, I, N>) -> Result<()>;
 
 pub type SkippableBodyChunkReadFn<T, R, I, N> =
-    fn(n: &mut T, d: &mut Deserializer<Take<&mut R>, &mut I, &mut N>) -> Result<()>;
+    fn(n: &mut T, r: &mut Reader<Take<&mut R>, &mut I, &mut N>) -> Result<()>;
 
 pub trait Sealed {
     fn read(
@@ -196,5 +195,5 @@ pub trait BodyChunks<R, I, N> {
 }
 
 pub trait ReadBody<R, I, N> {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()>;
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()>;
 }

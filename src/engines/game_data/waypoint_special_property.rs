@@ -2,7 +2,7 @@ use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::Deserializer,
+    read::Reader,
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
@@ -31,8 +31,8 @@ impl Default for WaypointSpecialProperty {
 }
 
 impl<R: Read, I, N> ReadBody<R, I, N> for WaypointSpecialProperty {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -42,11 +42,11 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for WaypointSpecialProperty {
         [
             BodyChunkEntry {
                 id: 0x2e009000,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_2e009000(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_2e009000(n, r)),
             },
             BodyChunkEntry {
                 id: 0x2e009001,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_2e009001(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_2e009001(n, r)),
             },
         ]
         .into_iter()
@@ -54,16 +54,16 @@ impl<R: Read, I, N> BodyChunks<R, I, N> for WaypointSpecialProperty {
 }
 
 impl WaypointSpecialProperty {
-    fn read_chunk_2e009000<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 2
-        *self = match d.string()?.as_str() {
-            "Checkpoint" => Self::Checkpoint { group: d.u32()? },
-            "Goal" => Self::Goal { order: d.u32()? },
-            "LinkedCheckpoint" => Self::LinkedCheckpoint { group: d.u32()? },
-            "Spawn" => Self::Spawn { order: d.u32()? },
-            "StartFinish" => Self::StartFinish { order: d.u32()? },
+    fn read_chunk_2e009000<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 2
+        *self = match r.string()?.as_str() {
+            "Checkpoint" => Self::Checkpoint { group: r.u32()? },
+            "Goal" => Self::Goal { order: r.u32()? },
+            "LinkedCheckpoint" => Self::LinkedCheckpoint { group: r.u32()? },
+            "Spawn" => Self::Spawn { order: r.u32()? },
+            "StartFinish" => Self::StartFinish { order: r.u32()? },
             tag => {
-                d.u32()?;
+                r.u32()?;
 
                 Self::Custom {
                     tag: tag.to_owned(),
@@ -74,9 +74,9 @@ impl WaypointSpecialProperty {
         Ok(())
     }
 
-    fn read_chunk_2e009001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
+    fn read_chunk_2e009001<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }

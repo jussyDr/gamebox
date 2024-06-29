@@ -2,11 +2,11 @@ use std::io::Read;
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
+    read::{IdStateMut, NodeStateMut, Reader},
 };
 
 use super::material::Material;
@@ -20,8 +20,8 @@ impl Class for Surface {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Surface {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -29,7 +29,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Surface {
     fn body_chunks() -> impl Iterator<Item = BodyChunkEntry<Self, R, I, N>> {
         [BodyChunkEntry {
             id: 0x0900C003,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0900c003(n, d)),
+            read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0900c003(n, r)),
         }]
         .into_iter()
     }
@@ -38,38 +38,38 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Surface {
 impl Surface {
     fn read_chunk_0900c003<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 4
-        d.u32()?; // 2
-        d.u32()?; // 7
-        d.u32()?; // 7
-        d.list(|d| {
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
+        r.u32()?; // 4
+        r.u32()?; // 2
+        r.u32()?; // 7
+        r.u32()?; // 7
+        r.list(|r| {
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
 
             Ok(())
         })?;
-        d.list(|d| {
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
-            d.u32()?;
+        r.list(|r| {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         })?;
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.f32()?;
-        let b = d
-            .list(|d| {
-                let a = d.u32()?;
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.f32()?;
+        let b = r
+            .list(|r| {
+                let a = r.u32()?;
                 if a != 0 {
                     if a == 1 {
-                        d.node_ref::<Material>()?;
+                        r.node_ref::<Material>()?;
                     } else {
-                        d.u32()?;
+                        r.u32()?;
                     }
                 }
 
@@ -77,14 +77,14 @@ impl Surface {
             })?
             .is_empty();
         if !b {
-            d.u32()?; // 0
+            r.u32()?; // 0
         }
-        d.list(|d| {
-            d.u16()?;
+        r.list(|r| {
+            r.u16()?;
 
             Ok(())
         })?;
-        d.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
 
         Ok(())
     }

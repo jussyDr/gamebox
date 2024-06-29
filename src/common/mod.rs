@@ -6,7 +6,7 @@ pub use rc::*;
 
 use std::io::{Read, Write};
 
-use crate::{deserialize::Deserializer, read::Result, serialize::Serializer};
+use crate::{read::Reader, read::Result, serialize::Serializer};
 
 /// A 2-dimensional vector of type `T`.
 #[derive(Clone, Default, PartialEq, Eq, Hash, Debug)]
@@ -79,8 +79,8 @@ pub enum FileFormat {
 }
 
 impl FileFormat {
-    pub fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
-        match d.u8()? {
+    pub fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Self> {
+        match r.u8()? {
             b'B' => Ok(Self::Binary),
             b'T' => Ok(Self::Text),
             _ => Err("unknown gamebox file format".into()),
@@ -105,8 +105,8 @@ pub enum Compression {
 }
 
 impl Compression {
-    pub fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
-        match d.u8()? {
+    pub fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Self> {
+        match r.u8()? {
             b'C' => Ok(Self::Compressed),
             b'U' => Ok(Self::Uncompressed),
             _ => Err("unknown compression".into()),
@@ -177,8 +177,8 @@ impl ClassId {
         self.0
     }
 
-    pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Self> {
-        let value = d.u32()?;
+    pub(crate) fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Self> {
+        let value = r.u32()?;
 
         if !matches!((value & 0xff000000) >> 24, 3 | 4 | 7 | 9 | 17 | 46 | 47) {
             return Err("".into());
@@ -191,10 +191,8 @@ impl ClassId {
         Ok(Self(value))
     }
 
-    pub(crate) fn read_or_null<R: Read, I, N>(
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<Option<Self>> {
-        let value = d.u32()?;
+    pub(crate) fn read_or_null<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Option<Self>> {
+        let value = r.u32()?;
 
         if value == NULL {
             return Ok(None);

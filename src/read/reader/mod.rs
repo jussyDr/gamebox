@@ -21,38 +21,38 @@ use crate::{
 
 use self::take::take;
 
-/// Low-level GameBox deserializer.
-pub struct Deserializer<R, I, N> {
-    reader: R,
+/// Low-level GameBox reader.
+pub struct Reader<R, I, N> {
+    inner: R,
     id_state: I,
     node_state: N,
 }
 
-impl<R, I, N> Deserializer<R, I, N> {
-    /// Create a new `Deserializer` with the given `id_state` and `node_state`.
-    pub fn new(reader: R, id_state: I, node_state: N) -> Self {
+impl<R, I, N> Reader<R, I, N> {
+    /// Create a new `Reader` with the given `id_state` and `node_state`.
+    pub fn new(inner: R, id_state: I, node_state: N) -> Self {
         Self {
-            reader,
+            inner,
             id_state,
             node_state,
         }
     }
 
-    /// Unwraps this `Deserializer`, returning the underlying reader.
-    pub fn into_reader(self) -> R {
-        self.reader
+    /// Unwraps this `Reader`, returning the underlying reader.
+    pub fn into_inner(self) -> R {
+        self.inner
     }
 
     /// Gets a mutable reference to the underlying reader.
-    pub fn get_reader_mut(&mut self) -> &mut R {
-        &mut self.reader
+    pub fn get_inner_mut(&mut self) -> &mut R {
+        &mut self.inner
     }
 
     /// Creates an adapter which will read at most `limit` bytes from it.
-    pub fn take(&mut self, limit: u64) -> Deserializer<Take<&mut R>, &mut I, &mut N> {
-        let reader = take(&mut self.reader, limit);
+    pub fn take(&mut self, limit: u64) -> Reader<Take<&mut R>, &mut I, &mut N> {
+        let take = take(&mut self.inner, limit);
 
-        Deserializer::new(reader, &mut self.id_state, &mut self.node_state)
+        Reader::new(take, &mut self.id_state, &mut self.node_state)
     }
 
     /// Creates an adapter with a new `id_state` and `node_state` which will read at most `limit` bytes from it.
@@ -61,14 +61,14 @@ impl<R, I, N> Deserializer<R, I, N> {
         limit: u64,
         id_state: IS,
         node_state: NS,
-    ) -> Deserializer<Take<&mut R>, IS, NS> {
-        let reader = take(&mut self.reader, limit);
+    ) -> Reader<Take<&mut R>, IS, NS> {
+        let take = take(&mut self.inner, limit);
 
-        Deserializer::new(reader, id_state, node_state)
+        Reader::new(take, id_state, node_state)
     }
 }
 
-impl<R: Read, I, N> Deserializer<R, I, N> {
+impl<R: Read, I, N> Reader<R, I, N> {
     /// Read an unsigned 8-bit integer.
     #[inline]
     pub fn u8(&mut self) -> Result<u8> {
@@ -140,7 +140,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     /// Read `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>> {
         let mut buf = vec![0; n];
-        self.reader.read_exact(&mut buf)?;
+        self.inner.read_exact(&mut buf)?;
 
         Ok(buf)
     }
@@ -149,7 +149,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     #[inline]
     pub fn byte_array<const L: usize>(&mut self) -> Result<[u8; L]> {
         let mut array = [0; L];
-        self.reader.read_exact(&mut array)?;
+        self.inner.read_exact(&mut array)?;
 
         Ok(array)
     }
@@ -221,15 +221,15 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     /// Read from a byte buffer using the given `read_fn` with a new node reference state and id state.
     pub fn scoped_buffer(
         &mut self,
-        read_fn: impl FnOnce(&mut Deserializer<Take<&mut R>, IdState, NodeState>) -> Result<()>,
+        read_fn: impl FnOnce(&mut Reader<Take<&mut R>, IdState, NodeState>) -> Result<()>,
     ) -> Result<()> {
         let len = self.u32()?;
 
-        let mut d = self.take_with(len as u64, IdState::new(), NodeState::new(0));
+        let mut r = self.take_with(len as u64, IdState::new(), NodeState::new(0));
 
-        read_fn(&mut d)?;
+        read_fn(&mut r)?;
 
-        d.eof()?;
+        r.eof()?;
 
         Ok(())
     }
@@ -266,7 +266,7 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     pub fn eof(&mut self) -> Result<()> {
         let mut buf = [0];
 
-        match self.reader.read(&mut buf) {
+        match self.inner.read(&mut buf) {
             Ok(0) => Ok(()),
             _ => Err("expected end of reader".into()),
         }
@@ -275,26 +275,26 @@ impl<R: Read, I, N> Deserializer<R, I, N> {
     /// Read all bytes until EOF in this source.
     pub fn read_to_end(&mut self) -> Result<Vec<u8>> {
         let mut buf = vec![];
-        self.reader.read_to_end(&mut buf)?;
+        self.inner.read_to_end(&mut buf)?;
 
         Ok(buf)
     }
 }
 
-impl<R: Seek, I, N> Deserializer<R, I, N> {
+impl<R: Seek, I, N> Reader<R, I, N> {
     /// Skip `n` bytes.
     pub fn skip(&mut self, n: u32) -> Result<()> {
-        self.reader.seek(io::SeekFrom::Current(n as i64))?;
+        self.inner.seek(io::SeekFrom::Current(n as i64))?;
 
         Ok(())
     }
 }
 
-impl<R: Read + Seek, I, N> Deserializer<R, I, N> {
+impl<R: Read + Seek, I, N> Reader<R, I, N> {
     /// Peek an unsigned 32-bit integer without advancing the underlying reader.
     pub fn peek_u32(&mut self) -> Result<u32> {
         let value = self.u32()?;
-        self.reader
+        self.inner
             .seek(io::SeekFrom::Current(-(size_of::<u32>() as i64)))?;
 
         Ok(value)

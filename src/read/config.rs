@@ -6,64 +6,33 @@ use std::{
 
 use super::{Readable, Result};
 
-/// A GameBox node reader.
-#[derive(Default)]
-pub struct Reader {
-    read_header: HeaderOptions,
-    skip_body: BodyOptions,
+pub struct ReadConfig {
+    header_options: HeaderOptions,
+    body_options: BodyOptions,
 }
 
-impl Reader {
-    /// Create a new GameBox node reader.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use gamebox::read::Reader;
-    /// let reader = Reader::new();
-    /// ```
+impl ReadConfig {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            header_options: HeaderOptions::default(),
+            body_options: BodyOptions::default(),
+        }
     }
 
-    /// Set options for reading the header.
-    pub fn read_header(mut self, read_header: HeaderOptions) -> Self {
-        self.read_header = read_header;
+    pub fn read_header(mut self, header_options: HeaderOptions) -> Self {
+        self.header_options = header_options;
         self
     }
 
-    /// Set options for reading the body.
-    pub fn read_body(mut self, skip_body: BodyOptions) -> Self {
-        self.skip_body = skip_body;
+    pub fn read_body(mut self, body_options: BodyOptions) -> Self {
+        self.body_options = body_options;
         self
     }
 
-    /// Read a node of type `T` from the given `reader`.
-    ///
-    /// # Examples
-    ///
-    /// ``` no_run
-    /// # use gamebox::read::Reader;
-    /// # use gamebox::Item;
-    /// # |reader: std::io::Cursor<&[u8]>| {
-    /// let item: Item = Reader::new().read(reader)?;
-    /// # Ok::<(), gamebox::read::Error>(()) };
-    /// ```
     pub fn read<T: Readable>(&self, reader: impl Read) -> Result<T> {
-        T::read(reader, self.read_header, self.skip_body)
+        T::read(reader, self.header_options, self.body_options)
     }
 
-    /// Read a node of type `T` from a file at the given `path`.
-    ///
-    /// # Examples
-    ///
-    /// ``` no_run
-    /// # use gamebox::read::Reader;
-    /// # use gamebox::Item;
-    /// # || {
-    /// let item: Item = Reader::new().read_file("MyItem.Item.Gbx")?;
-    /// # Ok::<(), gamebox::read::Error>(()) };
-    /// ```
     pub fn read_file<T: Readable>(&self, path: impl AsRef<Path>) -> Result<T> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);

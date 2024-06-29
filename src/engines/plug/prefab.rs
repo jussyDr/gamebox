@@ -4,11 +4,11 @@ use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{read_gbx, HeaderChunkEntry, HeaderChunks, ReadBody, Sealed},
         BodyOptions, HeaderOptions, Readable, Result,
     },
+    read::{IdStateMut, NodeStateMut, Reader},
 };
 
 use super::static_object_model::StaticObjectModel;
@@ -40,15 +40,15 @@ impl HeaderChunks for Prefab {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Prefab {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 11
-        d.u32()?;
-        d.u32()?;
-        d.string()?; // "\\storage.nadeo.org\graphical_data\Stadium\3D\Items\VTM.max:Fall-------------------------------EXPORT"
-        d.u32()?;
-        d.list(|d| {
-            d.u32()?; // 0
-            d.any_node_ref(|d, class_id| {
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 11
+        r.u32()?;
+        r.u32()?;
+        r.string()?; // "\\storage.nadeo.org\graphical_data\Stadium\3D\Items\VTM.max:Fall-------------------------------EXPORT"
+        r.u32()?;
+        r.list(|r| {
+            r.u32()?; // 0
+            r.any_node_ref(|d, class_id| {
                 match class_id {
                     0x09159000 => {
                         let mut node = StaticObjectModel::default();
@@ -59,18 +59,18 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Prefab {
 
                 Ok(Rc::new(()))
             })?;
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?;
-            d.u32()?; // 0
-            d.u32()?;
-            d.u32()?; // 0xffffffff
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?; // 1.0
+            r.u32()?;
+            r.u32()?; // 0
+            r.u32()?;
+            r.u32()?; // 0xffffffff
 
             Ok(())
         })?;
-        d.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }

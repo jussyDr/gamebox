@@ -1,12 +1,14 @@
 //! Reading GameBox nodes.
 
+mod config;
 mod file;
 pub(crate) mod json;
 pub(crate) mod readable;
 mod reader;
-
-pub use file::GbxFile;
 pub use reader::*;
+
+pub use config::*;
+pub use file::GbxFile;
 
 use std::{io::Read, path::Path};
 
@@ -34,7 +36,7 @@ pub trait Readable: readable::Sealed {}
 /// # Ok::<(), gamebox::read::Error>(()) };
 /// ```
 pub fn read<T: Readable>(reader: impl Read) -> Result<T> {
-    Reader::new().read(reader)
+    ReadConfig::new().read(reader)
 }
 
 /// Read a node of type `T` from a file at the given `path`.
@@ -49,5 +51,5 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T> {
 /// # Ok::<(), gamebox::read::Error>(()) };
 /// ```
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T> {
-    Reader::new().read_file(path)
+    ReadConfig::new().read_file(path)
 }

@@ -39,19 +39,19 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        deserialize::{Deserializer, IdStateMut},
         read::{
             readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
             Result,
         },
+        read::{IdStateMut, Reader},
         Rgb,
     };
 
     use super::{Material, MaterialUserInst};
 
     impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for MaterialUserInst {
-        fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            read_body_chunks(self, d)
+        fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            read_body_chunks(self, r)
         }
     }
 
@@ -60,15 +60,15 @@ mod read {
             [
                 BodyChunkEntry {
                     id: 0x090fd000,
-                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd000(n, d)),
+                    read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_090fd000(n, r)),
                 },
                 BodyChunkEntry {
                     id: 0x090fd001,
-                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd001(n, d)),
+                    read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_090fd001(n, r)),
                 },
                 BodyChunkEntry {
                     id: 0x090fd002,
-                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090fd002(n, d)),
+                    read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_090fd002(n, r)),
                 },
             ]
             .into_iter()
@@ -78,45 +78,45 @@ mod read {
     impl MaterialUserInst {
         fn read_chunk_090fd000<R: Read, I: IdStateMut, N>(
             &mut self,
-            d: &mut Deserializer<R, I, N>,
+            r: &mut Reader<R, I, N>,
         ) -> Result<()> {
-            let version = d.u32()?;
+            let version = r.u32()?;
 
             if !matches!(version, 9..=11) {
                 return Err("".into());
             }
 
-            let uses_game_material = if version >= 11 { d.bool8()? } else { true };
+            let uses_game_material = if version >= 11 { r.bool8()? } else { true };
 
-            d.id_or_null()?; // "TM_wiuehrfsd"
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
-            d.u8()?;
+            r.id_or_null()?; // "TM_wiuehrfsd"
+            r.u32()?; // 0xffffffff
+            r.u32()?; // 0
+            r.u8()?;
             if version >= 10 {
-                d.u8()?;
+                r.u8()?;
             }
             if uses_game_material {
-                let path = d.string()?;
+                let path = r.string()?;
                 self.material = Material::Game { path };
             } else {
-                let id = d.id()?;
+                let id = r.id()?;
                 self.material = Material::Custom {
                     id,
                     color: Rgb { r: 0, g: 0, b: 0 },
                 };
             }
-            d.list(|d| {
-                d.id()?; // "TargetColor"
-                d.id()?; // "Real"
-                d.u32()?; // 3
+            r.list(|r| {
+                r.id()?; // "TargetColor"
+                r.id()?; // "Real"
+                r.u32()?; // 3
 
                 Ok(())
             })?;
-            let color_values = d.list(|d| d.u32())?;
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0xffffffff
+            let color_values = r.list(|r| r.u32())?;
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0xffffffff
 
             if !color_values.is_empty() {
                 if let Material::Custom { color, .. } = &mut self.material {
@@ -131,27 +131,21 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_090fd001<R: Read, I, N>(
-            &mut self,
-            d: &mut Deserializer<R, I, N>,
-        ) -> Result<()> {
-            d.u32()?; // 5
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
+        fn read_chunk_090fd001<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.u32()?; // 5
+            r.u32()?; // 0xffffffff
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?; // 1.0
+            r.u32()?; // 0
+            r.u32()?; // 0
 
             Ok(())
         }
 
-        fn read_chunk_090fd002<R: Read, I, N>(
-            &mut self,
-            d: &mut Deserializer<R, I, N>,
-        ) -> Result<()> {
-            d.u32()?; // 0
-            d.u32()?; // 0
+        fn read_chunk_090fd002<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.u32()?; // 0
+            r.u32()?; // 0
 
             Ok(())
         }

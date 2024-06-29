@@ -5,7 +5,7 @@ use crate::{
     read::Result,
 };
 
-use super::Deserializer;
+use super::Reader;
 
 /// Identifier state.
 pub struct IdState {
@@ -58,7 +58,7 @@ impl<T: IdStateMut> IdStateMut for &mut T {
     }
 }
 
-impl<R: Read, I: IdStateMut, N> Deserializer<R, I, N> {
+impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     /// Read an identifier that is null.
     pub fn null_id(&mut self) -> Result<()> {
         match self.id_or_null()? {

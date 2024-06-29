@@ -56,21 +56,19 @@ impl ExternalFileRef {
 mod read {
     use std::{io::Read, path::PathBuf};
 
-    use crate::{
-        deserialize::Deserializer, read::Result, ExternalFileRef, FileRef, InternalFileRef,
-    };
+    use crate::{read::Reader, read::Result, ExternalFileRef, FileRef, InternalFileRef};
 
     use super::{FILE_REF_VERSION, INTERNAL_FILE_REF_CHECKSUM};
 
     impl FileRef {
-        pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
-            if d.u8()? != FILE_REF_VERSION {
+        pub(crate) fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Option<Self>> {
+            if r.u8()? != FILE_REF_VERSION {
                 return Err("unknown file reference version".into());
             }
 
-            let checksum = d.byte_array::<32>()?;
-            let path = PathBuf::from(d.string()?);
-            let url = d.string()?;
+            let checksum = r.byte_array::<32>()?;
+            let path = PathBuf::from(r.string()?);
+            let url = r.string()?;
 
             if path.as_os_str().is_empty() {
                 return Ok(None);
@@ -89,8 +87,8 @@ mod read {
     }
 
     impl InternalFileRef {
-        pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
-            match FileRef::read(d)? {
+        pub(crate) fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Option<Self>> {
+            match FileRef::read(r)? {
                 None => Ok(None),
                 Some(FileRef::Internal(file_ref)) => Ok(Some(file_ref)),
                 Some(FileRef::External(_)) => Err("expected internal file reference".into()),
@@ -99,8 +97,8 @@ mod read {
     }
 
     impl ExternalFileRef {
-        pub(crate) fn read<R: Read, I, N>(d: &mut Deserializer<R, I, N>) -> Result<Option<Self>> {
-            match FileRef::read(d)? {
+        pub(crate) fn read<R: Read, I, N>(r: &mut Reader<R, I, N>) -> Result<Option<Self>> {
+            match FileRef::read(r)? {
                 None => Ok(None),
                 Some(FileRef::Internal(_)) => Err("expected external file reference".into()),
                 Some(FileRef::External(file_ref)) => Ok(Some(file_ref)),

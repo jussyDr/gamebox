@@ -5,7 +5,7 @@ use crate::{
     read::{readable::ReadBody, Result},
 };
 
-use super::{repeat_n_with, Deserializer};
+use super::{repeat_n_with, Reader};
 
 /// Reference to a node of type `T`.
 pub enum NodeRef<T> {
@@ -104,7 +104,7 @@ impl<T: NodeStateMut> NodeStateMut for &mut T {
     }
 }
 
-impl<R: Read, I, N: NodeStateMut> Deserializer<R, I, N> {
+impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
     /// Read an internal node reference that is not null.
     pub fn internal_node_ref<T: 'static + Default + Class + ReadBody<R, I, N>>(
         &mut self,

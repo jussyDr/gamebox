@@ -2,11 +2,11 @@ use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
         Result,
     },
+    read::{IdStateMut, NodeStateMut, Reader},
 };
 
 use self::graphic::LightBall;
@@ -33,23 +33,23 @@ impl Class for StaticObjectModel {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for StaticObjectModel {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        let version = d.u32()?;
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        let version = r.u32()?;
 
         if version != 3 {
             return Err("".into());
         }
 
-        self.solid_to_model = d.unique_internal_node_ref::<Solid2Model>()?;
-        if !d.bool8()? {
-            d.internal_node_ref_or_null::<Surface>()?;
+        self.solid_to_model = r.unique_internal_node_ref::<Solid2Model>()?;
+        if !r.bool8()? {
+            r.internal_node_ref_or_null::<Surface>()?;
         }
 
         Ok(())
     }
 }
 
-/// Model from a solid.
+/// Model from a solir.
 #[derive(Default, Debug)]
 pub struct Solid2Model {
     layers: Vec<Layer>,
@@ -76,8 +76,8 @@ impl Class for Solid2Model {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Solid2Model {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -87,11 +87,11 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Solid2Mode
         [
             BodyChunkEntry {
                 id: 0x090bb000,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_090bb000(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_090bb000(n, r)),
             },
             BodyChunkEntry {
                 id: 0x090bb002,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_090bb002(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_090bb002(n, r)),
             },
         ]
         .into_iter()
@@ -101,23 +101,23 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Solid2Mode
 impl Solid2Model {
     fn read_chunk_090bb000<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        let version = d.u32()?;
+        let version = r.u32()?;
 
         if !matches!(version, 29..=34) {
             return Err("".into());
         }
 
-        d.null_id()?;
-        self.layers = d.list(|d| {
-            let mesh_index = d.u32()?;
-            let material_index = d.u32()?;
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 1
+        r.null_id()?;
+        self.layers = r.list(|r| {
+            let mesh_index = r.u32()?;
+            let material_index = r.u32()?;
+            r.u32()?; // 0xffffffff
+            r.u32()?; // 1
 
             if version >= 32 {
-                d.u32()?; // 0
+                r.u32()?; // 0
             }
 
             Ok(Layer {
@@ -125,121 +125,121 @@ impl Solid2Model {
                 material_index,
             })
         })?;
-        d.u32()?; // 10
-        self.meshes = d.list(|d| {
-            let visual_indexed_triangles = d.internal_node_ref::<VisualIndexedTriangles>()?;
+        r.u32()?; // 10
+        self.meshes = r.list(|r| {
+            let visual_indexed_triangles = r.internal_node_ref::<VisualIndexedTriangles>()?;
 
             Ok(visual_indexed_triangles)
         })?;
-        d.u32()?; // 0
-        let num_materials = d.u32()?;
+        r.u32()?; // 0
+        let num_materials = r.u32()?;
         if num_materials == 0 {
-            d.u32()?; // 10
-            d.list(|d| {
-                d.external_node_ref()?;
+            r.u32()?; // 10
+            r.list(|r| {
+                r.external_node_ref()?;
 
                 Ok(())
             })?;
         }
-        d.internal_node_ref_or_null::<Skel>()?;
-        d.list(|d| {
-            d.f32()?;
+        r.internal_node_ref_or_null::<Skel>()?;
+        r.list(|r| {
+            r.f32()?;
 
             Ok(())
         })?;
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.u32()?; // 1
-        d.f32()?; // 73.47571
-        d.u32()?; // 1
-        d.f32()?; // 0.011813663
-        d.f32()?; // 0.12343697
-        d.f32()?; // 0.99153054
-        d.f32()?; // 0.98973596
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0xffff7f7f
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0xd05ebb50
-        d.u32()?; // 0x01d74f56
-        d.u32()?; // 0
-        d.string()?; // "Stadium\Media\Material\"
-        d.u32()?; // 0
-        d.list(|d| {
-            d.id_or_null()?; // "?Screen16x9SpotSmall"
-            d.u32()?; // 1
-            d.node_ref::<Light>()?;
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
-            d.u32()?; // 0xffffffff
-            d.u32()?;
-            d.u32()?;
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
+        r.u32()?; // 1
+        r.u32()?; // 1
+        r.u32()?; // 1
+        r.u32()?; // 1
+        r.f32()?; // 73.47571
+        r.u32()?; // 1
+        r.f32()?; // 0.011813663
+        r.f32()?; // 0.12343697
+        r.f32()?; // 0.99153054
+        r.f32()?; // 0.98973596
+        r.u32()?; // 0xffff7f7f
+        r.u32()?; // 0xffff7f7f
+        r.u32()?; // 0xffff7f7f
+        r.u32()?; // 0xffff7f7f
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0xd05ebb50
+        r.u32()?; // 0x01d74f56
+        r.u32()?; // 0
+        r.string()?; // "Stadium\Media\Material\"
+        r.u32()?; // 0
+        r.list(|r| {
+            r.id_or_null()?; // "?Screen16x9SpotSmall"
+            r.u32()?; // 1
+            r.node_ref::<Light>()?;
+            r.f32()?; // 1.0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?; // 1.0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?; // 1.0
+            r.u32()?; // 0
+            r.u32()?; // 0xffffffff
+            r.u32()?;
+            r.u32()?;
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
 
             Ok(())
         })?;
-        d.list(|d| {
-            d.internal_node_ref::<LightUserModel>()?;
+        r.list(|r| {
+            r.internal_node_ref::<LightUserModel>()?;
 
             Ok(())
         })?;
-        if d.bool32()? {
-            d.u32()?; // 0
-            d.u32()?; // 0
+        if r.bool32()? {
+            r.u32()?; // 0
+            r.u32()?; // 0
         }
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 1
-        d.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 1
+        r.string()?; // "NadeoImporter Item Items/palm_trees/big_palm_trees/big_palm_tree_low.Item.xml"
         if version >= 30 {
-            d.u32()?;
+            r.u32()?;
         }
-        self.materials = d.repeat(num_materials as usize, |d| {
-            d.u32()?; // 0
-            let material = d.internal_node_ref::<MaterialUserInst>()?;
+        self.materials = r.repeat(num_materials as usize, |r| {
+            r.u32()?; // 0
+            let material = r.internal_node_ref::<MaterialUserInst>()?;
 
             Ok(material)
         })?;
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0xffffffff
-        d.f32()?; // 1.0
-        d.f32()?; // 1.0
-        d.u32()?; // 0xffffffff
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0xffffffff
+        r.f32()?; // 1.0
+        r.f32()?; // 1.0
+        r.u32()?; // 0xffffffff
         if version >= 31 {
-            d.u32()?; // 0
+            r.u32()?; // 0
         }
         if version >= 33 {
-            d.u32()?; // 0
+            r.u32()?; // 0
         }
 
         Ok(())
     }
 
-    fn read_chunk_090bb002<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
+    fn read_chunk_090bb002<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }
@@ -253,8 +253,8 @@ impl Class for Skel {
 }
 
 impl<R: Read, I: IdStateMut, N> ReadBody<R, I, N> for Skel {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -265,47 +265,44 @@ impl<R: Read, I: IdStateMut, N> BodyChunks<R, I, N> for Skel {
     {
         [BodyChunkEntry {
             id: 0x090ba000,
-            read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0(n, d)),
+            read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0(n, r)),
         }]
         .into_iter()
     }
 }
 
 impl Skel {
-    fn read_chunk_0<R: Read, I: IdStateMut, N>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
-        let version = d.u32()?;
+    fn read_chunk_0<R: Read, I: IdStateMut, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        let version = r.u32()?;
 
         if version != 19 {
             return Err("".into());
         }
 
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0
-        d.u16()?; // 0
-        d.u32()?; // 1
-        d.id()?; // "Point_001_001_001_001_001_001_006.003"
-        d.u16()?; // 0xffff
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u32()?;
-        d.u8()?;
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0
+        r.u16()?; // 0
+        r.u32()?; // 1
+        r.id()?; // "Point_001_001_001_001_001_001_006.003"
+        r.u16()?; // 0xffff
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u8()?;
 
         Ok(())
     }
@@ -319,8 +316,8 @@ impl Class for Light {
 }
 
 impl<R: Read, I, N: NodeStateMut> ReadBody<R, I, N> for Light {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -332,11 +329,11 @@ impl<R: Read, I, N: NodeStateMut> BodyChunks<R, I, N> for Light {
         [
             BodyChunkEntry {
                 id: 0x0901d003,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_3(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_3(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0901d004,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_4(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_4(n, r)),
             },
         ]
         .into_iter()
@@ -344,27 +341,24 @@ impl<R: Read, I, N: NodeStateMut> BodyChunks<R, I, N> for Light {
 }
 
 impl Light {
-    fn read_chunk_3<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        d.u32()?; // 0xffffffff
-        d.f32()?;
-        d.f32()?;
-        d.u32()?; // 0xffffffff
+    fn read_chunk_3<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 1
+        r.u32()?; // 0xffffffff
+        r.f32()?;
+        r.f32()?;
+        r.u32()?; // 0xffffffff
 
         Ok(())
     }
 
-    fn read_chunk_4<R: Read, I, N: NodeStateMut>(
-        &mut self,
-        d: &mut Deserializer<R, I, N>,
-    ) -> Result<()> {
-        d.u32()?; // 0
-        d.internal_node_ref::<LightBall>()?;
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0xffffffff
-        d.u32()?; // 0
-        d.u32()?; // 0xffffffff
+    fn read_chunk_4<R: Read, I, N: NodeStateMut>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
+        r.internal_node_ref::<LightBall>()?;
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0xffffffff
+        r.u32()?; // 0
+        r.u32()?; // 0xffffffff
 
         Ok(())
     }
@@ -375,7 +369,7 @@ mod graphic {
 
     use crate::{
         common::{Class, ClassId, EngineId},
-        deserialize::Deserializer,
+        read::Reader,
         read::{
             readable::{read_body_chunks, BodyChunkEntry, BodyChunkReadFn, BodyChunks, ReadBody},
             Result,
@@ -386,19 +380,19 @@ mod graphic {
     struct Light;
 
     impl Light {
-        fn read_chunk_10<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            d.u32()?; // 0
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.u32()?;
-            d.u32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
+        fn read_chunk_10<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.u32()?; // 0
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
 
             Ok(())
         }
@@ -410,9 +404,9 @@ mod graphic {
     }
 
     impl LightPoint {
-        fn read_chunk_4<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            d.f32()?;
-            d.u32()?; // 0
+        fn read_chunk_4<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.f32()?;
+            r.u32()?; // 0
 
             Ok(())
         }
@@ -428,8 +422,8 @@ mod graphic {
     }
 
     impl<R: Read, I, N> ReadBody<R, I, N> for LightBall {
-        fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            read_body_chunks(self, d)
+        fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            read_body_chunks(self, r)
         }
     }
 
@@ -441,27 +435,27 @@ mod graphic {
             [
                 BodyChunkEntry {
                     id: 0x0400100a,
-                    read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
-                        Light::read_chunk_10(&mut n.parent.parent, d)
+                    read_fn: BodyChunkReadFn::Normal(|n: &mut Self, r| {
+                        Light::read_chunk_10(&mut n.parent.parent, r)
                     }),
                 },
                 BodyChunkEntry {
                     id: 0x04003004,
-                    read_fn: BodyChunkReadFn::Normal(|n: &mut Self, d| {
-                        LightPoint::read_chunk_4(&mut n.parent, d)
+                    read_fn: BodyChunkReadFn::Normal(|n: &mut Self, r| {
+                        LightPoint::read_chunk_4(&mut n.parent, r)
                     }),
                 },
                 BodyChunkEntry {
                     id: 0x04002008,
-                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_8(n, d)),
+                    read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_8(n, r)),
                 },
                 BodyChunkEntry {
                     id: 0x04002009,
-                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_9(n, d)),
+                    read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_9(n, r)),
                 },
                 BodyChunkEntry {
                     id: 0x0400200a,
-                    read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_10(n, d)),
+                    read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_10(n, r)),
                 },
             ]
             .into_iter()
@@ -469,33 +463,33 @@ mod graphic {
     }
 
     impl LightBall {
-        fn read_chunk_8<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            d.u32()?; // 16
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.f32()?;
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?;
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?;
-            d.u32()?;
+        fn read_chunk_8<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.u32()?; // 16
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?;
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?;
+            r.u32()?;
 
             Ok(())
         }
 
-        fn read_chunk_9<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            d.f32()?;
+        fn read_chunk_9<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.f32()?;
 
             Ok(())
         }
 
-        fn read_chunk_10<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-            d.f32()?;
+        fn read_chunk_10<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+            r.f32()?;
 
             Ok(())
         }

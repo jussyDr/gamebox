@@ -1,10 +1,9 @@
 //! Types used for reading [Material] nodes.
 
-use std::{io::Read, path::Path, rc::Rc};
+use std::{io::Read, rc::Rc};
 
 use crate::{
     common::{Class, ClassId, EngineId},
-    deserialize::{Deserializer, IdStateMut, NodeStateMut},
     read::{
         readable::{
             read_body_chunks, read_gbx, BodyChunkEntry, BodyChunkReadFn, BodyChunks,
@@ -12,6 +11,7 @@ use crate::{
         },
         BodyOptions, HeaderOptions, Readable, Result,
     },
+    read::{IdStateMut, NodeStateMut, Reader},
     RcPath,
 };
 
@@ -50,8 +50,8 @@ impl HeaderChunks for Material {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for Material {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -61,43 +61,43 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Material {
         [
             BodyChunkEntry {
                 id: 0x09079001,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079001(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079001(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079007,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079007(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079007(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079010,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079010(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079010(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079011,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079011(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079011(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079012,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_09079012(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_09079012(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079013,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_09079013(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_09079013(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079015,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079015(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079015(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079016,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079016(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079016(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079017,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_09079017(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_09079017(n, r)),
             },
             BodyChunkEntry {
                 id: 0x09079019,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_09079019(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_09079019(n, r)),
             },
         ]
         .into_iter()
@@ -105,93 +105,93 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for Material {
 }
 
 impl Material {
-    fn read_chunk_09079001<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0xffffffff
+    fn read_chunk_09079001<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0xffffffff
 
         Ok(())
     }
 
     fn read_chunk_09079007<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        self.custom = d.internal_node_ref_or_null::<MaterialCustom>()?;
+        self.custom = r.internal_node_ref_or_null::<MaterialCustom>()?;
 
         Ok(())
     }
 
-    fn read_chunk_09079010<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.f32()?; // 1.0
+    fn read_chunk_09079010<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.f32()?; // 1.0
 
         Ok(())
     }
 
-    fn read_chunk_09079011<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
+    fn read_chunk_09079011<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_09079012<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
+    fn read_chunk_09079012<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
         if self.custom.is_some() {
-            d.string()?; // ":data:\Projects\Techno3\Media\Material\Tech3_Block_TDSN_CubeOut.Material.gbx"
-            d.u32()?; // 0x7ec30323
-            d.u32()?; // 0x803b7649
-            d.u32()?; // 0
-            d.u32()?; // 0x28002841
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.u32()?; // 2
-            d.u32()?; // 1
-            d.f32()?; // 1.0
-            d.u32()?; // 0xffffffff
-            d.u32()?; // 0
+            r.string()?; // ":data:\Projects\Techno3\Media\Material\Tech3_Block_TDSN_CubeOut.Material.gbx"
+            r.u32()?; // 0x7ec30323
+            r.u32()?; // 0x803b7649
+            r.u32()?; // 0
+            r.u32()?; // 0x28002841
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.u32()?; // 2
+            r.u32()?; // 1
+            r.f32()?; // 1.0
+            r.u32()?; // 0xffffffff
+            r.u32()?; // 0
         }
 
         Ok(())
     }
 
-    fn read_chunk_09079013<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
+    fn read_chunk_09079013<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_09079015<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 7
-        d.u32()?; // 5 | 6 | 0xffffffff
-        if d.bool32()? {
-            d.u32()?; // 7
+    fn read_chunk_09079015<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 7
+        r.u32()?; // 5 | 6 | 0xffffffff
+        if r.bool32()? {
+            r.u32()?; // 7
         }
-        let a = d.u32()?; // 0 | 0xffffffff
+        let a = r.u32()?; // 0 | 0xffffffff
         if a == 0 {
-            d.u32()?; // 0
+            r.u32()?; // 0
         }
 
         Ok(())
     }
 
-    fn read_chunk_09079016<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0x240
+    fn read_chunk_09079016<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
+        r.u32()?; // 0x240
 
         Ok(())
     }
 
-    fn read_chunk_09079017<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        d.u32()?; // 0x800f0016
-        d.f32()?; // -1.0
-        d.u32()?; // 0
-        d.u32()?; // 0
+    fn read_chunk_09079017<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 1
+        r.u32()?; // 0x800f0016
+        r.f32()?; // -1.0
+        r.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_09079019<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0
-        d.u32()?; // 0
+    fn read_chunk_09079019<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }
@@ -213,8 +213,8 @@ impl Class for MaterialCustom {
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> ReadBody<R, I, N> for MaterialCustom {
-    fn read_body(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        read_body_chunks(self, d)
+    fn read_body(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        read_body_chunks(self, r)
     }
 }
 
@@ -224,43 +224,43 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MaterialCu
         [
             BodyChunkEntry {
                 id: 0x0903a004,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a004(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a004(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a00a,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a00a(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a00a(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a00c,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a00c(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a00c(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a00f,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_0903a00f(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_0903a00f(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a011,
-                read_fn: BodyChunkReadFn::Skippable(|n, d| Self::read_chunk_0903a011(n, d)),
+                read_fn: BodyChunkReadFn::Skippable(|n, r| Self::read_chunk_0903a011(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a012,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a012(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a012(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a013,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a013(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a013(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a014,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a014(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a014(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a015,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a015(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a015(n, r)),
             },
             BodyChunkEntry {
                 id: 0x0903a016,
-                read_fn: BodyChunkReadFn::Normal(|n, d| Self::read_chunk_0903a016(n, d)),
+                read_fn: BodyChunkReadFn::Normal(|n, r| Self::read_chunk_0903a016(n, r)),
             },
         ]
         .into_iter()
@@ -268,38 +268,38 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> BodyChunks<R, I, N> for MaterialCu
 }
 
 impl MaterialCustom {
-    fn read_chunk_0903a004<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0;
+    fn read_chunk_0903a004<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0;
 
         Ok(())
     }
 
     fn read_chunk_0903a00a<R: Read, I: IdStateMut, N>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        if d.bool32()? {
-            d.id()?; // "BaseColorTarget"
-            d.u32()?; // 3
-            d.u32()?; // 1
-            d.u32()?; // 0
-            d.u32()?; // 0
-            d.f32()?; // 1.0
-            d.u32()?; // 0
+        if r.bool32()? {
+            r.id()?; // "BaseColorTarget"
+            r.u32()?; // 3
+            r.u32()?; // 1
+            r.u32()?; // 0
+            r.u32()?; // 0
+            r.f32()?; // 1.0
+            r.u32()?; // 0
         }
 
-        d.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }
 
     fn read_chunk_0903a00c<R: Read, I: IdStateMut, N>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        d.list(|d| {
-            d.id()?; // "PreLightGen" | "OpacityIsDiffuseAlpha" | "IsPoleEmblem" | "BaseColorHueMask"
-            d.u32()?; // 0
+        r.list(|r| {
+            r.id()?; // "PreLightGen" | "OpacityIsDiffuseAlpha" | "IsPoleEmblem" | "BaseColorHueMask"
+            r.u32()?; // 0
 
             Ok(())
         })?;
@@ -309,43 +309,43 @@ impl MaterialCustom {
 
     fn read_chunk_0903a00f<R: Read, I: IdStateMut, N>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 2
-        d.f32()?; // -1.0
-        d.f32()?; // -1.0
-        d.u32()?; // 0
-        if d.bool32()? {
-            d.id()?; // "LodNormal"
-            d.u32()?; // 0
+        r.u32()?; // 2
+        r.f32()?; // -1.0
+        r.f32()?; // -1.0
+        r.u32()?; // 0
+        if r.bool32()? {
+            r.id()?; // "LodNormal"
+            r.u32()?; // 0
         }
 
         Ok(())
     }
 
-    fn read_chunk_0903a011<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0xffffffff
+    fn read_chunk_0903a011<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0xffffffff
 
         Ok(())
     }
 
-    fn read_chunk_0903a012<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 0xffffffff
+    fn read_chunk_0903a012<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 0xffffffff
 
         Ok(())
     }
 
     fn read_chunk_0903a013<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
-        d: &mut Deserializer<R, I, N>,
+        r: &mut Reader<R, I, N>,
     ) -> Result<()> {
-        d.u32()?; // 0
-        d.list(|d| {
-            let texture_kind = d.id()?; // "BaseColor" | "RoughMetal" | "Normal" | "BaseColorHueMask"
-            d.u32()?; // 0
-            let texture_ref = d.external_node_ref()?;
-            d.u32()?; // 4
-            d.u32()?; // 4
+        r.u32()?; // 0
+        r.list(|r| {
+            let texture_kind = r.id()?; // "BaseColor" | "RoughMetal" | "Normal" | "BaseColorHueMask"
+            r.u32()?; // 0
+            let texture_ref = r.external_node_ref()?;
+            r.u32()?; // 4
+            r.u32()?; // 4
 
             match texture_kind.as_ref() {
                 "ACosSmoothPy" => {}
@@ -369,31 +369,31 @@ impl MaterialCustom {
         Ok(())
     }
 
-    fn read_chunk_0903a014<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 1
-        d.u32()?; // 0
+    fn read_chunk_0903a014<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 1
+        r.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_0903a015<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 2
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
-        d.u32()?; // 0
+    fn read_chunk_0903a015<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 2
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
+        r.u32()?; // 0
 
         Ok(())
     }
 
-    fn read_chunk_0903a016<R: Read, I, N>(&mut self, d: &mut Deserializer<R, I, N>) -> Result<()> {
-        d.u32()?; // 2
-        d.u32()?; // 0
-        d.u32()?; // 0x7f80
-        d.u32()?; // 0x0c007800
-        d.u32()?; // 0x0x8fff2
-        d.u32()?; // 0
+    fn read_chunk_0903a016<R: Read, I, N>(&mut self, r: &mut Reader<R, I, N>) -> Result<()> {
+        r.u32()?; // 2
+        r.u32()?; // 0
+        r.u32()?; // 0x7f80
+        r.u32()?; // 0x0c007800
+        r.u32()?; // 0x0x8fff2
+        r.u32()?; // 0
 
         Ok(())
     }
