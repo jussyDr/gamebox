@@ -1,4 +1,4 @@
-//! Low-level GameBox deserialization.
+//! Low-level GameBox reader.
 
 mod id;
 mod node;
