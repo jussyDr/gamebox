@@ -1,3 +1,5 @@
+//! Types used for reading [StaticObjectModel] nodes.
+
 use std::{io::Read, rc::Rc};
 
 use crate::{

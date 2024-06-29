@@ -1,3 +1,5 @@
+//! Types used for reading [MaterialUserInst] nodes.
+
 use std::rc::Rc;
 
 use crate::{

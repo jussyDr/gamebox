@@ -1,3 +1,5 @@
+//! Types used for reading [EntRecordData] nodes.
+
 use std::io::Read;
 
 use crate::{

@@ -1,3 +1,5 @@
+//! Types used for reading [BlockInfoGroups] nodes.
+
 use std::io::Read;
 
 use serde::Deserialize;

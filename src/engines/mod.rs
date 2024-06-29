@@ -1,3 +1,5 @@
+//! Engines.
+
 /// Game engine.
 pub mod game {
     pub mod block_info_classic;

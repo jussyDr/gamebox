@@ -1,3 +1,5 @@
+//! Types used for reading [VisualIndexedTriangles] nodes.
+
 mod read;
 
 use std::ops::{Deref, DerefMut};

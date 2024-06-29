@@ -1,3 +1,5 @@
+//! Types used for reading [Crystal] nodes.
+
 mod read;
 mod write;
 

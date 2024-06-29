@@ -1,3 +1,5 @@
+//! Types used for reading [TraitsMetadata] nodes.
+
 use std::io::Read;
 
 use crate::{

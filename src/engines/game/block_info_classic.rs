@@ -1,3 +1,5 @@
+//! Types used for reading [BlockInfoClassic] nodes.
+
 use std::{
     io::{BufRead, Read},
     ops::{Deref, DerefMut},
