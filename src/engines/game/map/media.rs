@@ -653,41 +653,41 @@ impl MediaBlockFxColors {
 pub struct MediaBlockFxColorsKey {
     global_intensity: f32,
     /// [0.0, 1.0].
-    far_blend: f32,
-    near_distance: f32,
-    far_distance: f32,
+    pub far_blend: f32,
+    pub near_distance: f32,
+    pub far_distance: f32,
     /// [0.0, 1.0].
-    near_inverse: f32,
+    pub near_inverse: f32,
     /// [0.0, 1.0].
-    near_hue: f32,
+    pub near_hue: f32,
     /// [-1.0, 1.0].
-    near_saturation: f32,
+    pub near_saturation: f32,
     /// [-1.0, 1.0].
-    near_brightness: f32,
+    pub near_brightness: f32,
     /// [-1.0, 1.0].
-    near_contrast: f32,
+    pub near_contrast: f32,
     /// [0.0, 1.0].
-    near_red: f32,
+    pub near_red: f32,
     /// [0.0, 1.0].
-    near_green: f32,
+    pub near_green: f32,
     /// [0.0, 1.0].
-    near_blue: f32,
+    pub near_blue: f32,
     /// [0.0, 1.0].
-    far_inverse: f32,
+    pub far_inverse: f32,
     /// [0.0, 1.0].
-    far_hue: f32,
+    pub far_hue: f32,
     /// [-1.0, 1.0].
-    far_saturation: f32,
+    pub far_saturation: f32,
     /// [-1.0, 1.0].
-    far_brightness: f32,
+    pub far_brightness: f32,
     /// [-1.0, 1.0].
-    far_contrast: f32,
+    pub far_contrast: f32,
     /// [0.0, 1.0].
-    far_red: f32,
+    pub far_red: f32,
     /// [0.0, 1.0].
-    far_green: f32,
+    pub far_green: f32,
     /// [0.0, 1.0].
-    far_blue: f32,
+    pub far_blue: f32,
 }
 
 impl MediaBlockFxColorsKey {

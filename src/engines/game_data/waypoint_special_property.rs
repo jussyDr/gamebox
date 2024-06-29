@@ -12,11 +12,17 @@ use crate::{
 /// Special waypoint property.
 #[derive(Clone, Debug)]
 pub enum WaypointSpecialProperty {
+    /// A checkpoint.
     Checkpoint { group: u32 },
+    /// A finish.
     Goal { order: u32 },
+    /// A linked checkpoint.
     LinkedCheckpoint { group: u32 },
+    /// A start.
     Spawn { order: u32 },
+    /// A multilap.
     StartFinish { order: u32 },
+    /// Custom waypoint.
     Custom { tag: String },
 }
 

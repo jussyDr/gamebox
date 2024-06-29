@@ -90,7 +90,7 @@ impl Crystal {
         let size = r.u32()?;
 
         if size > 0 {
-            let mut d = r.take_with(size as u64, (), ());
+            let mut r = r.take_with(size as u64, (), ());
 
             r.u32()?; // 0
             r.u32()?; // 1
@@ -108,6 +108,8 @@ impl Crystal {
             r.u32()?; // 0
             r.node::<TraitsMetadata>()?;
             r.u32()?; // 0
+
+            r.eof()?;
         }
 
         r.u32()?; // 1

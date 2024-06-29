@@ -22,10 +22,7 @@ impl Deref for RcStr {
     type Target = str;
 
     fn deref(&self) -> &str {
-        match self.0 {
-            None => "",
-            Some(ref rc_str) => rc_str,
-        }
+        self.0.as_deref().unwrap_or_default()
     }
 }
 

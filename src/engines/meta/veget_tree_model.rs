@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Node type corresponding to GameBox files with the extension `VegetTreeModel.Gbx`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VegetTreeModel;
 
 impl Class for VegetTreeModel {

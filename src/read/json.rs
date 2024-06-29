@@ -17,10 +17,10 @@ pub fn read_json<'de, T: ClassName + Deserialize<'de>>(reader: impl Read) -> Res
 
     de.end()?;
 
-    let class_name = object.remove("ClassId").ok_or("")?;
+    let class_name = object.remove("ClassId").ok_or("no class name field")?;
 
     if class_name != T::CLASS_NAME {
-        return Err("".into());
+        return Err("class name does not match".into());
     }
 
     let node: T = Deserialize::deserialize(Value::Object(object))?;

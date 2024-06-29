@@ -11,7 +11,7 @@ use crate::{
 use super::Result;
 
 enum BodyData<R> {
-    NotRead { Reader: Reader<R, (), ()> },
+    NotRead { reader: Reader<R, (), ()> },
     Read { data: Vec<u8> },
 }
 
@@ -119,7 +119,7 @@ impl<R: Read> GbxFile<R> {
             vec![]
         };
 
-        let body_data = BodyData::NotRead { Reader: d };
+        let body_data = BodyData::NotRead { reader: d };
 
         Ok(Self {
             class_id,
@@ -134,7 +134,7 @@ impl<R: Read> GbxFile<R> {
     /// Raw uncompressed body data.
     pub fn body_data(&mut self) -> Result<&[u8]> {
         match self.body_data {
-            BodyData::NotRead { Reader: ref mut d } => {
+            BodyData::NotRead { reader: ref mut d } => {
                 let data = if self.is_body_compressed {
                     let decompressed_size = d.u32()?;
                     let compressed_size = d.u32()?;
