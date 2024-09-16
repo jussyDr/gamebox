@@ -1,56 +1,16 @@
-//! Reading GameBox files.
-
 use std::{
     fs,
     io::{BufReader, Read},
     path::Path,
 };
 
-use crate::Error;
+use crate::{Compression, Error, FileFormat, FILE_SIGNATURE, FILE_VERSION, UNKNOWN_BYTE};
 
 use super::{
-    readable::BodyChunks,
+    readable::{BodyChunks, BodyChunksInline},
     reader::{IdState, IdStateMut, NodeState, NodeStateMut, Reader},
     Readable,
 };
-
-const SIGNATURE: &[u8; 3] = b"GBX";
-
-const VERSION: u16 = 6;
-
-enum Format {
-    Binary,
-    Text,
-}
-
-impl Format {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        let format = match r.u8()? {
-            b'B' => Self::Binary,
-            b'T' => Self::Text,
-            _ => return Err(Error),
-        };
-
-        Ok(format)
-    }
-}
-
-enum Compression {
-    Compressed,
-    Uncompressed,
-}
-
-impl Compression {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        let compression = match r.u8()? {
-            b'C' => Self::Compressed,
-            b'U' => Self::Uncompressed,
-            _ => return Err(Error),
-        };
-
-        Ok(compression)
-    }
-}
 
 /// GameBox file.
 pub struct File {
@@ -65,15 +25,15 @@ impl File {
     pub fn new(reader: impl Read) -> Result<Self, Error> {
         let mut r = Reader::new(reader, (), ());
 
-        if &r.byte_array()? != SIGNATURE {
+        if &r.byte_array()? != FILE_SIGNATURE {
             return Err(Error);
         }
 
-        if r.u16()? != VERSION {
+        if r.u16()? != FILE_VERSION {
             return Err(Error);
         }
 
-        if !matches!(Format::read(&mut r)?, Format::Binary) {
+        if !matches!(FileFormat::read(&mut r)?, FileFormat::Binary) {
             return Err(Error);
         }
 
@@ -83,7 +43,7 @@ impl File {
 
         let body_compression = Compression::read(&mut r)?;
 
-        if r.u8()? != b'R' {
+        if r.u8()? != UNKNOWN_BYTE {
             return Err(Error);
         }
 
@@ -171,7 +131,7 @@ fn read_user_data<T: Readable>(node: &mut T, class_id: u32, user_data: &[u8]) ->
 
         let chunk_len = chunk_len & 0x7fffffff;
 
-        let mut r = r.take(chunk_len as u64, &mut id_state, ());
+        let mut r = r.take_with(chunk_len as u64, &mut id_state, ());
 
         read_fn(node, &mut r)?;
 
@@ -214,15 +174,73 @@ pub(crate) fn read_body_chunks<T: BodyChunks>(
 
         let chunk_num = chunk_num(chunk_id);
 
-        let read_fn = chunks
-            .find(|(num, _)| *num == chunk_num)
-            .map(|(_, read_fn)| read_fn)
+        let (read_fn, skippable) = chunks
+            .find(|(num, _, _)| *num == chunk_num)
+            .map(|(_, read_fn, skippable)| (read_fn, skippable))
             .ok_or(Error)?;
 
-        read_fn(node, r)?;
+        if skippable {
+            if r.u32()? != 0x534B4950 {
+                return Err(Error);
+            }
+
+            let len = r.u32()?;
+
+            // let mut r = r.take(len as u64);
+
+            read_fn(node, r)?;
+
+            // r.expect_eof()?;
+        } else {
+            read_fn(node, r)?;
+        }
     }
 
-    r.expect_eof()?;
+    Ok(())
+}
+
+pub(crate) fn read_body_chunks_inline<T: BodyChunksInline, N>(
+    node: &mut T,
+    r: &mut Reader<impl Read, impl IdStateMut, N>,
+) -> Result<(), Error> {
+    let mut chunks = T::body_chunks();
+
+    loop {
+        let chunk_id = r.u32()?;
+
+        if chunk_id == 0xfacade01 {
+            break;
+        }
+
+        println!("{:08X?}", chunk_id);
+
+        // if chunk_class_id(chunk_id) != class_id {
+        //     return Err(Error);
+        // }
+
+        let chunk_num = chunk_num(chunk_id);
+
+        let (read_fn, skippable) = chunks
+            .find(|(num, _, _)| *num == chunk_num)
+            .map(|(_, read_fn, skippable)| (read_fn, skippable))
+            .ok_or(Error)?;
+
+        if skippable {
+            if r.u32()? != 0x534B4950 {
+                return Err(Error);
+            }
+
+            let len = r.u32()?;
+
+            // let mut r = r.take(len as u64);
+
+            read_fn(node, r)?;
+
+            // r.expect_eof()?;
+        } else {
+            read_fn(node, r)?;
+        }
+    }
 
     Ok(())
 }

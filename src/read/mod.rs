@@ -1,15 +1,18 @@
 //! Reading GameBox files.
 
-pub mod file;
-pub mod reader;
+mod file;
+mod reader;
+
+pub use file::File;
+pub use reader::{
+    IdState, IdStateMut, IdStateRef, NodeState, NodeStateMut, NodeStateRef, Reader, Take,
+};
 
 use std::{io::Read, path::Path};
 
-use file::File;
-
 use crate::Error;
 
-/// Read a GameBox node of type `T` from the given `reader`.
+/// Read a node of type `T` from the given `reader`.
 ///
 /// # Examples
 /// ``` no_run
@@ -26,7 +29,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     file.read()
 }
 
-/// Read a GameBox node of type `T` from a file at the given `path`.
+/// Read a node of type `T` from a file at the given `path`.
 ///
 /// # Examples
 /// ``` no_run
@@ -43,9 +46,9 @@ pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
     file.read()
 }
 
-/// Readable GameBox node.
+/// Readable GameBox class.
 ///
-/// Note that this trait is sealed and cannot be implemented for types outside of GameBox.
+/// Note that this trait is sealed and cannot be implemented for types outside of this crate.
 pub trait Readable: readable::Sealed {}
 
 pub(crate) mod readable {
@@ -65,12 +68,28 @@ pub(crate) mod readable {
         fn user_data_chunks() -> impl Iterator<Item = UserDataChunk<Self>>;
     }
 
-    pub type BodyChunk<T, R, I, N> = (u16, fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>);
+    pub type BodyChunk<T, R, I, N> = (
+        u16,
+        fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
+        bool,
+    );
 
     pub trait BodyChunks {
         /// The chunks numbers must not contain duplicates and must be increasing.
         fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>>;
+    }
+
+    pub trait BodyChunksInline {
+        /// The chunks numbers must not contain duplicates and must be increasing.
+        fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>>;
+    }
+
+    impl<T: BodyChunksInline> BodyChunks for T {
+        fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>>
+        {
+            <T as BodyChunksInline>::body_chunks()
+        }
     }
 
     pub trait Sealed: Default + UserDataChunks + BodyChunks {}
