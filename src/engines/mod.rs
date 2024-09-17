@@ -10,6 +10,10 @@ pub mod game {
     pub(crate) mod challenge_parameters;
     pub(crate) mod collector_list;
     pub(crate) mod ghost;
+    pub(crate) mod media_block;
+    pub(crate) mod media_clip;
+    pub(crate) mod media_clip_group;
+    pub(crate) mod media_track;
     pub(crate) mod zone_genealogy;
 
     #[doc(inline)]
@@ -26,6 +30,14 @@ pub mod game {
     pub use collector_list::CollectorList;
     #[doc(inline)]
     pub use ghost::Ghost;
+    #[doc(inline)]
+    pub use media_block::MediaBlock;
+    #[doc(inline)]
+    pub use media_clip::MediaClip;
+    #[doc(inline)]
+    pub use media_clip_group::MediaClipGroup;
+    #[doc(inline)]
+    pub use media_track::MediaTrack;
     #[doc(inline)]
     pub use zone_genealogy::ZoneGenealogy;
 }

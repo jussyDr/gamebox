@@ -92,5 +92,21 @@ pub(crate) mod readable {
         }
     }
 
+    pub trait Class {
+        fn is_instance_of(&self, id: u32) -> bool;
+    }
+
+    impl dyn Class {
+        pub fn downcast<T>(&self) -> Option<T> {
+            todo!()
+        }
+    }
+
+    pub trait ReadAbstract {
+        fn read_abstract<R, I, N>(r: &mut Reader<R, I, N>, class_id: u32) -> Result<Self, Error>
+        where
+            Self: Sized;
+    }
+
     pub trait Sealed: Default + UserDataChunks + BodyChunks {}
 }

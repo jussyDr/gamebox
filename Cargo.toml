@@ -3,8 +3,12 @@ members = ["ffi", "python"]
 
 [package]
 name = "gamebox"
+authors = ["Justin de Ruiter <justinderuiter@ziggo.nl>"]
 version = "0.1.0"
 edition = "2021"
+description = "GameBox file reading and writing"
+repository = "https://github.com/jussyDr/gamebox"
+license = "GPL-2.0"
 
 [dependencies]
 lzo1x = "0.2.0"

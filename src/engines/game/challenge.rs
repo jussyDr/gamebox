@@ -10,12 +10,12 @@ use crate::{
     },
     read::{
         readable::{self, BodyChunk, BodyChunks, UserDataChunk, UserDataChunks},
-        IdState, IdStateMut, IdStateRef, NodeStateMut, NodeStateRef, Readable, Reader,
+        IdState, IdStateMut, NodeStateMut, Readable, Reader,
     },
     Error,
 };
 
-use super::{AnchoredObject, ZoneGenealogy};
+use super::{AnchoredObject, MediaClip, MediaClipGroup, ZoneGenealogy};
 
 /// A challenge.
 #[derive(Default)]
@@ -43,7 +43,7 @@ impl UserDataChunks for Challenge {
 impl BodyChunks for Challenge {
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-        let chunks: [BodyChunk<Self, R, I, N>; 18] = [
+        let chunks: [BodyChunk<Self, R, I, N>; 19] = [
             (13, |n, r| Self::read_chunk_13(n, r), false),
             (17, |n, r| Self::read_chunk_17(n, r), false),
             (24, |n, r| Self::read_chunk_24(n, r), true),
@@ -62,6 +62,7 @@ impl BodyChunks for Challenge {
             (67, |n, r| Self::read_chunk_67(n, r), true),
             (68, |n, r| Self::read_chunk_68(n, r), true),
             (72, |n, r| Self::read_chunk_72(n, r), true),
+            (73, |n, r| Self::read_chunk_73(n, r), false),
         ];
 
         chunks.into_iter()
@@ -396,7 +397,7 @@ impl Challenge {
 
     fn read_chunk_72(
         &mut self,
-        r: &mut Reader<impl Read, impl IdStateRef, impl NodeStateRef>,
+        r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
     ) -> Result<(), Error> {
         let version = r.u32()?;
 
@@ -410,8 +411,27 @@ impl Challenge {
             return Err(Error);
         }
 
-        r.list(|r| Block::read_inline(r))?;
+        r.list(|r| Block::read(r))?;
         r.u32()?;
+        let _baked_clips_additional_data = r.list(|_| Ok(()))?;
+
+        Ok(())
+    }
+
+    fn read_chunk_73(
+        &mut self,
+        r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+    ) -> Result<(), Error> {
+        if r.u32()? != 2 {
+            return Err(Error);
+        }
+
+        let _clip_intro = r.node::<MediaClip>()?;
+        let _clip_podium = r.node::<MediaClip>()?;
+        let _clip_group_in_game = r.node::<MediaClipGroup>()?;
+        let _clip_group_end_race = r.node::<MediaClipGroup>()?;
+        let _clip_ambiance = r.node::<MediaClip>()?;
+        let _clip_trigger_size = r.vec3::<u32>()?;
 
         Ok(())
     }
