@@ -11,6 +11,11 @@ pub mod game {
     pub(crate) mod collector_list;
     pub(crate) mod ghost;
     pub(crate) mod media_block;
+    pub(crate) mod media_block_camera_custom;
+    pub(crate) mod media_block_fog;
+    pub(crate) mod media_block_transition_fade;
+    pub(crate) mod media_block_triangles;
+    pub(crate) mod media_block_triangles_3d;
     pub(crate) mod media_clip;
     pub(crate) mod media_clip_group;
     pub(crate) mod media_track;
@@ -32,6 +37,16 @@ pub mod game {
     pub use ghost::Ghost;
     #[doc(inline)]
     pub use media_block::MediaBlock;
+    #[doc(inline)]
+    pub use media_block_camera_custom::MediaBlockCameraCustom;
+    #[doc(inline)]
+    pub use media_block_fog::MediaBlockFog;
+    #[doc(inline)]
+    pub use media_block_transition_fade::MediaBlockTransitionFade;
+    #[doc(inline)]
+    pub use media_block_triangles::MediaBlockTriangles;
+    #[doc(inline)]
+    pub use media_block_triangles_3d::MediaBlockTriangles3D;
     #[doc(inline)]
     pub use media_clip::MediaClip;
     #[doc(inline)]
