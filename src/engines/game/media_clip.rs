@@ -43,13 +43,7 @@ impl MediaClip {
             return Err(Error);
         }
 
-        let list_version = r.u32()?;
-
-        if list_version != 10 {
-            return Err(Error);
-        }
-
-        let _tracks = r.list(|r| r.node::<MediaTrack>())?;
+        let _tracks = r.versioned_list(|r| r.node::<MediaTrack>())?;
         let _name = r.string()?;
         let _stop_when_leave = r.bool()?;
         r.bool()?;

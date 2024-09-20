@@ -236,8 +236,7 @@ impl Challenge {
         r.u32()?;
         let _password = r.string()?;
         let _decoration = r.ident()?;
-        let _map_coord_origin = r.vec2::<f32>()?;
-        let _map_coord_target = r.vec2::<f32>()?;
+        read_map_origin_and_target(r)?;
         let _pack_mask = r.u128()?;
         let _map_type = r.string()?;
         let _map_style = r.string()?;
@@ -303,16 +302,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        let author_version = r.u32()?;
-
-        if author_version != 0 {
-            return Err(Error);
-        }
-
-        let _author_login = r.string()?;
-        let _author_nickname = r.string()?;
-        let _author_zone = r.string()?;
-        let _author_extra_info = r.string()?;
+        read_author(r)?;
 
         Ok(())
     }
@@ -359,13 +349,7 @@ impl Challenge {
         let _decoration = r.ident()?;
         let _size = r.vec3::<u32>()?;
         let _need_unlock = r.bool()?;
-        let version = r.u32()?;
-
-        if version != 6 {
-            return Err(Error);
-        }
-
-        self.blocks = r.list(|r| Block::read(r))?;
+        self.blocks = read_blocks(r)?;
 
         Ok(())
     }
@@ -383,8 +367,7 @@ impl Challenge {
     }
 
     fn read_chunk_37<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-        let _map_coord_origin = r.vec2::<f32>()?;
-        let _map_coord_target = r.vec2::<f32>()?;
+        read_map_origin_and_target(r)?;
 
         Ok(())
     }
@@ -431,13 +414,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        let list_version = r.u32()?;
-
-        if list_version != 10 {
-            return Err(Error);
-        }
-
-        let _car_marks_buffer = r.list(|r| r.node::<VehicleCarMarksSamples>())?;
+        let _car_marks_buffer = r.versioned_list(|r| r.node::<VehicleCarMarksSamples>())?;
 
         Ok(())
     }
@@ -455,13 +432,7 @@ impl Challenge {
         {
             let mut r = r.take_with(len as u64, IdState::new(), ());
 
-            let list_version = r.u32()?;
-
-            if list_version != 10 {
-                return Err(Error);
-            }
-
-            self.anchored_objects = r.list(|r| r.node_inline::<AnchoredObject>())?;
+            self.anchored_objects = r.versioned_list(|r| r.node_inline::<AnchoredObject>())?;
             let _items_on_item = r.list(|r| r.vec2::<u32>())?;
             let _block_indexes = r.list(|r| r.u32())?;
             let _item_indexes = r.list(|r| r.u32())?;
@@ -480,16 +451,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        let author_version = r.u32()?;
-
-        if author_version != 0 {
-            return Err(Error);
-        }
-
-        let _author_login = r.string()?;
-        let _author_nickname = r.string()?;
-        let _author_zone = r.string()?;
-        let _author_extra_info = r.string()?;
+        read_author(r)?;
 
         Ok(())
     }
@@ -530,13 +492,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        let blocks_version = r.u32()?;
-
-        if blocks_version != 6 {
-            return Err(Error);
-        }
-
-        self.baked_blocks = r.list(|r| Block::read(r))?;
+        self.baked_blocks = read_blocks(r)?;
         r.u32()?;
         let _baked_clips_additional_data = r.list(|_| Ok(()))?;
 
@@ -678,11 +634,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        r.u32()?;
-        let _day_time = r.u32()?;
-        r.u32()?;
-        let _dynamic_daylight = r.bool()?;
-        let _day_duration = r.u32()?;
+        read_light_settings(r)?;
 
         Ok(())
     }
@@ -893,12 +845,52 @@ impl Challenge {
     }
 
     fn read_chunk_107<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-        r.u32()?;
-        let _day_time = r.f32()?;
-        r.u32()?;
-        let _dynamic_daylight = r.bool()?;
-        let _day_duration = r.u32()?;
+        read_light_settings(r)?;
 
         Ok(())
     }
+}
+
+fn read_map_origin_and_target<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+    let _map_coord_origin = r.vec2::<f32>()?;
+    let _map_coord_target = r.vec2::<f32>()?;
+
+    Ok(())
+}
+
+fn read_author<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+    let author_version = r.u32()?;
+
+    if author_version != 0 {
+        return Err(Error);
+    }
+
+    let _author_login = r.string()?;
+    let _author_nickname = r.string()?;
+    let _author_zone = r.string()?;
+    let _author_extra_info = r.string()?;
+
+    Ok(())
+}
+
+fn read_blocks(
+    r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+) -> Result<Box<[Block]>, Error> {
+    let version = r.u32()?;
+
+    if version != 6 {
+        return Err(Error);
+    }
+
+    r.list(|r| Block::read(r))
+}
+
+fn read_light_settings<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+    r.u32()?;
+    let _day_time = r.f32()?;
+    r.u32()?;
+    let _dynamic_daylight = r.bool()?;
+    let _day_duration = r.u32()?;
+
+    Ok(())
 }

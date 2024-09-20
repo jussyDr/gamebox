@@ -67,13 +67,7 @@ impl MediaClipGroup {
         &mut self,
         r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
     ) -> Result<(), Error> {
-        let list_version = r.u32()?;
-
-        if list_version != 10 {
-            return Err(Error);
-        }
-
-        let _clips = r.list(|r| r.node::<MediaClip>())?;
+        let _clips = r.versioned_list(|r| r.node::<MediaClip>())?;
         let _triggers = r.list(|r| {
             r.u32()?;
             r.u32()?;

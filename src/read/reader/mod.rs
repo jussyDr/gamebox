@@ -298,6 +298,20 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.repeat(len as usize, read_elem)
     }
 
+    /// Read a list.
+    pub fn versioned_list<T>(
+        &mut self,
+        read_elem: impl Fn(&mut Self) -> Result<T, Error>,
+    ) -> Result<Box<[T]>, Error> {
+        let version = self.u32()?;
+
+        if version != 10 {
+            return Err(Error);
+        }
+
+        self.list(read_elem)
+    }
+
     /// Check if this reader is at EOF else return an error.
     pub fn expect_eof(&mut self) -> Result<(), Error> {
         let mut buf = [0];

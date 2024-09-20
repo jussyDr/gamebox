@@ -38,13 +38,7 @@ impl MediaTrack {
         r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
     ) -> Result<(), Error> {
         let _name = r.string()?;
-        let list_version = r.u32()?;
-
-        if list_version != 10 {
-            return Err(Error);
-        }
-
-        let _blocks = r.list(|r| MediaBlock::read(r))?;
+        let _blocks = r.versioned_list(|r| MediaBlock::read(r))?;
         r.u32()?;
 
         Ok(())

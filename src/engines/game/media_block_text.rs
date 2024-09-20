@@ -9,7 +9,7 @@ use crate::{
     Error,
 };
 
-/// An text media block.
+/// A text media block.
 pub struct MediaBlockText;
 
 impl BodyChunks for MediaBlockText {
