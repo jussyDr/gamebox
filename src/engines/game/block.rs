@@ -2,12 +2,14 @@ use std::io::Read;
 
 use crate::{
     engines::{game::BlockSkin, game_data::WaypointSpecialProperty},
-    read::{IdStateMut, IdStateRef, NodeStateMut, NodeStateRef, Reader},
+    read::{IdStateMut, NodeStateMut, Reader},
     Direction, Error,
 };
 
 /// A block placed inside of a [Challenge](super::Challenge).
-pub struct Block;
+pub struct Block {
+    pub(crate) is_free: bool,
+}
 
 impl Block {
     pub(crate) fn read(
@@ -27,30 +29,8 @@ impl Block {
             let _waypoint_special_property = r.node::<WaypointSpecialProperty>()?;
         }
 
-        Ok(Self)
-    }
+        let is_free = flags & 0x20000000 != 0;
 
-    pub(crate) fn read_inline(
-        r: &mut Reader<impl Read, impl IdStateRef, impl NodeStateRef>,
-    ) -> Result<Self, Error> {
-        let _name = r.id_ref()?;
-        let _direction = Direction::read_u8(r)?;
-        let _coord = r.vec3::<u8>()?;
-        let flags = r.u32()?;
-
-        if flags & 0x00008000 != 0 {
-            // let _author = r.id_ref()?;
-            // let _skin = r.node::<BlockSkin>()?;
-
-            panic!("{:02X?}", r.bytes(144)?);
-        }
-
-        if flags & 0x00100000 != 0 {
-            // let _waypoint_special_property = r.node::<WaypointSpecialProperty>()?;
-
-            panic!("{:02X?}", r.bytes(144)?);
-        }
-
-        Ok(Self)
+        Ok(Self { is_free })
     }
 }

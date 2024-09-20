@@ -15,6 +15,12 @@ use super::MediaBlock;
 pub struct MediaTrack;
 
 impl BodyChunks for MediaTrack {
+    type Parent = Self;
+
+    fn parent(&mut self) -> Option<&mut Self> {
+        None
+    }
+
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
         let chunks: [BodyChunk<Self, R, I, N>; 2] = [

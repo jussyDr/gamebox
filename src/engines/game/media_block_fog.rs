@@ -12,6 +12,12 @@ use crate::{
 pub struct MediaBlockFog;
 
 impl BodyChunks for MediaBlockFog {
+    type Parent = Self;
+
+    fn parent(&mut self) -> Option<&mut Self> {
+        None
+    }
+
     fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
         let chunks: [BodyChunk<Self, R, I, N>; 1] = [(0, |n, r| Self::read_chunk_0(n, r), false)];
 

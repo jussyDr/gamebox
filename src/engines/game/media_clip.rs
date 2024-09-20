@@ -15,9 +15,18 @@ use super::MediaTrack;
 pub struct MediaClip;
 
 impl BodyChunks for MediaClip {
+    type Parent = Self;
+
+    fn parent(&mut self) -> Option<&mut Self> {
+        None
+    }
+
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-        let chunks: [BodyChunk<Self, R, I, N>; 1] = [(13, |n, r| Self::read_chunk_13(n, r), false)];
+        let chunks: [BodyChunk<Self, R, I, N>; 2] = [
+            (13, |n, r| Self::read_chunk_13(n, r), false),
+            (14, |n, r| Self::read_chunk_14(n, r), true),
+        ];
 
         chunks.into_iter()
     }
@@ -48,6 +57,13 @@ impl MediaClip {
         r.string()?;
         r.f32()?;
         let _local_player_clip_ent_index = r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_14<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        r.u32()?;
 
         Ok(())
     }

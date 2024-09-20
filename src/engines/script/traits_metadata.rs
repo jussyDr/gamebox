@@ -82,12 +82,10 @@ struct ArrayType {
 }
 
 struct StructType {
-    name: String,
     members: Box<[StructMemberType]>,
 }
 
 struct StructMemberType {
-    name: String,
     ty: Type,
 }
 
@@ -120,15 +118,15 @@ impl Type {
 
             15 => {
                 let member_count = r.u8()?;
-                let name = r.string()?;
+                let _name = r.string()?;
                 let members = r.repeat(member_count as usize, |r| {
-                    let name = r.string()?;
+                    let _name = r.string()?;
                     let ty = Self::read(r)?;
 
-                    Ok(StructMemberType { name, ty })
+                    Ok(StructMemberType { ty })
                 })?;
 
-                Self::Struct(Box::new(StructType { name, members }))
+                Self::Struct(Box::new(StructType { members }))
             }
             16 => Self::ValueNotComputed,
             _ => return Err(Error),

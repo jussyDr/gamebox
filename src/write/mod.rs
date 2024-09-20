@@ -2,8 +2,9 @@
 
 mod writer;
 
-use lzo1x::CompressLevel;
 pub use writer::Writer;
+
+use lzo1x::CompressLevel;
 
 use std::{
     fs::File,
@@ -20,7 +21,7 @@ use crate::{Compression, Error, FileFormat, FILE_SIGNATURE, FILE_VERSION, UNKNOW
 /// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::Error> {
 /// use gamebox::Challenge;
 ///
-/// let challenge = Challenge::new();
+/// let challenge = Challenge::default();
 ///
 /// gamebox::write(&challenge, writer)?;
 /// # Ok(())
@@ -33,7 +34,7 @@ pub fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
 
     let compressed_body = lzo1x::compress(&body, CompressLevel::default());
 
-    let mut w = Writer::new(writer);
+    let mut w = Writer::new(writer, (), ());
 
     w.bytes(FILE_SIGNATURE)?;
     w.u16(FILE_VERSION)?;
@@ -60,7 +61,7 @@ pub fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
 /// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::Error> {
 /// use gamebox::Challenge;
 ///
-/// let challenge = Challenge::new();
+/// let challenge = Challenge::default();
 ///
 /// gamebox::write_file(&challenge, "MyMap.Map.Gbx")?;
 /// # Ok(())
@@ -78,7 +79,7 @@ pub fn write_file<T: Writable>(node: &T, path: impl AsRef<Path>) -> Result<(), E
 /// Note that this trait is sealed and cannot be implemented for types outside of this crate.
 pub trait Writable: writable::Sealed {}
 
-mod writable {
+pub(crate) mod writable {
     pub trait Sealed {
         const CLASS_ID: u32;
     }

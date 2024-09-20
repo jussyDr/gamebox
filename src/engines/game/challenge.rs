@@ -5,6 +5,7 @@ use crate::{
         game::{
             block::Block, challenge_parameters::ChallengeParameters, collector_list::CollectorList,
         },
+        game_data::WaypointSpecialProperty,
         scene::VehicleCarMarksSamples,
         script::TraitsMetadata,
     },
@@ -12,18 +13,110 @@ use crate::{
         readable::{self, BodyChunk, BodyChunks, UserDataChunk, UserDataChunks},
         IdState, IdStateMut, NodeStateMut, Readable, Reader,
     },
+    write::{writable, Writable},
     Error,
 };
 
 use super::{AnchoredObject, MediaClip, MediaClipGroup, ZoneGenealogy};
 
+enum MapElemColor {
+    Default,
+    White,
+    Green,
+    Blue,
+    Red,
+    Black,
+}
+
+impl MapElemColor {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        let map_elem_color = match r.u8()? {
+            0 => Self::Default,
+            1 => Self::White,
+            2 => Self::Green,
+            3 => Self::Blue,
+            4 => Self::Red,
+            5 => Self::Black,
+            _ => return Err(Error),
+        };
+
+        Ok(map_elem_color)
+    }
+}
+
+enum PhaseOffset {
+    None,
+    One8th,
+    Two8th,
+    Three8th,
+    Four8th,
+    Five8th,
+    Six8th,
+    Seven8th,
+}
+
+impl PhaseOffset {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        let map_elem_color = match r.u8()? {
+            0 => Self::None,
+            1 => Self::One8th,
+            2 => Self::Two8th,
+            3 => Self::Three8th,
+            4 => Self::Four8th,
+            5 => Self::Five8th,
+            6 => Self::Six8th,
+            7 => Self::Seven8th,
+            _ => return Err(Error),
+        };
+
+        Ok(map_elem_color)
+    }
+}
+
+enum LightmapQuality {
+    Normal,
+    High,
+    VeryHigh,
+    Highest,
+    Low,
+    VeryLow,
+    Lowest,
+}
+
+impl LightmapQuality {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        let lightmap_quality = match r.u8()? {
+            0 => Self::Normal,
+            1 => Self::High,
+            2 => Self::VeryHigh,
+            3 => Self::Highest,
+            4 => Self::Low,
+            5 => Self::VeryLow,
+            6 => Self::Lowest,
+            _ => return Err(Error),
+        };
+
+        Ok(lightmap_quality)
+    }
+}
+
 /// A challenge.
 #[derive(Default)]
-pub struct Challenge;
+pub struct Challenge {
+    blocks: Box<[Block]>,
+    baked_blocks: Box<[Block]>,
+    anchored_objects: Box<[Option<AnchoredObject>]>,
+}
 
 impl Readable for Challenge {}
 
 impl readable::Sealed for Challenge {}
+
+impl Writable for Challenge {}
+
+impl writable::Sealed for Challenge {
+    const CLASS_ID: u32 = 0x03043000;
+}
 
 impl UserDataChunks for Challenge {
     fn user_data_chunks() -> impl Iterator<Item = UserDataChunk<Self>> {
@@ -41,9 +134,15 @@ impl UserDataChunks for Challenge {
 }
 
 impl BodyChunks for Challenge {
+    type Parent = Self;
+
+    fn parent(&mut self) -> Option<&mut Self> {
+        None
+    }
+
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-        let chunks: [BodyChunk<Self, R, I, N>; 19] = [
+        let chunks: [BodyChunk<Self, R, I, N>; 45] = [
             (13, |n, r| Self::read_chunk_13(n, r), false),
             (17, |n, r| Self::read_chunk_17(n, r), false),
             (24, |n, r| Self::read_chunk_24(n, r), true),
@@ -63,6 +162,32 @@ impl BodyChunks for Challenge {
             (68, |n, r| Self::read_chunk_68(n, r), true),
             (72, |n, r| Self::read_chunk_72(n, r), true),
             (73, |n, r| Self::read_chunk_73(n, r), false),
+            (75, |n, r| Self::read_chunk_75(n, r), true),
+            (79, |n, r| Self::read_chunk_79(n, r), true),
+            (80, |n, r| Self::read_chunk_80(n, r), true),
+            (81, |n, r| Self::read_chunk_81(n, r), true),
+            (82, |n, r| Self::read_chunk_82(n, r), true),
+            (83, |n, r| Self::read_chunk_83(n, r), true),
+            (84, |n, r| Self::read_chunk_84(n, r), true),
+            (85, |n, r| Self::read_chunk_85(n, r), true),
+            (86, |n, r| Self::read_chunk_86(n, r), true),
+            (87, |n, r| Self::read_chunk_87(n, r), true),
+            (89, |n, r| Self::read_chunk_89(n, r), true),
+            (90, |n, r| Self::read_chunk_90(n, r), true),
+            (91, |n, r| Self::read_chunk_91(n, r), true),
+            (93, |n, r| Self::read_chunk_93(n, r), true),
+            (94, |n, r| Self::read_chunk_94(n, r), true),
+            (95, |n, r| Self::read_chunk_95(n, r), true),
+            (96, |n, r| Self::read_chunk_96(n, r), true),
+            (97, |n, r| Self::read_chunk_97(n, r), true),
+            (98, |n, r| Self::read_chunk_98(n, r), true),
+            (99, |n, r| Self::read_chunk_99(n, r), true),
+            (100, |n, r| Self::read_chunk_100(n, r), true),
+            (101, |n, r| Self::read_chunk_101(n, r), true),
+            (103, |n, r| Self::read_chunk_103(n, r), true),
+            (104, |n, r| Self::read_chunk_104(n, r), true),
+            (105, |n, r| Self::read_chunk_105(n, r), true),
+            (107, |n, r| Self::read_chunk_107(n, r), true),
         ];
 
         chunks.into_iter()
@@ -240,7 +365,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        let _blocks = r.list(|r| Block::read(r))?;
+        self.blocks = r.list(|r| Block::read(r))?;
 
         Ok(())
     }
@@ -336,7 +461,7 @@ impl Challenge {
                 return Err(Error);
             }
 
-            let _anchored_objects = r.list(|r| r.node_inline::<AnchoredObject>())?;
+            self.anchored_objects = r.list(|r| r.node_inline::<AnchoredObject>())?;
             let _items_on_item = r.list(|r| r.vec2::<u32>())?;
             let _block_indexes = r.list(|r| r.u32())?;
             let _item_indexes = r.list(|r| r.u32())?;
@@ -411,7 +536,7 @@ impl Challenge {
             return Err(Error);
         }
 
-        r.list(|r| Block::read(r))?;
+        self.baked_blocks = r.list(|r| Block::read(r))?;
         r.u32()?;
         let _baked_clips_additional_data = r.list(|_| Ok(()))?;
 
@@ -432,6 +557,347 @@ impl Challenge {
         let _clip_group_end_race = r.node::<MediaClipGroup>()?;
         let _clip_ambiance = r.node::<MediaClip>()?;
         let _clip_trigger_size = r.vec3::<u32>()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_75<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let _objective_text_author = r.string()?;
+        let _objective_text_gold = r.string()?;
+        let _objective_text_silver = r.string()?;
+        let _objective_text_bronze = r.string()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_79<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error);
+        }
+
+        r.u8()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_80<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        let _offzone_trigger_size = r.vec3::<u32>()?;
+        let _offzones = r.list(|r| r.box3::<u32>())?;
+
+        Ok(())
+    }
+
+    fn read_chunk_81<N>(
+        &mut self,
+        r: &mut Reader<impl Read, impl IdStateMut, N>,
+    ) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        let _title_id = r.id()?;
+        let _build_version = r.string()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_82<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        let _deco_base_height_offset = r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_83(
+        &mut self,
+        r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+    ) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error);
+        }
+
+        let _bot_paths = r.list(|r| {
+            let _clan = r.u32()?;
+            let _path = r.list(|r| r.vec3::<f32>())?;
+            let _is_flying = r.bool()?;
+            let _waypoint_special_property = r.node::<WaypointSpecialProperty>()?;
+            let _is_autonomous = r.bool()?;
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn read_chunk_84<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error);
+        }
+
+        r.u32()?;
+        let len = r.u32()?;
+
+        {
+            let mut r = r.take_with(len as u64, IdState::new(), ());
+
+            let _embedded_item_models = r.list(|r| r.ident())?;
+            let _embedded_zip_data = r.byte_buf()?;
+            let _textures = r.list(|r| r.string())?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_85<R, I, N>(&mut self, _: &mut Reader<R, I, N>) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn read_chunk_86<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error);
+        }
+
+        r.u32()?;
+        let _day_time = r.u32()?;
+        r.u32()?;
+        let _dynamic_daylight = r.bool()?;
+        let _day_duration = r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_87<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_89<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error);
+        }
+
+        let _world_distortion = r.vec3::<f32>()?;
+        r.bool()?;
+        r.u32()?;
+        r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_90<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_91<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        let has_lightmaps = r.bool()?;
+        r.bool()?;
+        r.bool()?;
+
+        if has_lightmaps {
+            let lightmaps_version = r.u32()?;
+
+            if lightmaps_version != 10 {
+                return Err(Error);
+            }
+
+            let _lightmap_frames = r.list(|r| {
+                r.byte_buf()?;
+                r.byte_buf()?;
+                r.byte_buf()?;
+
+                Ok(())
+            })?;
+            let _lightmap_cache_data_len = r.u32()?;
+            let _compressed_lightmap_cache_data = r.byte_buf()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_93<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.bytes(51079)?;
+
+        Ok(())
+    }
+
+    fn read_chunk_94<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.bytes(20)?;
+
+        Ok(())
+    }
+
+    fn read_chunk_95<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        for _block in self
+            .blocks
+            .iter_mut()
+            .chain(&mut self.baked_blocks)
+            .filter(|block| block.is_free)
+        {
+            let _absolute_position_in_map = r.vec3::<f32>()?;
+            let _pitch_yaw_roll = r.vec3::<f32>()?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_96<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.bytes(8)?;
+
+        Ok(())
+    }
+
+    fn read_chunk_97<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.bytes(20)?;
+
+        Ok(())
+    }
+
+    fn read_chunk_98<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        for _block in self.blocks.iter_mut().chain(&mut self.baked_blocks) {
+            let _color = MapElemColor::read(r)?;
+        }
+
+        for _anchored_object in &mut self.anchored_objects {
+            let _color = MapElemColor::read(r)?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_99<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        for _anchored_object in &mut self.anchored_objects {
+            let _anim_phase_offset = PhaseOffset::read(r)?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_100<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.bytes(16)?;
+
+        Ok(())
+    }
+
+    fn read_chunk_101<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        for _anchored_object in &mut self.anchored_objects {
+            let has_foreground_pack_desc = r.bool8()?;
+
+            if has_foreground_pack_desc {
+                let _foreground_pack_desc = r.file_ref()?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_103<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.bytes(16)?;
+
+        Ok(())
+    }
+
+    fn read_chunk_104<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error);
+        }
+
+        for _block in self.blocks.iter_mut().chain(&mut self.baked_blocks) {
+            let _lightmap_quality = LightmapQuality::read(r)?;
+        }
+
+        for _anchored_object in &mut self.anchored_objects {
+            let _lightmap_quality = LightmapQuality::read(r)?;
+        }
+
+        Ok(())
+    }
+
+    fn read_chunk_105<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error);
+        }
+
+        for _block in &self.blocks {
+            let _macroblock_id = r.u32()?;
+        }
+
+        for _anchored_object in &self.anchored_objects {
+            let _macroblock_id = r.u32()?;
+        }
+
+        let _id_flags_pair = r.list(|r| r.vec2::<u32>());
+
+        Ok(())
+    }
+
+    fn read_chunk_107<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        let _day_time = r.f32()?;
+        r.u32()?;
+        let _dynamic_daylight = r.bool()?;
+        let _day_duration = r.u32()?;
 
         Ok(())
     }

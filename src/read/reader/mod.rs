@@ -10,7 +10,7 @@ use std::{
     iter,
 };
 
-use crate::{Error, Vec2, Vec3};
+use crate::{Box3, Error, Vec2, Vec3, Vec4};
 
 pub trait Num {
     fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error>
@@ -226,6 +226,21 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let z = T::read(self)?;
 
         Ok(Vec3 { x, y, z })
+    }
+
+    /// Read a 4-dimensional vector.
+    pub fn vec4<T: Num>(&mut self) -> Result<Vec4<T>, Error> {
+        let x = T::read(self)?;
+        let y = T::read(self)?;
+        let z = T::read(self)?;
+        let w = T::read(self)?;
+
+        Ok(Vec4 { x, y, z, w })
+    }
+
+    /// Read a 3-dimensional box.
+    pub fn box3<T: Num>(&mut self) -> Result<Box3<T>, Error> {
+        Ok(Box3(self.vec3()?, self.vec3()?))
     }
 
     /// Read a file reference.

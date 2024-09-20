@@ -4,13 +4,13 @@ use crate::read::readable::{BodyChunk, BodyChunks};
 
 use super::MediaBlockTriangles;
 
-/// A 3D triangles media block.
+/// A 2D triangles media block.
 #[derive(Default)]
-pub struct MediaBlockTriangles3D {
+pub struct MediaBlockTriangles2D {
     media_block_triangles: MediaBlockTriangles,
 }
 
-impl Deref for MediaBlockTriangles3D {
+impl Deref for MediaBlockTriangles2D {
     type Target = MediaBlockTriangles;
 
     fn deref(&self) -> &MediaBlockTriangles {
@@ -18,13 +18,13 @@ impl Deref for MediaBlockTriangles3D {
     }
 }
 
-impl DerefMut for MediaBlockTriangles3D {
+impl DerefMut for MediaBlockTriangles2D {
     fn deref_mut(&mut self) -> &mut MediaBlockTriangles {
         &mut self.media_block_triangles
     }
 }
 
-impl BodyChunks for MediaBlockTriangles3D {
+impl BodyChunks for MediaBlockTriangles2D {
     type Parent = MediaBlockTriangles;
 
     fn parent(&mut self) -> Option<&mut MediaBlockTriangles> {

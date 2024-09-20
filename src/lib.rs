@@ -12,7 +12,6 @@ pub mod write;
 pub use engines::game::challenge::Challenge;
 #[doc(inline)]
 pub use read::{read, read_file};
-use write::Writer;
 #[doc(inline)]
 pub use write::{write, write_file};
 
@@ -22,6 +21,7 @@ use std::{
 };
 
 use read::Reader;
+use write::Writer;
 
 /// An error.
 #[derive(Debug)]
@@ -52,6 +52,21 @@ pub struct Vec3<T> {
     /// Z component.
     pub z: T,
 }
+
+/// A 4-dimensional vector.
+pub struct Vec4<T> {
+    /// X component.
+    pub x: T,
+    /// Y component.
+    pub y: T,
+    /// Z component.
+    pub z: T,
+    /// W component.
+    pub w: T,
+}
+
+/// A 3-dimensional box.
+pub struct Box3<T>(Vec3<T>, Vec3<T>);
 
 /// A cardinal direction.
 pub enum Direction {
@@ -113,7 +128,7 @@ impl FileFormat {
         Ok(format)
     }
 
-    fn write(&self, w: &mut Writer<impl Write>) -> Result<(), Error> {
+    fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
         let value = match self {
             Self::Binary => b'B',
             Self::Text => b'T',
@@ -139,7 +154,7 @@ impl Compression {
         Ok(compression)
     }
 
-    fn write(&self, w: &mut Writer<impl Write>) -> Result<(), Error> {
+    fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
         let value = match self {
             Self::Compressed => b'C',
             Self::Uncompressed => b'U',

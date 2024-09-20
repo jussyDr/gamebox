@@ -33,6 +33,12 @@ impl Interpolation {
 pub struct MediaBlockCameraCustom;
 
 impl BodyChunks for MediaBlockCameraCustom {
+    type Parent = Self;
+
+    fn parent(&mut self) -> Option<&mut Self> {
+        None
+    }
+
     fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
         let chunks: [BodyChunk<Self, R, I, N>; 1] = [(6, |n, r| Self::read_chunk_6(n, r), false)];
 

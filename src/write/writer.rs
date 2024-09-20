@@ -1,20 +1,50 @@
-use std::io::Write;
+use std::{any::Any, io::Write, rc::Rc};
+
+use indexmap::IndexSet;
 
 use crate::Error;
 
-/// Low-level GameBox writer.
-pub struct Writer<W> {
-    inner: W,
+pub struct IdState {
+    ids: IndexSet<String>,
 }
 
-impl<W> Writer<W> {
-    /// Create a new writer.
-    pub const fn new(inner: W) -> Self {
-        Self { inner }
+pub trait IdStateRef {
+    fn get(&self) -> &IdState;
+}
+
+pub trait IdStateMut: IdStateRef {
+    fn get_mut(&mut self) -> &mut IdState;
+}
+
+pub struct NodeState {
+    nodes: IndexSet<Rc<dyn Any>>,
+}
+
+impl NodeState {
+    pub fn num_nodes(&self) -> usize {
+        self.nodes.len()
     }
 }
 
-impl<W: Write> Writer<W> {
+/// Low-level GameBox writer.
+pub struct Writer<W, I, N> {
+    inner: W,
+    id_state: I,
+    node_state: N,
+}
+
+impl<W, I, N> Writer<W, I, N> {
+    /// Create a new writer.
+    pub const fn new(inner: W, id_state: I, node_state: N) -> Self {
+        Self {
+            inner,
+            id_state,
+            node_state,
+        }
+    }
+}
+
+impl<W: Write, I, N> Writer<W, I, N> {
     /// Write the given `bytes`.
     pub fn bytes(&mut self, bytes: impl AsRef<[u8]>) -> Result<(), Error> {
         self.inner.write_all(bytes.as_ref()).map_err(|_| Error)
@@ -43,5 +73,38 @@ impl<W: Write> Writer<W> {
     /// Write an unsigned 128-bit integer.
     pub fn u128(&mut self, value: u128) -> Result<(), Error> {
         self.bytes(value.to_le_bytes())
+    }
+
+    /// Write a string.
+    pub fn string(&mut self, s: impl AsRef<str>) -> Result<(), Error> {
+        self.u32(s.as_ref().len() as u32)?;
+        self.bytes(s.as_ref().as_bytes())?;
+
+        Ok(())
+    }
+}
+
+impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
+    /// Write an identifier.
+    pub fn id(&mut self, id: impl AsRef<str>) -> Result<(), Error> {
+        if self.id_state.get().ids.is_empty() {
+            self.u32(3)?;
+        }
+
+        match self.id_state.get().ids.get_index_of(id.as_ref()) {
+            None => {
+                self.u32(0x40000000)?;
+                self.string(id.as_ref())?;
+
+                self.id_state.get_mut().ids.insert(id.as_ref().to_owned());
+            }
+            Some(index) => {
+                let index = (index + 1) as u32;
+
+                self.u32(0x40000000 | index)?;
+            }
+        }
+
+        Ok(())
     }
 }

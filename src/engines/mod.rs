@@ -1,5 +1,14 @@
 //! All GameBox engines.
 
+pub mod control {
+    //! The control engine.
+
+    pub(crate) mod effect_simi;
+
+    #[doc(inline)]
+    pub use effect_simi::EffectSimi;
+}
+
 pub mod game {
     //! The game engine.
 
@@ -13,8 +22,13 @@ pub mod game {
     pub(crate) mod media_block;
     pub(crate) mod media_block_camera_custom;
     pub(crate) mod media_block_fog;
+    pub(crate) mod media_block_interface;
+    pub(crate) mod media_block_manialink;
+    pub(crate) mod media_block_sound;
+    pub(crate) mod media_block_text;
     pub(crate) mod media_block_transition_fade;
     pub(crate) mod media_block_triangles;
+    pub(crate) mod media_block_triangles_2d;
     pub(crate) mod media_block_triangles_3d;
     pub(crate) mod media_clip;
     pub(crate) mod media_clip_group;
@@ -42,9 +56,19 @@ pub mod game {
     #[doc(inline)]
     pub use media_block_fog::MediaBlockFog;
     #[doc(inline)]
+    pub use media_block_interface::MediaBlockInterface;
+    #[doc(inline)]
+    pub use media_block_manialink::MediaBlockManialink;
+    #[doc(inline)]
+    pub use media_block_sound::MediaBlockSound;
+    #[doc(inline)]
+    pub use media_block_text::MediaBlockText;
+    #[doc(inline)]
     pub use media_block_transition_fade::MediaBlockTransitionFade;
     #[doc(inline)]
     pub use media_block_triangles::MediaBlockTriangles;
+    #[doc(inline)]
+    pub use media_block_triangles_2d::MediaBlockTriangles2D;
     #[doc(inline)]
     pub use media_block_triangles_3d::MediaBlockTriangles3D;
     #[doc(inline)]

@@ -75,6 +75,10 @@ pub(crate) mod readable {
     );
 
     pub trait BodyChunks {
+        type Parent: BodyChunks;
+
+        fn parent(&mut self) -> Option<&mut Self::Parent>;
+
         /// The chunks numbers must not contain duplicates and must be increasing.
         fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>>;
@@ -86,6 +90,12 @@ pub(crate) mod readable {
     }
 
     impl<T: BodyChunksInline> BodyChunks for T {
+        type Parent = Self;
+
+        fn parent(&mut self) -> Option<&mut Self> {
+            None
+        }
+
         fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>>
         {
             <T as BodyChunksInline>::body_chunks()

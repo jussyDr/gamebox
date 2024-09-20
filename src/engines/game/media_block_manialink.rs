@@ -8,11 +8,11 @@ use crate::{
     Error,
 };
 
-/// A collector list.
+/// A manialink media block.
 #[derive(Default)]
-pub struct CollectorList;
+pub struct MediaBlockManialink;
 
-impl BodyChunks for CollectorList {
+impl BodyChunks for MediaBlockManialink {
     type Parent = Self;
 
     fn parent(&mut self) -> Option<&mut Self> {
@@ -20,23 +20,26 @@ impl BodyChunks for CollectorList {
     }
 
     fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-        let chunks: [BodyChunk<Self, R, I, N>; 1] = [(0, |n, r| Self::read_chunk_0(n, r), false)];
+        let chunks: [BodyChunk<Self, R, I, N>; 1] = [(1, |n, r| Self::read_chunk_1(n, r), false)];
 
         chunks.into_iter()
     }
 }
 
-impl CollectorList {
-    fn read_chunk_0<N>(
+impl MediaBlockManialink {
+    fn read_chunk_1<N>(
         &mut self,
         r: &mut Reader<impl Read, impl IdStateMut, N>,
     ) -> Result<(), Error> {
-        let _collector_stock = r.list(|r| {
-            let _block_model = r.ident()?;
-            let _count = r.u32()?;
+        let version = r.u32()?;
 
-            Ok(())
-        })?;
+        if version != 0 {
+            return Err(Error);
+        }
+
+        let _start = r.f32()?;
+        let _end = r.f32()?;
+        let _manialink_url = r.string()?;
 
         Ok(())
     }

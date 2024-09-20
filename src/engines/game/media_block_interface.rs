@@ -8,10 +8,10 @@ use crate::{
     Error,
 };
 
-/// A transition fade media block.
-pub struct MediaBlockTransitionFade;
+/// An interface media block.
+pub struct MediaBlockInterface;
 
-impl BodyChunks for MediaBlockTransitionFade {
+impl BodyChunks for MediaBlockInterface {
     type Parent = Self;
 
     fn parent(&mut self) -> Option<&mut Self> {
@@ -25,16 +25,18 @@ impl BodyChunks for MediaBlockTransitionFade {
     }
 }
 
-impl MediaBlockTransitionFade {
+impl MediaBlockInterface {
     fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-        let _keys = r.list(|r| {
-            let _time = r.f32()?;
-            let _opacity = r.f32()?;
+        let version = r.u32()?;
 
-            Ok(())
-        })?;
-        let _color = r.vec3::<f32>()?;
-        r.f32()?;
+        if version != 0 {
+            return Err(Error);
+        }
+
+        let _start = r.f32()?;
+        let _end = r.f32()?;
+        let _show_interface = r.bool()?;
+        let _mania_link = r.string()?;
 
         Ok(())
     }

@@ -13,6 +13,12 @@ use crate::{
 pub struct BlockSkin;
 
 impl BodyChunks for BlockSkin {
+    type Parent = Self;
+
+    fn parent(&mut self) -> Option<&mut Self> {
+        None
+    }
+
     fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
         let chunks: [BodyChunk<Self, R, I, N>; 2] = [
             (2, |n, r| Self::read_chunk_2(n, r), false),

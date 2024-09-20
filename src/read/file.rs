@@ -157,15 +157,26 @@ pub(crate) fn read_body_chunks<T: BodyChunks>(
     node: &mut T,
     r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
 ) -> Result<(), Error> {
+    read_body_chunks_inner(node, r)?;
+
+    Ok(())
+}
+
+pub(crate) fn read_body_chunks_inner<T: BodyChunks>(
+    node: &mut T,
+    r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+) -> Result<Option<u32>, Error> {
+    let mut next_chunk_id = match node.parent() {
+        None => match r.u32()? {
+            0xfacade01 => None,
+            chunk_id => Some(chunk_id),
+        },
+        Some(parent) => read_body_chunks_inner(parent, r)?,
+    };
+
     let mut chunks = T::body_chunks();
 
-    loop {
-        let chunk_id = r.u32()?;
-
-        if chunk_id == 0xfacade01 {
-            break;
-        }
-
+    while let Some(chunk_id) = next_chunk_id {
         println!("{:08X?}", chunk_id);
 
         // if chunk_class_id(chunk_id) != class_id {
@@ -174,29 +185,38 @@ pub(crate) fn read_body_chunks<T: BodyChunks>(
 
         let chunk_num = chunk_num(chunk_id);
 
-        let (read_fn, skippable) = chunks
+        let chunk = chunks
             .find(|(num, _, _)| *num == chunk_num)
-            .map(|(_, read_fn, skippable)| (read_fn, skippable))
-            .ok_or(Error)?;
+            .map(|(_, read_fn, skippable)| (read_fn, skippable));
 
-        if skippable {
-            if r.u32()? != 0x534B4950 {
-                return Err(Error);
+        match chunk {
+            None => break,
+            Some((read_fn, skippable)) => {
+                if skippable {
+                    if r.u32()? != 0x534B4950 {
+                        return Err(Error);
+                    }
+
+                    let len = r.u32()?;
+
+                    // let mut r = r.take(len as u64);
+
+                    read_fn(node, r)?;
+
+                    // r.expect_eof()?;
+                } else {
+                    read_fn(node, r)?;
+                }
             }
-
-            let len = r.u32()?;
-
-            // let mut r = r.take(len as u64);
-
-            read_fn(node, r)?;
-
-            // r.expect_eof()?;
-        } else {
-            read_fn(node, r)?;
         }
+
+        next_chunk_id = match r.u32()? {
+            0xfacade01 => None,
+            chunk_id => Some(chunk_id),
+        };
     }
 
-    Ok(())
+    Ok(next_chunk_id)
 }
 
 pub(crate) fn read_body_chunks_inline<T: BodyChunksInline, N>(
