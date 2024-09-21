@@ -1,11 +1,8 @@
 use std::io::Read;
 
-use crate::{
-    read::{
-        readable::{BodyChunk, BodyChunksInline},
-        Reader,
-    },
-    Error,
+use crate::read::{
+    readable::{BodyChunk, BodyChunksInline},
+    Error, Reader,
 };
 
 /// A traits metadata.

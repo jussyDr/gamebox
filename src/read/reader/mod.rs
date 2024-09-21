@@ -10,7 +10,9 @@ use std::{
     iter,
 };
 
-use crate::{Box3, Error, PackDesc, Vec2, Vec3, Vec4};
+use crate::{Box3, PackDesc, Vec2, Vec3, Vec4};
+
+use super::Error;
 
 pub trait Num {
     fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error>

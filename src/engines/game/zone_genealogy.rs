@@ -3,9 +3,9 @@ use std::io::Read;
 use crate::{
     read::{
         readable::{BodyChunk, BodyChunksInline},
-        IdStateMut, Reader,
+        Error, IdStateMut, Reader,
     },
-    Direction, Error,
+    Direction,
 };
 
 /// A zone genealogy.

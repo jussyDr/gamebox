@@ -2,8 +2,8 @@ use std::io::Read;
 
 use crate::{
     engines::{game::BlockSkin, game_data::WaypointSpecialProperty},
-    read::{IdStateMut, NodeStateMut, Reader},
-    Direction, Error,
+    read::{Error, IdStateMut, NodeStateMut, Reader},
+    Direction,
 };
 
 /// A block placed inside of a [Challenge](super::Challenge).

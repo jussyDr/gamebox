@@ -12,7 +12,11 @@ use std::{
     path::Path,
 };
 
-use crate::{Compression, Error, FileFormat, FILE_SIGNATURE, FILE_VERSION, UNKNOWN_BYTE};
+use crate::{Compression, FileFormat, FILE_SIGNATURE, FILE_VERSION, UNKNOWN_BYTE};
+
+/// An error that occured while writing.
+#[derive(Debug)]
+pub struct Error;
 
 /// Write a node to the given `writer`.
 ///
@@ -82,9 +86,7 @@ pub trait Writable: writable::Sealed {}
 pub(crate) mod writable {
     use std::io::Write;
 
-    use crate::Error;
-
-    use super::{IdStateMut, Writer};
+    use super::{Error, IdStateMut, Writer};
 
     pub trait WriteUserData {
         fn write_user_data<W: Write, I: IdStateMut, N>(

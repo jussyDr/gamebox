@@ -15,24 +15,15 @@ pub use read::{read, read_file};
 #[doc(inline)]
 pub use write::{write, write_file};
 
-use std::{
-    io::{Read, Write},
-    rc::Rc,
-};
-
-use read::Reader;
-use write::Writer;
-
-/// An error.
-#[derive(Debug)]
-pub struct Error;
+use std::rc::Rc;
 
 /// A identifier, collection, author triple.
 #[derive(Default)]
 pub struct Ident {
     /// The identifier.
     pub id: Option<Rc<str>>,
-    collection: Option<()>,
+    /// The collection.
+    pub collection: Option<()>,
     /// The author.
     pub author: Option<Rc<str>>,
 }
@@ -74,6 +65,7 @@ pub struct Vec4<T> {
 pub struct Box3<T>(Vec3<T>, Vec3<T>);
 
 /// A cardinal direction.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Direction {
     /// North.
     North,
@@ -83,32 +75,6 @@ pub enum Direction {
     South,
     /// West.
     West,
-}
-
-impl Direction {
-    pub(crate) fn read_u8<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        let direction = match r.u8()? {
-            0 => Self::North,
-            1 => Self::East,
-            2 => Self::South,
-            3 => Self::West,
-            _ => return Err(Error),
-        };
-
-        Ok(direction)
-    }
-
-    pub(crate) fn read_u32<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        let direction = match r.u32()? {
-            0 => Self::North,
-            1 => Self::East,
-            2 => Self::South,
-            3 => Self::West,
-            _ => return Err(Error),
-        };
-
-        Ok(direction)
-    }
 }
 
 const FILE_SIGNATURE: &[u8; 3] = b"GBX";
@@ -122,51 +88,100 @@ enum FileFormat {
     Text,
 }
 
-impl FileFormat {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        let format = match r.u8()? {
-            b'B' => Self::Binary,
-            b'T' => Self::Text,
-            _ => return Err(Error),
-        };
-
-        Ok(format)
-    }
-
-    fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-        let value = match self {
-            Self::Binary => b'B',
-            Self::Text => b'T',
-        };
-
-        w.u8(value)
-    }
-}
-
 enum Compression {
     Compressed,
     Uncompressed,
 }
 
-impl Compression {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        let compression = match r.u8()? {
-            b'C' => Self::Compressed,
-            b'U' => Self::Uncompressed,
-            _ => return Err(Error),
-        };
+/// A pack descriptor.
+pub struct PackDesc;
 
-        Ok(compression)
+mod r {
+    use std::io::Read;
+
+    use crate::{
+        read::{Error, Reader},
+        Compression, Direction, FileFormat,
+    };
+
+    impl Direction {
+        pub(crate) fn read_u8<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+            let direction = match r.u8()? {
+                0 => Self::North,
+                1 => Self::East,
+                2 => Self::South,
+                3 => Self::West,
+                _ => return Err(Error),
+            };
+
+            Ok(direction)
+        }
+
+        pub(crate) fn read_u32<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+            let direction = match r.u32()? {
+                0 => Self::North,
+                1 => Self::East,
+                2 => Self::South,
+                3 => Self::West,
+                _ => return Err(Error),
+            };
+
+            Ok(direction)
+        }
     }
 
-    fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-        let value = match self {
-            Self::Compressed => b'C',
-            Self::Uncompressed => b'U',
-        };
+    impl FileFormat {
+        pub(crate) fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+            let format = match r.u8()? {
+                b'B' => Self::Binary,
+                b'T' => Self::Text,
+                _ => return Err(Error),
+            };
 
-        w.u8(value)
+            Ok(format)
+        }
+    }
+
+    impl Compression {
+        pub(crate) fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+            let compression = match r.u8()? {
+                b'C' => Self::Compressed,
+                b'U' => Self::Uncompressed,
+                _ => return Err(Error),
+            };
+
+            Ok(compression)
+        }
     }
 }
 
-struct PackDesc;
+mod w {
+    use std::io::Write;
+
+    use crate::{
+        write::{Error, Writer},
+        Compression, FileFormat,
+    };
+
+    impl FileFormat {
+        pub(crate) fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            let value = match self {
+                Self::Binary => b'B',
+                Self::Text => b'T',
+            };
+
+            w.u8(value)
+        }
+    }
+
+    impl Compression {
+        pub(crate) fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            let value = match self {
+                Self::Compressed => b'C',
+                Self::Uncompressed => b'U',
+            };
+
+            w.u8(value)
+        }
+    }
+}

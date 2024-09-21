@@ -2,7 +2,9 @@ use std::{any::Any, io::Write, rc::Rc};
 
 use indexmap::IndexSet;
 
-use crate::{Error, Ident, Vec2};
+use crate::{Ident, Vec2};
+
+use super::Error;
 
 pub trait Num {
     fn write<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error>;

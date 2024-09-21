@@ -1,6 +1,6 @@
 use std::{io::Read, rc::Rc};
 
-use crate::{Error, Ident};
+use crate::{read::Error, Ident};
 
 use super::Reader;
 
@@ -129,6 +129,14 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         };
 
         Ok(Some(id))
+    }
+
+    /// Read a non null identifier.
+    pub fn id_non_null(&mut self) -> Result<Rc<str>, Error> {
+        match self.id()? {
+            None => Err(Error),
+            Some(id) => Ok(id),
+        }
     }
 
     /// Read a identifier triple.

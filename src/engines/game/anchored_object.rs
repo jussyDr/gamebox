@@ -4,9 +4,8 @@ use crate::{
     engines::game_data::WaypointSpecialProperty,
     read::{
         readable::{BodyChunk, BodyChunksInline},
-        IdStateMut, Reader,
+        Error, IdStateMut, Reader,
     },
-    Error,
 };
 
 /// TODO.

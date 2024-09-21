@@ -1,11 +1,8 @@
 use std::io::Read;
 
-use crate::{
-    read::{
-        readable::{BodyChunk, BodyChunks},
-        IdStateMut, NodeStateMut, Reader,
-    },
-    Error,
+use crate::read::{
+    readable::{BodyChunk, BodyChunks},
+    Error, IdStateMut, NodeStateMut, Reader,
 };
 
 use super::ghost::Ghost;

@@ -1,10 +1,8 @@
 use std::{any::Any, io::Read, rc::Rc};
 
-use crate::{
-    read::{
-        file::{read_body_chunks, read_body_chunks_inline},
-        readable::{BodyChunks, BodyChunksInline},
-    },
+use crate::read::{
+    file::{read_body_chunks, read_body_chunks_inline},
+    readable::{BodyChunks, BodyChunksInline},
     Error,
 };
 

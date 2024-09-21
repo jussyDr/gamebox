@@ -10,7 +10,9 @@ pub use reader::{
 
 use std::{io::Read, path::Path};
 
-use crate::Error;
+/// A read error.
+#[derive(Debug)]
+pub struct Error;
 
 /// Read a node of type `T` from the given `reader`.
 ///
@@ -54,9 +56,10 @@ pub trait Readable: readable::Sealed {}
 pub(crate) mod readable {
     use std::io::Read;
 
-    use crate::Error;
-
-    use super::reader::{IdState, IdStateMut, NodeStateMut, Reader, Take};
+    use super::{
+        reader::{IdState, IdStateMut, NodeStateMut, Reader, Take},
+        Error,
+    };
 
     pub type UserDataChunk<T> = (
         u16,

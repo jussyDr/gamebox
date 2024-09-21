@@ -5,8 +5,7 @@ use crate::{
         MediaBlockCameraCustom, MediaBlockInterface, MediaBlockManialink, MediaBlockSound,
         MediaBlockText, MediaBlockTriangles2D, MediaBlockTriangles3D,
     },
-    read::{file::read_body_chunks, IdStateMut, NodeStateMut, Reader},
-    Error,
+    read::{file::read_body_chunks, Error, IdStateMut, NodeStateMut, Reader},
 };
 
 use super::{MediaBlockFog, MediaBlockTransitionFade};

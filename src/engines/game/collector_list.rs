@@ -1,11 +1,8 @@
 use std::io::Read;
 
-use crate::{
-    read::{
-        readable::{BodyChunk, BodyChunks},
-        IdStateMut, Reader,
-    },
-    Error,
+use crate::read::{
+    readable::{BodyChunk, BodyChunks},
+    Error, IdStateMut, Reader,
 };
 
 /// A collector list.

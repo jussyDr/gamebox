@@ -4,9 +4,8 @@ use crate::{
     engines::control::EffectSimi,
     read::{
         readable::{BodyChunk, BodyChunks},
-        IdStateMut, NodeStateMut, Reader,
+        Error, IdStateMut, NodeStateMut, Reader,
     },
-    Error,
 };
 
 /// A text media block.

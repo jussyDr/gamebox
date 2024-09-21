@@ -199,9 +199,8 @@ mod read {
         },
         read::{
             readable::{BodyChunk, BodyChunks, UserDataChunk, UserDataChunks},
-            IdState, IdStateMut, NodeStateMut, Reader,
+            Error, IdState, IdStateMut, NodeStateMut, Reader,
         },
-        Error,
     };
 
     use super::{
@@ -1119,12 +1118,9 @@ mod read {
 mod write {
     use std::io::Write;
 
-    use crate::{
-        write::{
-            writable::{WriteBody, WriteUserData},
-            IdStateMut, Writer,
-        },
-        Error,
+    use crate::write::{
+        writable::{WriteBody, WriteUserData},
+        Error, IdStateMut, Writer,
     };
 
     use super::{Challenge, EditorMode, MapKind, PlayMode};

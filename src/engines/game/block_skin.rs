@@ -1,11 +1,8 @@
 use std::io::Read;
 
-use crate::{
-    read::{
-        readable::{BodyChunk, BodyChunks},
-        Reader,
-    },
-    Error,
+use crate::read::{
+    readable::{BodyChunk, BodyChunks},
+    Error, Reader,
 };
 
 /// Skin of a [Block](super::Block).
