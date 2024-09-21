@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+#![warn(missing_docs, clippy::print_stdout)]
 
 //! Reading and writing GameBox files.
 //!
@@ -28,14 +28,17 @@ use write::Writer;
 pub struct Error;
 
 /// A identifier, collection, author triple.
+#[derive(Default)]
 pub struct Ident {
     /// The identifier.
     pub id: Option<Rc<str>>,
+    collection: Option<()>,
     /// The author.
     pub author: Option<Rc<str>>,
 }
 
 /// A 2-dimensional vector.
+#[derive(Default)]
 pub struct Vec2<T> {
     /// X component.
     pub x: T,
@@ -44,6 +47,7 @@ pub struct Vec2<T> {
 }
 
 /// A 3-dimensional vector.
+#[derive(Default)]
 pub struct Vec3<T> {
     /// X component.
     pub x: T,
@@ -54,6 +58,7 @@ pub struct Vec3<T> {
 }
 
 /// A 4-dimensional vector.
+#[derive(Default)]
 pub struct Vec4<T> {
     /// X component.
     pub x: T,
@@ -163,3 +168,5 @@ impl Compression {
         w.u8(value)
     }
 }
+
+struct PackDesc;

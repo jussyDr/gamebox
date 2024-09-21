@@ -118,6 +118,8 @@ fn read_user_data<T: Readable>(node: &mut T, class_id: u32, user_data: &[u8]) ->
     let mut id_state = IdState::new();
 
     for (chunk_id, chunk_len) in chunk_entries {
+        println!("{:08X?}", chunk_id);
+
         if chunk_class_id(chunk_id) != class_id {
             return Err(Error);
         }

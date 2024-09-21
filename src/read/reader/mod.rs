@@ -10,7 +10,7 @@ use std::{
     iter,
 };
 
-use crate::{Box3, Error, Vec2, Vec3, Vec4};
+use crate::{Box3, Error, PackDesc, Vec2, Vec3, Vec4};
 
 pub trait Num {
     fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error>
@@ -243,8 +243,8 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(Box3(self.vec3()?, self.vec3()?))
     }
 
-    /// Read a file reference.
-    pub fn file_ref(&mut self) -> Result<Option<()>, Error> {
+    /// Read a pack descriptor.
+    pub fn pack_desc(&mut self) -> Result<Option<PackDesc>, Error> {
         let version = self.u8()?;
 
         if version != 3 {
@@ -255,7 +255,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let _path = self.string()?;
         let _locator_url = self.string()?;
 
-        Ok(Some(()))
+        Ok(Some(PackDesc))
     }
 
     /// Read buffer of bytes.

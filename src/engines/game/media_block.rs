@@ -40,8 +40,6 @@ impl MediaBlock {
         let _index = r.u32()?;
         let class_id = r.u32()?;
 
-        println!("{:02X?}", class_id);
-
         let node = match class_id {
             0x0304b000 => {
                 let mut node = MediaBlockTriangles2D::default();

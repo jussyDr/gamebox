@@ -2,7 +2,7 @@
 
 mod writer;
 
-pub use writer::Writer;
+pub use writer::{IdStateMut, Writer};
 
 use lzo1x::CompressLevel;
 
@@ -80,7 +80,27 @@ pub fn write_file<T: Writable>(node: &T, path: impl AsRef<Path>) -> Result<(), E
 pub trait Writable: writable::Sealed {}
 
 pub(crate) mod writable {
-    pub trait Sealed {
+    use std::io::Write;
+
+    use crate::Error;
+
+    use super::{IdStateMut, Writer};
+
+    pub trait WriteUserData {
+        fn write_user_data<W: Write, I: IdStateMut, N>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error>;
+    }
+
+    pub trait WriteBody {
+        fn write_body<W: Write, I: IdStateMut, N>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error>;
+    }
+
+    pub trait Sealed: WriteUserData + WriteBody {
         const CLASS_ID: u32;
     }
 }

@@ -78,7 +78,7 @@ impl<R: Read, I: IdStateRef, N> Reader<R, I, N> {
         let index = index & 0x3fffffff;
 
         if index == 0 {
-            println!("{:02X?}", self.bytes(144)?);
+            todo!()
         }
 
         let index = index - 1;
@@ -135,14 +135,18 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     pub fn ident(&mut self) -> Result<Ident, Error> {
         let id = self.id()?;
 
-        let collection = self.u32()?;
-
-        if collection != 0xffffffff && collection != 26 {
-            return Err(Error);
-        }
+        let collection = match self.u32()? {
+            0xffffffff => None,
+            26 => Some(()),
+            _ => return Err(Error),
+        };
 
         let author = self.id()?;
 
-        Ok(Ident { id, author })
+        Ok(Ident {
+            id,
+            collection,
+            author,
+        })
     }
 }

@@ -47,7 +47,7 @@ impl AnchoredObject {
         let _scale = r.f32()?;
 
         if flags & 0x0004 != 0 {
-            let _pack_desc = r.file_ref()?;
+            let _pack_desc = r.pack_desc()?;
         }
 
         r.vec3::<f32>()?;

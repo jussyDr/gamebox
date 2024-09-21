@@ -47,7 +47,7 @@ impl MediaBlockSound {
     }
 
     fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-        let _sound = r.file_ref()?;
+        let _sound = r.pack_desc()?;
         let version = r.u32()?;
 
         if version != 1 {

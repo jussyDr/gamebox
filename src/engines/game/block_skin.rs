@@ -32,8 +32,8 @@ impl BodyChunks for BlockSkin {
 impl BlockSkin {
     fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
         let _text = r.string()?;
-        let _pack_desc = r.file_ref()?;
-        let _parent_pack_desc = r.file_ref()?;
+        let _pack_desc = r.pack_desc()?;
+        let _parent_pack_desc = r.pack_desc()?;
 
         Ok(())
     }
@@ -45,7 +45,7 @@ impl BlockSkin {
             return Err(Error);
         }
 
-        let _foreground_pack_desc = r.file_ref()?;
+        let _foreground_pack_desc = r.pack_desc()?;
 
         Ok(())
     }
