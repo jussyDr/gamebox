@@ -62,6 +62,13 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         Ok(Some(node))
     }
 
+    pub fn node_inline_non_null<T: Default + BodyChunksInline>(&mut self) -> Result<T, Error> {
+        match self.node_inline()? {
+            None => Err(Error),
+            Some(node) => Ok(node),
+        }
+    }
+
     /// TODO.
     pub fn node_inline_v2<T: Default + BodyChunksInline>(&mut self) -> Result<Option<T>, Error> {
         let mut node = T::default();
@@ -119,5 +126,13 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         };
 
         Ok(Some(node))
+    }
+
+    /// Read a non null node of type `T`.
+    pub fn node_non_null<T: Default + BodyChunks + 'static>(&mut self) -> Result<Rc<T>, Error> {
+        match self.node()? {
+            None => Err(Error),
+            Some(node) => Ok(node),
+        }
     }
 }

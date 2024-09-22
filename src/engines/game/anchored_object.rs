@@ -8,9 +8,15 @@ use crate::{
     },
 };
 
+use super::challenge::{LightmapQuality, MapElemColor, PhaseOffset};
+
 /// TODO.
 #[derive(Default)]
-pub struct AnchoredObject;
+pub struct AnchoredObject {
+    pub(crate) color: MapElemColor,
+    pub(crate) anim_phase_offset: PhaseOffset,
+    pub(crate) lightmap_quality: LightmapQuality,
+}
 
 impl BodyChunksInline for AnchoredObject {
     fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {

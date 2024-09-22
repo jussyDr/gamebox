@@ -3,12 +3,18 @@ use std::io::Read;
 use crate::{
     engines::{game::BlockSkin, game_data::WaypointSpecialProperty},
     read::{Error, IdStateMut, NodeStateMut, Reader},
-    Direction,
+    Direction, Vec3,
 };
+
+use super::challenge::{LightmapQuality, MapElemColor};
 
 /// A block placed inside of a [Challenge](super::Challenge).
 pub struct Block {
     pub(crate) is_free: bool,
+    pub(crate) absolute_position_in_map: Vec3<f32>,
+    pub(crate) pitch_yaw_roll: Vec3<f32>,
+    pub(crate) color: MapElemColor,
+    pub(crate) lightmap_quality: LightmapQuality,
 }
 
 impl Block {
@@ -31,6 +37,12 @@ impl Block {
 
         let is_free = flags & 0x20000000 != 0;
 
-        Ok(Self { is_free })
+        Ok(Self {
+            is_free,
+            absolute_position_in_map: Vec3::default(),
+            pitch_yaw_roll: Vec3::default(),
+            color: MapElemColor::default(),
+            lightmap_quality: LightmapQuality::default(),
+        })
     }
 }

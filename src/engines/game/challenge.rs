@@ -49,7 +49,9 @@ enum MapKind {
     MultiNadeo,
 }
 
-enum MapElemColor {
+#[derive(Default)]
+pub enum MapElemColor {
+    #[default]
     Default,
     White,
     Green,
@@ -58,7 +60,9 @@ enum MapElemColor {
     Black,
 }
 
-enum PhaseOffset {
+#[derive(Default)]
+pub enum PhaseOffset {
+    #[default]
     None,
     One8th,
     Two8th,
@@ -69,7 +73,9 @@ enum PhaseOffset {
     Seven8th,
 }
 
-enum LightmapQuality {
+#[derive(Default)]
+pub enum LightmapQuality {
+    #[default]
     Normal,
     High,
     VeryHigh,
@@ -130,7 +136,7 @@ pub struct Challenge {
     thumbnail_near_clip_plane: f32,
     thumbnail_far_clip_plane: f32,
     car_marks_buffer: Box<[Option<Rc<VehicleCarMarksSamples>>]>,
-    anchored_objects: Box<[Option<AnchoredObject>]>,
+    anchored_objects: Box<[AnchoredObject]>,
     items_on_item: Box<[Vec2<u32>]>,
     block_indices: Box<[u32]>,
     item_indices: Box<[u32]>,
@@ -680,7 +686,8 @@ mod read {
             {
                 let mut r = r.take_with(len as u64, IdState::new(), ());
 
-                self.anchored_objects = r.versioned_list(|r| r.node_inline::<AnchoredObject>())?;
+                self.anchored_objects =
+                    r.versioned_list(|r| r.node_inline_non_null::<AnchoredObject>())?;
                 self.items_on_item = r.list(|r| r.vec2::<u32>())?;
                 self.block_indices = r.list(|r| r.u32())?;
                 self.item_indices = r.list(|r| r.u32())?;
@@ -985,14 +992,14 @@ mod read {
                 return Err(Error);
             }
 
-            for _block in self
+            for block in self
                 .blocks
                 .iter_mut()
                 .chain(&mut self.baked_blocks)
                 .filter(|block| block.is_free)
             {
-                let _absolute_position_in_map = r.vec3::<f32>()?;
-                let _pitch_yaw_roll = r.vec3::<f32>()?;
+                block.absolute_position_in_map = r.vec3::<f32>()?;
+                block.pitch_yaw_roll = r.vec3::<f32>()?;
             }
 
             Ok(())
@@ -1017,12 +1024,12 @@ mod read {
                 return Err(Error);
             }
 
-            for _block in self.blocks.iter_mut().chain(&mut self.baked_blocks) {
-                let _color = MapElemColor::read(r)?;
+            for block in self.blocks.iter_mut().chain(&mut self.baked_blocks) {
+                block.color = MapElemColor::read(r)?;
             }
 
-            for _anchored_object in &mut self.anchored_objects {
-                let _color = MapElemColor::read(r)?;
+            for anchored_object in &mut self.anchored_objects {
+                anchored_object.color = MapElemColor::read(r)?;
             }
 
             Ok(())
@@ -1035,8 +1042,8 @@ mod read {
                 return Err(Error);
             }
 
-            for _anchored_object in &mut self.anchored_objects {
-                let _anim_phase_offset = PhaseOffset::read(r)?;
+            for anchored_object in &mut self.anchored_objects {
+                anchored_object.anim_phase_offset = PhaseOffset::read(r)?;
             }
 
             Ok(())
@@ -1079,12 +1086,12 @@ mod read {
                 return Err(Error);
             }
 
-            for _block in self.blocks.iter_mut().chain(&mut self.baked_blocks) {
-                let _lightmap_quality = LightmapQuality::read(r)?;
+            for block in self.blocks.iter_mut().chain(&mut self.baked_blocks) {
+                block.lightmap_quality = LightmapQuality::read(r)?;
             }
 
-            for _anchored_object in &mut self.anchored_objects {
-                let _lightmap_quality = LightmapQuality::read(r)?;
+            for anchored_object in &mut self.anchored_objects {
+                anchored_object.lightmap_quality = LightmapQuality::read(r)?;
             }
 
             Ok(())

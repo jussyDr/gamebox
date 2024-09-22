@@ -20,6 +20,10 @@ pub struct Error;
 
 /// Write a node to the given `writer`.
 ///
+/// # Safety
+///
+/// The given `node` must be valid.
+///
 /// # Examples
 /// ``` no_run
 /// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::write::Error> {
@@ -27,11 +31,11 @@ pub struct Error;
 ///
 /// let challenge = Challenge::default();
 ///
-/// gamebox::write(&challenge, writer)?;
+/// unsafe { gamebox::write(&challenge, writer)? };
 /// # Ok(())
 /// # }
 /// ```
-pub fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
+pub unsafe fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
     let user_data = vec![];
     let body = vec![];
     let num_nodes = 0;
@@ -60,6 +64,10 @@ pub fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
 
 /// Write a node to a file at the given `path`.
 ///
+/// # Safety
+///
+/// The given `node` must be valid.
+///
 /// # Examples
 /// ``` no_run
 /// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::write::Error> {
@@ -67,11 +75,11 @@ pub fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
 ///
 /// let challenge = Challenge::default();
 ///
-/// gamebox::write_file(&challenge, "MyMap.Map.Gbx")?;
+/// unsafe { gamebox::write_file(&challenge, "MyMap.Map.Gbx")? };
 /// # Ok(())
 /// # }
 /// ```
-pub fn write_file<T: Writable>(node: &T, path: impl AsRef<Path>) -> Result<(), Error> {
+pub unsafe fn write_file<T: Writable>(node: &T, path: impl AsRef<Path>) -> Result<(), Error> {
     let file = File::create(path).map_err(|_| Error)?;
     let writer = BufWriter::new(file);
 
