@@ -22,7 +22,7 @@ pub struct Error;
 ///
 /// # Examples
 /// ``` no_run
-/// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::Error> {
+/// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::write::Error> {
 /// use gamebox::Challenge;
 ///
 /// let challenge = Challenge::default();
@@ -62,7 +62,7 @@ pub fn write<T: Writable>(node: &T, writer: impl Write) -> Result<(), Error> {
 ///
 /// # Examples
 /// ``` no_run
-/// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::Error> {
+/// # fn example(writer: impl std::io::Write) -> Result<(), gamebox::write::Error> {
 /// use gamebox::Challenge;
 ///
 /// let challenge = Challenge::default();

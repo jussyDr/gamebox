@@ -2,8 +2,9 @@ use std::io::Read;
 
 use crate::{
     engines::game::{
-        MediaBlockCameraCustom, MediaBlockInterface, MediaBlockManialink, MediaBlockSound,
-        MediaBlockText, MediaBlockTriangles2D, MediaBlockTriangles3D,
+        MediaBlockCameraCustom, MediaBlockColorGrading, MediaBlockFxColors, MediaBlockImage,
+        MediaBlockInterface, MediaBlockManialink, MediaBlockSound, MediaBlockText,
+        MediaBlockToneMapping, MediaBlockTriangles2D, MediaBlockTriangles3D,
     },
     read::{file::read_body_chunks, Error, IdStateMut, NodeStateMut, Reader},
 };
@@ -16,16 +17,24 @@ pub enum MediaBlock {
     Triangles2D(MediaBlockTriangles2D),
     /// 3D triangles media block.
     Triangles3D(MediaBlockTriangles3D),
+    /// FX colors media block.
+    FxColors(MediaBlockFxColors),
     /// Custom camera media block.
     CameraCustom(MediaBlockCameraCustom),
+    /// Image media block.
+    Image(MediaBlockImage),
     /// Sound media block.
     Sound(MediaBlockSound),
     /// Text media block.
     Text(MediaBlockText),
     /// Transition fade media block.
     TransitionFade(MediaBlockTransitionFade),
+    /// Tone mapping media block.
+    ToneMapping(MediaBlockToneMapping),
     /// Manialink media block.
     Manialink(MediaBlockManialink),
+    /// Color grading media block.
+    ColorGrading(MediaBlockColorGrading),
     /// Interface media block.
     Interface(MediaBlockInterface),
     /// Fog media block.
@@ -50,10 +59,20 @@ impl MediaBlock {
                 read_body_chunks(&mut node, r)?;
                 Self::Triangles3D(node)
             }
+            0x03080000 => {
+                let mut node = MediaBlockFxColors;
+                read_body_chunks(&mut node, r)?;
+                Self::FxColors(node)
+            }
             0x030a2000 => {
                 let mut node = MediaBlockCameraCustom;
                 read_body_chunks(&mut node, r)?;
                 Self::CameraCustom(node)
+            }
+            0x030a5000 => {
+                let mut node = MediaBlockImage;
+                read_body_chunks(&mut node, r)?;
+                Self::Image(node)
             }
             0x030a7000 => {
                 let mut node = MediaBlockSound;
@@ -70,10 +89,20 @@ impl MediaBlock {
                 read_body_chunks(&mut node, r)?;
                 Self::TransitionFade(node)
             }
+            0x03127000 => {
+                let mut node = MediaBlockToneMapping;
+                read_body_chunks(&mut node, r)?;
+                Self::ToneMapping(node)
+            }
             0x0312a000 => {
                 let mut node = MediaBlockManialink;
                 read_body_chunks(&mut node, r)?;
                 Self::Manialink(node)
+            }
+            0x03186000 => {
+                let mut node = MediaBlockColorGrading;
+                read_body_chunks(&mut node, r)?;
+                Self::ColorGrading(node)
             }
             0x03195000 => {
                 let mut node = MediaBlockInterface;

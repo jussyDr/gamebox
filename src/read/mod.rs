@@ -20,7 +20,7 @@ pub struct Error;
 /// ``` no_run
 /// use gamebox::Challenge;
 ///
-/// # fn example(reader: impl std::io::Read) -> Result<(), gamebox::Error> {
+/// # fn example(reader: impl std::io::Read) -> Result<(), gamebox::read::Error> {
 /// let challenge: Challenge = gamebox::read(reader)?;
 /// # Ok(())
 /// # }
@@ -37,7 +37,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 /// ``` no_run
 /// use gamebox::Challenge;
 ///
-/// # fn example() -> Result<(), gamebox::Error> {
+/// # fn example() -> Result<(), gamebox::read::Error> {
 /// let challenge: Challenge = gamebox::read_file("MyMap.Map.Gbx")?;
 /// # Ok(())
 /// # }

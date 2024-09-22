@@ -355,7 +355,7 @@ mod read {
 
         fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            let chunks: [BodyChunk<Self, R, I, N>; 45] = [
+            let chunks: [BodyChunk<Self, R, I, N>; 49] = [
                 (13, |n, r| Self::read_chunk_13(n, r), false),
                 (17, |n, r| Self::read_chunk_17(n, r), false),
                 (24, |n, r| Self::read_chunk_24(n, r), true),
@@ -364,10 +364,13 @@ mod read {
                 (34, |n, r| Self::read_chunk_34(n, r), false),
                 (36, |n, r| Self::read_chunk_36(n, r), false),
                 (37, |n, r| Self::read_chunk_37(n, r), false),
+                (38, |n, r| Self::read_chunk_38(n, r), false),
+                (40, |n, r| Self::read_chunk_40(n, r), false),
                 (41, |n, r| Self::read_chunk_41(n, r), true),
                 (42, |n, r| Self::read_chunk_42(n, r), false),
                 (52, |n, r| Self::read_chunk_52(n, r), true),
                 (54, |n, r| Self::read_chunk_54(n, r), true),
+                (56, |n, r| Self::read_chunk_56(n, r), true),
                 (62, |n, r| Self::read_chunk_62(n, r), true),
                 (64, |n, r| Self::read_chunk_64(n, r), true),
                 (66, |n, r| Self::read_chunk_66(n, r), true),
@@ -388,6 +391,7 @@ mod read {
                 (89, |n, r| Self::read_chunk_89(n, r), true),
                 (90, |n, r| Self::read_chunk_90(n, r), true),
                 (91, |n, r| Self::read_chunk_91(n, r), true),
+                (92, |n, r| Self::read_chunk_92(n, r), true),
                 (93, |n, r| Self::read_chunk_93(n, r), true),
                 (94, |n, r| Self::read_chunk_94(n, r), true),
                 (95, |n, r| Self::read_chunk_95(n, r), true),
@@ -585,6 +589,31 @@ mod read {
             Ok(())
         }
 
+        fn read_chunk_38<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_40<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let has_custom_cam_thumbnail = r.bool()?;
+
+            if has_custom_cam_thumbnail {
+                r.u8()?;
+                r.vec3::<f32>()?;
+                r.vec3::<f32>()?;
+                r.vec3::<f32>()?;
+                self.thumbnail_position = r.vec3::<f32>()?;
+                self.thumbnail_fov = r.f32()?;
+                self.thumbnail_near_clip_plane = r.f32()?;
+                self.thumbnail_far_clip_plane = r.f32()?;
+            }
+
+            self.comments = r.string()?;
+
+            Ok(())
+        }
+
         fn read_chunk_41<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.hashed_password = r.byte_array::<16>()?;
             self.crc32 = r.u32()?;
@@ -613,6 +642,12 @@ mod read {
             self.thumbnail_near_clip_plane = r.f32()?;
             self.thumbnail_far_clip_plane = r.f32()?;
             self.comments = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_56<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
 
             Ok(())
         }
@@ -913,8 +948,26 @@ mod read {
             Ok(())
         }
 
+        fn read_chunk_92<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+
+            Ok(())
+        }
+
         fn read_chunk_93<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.bytes(51079)?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            match r.u32()? {
+                0x57 => {
+                    r.bytes(51063)?;
+                }
+                0xdd => {
+                    r.bytes(83844)?;
+                }
+                _ => todo!(),
+            }
 
             Ok(())
         }

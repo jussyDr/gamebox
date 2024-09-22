@@ -181,6 +181,8 @@ pub(crate) fn read_body_chunks_inner<T: BodyChunks>(
         //     return Err(Error);
         // }
 
+        println!("{:08X?}", chunk_id);
+
         let chunk_num = chunk_num(chunk_id);
 
         let chunk = chunks
