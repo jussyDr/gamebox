@@ -9,6 +9,8 @@ pub mod write;
 #[doc(inline)]
 pub use engines::game::challenge::Challenge;
 #[doc(inline)]
+pub use engines::game::item_model::ItemModel;
+#[doc(inline)]
 pub use read::{read, read_file};
 #[doc(inline)]
 pub use write::{write, write_file};

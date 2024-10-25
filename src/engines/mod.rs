@@ -20,6 +20,7 @@ pub mod game {
     pub(crate) mod challenge_parameters;
     pub(crate) mod collector_list;
     pub(crate) mod ghost;
+    pub(crate) mod item_model;
     pub(crate) mod media_block;
     pub(crate) mod media_block_camera_custom;
     pub(crate) mod media_block_color_grading;
@@ -54,6 +55,8 @@ pub mod game {
     pub use collector_list::CollectorList;
     #[doc(inline)]
     pub use ghost::Ghost;
+    #[doc(inline)]
+    pub use item_model::ItemModel;
     #[doc(inline)]
     pub use media_block::MediaBlock;
     #[doc(inline)]
