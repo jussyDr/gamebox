@@ -6,7 +6,7 @@ name = "gamebox"
 authors = ["Justin de Ruiter <justinderuiter@ziggo.nl>"]
 version = "0.1.0"
 edition = "2021"
-description = "GameBox file reading and writing"
+description = "GameBox file reading and writing for Trackmania (2020)"
 repository = "https://github.com/jussyDr/gamebox"
 license = "GPL-2.0"
 

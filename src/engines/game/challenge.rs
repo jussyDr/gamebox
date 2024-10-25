@@ -1,3 +1,5 @@
+//! Challenge types.
+
 use std::rc::Rc;
 
 use crate::{
@@ -49,39 +51,63 @@ enum MapKind {
     MultiNadeo,
 }
 
+/// Map element color.
 #[derive(Default)]
 pub enum MapElemColor {
+    /// Default color.
     #[default]
     Default,
+    /// White.
     White,
+    /// Green.
     Green,
+    /// Blue.
     Blue,
+    /// Red.
     Red,
+    /// Black.
     Black,
 }
 
+/// Phase offset.
 #[derive(Default)]
 pub enum PhaseOffset {
+    /// No phase offset.
     #[default]
     None,
+    /// One eighth phase offset.
     One8th,
+    /// Two eighths phase offset.
     Two8th,
+    /// Three eighths phase offset.
     Three8th,
+    /// Four eighths phase offset.
     Four8th,
+    /// Five eighths phase offset.
     Five8th,
+    /// Six eighths phase offset.
     Six8th,
+    /// Seven eighths phase offset.
     Seven8th,
 }
 
+/// Lightmap quality.
 #[derive(Default)]
 pub enum LightmapQuality {
+    /// Normal quality.
     #[default]
     Normal,
+    /// High quality.
     High,
+    /// Very high quality.
     VeryHigh,
+    /// Highest quality.
     Highest,
+    /// Low quality.
     Low,
+    /// Very low quality.
     VeryLow,
+    /// Lowest quality.
     Lowest,
 }
 

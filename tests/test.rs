@@ -9,3 +9,11 @@ fn read_challenge_2() {
     gamebox::read_file::<gamebox::Challenge>("tests/engines/game/challenge/Mindor.Map.Gbx")
         .unwrap();
 }
+
+#[test]
+fn read_challenge_3() {
+    gamebox::read_file::<gamebox::Challenge>(
+        "tests/engines/game/challenge/MIDNIGHT METROPOLIS.Map.Gbx",
+    )
+    .unwrap();
+}

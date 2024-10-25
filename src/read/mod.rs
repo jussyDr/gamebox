@@ -8,11 +8,24 @@ pub use reader::{
     IdState, IdStateMut, IdStateRef, NodeState, NodeStateMut, NodeStateRef, Reader, Take,
 };
 
-use std::{io::Read, path::Path};
+use std::{
+    error,
+    fmt::{self, Display, Formatter},
+    io::Read,
+    path::Path,
+};
 
 /// A read error.
 #[derive(Debug)]
 pub struct Error;
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str("error")
+    }
+}
+
+impl error::Error for Error {}
 
 /// Read a node of type `T` from the given `reader`.
 ///

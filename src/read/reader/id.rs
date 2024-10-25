@@ -146,6 +146,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         let collection = match self.u32()? {
             0xffffffff => None,
             26 => Some(()),
+            0x00002713 => Some(()),
             _ => return Err(Error),
         };
 

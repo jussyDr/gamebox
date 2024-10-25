@@ -62,6 +62,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         Ok(Some(node))
     }
 
+    /// TODO.
     pub fn node_inline_non_null<T: Default + BodyChunksInline>(&mut self) -> Result<T, Error> {
         match self.node_inline()? {
             None => Err(Error),

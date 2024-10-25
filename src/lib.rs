@@ -1,8 +1,6 @@
 #![warn(missing_docs, clippy::print_stdout)]
 
-//! Reading and writing GameBox files.
-//!
-//! GameBox class instances are called nodes.
+//! GameBox file reading and writing for Trackmania (2020).
 
 pub mod engines;
 pub mod read;

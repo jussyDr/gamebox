@@ -12,10 +12,11 @@ pub mod control {
 pub mod game {
     //! The game engine.
 
+    pub mod challenge;
+
     pub(crate) mod anchored_object;
     pub(crate) mod block;
     pub(crate) mod block_skin;
-    pub(crate) mod challenge;
     pub(crate) mod challenge_parameters;
     pub(crate) mod collector_list;
     pub(crate) mod ghost;
@@ -100,6 +101,15 @@ pub mod game_data {
 
     #[doc(inline)]
     pub use waypoint_special_property::WaypointSpecialProperty;
+}
+
+pub mod plug {
+    //! The plug engine.
+
+    pub(crate) mod ent_record_data;
+
+    #[doc(inline)]
+    pub use ent_record_data::EntRecordData;
 }
 
 pub mod scene {
