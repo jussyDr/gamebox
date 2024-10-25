@@ -1,6 +1,6 @@
 //! Challenge types.
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     engines::{game::block::Block, scene::VehicleCarMarksSamples, script::TraitsMetadata},
@@ -137,7 +137,7 @@ pub struct Challenge {
     map_style: String,
     lightmap_cache_uid: u64,
     lightmap_version: u8,
-    title_id: Option<Rc<str>>,
+    title_id: Option<Arc<str>>,
     xml: String,
     thumbnail: Box<[u8]>,
     comments: String,
@@ -146,8 +146,8 @@ pub struct Challenge {
     author_zone: String,
     author_extra_info: String,
     player_model: Ident,
-    block_stock: Option<Rc<CollectorList>>,
-    challenge_parameters: Option<Rc<ChallengeParameters>>,
+    block_stock: Option<Arc<CollectorList>>,
+    challenge_parameters: Option<Arc<ChallengeParameters>>,
     mod_pack_desc: Option<PackDesc>,
     size: Vec3<u32>,
     need_unlock: bool,
@@ -161,7 +161,7 @@ pub struct Challenge {
     thumbnail_fov: f32,
     thumbnail_near_clip_plane: f32,
     thumbnail_far_clip_plane: f32,
-    car_marks_buffer: Box<[Option<Rc<VehicleCarMarksSamples>>]>,
+    car_marks_buffer: Box<[Option<Arc<VehicleCarMarksSamples>>]>,
     anchored_objects: Box<[AnchoredObject]>,
     items_on_item: Box<[Vec2<u32>]>,
     block_indices: Box<[u32]>,
@@ -171,11 +171,11 @@ pub struct Challenge {
     zone_genealogy: Box<[Option<ZoneGenealogy>]>,
     script_metadata: Option<TraitsMetadata>,
     baked_blocks: Box<[Block]>,
-    clip_intro: Option<Rc<MediaClip>>,
-    clip_podium: Option<Rc<MediaClip>>,
-    clip_group_in_game: Option<Rc<MediaClipGroup>>,
-    clip_group_end_race: Option<Rc<MediaClipGroup>>,
-    clip_ambiance: Option<Rc<MediaClip>>,
+    clip_intro: Option<Arc<MediaClip>>,
+    clip_podium: Option<Arc<MediaClip>>,
+    clip_group_in_game: Option<Arc<MediaClipGroup>>,
+    clip_group_end_race: Option<Arc<MediaClipGroup>>,
+    clip_ambiance: Option<Arc<MediaClip>>,
     clip_trigger_size: Vec3<u32>,
     objective_text_author: String,
     objective_text_gold: String,

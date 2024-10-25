@@ -1,4 +1,4 @@
-use std::{any::Any, io::Read, rc::Rc};
+use std::{any::Any, io::Read, sync::Arc};
 
 use crate::read::{
     file::{read_body_chunks, read_body_chunks_inline},
@@ -10,7 +10,7 @@ use super::{IdStateMut, Reader};
 
 /// Node state.
 pub struct NodeState {
-    nodes: Box<[Option<Rc<dyn Any>>]>,
+    nodes: Box<[Option<Arc<dyn Any + Send + Sync>>]>,
 }
 
 impl NodeState {
@@ -82,7 +82,9 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     /// Read a node of type `T`.
-    pub fn node<T: Default + BodyChunks + 'static>(&mut self) -> Result<Option<Rc<T>>, Error> {
+    pub fn node<T: Default + Send + Sync + BodyChunks + 'static>(
+        &mut self,
+    ) -> Result<Option<Arc<T>>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
@@ -110,7 +112,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
                 read_body_chunks(&mut node, self)?;
 
-                let node: Rc<dyn Any> = Rc::new(node);
+                let node: Arc<dyn Any + Send + Sync> = Arc::new(node);
 
                 let slot = self
                     .node_state
@@ -119,18 +121,20 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
                     .get_mut(index as usize)
                     .expect("slot empty");
 
-                *slot = Some(Rc::clone(&node));
+                *slot = Some(Arc::clone(&node));
 
                 node.downcast().expect("failed to downcast")
             }
-            Some(node) => Rc::clone(node).downcast().map_err(|_| Error)?,
+            Some(node) => Arc::clone(node).downcast().map_err(|_| Error)?,
         };
 
         Ok(Some(node))
     }
 
     /// Read a non null node of type `T`.
-    pub fn node_non_null<T: Default + BodyChunks + 'static>(&mut self) -> Result<Rc<T>, Error> {
+    pub fn node_non_null<T: Default + Send + Sync + BodyChunks + 'static>(
+        &mut self,
+    ) -> Result<Arc<T>, Error> {
         match self.node()? {
             None => Err(Error),
             Some(node) => Ok(node),

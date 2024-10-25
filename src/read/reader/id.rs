@@ -1,4 +1,4 @@
-use std::{io::Read, rc::Rc};
+use std::{io::Read, sync::Arc};
 
 use crate::{read::Error, Ident};
 
@@ -7,7 +7,7 @@ use super::Reader;
 /// Identifier state.
 pub struct IdState {
     seen_id: bool,
-    ids: Vec<Rc<str>>,
+    ids: Vec<Arc<str>>,
 }
 
 impl IdState {
@@ -64,7 +64,7 @@ impl IdStateMut for &mut IdState {
 
 impl<R: Read, I: IdStateRef, N> Reader<R, I, N> {
     /// Read a identifier.
-    pub fn id_ref(&mut self) -> Result<Option<Rc<str>>, Error> {
+    pub fn id_ref(&mut self) -> Result<Option<Arc<str>>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
@@ -85,13 +85,13 @@ impl<R: Read, I: IdStateRef, N> Reader<R, I, N> {
 
         let id = self.id_state.get().ids.get(index as usize).ok_or(Error)?;
 
-        Ok(Some(Rc::clone(id)))
+        Ok(Some(Arc::clone(id)))
     }
 }
 
 impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     /// Read a identifier.
-    pub fn id(&mut self) -> Result<Option<Rc<str>>, Error> {
+    pub fn id(&mut self) -> Result<Option<Arc<str>>, Error> {
         if !self.id_state.get().seen_id {
             let version = self.u32()?;
 
@@ -115,9 +115,9 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         let index = index & 0x3fffffff;
 
         let id = if index == 0 {
-            let id = Rc::from(self.string()?);
+            let id = Arc::from(self.string()?);
 
-            self.id_state.get_mut().ids.push(Rc::clone(&id));
+            self.id_state.get_mut().ids.push(Arc::clone(&id));
 
             id
         } else {
@@ -125,14 +125,14 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
 
             let id = self.id_state.get().ids.get(index as usize).ok_or(Error)?;
 
-            Rc::clone(id)
+            Arc::clone(id)
         };
 
         Ok(Some(id))
     }
 
     /// Read a non null identifier.
-    pub fn id_non_null(&mut self) -> Result<Rc<str>, Error> {
+    pub fn id_non_null(&mut self) -> Result<Arc<str>, Error> {
         match self.id()? {
             None => Err(Error),
             Some(id) => Ok(id),

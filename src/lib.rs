@@ -15,17 +15,17 @@ pub use read::{read, read_file};
 #[doc(inline)]
 pub use write::{write, write_file};
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// A identifier, collection, author triple.
 #[derive(Default)]
 pub struct Ident {
     /// The identifier.
-    pub id: Option<Rc<str>>,
+    pub id: Option<Arc<str>>,
     /// The collection.
     pub collection: Option<()>,
     /// The author.
-    pub author: Option<Rc<str>>,
+    pub author: Option<Arc<str>>,
 }
 
 /// A 2-dimensional vector.
