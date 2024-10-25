@@ -11,7 +11,7 @@ pub use reader::{
 use std::{
     error,
     fmt::{self, Display, Formatter},
-    io::Read,
+    io::{self, Read},
     path::Path,
 };
 
@@ -26,6 +26,12 @@ impl Display for Error {
 }
 
 impl error::Error for Error {}
+
+impl From<io::Error> for Error {
+    fn from(_: io::Error) -> Self {
+        Self
+    }
+}
 
 /// Read a node of type `T` from the given `reader`.
 ///
