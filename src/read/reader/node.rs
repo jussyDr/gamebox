@@ -34,6 +34,12 @@ impl NodeStateRef for NodeState {
     }
 }
 
+impl<T: NodeStateRef> NodeStateRef for &mut T {
+    fn get(&self) -> &NodeState {
+        (**self).get()
+    }
+}
+
 /// Allows to get a mutable reference to a [NodeState].
 pub trait NodeStateMut: NodeStateRef {
     /// Get a mutable reference to a [NodeState].
@@ -43,6 +49,12 @@ pub trait NodeStateMut: NodeStateRef {
 impl NodeStateMut for NodeState {
     fn get_mut(&mut self) -> &mut NodeState {
         self
+    }
+}
+
+impl<T: NodeStateMut> NodeStateMut for &mut T {
+    fn get_mut(&mut self) -> &mut NodeState {
+        (**self).get_mut()
     }
 }
 

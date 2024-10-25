@@ -38,9 +38,9 @@ impl IdStateRef for IdState {
     }
 }
 
-impl IdStateRef for &mut IdState {
+impl<T: IdStateRef> IdStateRef for &mut T {
     fn get(&self) -> &IdState {
-        self
+        (**self).get()
     }
 }
 
@@ -56,14 +56,14 @@ impl IdStateMut for IdState {
     }
 }
 
-impl IdStateMut for &mut IdState {
+impl<T: IdStateMut> IdStateMut for &mut T {
     fn get_mut(&mut self) -> &mut IdState {
-        self
+        (**self).get_mut()
     }
 }
 
 impl<R: Read, I: IdStateRef, N> Reader<R, I, N> {
-    /// Read a identifier.
+    /// Read an identifier.
     pub fn id_ref(&mut self) -> Result<Option<Arc<str>>, Error> {
         let index = self.u32()?;
 
@@ -90,7 +90,7 @@ impl<R: Read, I: IdStateRef, N> Reader<R, I, N> {
 }
 
 impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
-    /// Read a identifier.
+    /// Read an identifier.
     pub fn id(&mut self) -> Result<Option<Arc<str>>, Error> {
         if !self.id_state.get().seen_id {
             let version = self.u32()?;
@@ -131,7 +131,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         Ok(Some(id))
     }
 
-    /// Read a non null identifier.
+    /// Read a non-null identifier.
     pub fn id_non_null(&mut self) -> Result<Arc<str>, Error> {
         match self.id()? {
             None => Err(Error),
@@ -139,7 +139,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
         }
     }
 
-    /// Read a identifier triple.
+    /// Read an identifier triple.
     pub fn ident(&mut self) -> Result<Ident, Error> {
         let id = self.id()?;
 

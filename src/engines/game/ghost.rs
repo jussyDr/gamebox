@@ -59,7 +59,7 @@ impl BodyChunks for Ghost {
 
     fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-        let chunks: [BodyChunk<Self, R, I, N>; 19] = [
+        let chunks: [BodyChunk<Self, R, I, N>; 24] = [
             (0, |n, r| Self::read_chunk_0(n, r), true),
             (5, |n, r| Self::read_chunk_5(n, r), true),
             (8, |n, r| Self::read_chunk_8(n, r), true),
@@ -79,6 +79,11 @@ impl BodyChunks for Ghost {
             (35, |n, r| Self::read_chunk_35(n, r), true),
             (36, |n, r| Self::read_chunk_36(n, r), true),
             (37, |n, r| Self::read_chunk_37(n, r), true),
+            (38, |n, r| Self::read_chunk_38(n, r), true),
+            (39, |n, r| Self::read_chunk_39(n, r), true),
+            (40, |n, r| Self::read_chunk_40(n, r), true),
+            (41, |n, r| Self::read_chunk_41(n, r), true),
+            (42, |n, r| Self::read_chunk_42(n, r), true),
         ];
 
         chunks.into_iter()
@@ -271,7 +276,10 @@ impl Ghost {
         Ok(())
     }
 
-    fn read_chunk_37<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+    fn read_chunk_37<N>(
+        &mut self,
+        r: &mut Reader<impl Read, impl IdStateMut, N>,
+    ) -> Result<(), Error> {
         let version = r.u32()?;
 
         if version != 1 {
@@ -280,7 +288,60 @@ impl Ghost {
 
         let _events_duration = r.u32()?;
         r.u32()?;
+        let _input_names = r.list(|r| r.id())?;
+        let num_entries = r.u32()?;
+        r.u32()?;
+        r.repeat(num_entries as usize, |r| {
+            let _time = r.u32()?;
+            let _input_name_index = r.u8()?;
+            let _data = r.u32()?;
 
-        todo!()
+            Ok(())
+        })?;
+        let _exe_version = r.string()?;
+        let _checksum = r.u32()?;
+        let _os_kind = r.u32()?;
+        let _cpu_kind = r.u32()?;
+        let _race_settings = r.string()?;
+        r.u32()?;
+        let _steering_wheel_sensitivity = r.bool()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_38<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u128()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_39<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_40<I, N>(&mut self, _: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn read_chunk_41<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+
+        Ok(())
+    }
+
+    fn read_chunk_42<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        r.u32()?;
+        r.u32()?;
+
+        Ok(())
     }
 }

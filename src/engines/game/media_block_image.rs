@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-/// An image block.
+/// An image media block.
 pub struct MediaBlockImage;
 
 impl BodyChunks for MediaBlockImage {

@@ -5,7 +5,7 @@ use crate::read::{
     Error, Reader,
 };
 
-/// A FX colors block.
+/// A FX colors media block.
 pub struct MediaBlockFxColors;
 
 impl BodyChunks for MediaBlockFxColors {

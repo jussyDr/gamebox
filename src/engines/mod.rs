@@ -23,7 +23,12 @@ pub mod game {
     pub(crate) mod item_model;
     pub(crate) mod media_block;
     pub(crate) mod media_block_camera_custom;
+    pub(crate) mod media_block_camera_effect_shake;
+    pub(crate) mod media_block_camera_game;
     pub(crate) mod media_block_color_grading;
+    pub(crate) mod media_block_dirty_lens;
+    pub(crate) mod media_block_dof;
+    pub(crate) mod media_block_entity;
     pub(crate) mod media_block_fog;
     pub(crate) mod media_block_fx_colors;
     pub(crate) mod media_block_image;
@@ -62,7 +67,17 @@ pub mod game {
     #[doc(inline)]
     pub use media_block_camera_custom::MediaBlockCameraCustom;
     #[doc(inline)]
+    pub use media_block_camera_effect_shake::MediaBlockCameraEffectShake;
+    #[doc(inline)]
+    pub use media_block_camera_game::MediaBlockCameraGame;
+    #[doc(inline)]
     pub use media_block_color_grading::MediaBlockColorGrading;
+    #[doc(inline)]
+    pub use media_block_dirty_lens::MediaBlockDirtyLens;
+    #[doc(inline)]
+    pub use media_block_dof::MediaBlockDOF;
+    #[doc(inline)]
+    pub use media_block_entity::MediaBlockEntity;
     #[doc(inline)]
     pub use media_block_fog::MediaBlockFog;
     #[doc(inline)]

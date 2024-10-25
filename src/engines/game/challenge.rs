@@ -365,6 +365,7 @@ mod read {
 
     impl UserDataChunks for Challenge {
         fn user_data_chunks() -> impl Iterator<Item = UserDataChunk<Self>> {
+            #[allow(clippy::redundant_closure)]
             let chunks: [UserDataChunk<Self>; 6] = [
                 (2, |n, r| Self::read_chunk_2(n, r)),
                 (3, |n, r| Self::read_chunk_3(n, r)),
@@ -387,7 +388,7 @@ mod read {
 
         fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            let chunks: [BodyChunk<Self, R, I, N>; 49] = [
+            let chunks: [BodyChunk<Self, R, I, N>; 50] = [
                 (13, |n, r| Self::read_chunk_13(n, r), false),
                 (17, |n, r| Self::read_chunk_17(n, r), false),
                 (24, |n, r| Self::read_chunk_24(n, r), true),
@@ -420,6 +421,7 @@ mod read {
                 (85, |n, r| Self::read_chunk_85(n, r), true),
                 (86, |n, r| Self::read_chunk_86(n, r), true),
                 (87, |n, r| Self::read_chunk_87(n, r), true),
+                (88, |n, r| Self::read_chunk_88(n, r), true),
                 (89, |n, r| Self::read_chunk_89(n, r), true),
                 (90, |n, r| Self::read_chunk_90(n, r), true),
                 (91, |n, r| Self::read_chunk_91(n, r), true),
@@ -702,22 +704,37 @@ mod read {
         fn read_chunk_64<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 7 {
+            if !matches!(version, 5 | 7) {
                 return Err(Error);
             }
 
             r.u32()?;
-            let len = r.u32()?;
+            let size = r.u32()?;
 
             {
-                let mut r = r.take_with(len as u64, IdState::new(), ());
+                let mut r = r.take_with(size as u64, IdState::new(), ());
 
                 self.anchored_objects =
                     r.versioned_list(|r| r.node_inline_non_null::<AnchoredObject>())?;
-                self.items_on_item = r.list(|r| r.vec2::<u32>())?;
+
+                if version != 5 {
+                    self.items_on_item = r.list(|r| r.vec2::<u32>())?;
+                }
+
                 self.block_indices = r.list(|r| r.u32())?;
-                self.item_indices = r.list(|r| r.u32())?;
-                self.snap_item_groups = r.list(|r| r.u32())?;
+
+                if version < 7 {
+                    self.snap_item_groups = r.list(|r| r.u32())?;
+                }
+
+                if version >= 6 {
+                    self.item_indices = r.list(|r| r.u32())?;
+                }
+
+                if version >= 7 {
+                    self.snap_item_groups = r.list(|r| r.u32())?;
+                }
+
                 r.list(|r| r.u32())?;
                 self.snapped_indices = r.list(|r| r.u32())?;
             }
@@ -927,6 +944,18 @@ mod read {
             Ok(())
         }
 
+        fn read_chunk_88<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error);
+            }
+
+            r.u32()?;
+
+            Ok(())
+        }
+
         fn read_chunk_89<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -963,7 +992,7 @@ mod read {
             if has_lightmaps {
                 let lightmaps_version = r.u32()?;
 
-                if lightmaps_version != 10 {
+                if !matches!(lightmaps_version, 8 | 10) {
                     return Err(Error);
                 }
 
@@ -982,24 +1011,29 @@ mod read {
         }
 
         fn read_chunk_92<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.u32()?;
+            if !r.bool()? {
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }
 
         fn read_chunk_93<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             r.u32()?;
-            r.u32()?;
-            r.u32()?;
 
-            match r.u32()? {
-                0x57 => {
-                    r.bytes(51063)?;
+            if r.bool()? {
+                r.u32()?;
+
+                match r.u32()? {
+                    0x57 => {
+                        r.bytes(51063)?;
+                    }
+                    0xdd => {
+                        r.bytes(83844)?;
+                    }
+                    x => todo!("{x}"),
                 }
-                0xdd => {
-                    r.bytes(83844)?;
-                }
-                _ => todo!(),
             }
 
             Ok(())
@@ -1038,7 +1072,11 @@ mod read {
         }
 
         fn read_chunk_97<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.bytes(20)?;
+            r.u32()?;
+            r.u32()?;
+            r.list(|r| r.u32())?;
+            r.byte_buf()?;
+            r.u32()?;
 
             Ok(())
         }

@@ -35,6 +35,12 @@ impl Block {
             let _waypoint_special_property = r.node::<WaypointSpecialProperty>()?;
         }
 
+        if flags & 0x00020000 != 0 {
+            let _decal_id = r.id()?;
+            let _decal_intensity = r.u32()?;
+            let _decal_variant = r.u32()?;
+        }
+
         let is_free = flags & 0x20000000 != 0;
 
         Ok(Self {
