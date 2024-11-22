@@ -1,0 +1,62 @@
+use gamebox::{
+    engines::{
+        game::block_info_classic::BlockInfoClassic,
+        plug::{bitmap::Bitmap, material::Material, solid_2_model::Solid2Model},
+    },
+    read_file, Prefab,
+};
+
+#[test]
+fn read_ed_classic_road_tech_straight() {
+    read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_material_decal_paint_2_logo_4x1() {
+    read_file::<Material>("tests/files/material/DecalPaint2Logo4x1.Material.Gbx").unwrap();
+}
+
+#[test]
+fn read_material_light_spot() {
+    read_file::<Material>("tests/files/material/LightSpot.Material.Gbx").unwrap();
+}
+
+#[test]
+fn read_material_road_tech() {
+    read_file::<Material>("tests/files/material/RoadTech.Material.Gbx").unwrap();
+}
+
+#[test]
+fn read_material_technics_trims() {
+    read_file::<Material>("tests/files/material/TechnicsTrims.Material.Gbx").unwrap();
+}
+
+#[test]
+fn read_mesh_stade_4096() {
+    read_file::<Solid2Model>("tests/files/mesh/Stade4096.Mesh.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_branch_cross_air() {
+    read_file::<Prefab>("tests/files/prefab/BranchCross_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_road_border_spot() {
+    read_file::<Prefab>("tests/files/prefab/RoadBorderSpot.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_stade_4096() {
+    read_file::<Prefab>("tests/files/prefab/Stade4096.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_straight_air() {
+    read_file::<Prefab>("tests/files/prefab/Straight_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_texture_technics_trims_d() {
+    read_file::<Bitmap>("tests/files/texture/TechnicsTrims_D.Texture.Gbx").unwrap();
+}

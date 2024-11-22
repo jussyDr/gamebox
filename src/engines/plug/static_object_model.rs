@@ -1,0 +1,59 @@
+use crate::{read::reader::NodeRef, Class};
+
+use super::{solid_2_model::Solid2Model, surface::Surface};
+
+#[derive(Default)]
+pub struct StaticObjectModel {
+    mesh: NodeRef<Solid2Model>,
+    hit_shape: Option<NodeRef<Surface>>,
+}
+
+impl Class for StaticObjectModel {
+    const CLASS_ID: u32 = 0x09159000;
+}
+
+impl StaticObjectModel {
+    pub fn mesh(&self) -> &NodeRef<Solid2Model> {
+        &self.mesh
+    }
+}
+
+mod read {
+    use std::io::Read;
+
+    use crate::{
+        engines::plug::{solid_2_model::Solid2Model, surface::Surface},
+        read::{
+            reader::{IdStateMut, NodeStateMut, Reader},
+            Error, ReadBody, Readable, Sealed,
+        },
+    };
+
+    use super::StaticObjectModel;
+
+    impl Readable for StaticObjectModel {}
+
+    impl Sealed for StaticObjectModel {}
+
+    impl ReadBody for StaticObjectModel {
+        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+            &mut self,
+            r: &mut Reader<R, I, N>,
+        ) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(Error::chunk_version(version));
+            }
+
+            self.mesh = r.node_ref::<Solid2Model>()?;
+            let is_mesh_collidable = r.bool8()?;
+
+            if !is_mesh_collidable {
+                self.hit_shape = r.node_ref_or_null::<Surface>()?;
+            }
+
+            Ok(())
+        }
+    }
+}
