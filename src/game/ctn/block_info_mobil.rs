@@ -17,7 +17,7 @@ impl BlockInfoMobil {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::placement_patch::PlacementPatch,
@@ -31,7 +31,7 @@ mod read {
     use super::BlockInfoMobil;
 
     impl ReadBody for BlockInfoMobil {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -40,7 +40,7 @@ mod read {
     }
 
     impl BodyChunks for BlockInfoMobil {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(2, Self::read_chunk_2),
@@ -65,7 +65,7 @@ mod read {
 
         fn read_chunk_3(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

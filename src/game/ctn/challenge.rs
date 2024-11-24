@@ -1,17 +1,27 @@
 //! Challenge.
 
+use std::sync::Arc;
+
 use crate::Class;
 
 /// A challenge.
 #[derive(Default)]
-pub struct Challenge;
+pub struct Challenge {
+    decoration_id: Arc<str>,
+}
 
 impl Class for Challenge {
     const CLASS_ID: u32 = 0x03043000;
 }
 
+impl Challenge {
+    pub const fn decoration_id(&self) -> &Arc<str> {
+        &self.decoration_id
+    }
+}
+
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         game::ctn::{
@@ -33,7 +43,7 @@ mod read {
     impl Sealed for Challenge {}
 
     impl ReadBody for Challenge {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -42,7 +52,7 @@ mod read {
     }
 
     impl BodyChunks for Challenge {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(13, Self::read_chunk_13),
@@ -85,6 +95,7 @@ mod read {
                 BodyChunk::skippable(93, Self::read_chunk_93),
                 BodyChunk::skippable(94, Self::read_chunk_94),
                 BodyChunk::skippable(95, Self::read_chunk_95),
+                BodyChunk::skippable(108, Self::read_chunk_108),
             ]
             .into_iter()
         }
@@ -104,7 +115,7 @@ mod read {
 
         fn read_chunk_17(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _block_stock = r.internal_node_ref::<CollectorList>()?;
             let _challenge_parameters = r.internal_node_ref::<ChallengeParameters>()?;
@@ -128,25 +139,28 @@ mod read {
 
         fn read_chunk_31(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _map_info = r.id()?;
-            let _map_info = r.id()?;
-            let _map_info = r.id()?;
+            let _map_id = r.id()?;
+            let _map_collection = r.id()?;
+            let _map_author = r.id()?;
             let _name = r.string()?;
-            let _decoration = r.id()?;
-            let _decoration = r.id()?;
-            let _decoration = r.id()?;
+            self.decoration_id = r.id()?;
+            let _decoration_collection = r.id()?;
+            let _decoration_author = r.id()?;
             let _size = r.nat3()?;
             let _need_unlock = r.bool()?;
-            let version = r.u32()?;
+            let blocks_version = r.u32()?;
 
-            if version != 6 {
-                return Err(Error::chunk_version(version));
+            if blocks_version != 6 {
+                return Err(Error::version("blocks", blocks_version));
             }
 
-            let num_blocks = r.u32()? as usize;
-            let _blocks = r.repeat(num_blocks * 2, |r| Block::read_from_body(r))?;
+            let _num_blocks = r.u32()? as usize;
+
+            while r.peek_u32()? & 0x40000000 != 0 {
+                let _block = Block::read_from_body(r)?;
+            }
 
             Ok(())
         }
@@ -253,7 +267,7 @@ mod read {
         fn read_chunk_64<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 5 {
+            if !matches!(version, 5 | 8) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -264,6 +278,11 @@ mod read {
                     Ok(())
                 })?;
                 let _block_indices = r.list(|r| r.u32())?;
+
+                if version >= 6 {
+                    let _item_indices = r.list(|r| r.u32())?;
+                }
+
                 let _snap_item_groups = r.list(|r| r.u32())?;
                 r.list(|r| r.u32())?;
                 let _snapped_indexes = r.list(|r| r.u32())?;
@@ -295,7 +314,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_67<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_67<I, N>(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, I, N>,
+        ) -> Result<(), Error> {
             r.u32()?;
             r.encapsulation(|r| {
                 r.list(|r| r.node::<ZoneGenealogy>())?;
@@ -306,7 +328,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_68<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_68<I, N>(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, I, N>,
+        ) -> Result<(), Error> {
             r.u32()?;
             r.encapsulation(|r| {
                 let _script_metadata = TraitsMetadata::read_from_body(r)?;
@@ -319,7 +344,7 @@ mod read {
 
         fn read_chunk_72(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -342,7 +367,7 @@ mod read {
 
         fn read_chunk_73(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -515,7 +540,18 @@ mod read {
 
         fn read_chunk_90<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             r.u32()?;
-            r.u32()?;
+
+            if r.bool()? {
+                r.u32()?;
+                r.list(|r| r.u32())?;
+                r.u32()?;
+                r.u32()?;
+                r.u8()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }
@@ -587,6 +623,13 @@ mod read {
             if version != 0 {
                 return Err(Error::chunk_version(version));
             }
+
+            Ok(())
+        }
+
+        fn read_chunk_108<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u8()?;
 
             Ok(())
         }

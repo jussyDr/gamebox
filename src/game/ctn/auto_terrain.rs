@@ -9,7 +9,7 @@ impl Class for AutoTerrain {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         game::ctn::zone_genealogy::ZoneGenealogy,
@@ -23,7 +23,7 @@ mod read {
     use super::AutoTerrain;
 
     impl ReadBody for AutoTerrain {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -32,7 +32,7 @@ mod read {
     }
 
     impl BodyChunks for AutoTerrain {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [BodyChunk::new(1, Self::read_chunk_1)].into_iter()
         }
@@ -41,7 +41,7 @@ mod read {
     impl AutoTerrain {
         fn read_chunk_1(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _offset = r.u32()?;
             let _offset = r.u32()?;

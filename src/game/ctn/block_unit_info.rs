@@ -17,7 +17,7 @@ impl Class for BlockUnitInfo {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         game::ctn::block_info_clip::BlockInfoClip,
@@ -31,7 +31,7 @@ mod read {
     use super::BlockUnitInfo;
 
     impl ReadBody for BlockUnitInfo {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -40,7 +40,7 @@ mod read {
     }
 
     impl BodyChunks for BlockUnitInfo {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(0, Self::read_chunk_0),
@@ -59,7 +59,7 @@ mod read {
     impl BlockUnitInfo {
         fn read_chunk_0(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _place_pylons = r.u32()?;
             r.bool()?;
@@ -113,7 +113,7 @@ mod read {
 
         fn read_chunk_12(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

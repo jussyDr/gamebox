@@ -15,6 +15,7 @@ pub mod challenge;
 pub mod challenge_parameters;
 pub mod collector;
 pub mod collector_list;
+pub mod decoration;
 pub mod ghost;
 pub mod media_clip;
 pub mod media_clip_group;

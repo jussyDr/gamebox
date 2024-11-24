@@ -20,7 +20,7 @@ impl StaticObjectModel {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::{solid_2_model::Solid2Model, surface::Surface},
@@ -37,7 +37,7 @@ mod read {
     impl Sealed for StaticObjectModel {}
 
     impl ReadBody for StaticObjectModel {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {

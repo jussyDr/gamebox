@@ -1,12 +1,24 @@
 use gamebox::{
-    game::ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge},
+    game::ctn::{
+        block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration,
+    },
     plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
     read_file,
 };
 
 #[test]
+fn read_decoration_base_48x48_day() {
+    read_file::<Decoration>("tests/files/decoration/Base48x48Day.Decoration.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_map_deco_48x48() {
+    read_file::<Challenge>("tests/files/map/Deco48x48.Map.Gbx").unwrap();
 }
 
 #[test]

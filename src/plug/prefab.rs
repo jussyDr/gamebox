@@ -44,7 +44,7 @@ impl Entity {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::static_object_model::StaticObjectModel,
@@ -61,7 +61,7 @@ mod read {
     impl Sealed for Prefab {}
 
     impl ReadBody for Prefab {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {

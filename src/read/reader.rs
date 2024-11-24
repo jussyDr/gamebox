@@ -3,7 +3,7 @@
 use std::{
     any::Any,
     cell::OnceCell,
-    io::{Read, Take},
+    io::{Read, Seek, Take},
     iter,
     path::{Path, PathBuf},
     sync::Arc,
@@ -270,19 +270,15 @@ impl<R: Read, I, N> Reader<R, I, N> {
 
     pub fn encapsulation(
         &mut self,
-        mut read_fn: impl FnMut(&mut Reader<Take<&mut R>, IdState, NullNodeState>) -> Result<(), Error>,
+        mut read_fn: impl FnMut(&mut Reader<&mut R, IdState, NullNodeState>) -> Result<(), Error>,
     ) -> Result<(), Error> {
         let size = self.u32()?;
 
-        let mut reader = Reader::new(
-            (&mut self.inner).take(size as u64),
-            IdState::new(),
-            NullNodeState,
-        );
+        let mut reader = Reader::new(&mut self.inner, IdState::new(), NullNodeState);
 
         read_fn(&mut reader)?;
 
-        reader.expect_eof()?;
+        // reader.expect_eof()?;
 
         Ok(())
     }
@@ -430,6 +426,10 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
             return Ok(None);
         }
 
+        if index == 0x00000019 {
+            return Ok(Some(Arc::from("Unassigned")));
+        }
+
         if index == 0x0000001a {
             return Ok(Some(Arc::from("Unassigned")));
         }
@@ -470,7 +470,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     }
 }
 
-impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
+impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     pub fn node<T: 'static + Class + ReadBody>(&mut self) -> Result<T, Error> {
         let class_id = self.u32()?;
 
@@ -659,5 +659,14 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
             Some(NodeRef::External(external_node_ref)) => Ok(Some(external_node_ref.clone())),
             _ => Err(Error::new(ErrorKind::Format("wat"))),
         }
+    }
+}
+
+impl<R: Read + Seek, I, N> Reader<R, I, N> {
+    pub fn peek_u32(&mut self) -> Result<u32, Error> {
+        let value = self.u32()?;
+        self.inner.seek_relative(-4).unwrap();
+
+        Ok(value)
     }
 }

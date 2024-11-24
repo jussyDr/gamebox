@@ -3,7 +3,7 @@
 pub struct Block;
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         game::{
@@ -19,7 +19,7 @@ mod read {
     use super::Block;
 
     impl ReadBody for Block {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {

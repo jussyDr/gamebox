@@ -39,7 +39,7 @@ impl BlockInfo {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         game::ctn::{
@@ -59,7 +59,7 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(15, Self::read_chunk_15),
@@ -122,7 +122,7 @@ mod read {
 
         fn read_chunk_35(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.variant_base_ground = BlockInfoVariantGround::read_from_body(r)?;
             self.variant_base_air = BlockInfoVariantAir::read_from_body(r)?;
@@ -138,7 +138,7 @@ mod read {
 
         fn read_chunk_39(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.additional_variants_ground =
                 r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantGround>())?;
@@ -158,7 +158,7 @@ mod read {
 
         fn read_chunk_41(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _fog_volume_box = r.external_node_ref_or_null::<()>()?;
 
@@ -167,7 +167,7 @@ mod read {
 
         fn read_chunk_42(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -195,7 +195,7 @@ mod read {
 
         fn read_chunk_44(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.additional_variants_air =
                 r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantAir>())?;

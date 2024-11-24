@@ -21,7 +21,7 @@ impl Material {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::material_custom::MaterialCustom,
@@ -39,7 +39,7 @@ mod read {
     impl Sealed for Material {}
 
     impl ReadBody for Material {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -48,7 +48,7 @@ mod read {
     }
 
     impl BodyChunks for Material {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(1, Self::read_chunk_1),
@@ -75,7 +75,7 @@ mod read {
 
         fn read_chunk_7(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.custom_material = r.internal_node_ref::<MaterialCustom>()?;
 

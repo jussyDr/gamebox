@@ -30,7 +30,7 @@ impl VisualIndexed {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::index_buffer::IndexBuffer,
@@ -47,7 +47,7 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [BodyChunk::new(1, Self::read_chunk_1)].into_iter()
         }
@@ -56,7 +56,7 @@ mod read {
     impl VisualIndexed {
         fn read_chunk_1(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             if r.bool()? {
                 self.index_buffer = IndexBuffer::read_from_body(r)?;

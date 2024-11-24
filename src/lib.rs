@@ -7,7 +7,7 @@ pub mod plug;
 pub mod read;
 pub mod script;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 pub use read::{read, read_file};
 

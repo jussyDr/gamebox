@@ -6,7 +6,7 @@ use std::{
     collections::VecDeque,
     fmt::{self, Debug, Display, Formatter},
     fs::File,
-    io::{self, BufReader, Read},
+    io::{self, BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -80,7 +80,7 @@ impl Debug for TraceEntry {
 }
 
 /// Read a node of type `T` from the given `reader`.
-pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
+pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     let mut r = Reader::new(reader, (), ());
 
     let signature = r.byte_array()?;
@@ -191,7 +191,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
             lzo1x::decompress(&compressed_body, &mut body)
                 .map_err(|_| Error::new(ErrorKind::Format("decompress")))?;
 
-            let mut r = Reader::new(body.as_slice(), id_state, node_state);
+            let mut r = Reader::new(Cursor::new(body), id_state, node_state);
 
             match node.read_body(&mut r) {
                 Ok(()) => {}
@@ -274,12 +274,12 @@ pub trait Readable: Sealed {}
 pub trait Sealed: Class + ReadBody {}
 
 pub trait ReadBody: Send + Sync + Default {
-    fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         r: &mut Reader<R, I, N>,
     ) -> Result<(), Error>;
 
-    fn read_from_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn read_from_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         r: &mut Reader<R, I, N>,
     ) -> Result<Self, Error> {
         let mut node = Self::default();
@@ -291,7 +291,7 @@ pub trait ReadBody: Send + Sync + Default {
 
 pub fn read_body_chunks<T: Class + BodyChunks>(
     node: &mut T,
-    r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+    r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
 ) -> Result<(), Error> {
     let chunk_id = read_body_chunks_inner(node, r)?;
 
@@ -306,7 +306,7 @@ pub fn read_body_chunks<T: Class + BodyChunks>(
 
 fn read_body_chunks_inner<T: Class + BodyChunks>(
     node: &mut T,
-    r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+    r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
 ) -> Result<u32, Error> {
     let mut chunk_id = match node.parent() {
         Some(parent) => read_body_chunks_inner(parent, r)?,
@@ -327,6 +327,8 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
         }
 
         let chunk_num = (chunk_id & 0x00000fff) as u16;
+
+        println!("{:08X?}, {}", class_id, chunk_num);
 
         let chunk = chunks
             .find(|chunk| chunk.num == chunk_num)
@@ -360,7 +362,7 @@ pub trait BodyChunks: Sized + Class {
         None::<&mut Self>
     }
 
-    fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+    fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>>;
 }
 

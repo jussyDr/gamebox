@@ -17,7 +17,7 @@ impl Bitmap {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::read::{
         read_body_chunks,
@@ -32,7 +32,7 @@ mod read {
     impl Sealed for Bitmap {}
 
     impl ReadBody for Bitmap {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -41,7 +41,7 @@ mod read {
     }
 
     impl BodyChunks for Bitmap {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(25, Self::read_chunk_25),
@@ -128,7 +128,7 @@ mod read {
 
         fn read_chunk_48(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

@@ -11,7 +11,7 @@ impl Class for Surface {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::material::Material,
@@ -29,7 +29,7 @@ mod read {
     impl Sealed for Surface {}
 
     impl ReadBody for Surface {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
@@ -38,7 +38,7 @@ mod read {
     }
 
     impl BodyChunks for Surface {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [BodyChunk::new(3, Self::read_chunk_3)].into_iter()
         }
@@ -47,7 +47,7 @@ mod read {
     impl Surface {
         fn read_chunk_3(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

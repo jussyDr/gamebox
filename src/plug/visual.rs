@@ -21,7 +21,7 @@ impl Visual {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         plug::vertex_stream::VertexStream,
@@ -34,7 +34,7 @@ mod read {
     use super::Visual;
 
     impl BodyChunks for Visual {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(1, Self::read_chunk_1),
@@ -90,7 +90,7 @@ mod read {
 
         fn read_chunk_15(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

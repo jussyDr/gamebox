@@ -26,7 +26,7 @@ impl BlockInfoVariant {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::{
         game::ctn::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo},
@@ -39,7 +39,7 @@ mod read {
     use super::BlockInfoVariant;
 
     impl BodyChunks for BlockInfoVariant {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(2, Self::read_chunk_2),
@@ -88,7 +88,7 @@ mod read {
 
         fn read_chunk_5(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -140,7 +140,7 @@ mod read {
 
         fn read_chunk_8(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

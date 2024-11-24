@@ -13,7 +13,7 @@ impl Class for Ghost {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::read::{
         read_body_chunks,
@@ -24,7 +24,7 @@ mod read {
     use super::Ghost;
 
     impl ReadBody for Ghost {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {

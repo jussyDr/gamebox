@@ -23,7 +23,7 @@ impl Deref for BlockInfoClassic {
 }
 
 mod read {
-    use std::io::Read;
+    use std::io::{Read, Seek};
 
     use crate::read::{
         read_body_chunks,
@@ -38,7 +38,7 @@ mod read {
     impl Sealed for BlockInfoClassic {}
 
     impl ReadBody for BlockInfoClassic {
-        fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
