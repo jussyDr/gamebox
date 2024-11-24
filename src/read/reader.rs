@@ -1,16 +1,19 @@
+//! Low-level GameBox reader.
+//!
 use std::{
     any::Any,
     cell::OnceCell,
-    io::Read,
+    io::{Read, Take},
     iter,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
-use crate::{Quat, Vec3};
+use crate::{Class, Nat3, PackDesc, Quat, Vec3};
 
 use super::{Error, ErrorKind, ReadBody, TraceEntry};
 
+/// Identifier state.
 pub struct IdState {
     seen_id: bool,
     ids: Vec<Arc<str>>,
@@ -41,6 +44,7 @@ impl IdStateMut for IdState {
     }
 }
 
+/// Node state.
 pub struct NodeState {
     node_refs: Box<[OnceCell<NodeRef<dyn Any + Send + Sync>>]>,
 }
@@ -116,6 +120,7 @@ impl<T: Default> Default for NodeRef<T> {
     }
 }
 
+/// Reference to a node in an external file.
 #[derive(Clone, Debug)]
 pub struct ExternalNodeRef {
     pub(crate) path: Arc<Path>,
@@ -157,6 +162,15 @@ impl NodeStateMut for NodeState {
     }
 }
 
+pub struct NullNodeState;
+
+impl NodeStateMut for NullNodeState {
+    fn get_mut(&mut self) -> &mut NodeState {
+        unimplemented!()
+    }
+}
+
+/// Low-level GameBox reader.
 pub struct Reader<R, I, N> {
     inner: R,
     id_state: I,
@@ -175,15 +189,17 @@ impl<R, I, N> Reader<R, I, N> {
     pub fn into_inner(self) -> R {
         self.inner
     }
+
+    pub fn get_mut(&mut self) -> &mut R {
+        &mut self.inner
+    }
 }
 
 impl<R: Read, I, N> Reader<R, I, N> {
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>, Error> {
         let mut buf = vec![0; n];
 
-        self.inner
-            .read_exact(&mut buf)
-            .map_err(|io_err| Error::new(ErrorKind::Io(io_err)))?;
+        self.inner.read_exact(&mut buf).map_err(Error::io)?;
 
         Ok(buf)
     }
@@ -191,9 +207,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn byte_array<const S: usize>(&mut self) -> Result<[u8; S], Error> {
         let mut buf = [0; S];
 
-        self.inner
-            .read_exact(&mut buf)
-            .map_err(|io_err| Error::new(ErrorKind::Io(io_err)))?;
+        self.inner.read_exact(&mut buf).map_err(Error::io)?;
 
         Ok(buf)
     }
@@ -208,6 +222,12 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let bytes = self.byte_array()?;
 
         Ok(i16::from_le_bytes(bytes))
+    }
+
+    pub fn i32(&mut self) -> Result<i32, Error> {
+        let bytes = self.byte_array()?;
+
+        Ok(i32::from_le_bytes(bytes))
     }
 
     pub fn u8(&mut self) -> Result<u8, Error> {
@@ -248,6 +268,25 @@ impl<R: Read, I, N> Reader<R, I, N> {
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8")))
     }
 
+    pub fn encapsulation(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Reader<Take<&mut R>, IdState, NullNodeState>) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        let size = self.u32()?;
+
+        let mut reader = Reader::new(
+            (&mut self.inner).take(size as u64),
+            IdState::new(),
+            NullNodeState,
+        );
+
+        read_fn(&mut reader)?;
+
+        reader.expect_eof()?;
+
+        Ok(())
+    }
+
     pub fn repeat<T>(
         &mut self,
         n: usize,
@@ -259,10 +298,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn expect_eof(&mut self) -> Result<(), Error> {
         let mut buf = [0];
 
-        let n = self
-            .inner
-            .read(&mut buf)
-            .map_err(|io_err| Error::new(ErrorKind::Io(io_err)))?;
+        let n = self.inner.read(&mut buf).map_err(Error::io)?;
 
         if n != 0 {
             return Err(Error::new(ErrorKind::Format("expected EOF")));
@@ -275,6 +311,44 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let bytes = self.byte_array()?;
 
         Ok(f32::from_le_bytes(bytes))
+    }
+
+    pub fn nat3(&mut self) -> Result<Nat3, Error> {
+        let x = self.u32()?;
+        let y = self.u32()?;
+        let z = self.u32()?;
+
+        Ok(Nat3 { x, y, z })
+    }
+
+    pub fn enum_u32<T: TryFrom<u32>>(&mut self) -> Result<T, Error> {
+        self.u32()?
+            .try_into()
+            .map_err(|_| Error::new(ErrorKind::Format("enum")))
+    }
+
+    pub fn enum_u8<T: TryFrom<u8>>(&mut self) -> Result<T, Error> {
+        self.u8()?
+            .try_into()
+            .map_err(|_| Error::new(ErrorKind::Format("enum")))
+    }
+
+    pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
+        let version = self.u8()?;
+
+        if version != 3 {
+            return Err(Error::version("pack desc", version as u32));
+        }
+
+        let checksum = self.byte_array::<32>()?;
+        let path = PathBuf::from(self.string()?);
+        let locator_url = self.string()?;
+
+        Ok(PackDesc::External {
+            path,
+            locator_url,
+            checksum,
+        })
     }
 
     pub fn vec3(&mut self) -> Result<Vec3, Error> {
@@ -323,7 +397,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let version = self.u32()?;
 
         if version != 10 {
-            return Err(Error::new(ErrorKind::Unsupported("list version")));
+            return Err(Error::version("list", version));
         }
 
         self.list(read_elem_fn)
@@ -344,7 +418,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
             let version = self.u32()?;
 
             if version != 3 {
-                return Err(Error::new(ErrorKind::Unsupported("identifier version")));
+                return Err(Error::version("identifier", version));
             }
 
             self.id_state.get_mut().seen_id = true;
@@ -391,13 +465,39 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     pub fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
             Some(id) => Ok(id),
-            None => Err(Error::new(ErrorKind::Unsupported("null identifier"))),
+            None => Err(Error::new(ErrorKind::Format("null identifier"))),
         }
     }
 }
 
 impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
-    pub fn node_ref_or_null<T: 'static + ReadBody>(&mut self) -> Result<Option<NodeRef<T>>, Error> {
+    pub fn node<T: 'static + Class + ReadBody>(&mut self) -> Result<T, Error> {
+        let class_id = self.u32()?;
+
+        if class_id != T::CLASS_ID {
+            return Err(Error::new(ErrorKind::Format("class id")));
+        }
+
+        let mut node = T::default();
+
+        match node.read_body(self) {
+            Ok(()) => {}
+            Err(mut error) => {
+                error.trace.push_front(TraceEntry {
+                    class_id: T::CLASS_ID,
+                    chunk_num: None,
+                });
+
+                return Err(error);
+            }
+        }
+
+        Ok(node)
+    }
+
+    pub fn node_ref_or_null<T: 'static + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<NodeRef<T>>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
@@ -451,7 +551,7 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         }
     }
 
-    pub fn node_ref<T: 'static + ReadBody>(&mut self) -> Result<NodeRef<T>, Error> {
+    pub fn node_ref<T: 'static + Class + ReadBody>(&mut self) -> Result<NodeRef<T>, Error> {
         let index = self.u32()?;
 
         let ref_index = index
@@ -501,9 +601,21 @@ impl<R: Read, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref<T: 'static + ReadBody>(&mut self) -> Result<Arc<T>, Error> {
+    pub fn internal_node_ref<T: 'static + Class + ReadBody>(&mut self) -> Result<Arc<T>, Error> {
         match self.node_ref()? {
             NodeRef::Internal { node } => Ok(node),
+            _ => Err(Error::new(ErrorKind::Format(
+                "expected an internal node reference",
+            ))),
+        }
+    }
+
+    pub fn internal_node_ref_or_null<T: 'static + Class + ReadBody>(
+        &mut self,
+    ) -> Result<Option<Arc<T>>, Error> {
+        match self.node_ref_or_null()? {
+            Some(NodeRef::Internal { node }) => Ok(Some(node)),
+            None => Ok(None),
             _ => Err(Error::new(ErrorKind::Format(
                 "expected an internal node reference",
             ))),

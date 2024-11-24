@@ -1,3 +1,5 @@
+//! Reading GameBox files.
+
 pub mod reader;
 
 use std::{
@@ -27,18 +29,34 @@ impl Error {
         }
     }
 
-    pub const fn chunk_version(version: u32) -> Self {
+    pub fn io(io_error: io::Error) -> Self {
+        let kind = match io_error.kind() {
+            io::ErrorKind::UnexpectedEof => ErrorKind::Format("unexpected EOF"),
+            _ => ErrorKind::Io(io_error),
+        };
+
         Self {
-            kind: ErrorKind::Unsupported("chunk version"),
+            kind,
             trace: VecDeque::new(),
         }
+    }
+
+    pub fn version(name: &str, version: u32) -> Self {
+        Self {
+            kind: ErrorKind::Unsupported(format!("{name} version: {version}")),
+            trace: VecDeque::new(),
+        }
+    }
+
+    pub fn chunk_version(version: u32) -> Self {
+        Self::version("chunk", version)
     }
 }
 
 #[derive(Debug)]
 pub enum ErrorKind {
     Io(io::Error),
-    Unsupported(&'static str),
+    Unsupported(String),
     Format(&'static str),
 }
 
@@ -61,6 +79,7 @@ impl Debug for TraceEntry {
     }
 }
 
+/// Read a node of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let mut r = Reader::new(reader, (), ());
 
@@ -73,36 +92,32 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let version = r.u16()?;
 
     if version != 6 {
-        return Err(Error::new(ErrorKind::Unsupported("file version")));
+        return Err(Error::version("file", version as u32));
     }
 
     let format = r.u8()?;
 
     if format != b'B' {
-        return Err(Error::new(ErrorKind::Unsupported("file format")));
+        return Err(Error::new(ErrorKind::Unsupported(
+            "file format".to_string(),
+        )));
     }
 
     let ref_table_compression = r.u8()?;
 
     if ref_table_compression != b'U' {
         return Err(Error::new(ErrorKind::Unsupported(
-            "reference table compression",
+            "reference table compression".to_string(),
         )));
     }
 
-    let body_compression = r.u8()?;
-
-    if body_compression != b'U' {
-        return Err(Error::new(ErrorKind::Unsupported("body compression")));
-    }
+    let body_compression = Compression::read(&mut r)?;
 
     if r.u8()? != b'R' {
-        return Err(Error::new(ErrorKind::Unsupported("")));
+        return Err(Error::new(ErrorKind::Unsupported("".to_string())));
     }
 
     let class_id = r.u32()?;
-
-    println!("{:08X?}", class_id);
 
     if class_id != T::CLASS_ID {
         return Err(Error::new(ErrorKind::Format("class id does not match")));
@@ -113,7 +128,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let header_data = r.byte_buf()?;
 
     if !header_data.is_empty() {
-        return Err(Error::new(ErrorKind::Unsupported("header data")));
+        // TODO
     }
 
     let num_nodes = r.u32()?;
@@ -132,7 +147,9 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
             let flags = r.u32()?;
 
             if flags & 0x00000004 != 0 {
-                return Err(Error::new(ErrorKind::Unsupported("reference table")));
+                return Err(Error::new(ErrorKind::Unsupported(
+                    "reference table".to_string(),
+                )));
             }
 
             let file_name = r.string()?;
@@ -152,8 +169,6 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 
             path.push(file_name);
 
-            println!("{node_index}, {:?}", path);
-
             node_state.set_external_node_ref(
                 node_ref_index as usize,
                 ExternalNodeRef {
@@ -165,27 +180,58 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     }
 
     let id_state = IdState::new();
-    let mut r = Reader::new(r.into_inner(), id_state, node_state);
 
-    match node.read_body(&mut r) {
-        Ok(()) => {}
-        Err(mut error) => {
-            error.trace.push_front(TraceEntry {
-                class_id: T::CLASS_ID,
-                chunk_num: None,
-            });
+    match body_compression {
+        Compression::Compressed => {
+            let body_size = r.u32()?;
+            let compressed_body = r.byte_buf()?;
+            r.expect_eof()?;
 
-            return Err(error);
+            let mut body = vec![0; body_size as usize];
+            lzo1x::decompress(&compressed_body, &mut body)
+                .map_err(|_| Error::new(ErrorKind::Format("decompress")))?;
+
+            let mut r = Reader::new(body.as_slice(), id_state, node_state);
+
+            match node.read_body(&mut r) {
+                Ok(()) => {}
+                Err(mut error) => {
+                    error.trace.push_front(TraceEntry {
+                        class_id: T::CLASS_ID,
+                        chunk_num: None,
+                    });
+
+                    return Err(error);
+                }
+            }
+
+            r.expect_eof()?;
+        }
+        Compression::Uncompressed => {
+            let mut r = Reader::new(r.into_inner(), id_state, node_state);
+
+            match node.read_body(&mut r) {
+                Ok(()) => {}
+                Err(mut error) => {
+                    error.trace.push_front(TraceEntry {
+                        class_id: T::CLASS_ID,
+                        chunk_num: None,
+                    });
+
+                    return Err(error);
+                }
+            }
+
+            r.expect_eof()?;
         }
     }
-
-    r.expect_eof()?;
 
     Ok(node)
 }
 
+/// Read a node of type `T` from a file at the given `path`.
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
-    let file = File::open(path).map_err(|io_err| Error::new(ErrorKind::Io(io_err)))?;
+    let file = File::open(path).map_err(Error::io)?;
     let reader = BufReader::new(file);
 
     read(reader)
@@ -225,9 +271,9 @@ fn read_folders_inner<R: Read, I, N>(
 
 pub trait Readable: Sealed {}
 
-pub trait Sealed: ReadBody {}
+pub trait Sealed: Class + ReadBody {}
 
-pub trait ReadBody: Send + Sync + Default + Class {
+pub trait ReadBody: Send + Sync + Default {
     fn read_body<R: Read, I: IdStateMut, N: NodeStateMut>(
         &mut self,
         r: &mut Reader<R, I, N>,
@@ -250,7 +296,9 @@ pub fn read_body_chunks<T: Class + BodyChunks>(
     let chunk_id = read_body_chunks_inner(node, r)?;
 
     if chunk_id != 0xfacade01 {
-        return Err(Error::new(ErrorKind::Unsupported("unknown chunk")));
+        return Err(Error::new(ErrorKind::Unsupported(format!(
+            "chunk: {chunk_id:08X?}"
+        ))));
     }
 
     Ok(())
@@ -280,11 +328,11 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
 
         let chunk_num = (chunk_id & 0x00000fff) as u16;
 
-        println!("{class_id:02X?}, {chunk_num}");
-
         let chunk = chunks
             .find(|chunk| chunk.num == chunk_num)
-            .ok_or(Error::new(ErrorKind::Unsupported("chunk")))?;
+            .ok_or(Error::new(ErrorKind::Unsupported(format!(
+                "chunk: {chunk_num}"
+            ))))?;
 
         match chunk.read_fn {
             BodyChunkReadFn::Normal(read_fn) => {
@@ -343,6 +391,23 @@ impl<T, R, I, N> BodyChunk<T, R, I, N> {
         Self {
             num,
             read_fn: BodyChunkReadFn::Skippable(read_fn),
+        }
+    }
+}
+
+pub enum Compression {
+    Compressed,
+    Uncompressed,
+}
+
+impl Compression {
+    pub fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        match r.u8()? {
+            b'C' => Ok(Self::Compressed),
+            b'U' => Ok(Self::Uncompressed),
+            _ => Err(Error::new(ErrorKind::Unsupported(
+                "compression".to_string(),
+            ))),
         }
     }
 }

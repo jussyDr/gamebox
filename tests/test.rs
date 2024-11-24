@@ -1,14 +1,17 @@
 use gamebox::{
-    engines::{
-        game::block_info_classic::BlockInfoClassic,
-        plug::{bitmap::Bitmap, material::Material, solid_2_model::Solid2Model},
-    },
-    read_file, Prefab,
+    game::ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge},
+    plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
+    read_file,
 };
 
 #[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_map_training_01() {
+    read_file::<Challenge>("tests/files/map/Training - 01.Map.Gbx").unwrap();
 }
 
 #[test]

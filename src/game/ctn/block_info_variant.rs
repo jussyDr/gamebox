@@ -1,0 +1,224 @@
+use std::sync::Arc;
+
+use crate::Class;
+
+use super::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo};
+
+/// A block info variant.
+#[derive(Default)]
+pub struct BlockInfoVariant {
+    mobils: Vec<Vec<Arc<BlockInfoMobil>>>,
+    block_unit_models: Vec<Arc<BlockUnitInfo>>,
+}
+
+impl Class for BlockInfoVariant {
+    const CLASS_ID: u32 = 0x0315b000;
+}
+
+impl BlockInfoVariant {
+    pub fn mobils(&self) -> &[Vec<Arc<BlockInfoMobil>>] {
+        &self.mobils
+    }
+
+    pub fn block_unit_models(&self) -> &[Arc<BlockUnitInfo>] {
+        &self.block_unit_models
+    }
+}
+
+mod read {
+    use std::io::Read;
+
+    use crate::{
+        game::ctn::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo},
+        read::{
+            reader::{IdStateMut, NodeStateMut, Reader},
+            BodyChunk, BodyChunks, Error,
+        },
+    };
+
+    use super::BlockInfoVariant;
+
+    impl BodyChunks for BlockInfoVariant {
+        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            [
+                BodyChunk::new(2, Self::read_chunk_2),
+                BodyChunk::new(3, Self::read_chunk_3),
+                BodyChunk::new(4, Self::read_chunk_4),
+                BodyChunk::new(5, Self::read_chunk_5),
+                BodyChunk::new(6, Self::read_chunk_6),
+                BodyChunk::new(7, Self::read_chunk_7),
+                BodyChunk::new(8, Self::read_chunk_8),
+                BodyChunk::new(9, Self::read_chunk_9),
+                BodyChunk::new(10, Self::read_chunk_10),
+                BodyChunk::new(11, Self::read_chunk_11),
+                BodyChunk::new(13, Self::read_chunk_13),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl BlockInfoVariant {
+        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _multi_dir = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_3<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 2 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let _symmetrical_variant_index = r.u32()?;
+            let _cardinal_dir = r.u8()?;
+            let _variant_base_type = r.u8()?;
+            let _no_pillar_below_index = r.u8()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u16()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_5(
+            &mut self,
+            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(Error::chunk_version(version));
+            }
+
+            self.mobils = r.list(|r| r.list(|r| r.internal_node_ref::<BlockInfoMobil>()))?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 11 {
+                return Err(Error::chunk_version(version));
+            }
+
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            let _entity_spawners: Vec<()> = r.list(|r| todo!())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_7<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let _probe = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_8(
+            &mut self,
+            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 2 {
+                return Err(Error::chunk_version(version));
+            }
+
+            self.block_unit_models = r.list(|r| r.internal_node_ref::<BlockUnitInfo>())?;
+            r.u32()?;
+            let _has_symmetry_h = r.bool()?;
+            let _has_symmetry_v = r.bool()?;
+            let _has_symmetry_d1 = r.bool()?;
+            let _has_symmetry_d2 = r.bool()?;
+            r.box3d()?;
+            let _name = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_9<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error::chunk_version(version));
+            }
+
+            r.list(|r| {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+
+                Ok(())
+            })?;
+            r.list(|r| {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u8()?;
+
+                Ok(())
+            })?;
+
+            Ok(())
+        }
+
+        fn read_chunk_10<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(Error::chunk_version(version));
+            }
+
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_11<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error::chunk_version(version));
+            }
+
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_13<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+    }
+}

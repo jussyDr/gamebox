@@ -2,3 +2,6 @@
 name = "gamebox"
 version = "0.1.0"
 edition = "2021"
+
+[dependencies]
+lzo1x = "0.2.0"
