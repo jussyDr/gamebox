@@ -26,6 +26,7 @@ mod read {
                 BodyChunk::new(11, Self::read_chunk_11),
                 BodyChunk::new(12, Self::read_chunk_12),
                 BodyChunk::new(13, Self::read_chunk_13),
+                BodyChunk::new(14, Self::read_chunk_14),
                 BodyChunk::new(16, Self::read_chunk_16),
                 BodyChunk::new(17, Self::read_chunk_17),
                 BodyChunk::new(18, Self::read_chunk_18),
@@ -54,7 +55,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            r.id()?;
+            r.id_or_null()?;
             r.id()?;
             r.id()?;
 
@@ -73,10 +74,17 @@ mod read {
             Ok(())
         }
 
+        fn read_chunk_14<N, I>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _icon_use_auto_render = r.bool()?;
+            let _icon_quarter_rotation_y = r.u32()?;
+
+            Ok(())
+        }
+
         fn read_chunk_16<N, I>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 4 {
+            if !matches!(version, 3 | 4) {
                 return Err(Error::chunk_version(version));
             }
 

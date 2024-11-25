@@ -22,8 +22,10 @@ pub mod media_clip_group;
 pub mod zone_genealogy;
 
 /// Cardinal direction.
+#[derive(Clone, Copy, Default)]
 pub enum Direction {
     /// North.
+    #[default]
     North,
     /// East.
     East,

@@ -6,7 +6,7 @@ use super::collector::Collector;
 #[derive(Default)]
 pub struct Decoration {
     parent: Collector,
-    map: ExternalNodeRef,
+    map: Option<ExternalNodeRef>,
 }
 
 impl Class for Decoration {
@@ -14,8 +14,8 @@ impl Class for Decoration {
 }
 
 impl Decoration {
-    pub const fn map(&self) -> &ExternalNodeRef {
-        &self.map
+    pub fn map(&self) -> Option<&ExternalNodeRef> {
+        self.map.as_ref()
     }
 }
 
@@ -185,7 +185,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.map = r.external_node_ref::<Challenge>()?;
+            self.map = r.external_node_ref_or_null::<Challenge>()?;
             let _deco_map_lightmap = r.u32()?;
 
             Ok(())

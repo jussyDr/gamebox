@@ -4,10 +4,13 @@ use std::sync::Arc;
 
 use crate::Class;
 
+use super::block::Block;
+
 /// A challenge.
 #[derive(Default)]
 pub struct Challenge {
     decoration_id: Arc<str>,
+    blocks: Vec<Block>,
 }
 
 impl Class for Challenge {
@@ -17,6 +20,10 @@ impl Class for Challenge {
 impl Challenge {
     pub const fn decoration_id(&self) -> &Arc<str> {
         &self.decoration_id
+    }
+
+    pub const fn blocks(&self) -> &Vec<Block> {
+        &self.blocks
     }
 }
 
@@ -156,10 +163,15 @@ mod read {
                 return Err(Error::version("blocks", blocks_version));
             }
 
-            let _num_blocks = r.u32()? as usize;
+            let num_blocks = r.u32()? as usize;
+            self.blocks = Vec::with_capacity(num_blocks);
 
             while r.peek_u32()? & 0x40000000 != 0 {
-                let _block = Block::read_from_body(r)?;
+                let block = Block::read_from_body(r)?;
+
+                if block.has_flags() {
+                    self.blocks.push(block);
+                }
             }
 
             Ok(())

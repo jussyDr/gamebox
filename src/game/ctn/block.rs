@@ -1,6 +1,35 @@
+use std::sync::Arc;
+
+use crate::Byte3;
+
+use super::Direction;
+
 /// A block.
 #[derive(Default)]
-pub struct Block;
+pub struct Block {
+    id: Arc<str>,
+    direction: Direction,
+    coord: Byte3,
+    has_flags: bool,
+}
+
+impl Block {
+    pub const fn id(&self) -> &Arc<str> {
+        &self.id
+    }
+
+    pub const fn direction(&self) -> Direction {
+        self.direction
+    }
+
+    pub const fn coord(&self) -> Byte3 {
+        self.coord
+    }
+
+    pub(crate) const fn has_flags(&self) -> bool {
+        self.has_flags
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -23,14 +52,16 @@ mod read {
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
-            let _name = r.id()?;
+            self.id = r.id()?;
             let _direction = r.enum_u8::<Direction>()?;
-            let _coord = r.u8()?;
-            let _coord = r.u8()?;
-            let _coord = r.u8()?;
+            self.coord.x = r.u8()?;
+            self.coord.y = r.u8()?;
+            self.coord.z = r.u8()?;
             let flags = r.u32()?;
 
             if flags != 0xffffffff {
+                self.has_flags = true;
+
                 if flags & 0x00008000 != 0 {
                     let _author = r.id()?;
                     let _skin = r.internal_node_ref::<BlockSkin>()?;

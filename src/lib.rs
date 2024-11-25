@@ -60,6 +60,24 @@ impl Vec3 {
 
 /// A 3-dimensional vector.
 #[derive(Clone, Copy, Default)]
+pub struct Byte3 {
+    /// X component.
+    pub x: u8,
+    /// Y component.
+    pub y: u8,
+    /// Z component.
+    pub z: u8,
+}
+
+impl Byte3 {
+    /// `[x, y, z]`.
+    pub const fn to_array(&self) -> [u8; 3] {
+        [self.x, self.y, self.z]
+    }
+}
+
+/// A 3-dimensional vector.
+#[derive(Clone, Copy, Default)]
 pub struct Nat3 {
     /// X component.
     pub x: u32,

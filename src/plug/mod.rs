@@ -1,16 +1,19 @@
 //! Plug engine.
 
 pub mod bitmap;
+pub mod crystal;
 pub mod index_buffer;
 pub mod light;
 pub mod material;
 pub mod material_custom;
+pub mod material_user_inst;
 pub mod placement_patch;
 pub mod prefab;
 pub mod road_chunk;
 pub mod solid_2_model;
 pub mod static_object_model;
 pub mod surface;
+pub mod tree_generator;
 pub mod vertex_stream;
 pub mod visual;
 pub mod visual3d;

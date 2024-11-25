@@ -1,6 +1,7 @@
 use gamebox::{
-    game::ctn::{
-        block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration,
+    game::{
+        ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration},
+        item_model::ItemModel,
     },
     plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
     read_file,
@@ -12,8 +13,18 @@ fn read_decoration_base_48x48_day() {
 }
 
 #[test]
+fn read_decoration_day_16x12() {
+    read_file::<Decoration>("tests/files/decoration/Day16x12.Decoration.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_cp_stripe() {
+    read_file::<ItemModel>("tests/files/item/CP-stripe.Item.Gbx").unwrap();
 }
 
 #[test]
