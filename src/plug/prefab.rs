@@ -18,6 +18,7 @@ impl Prefab {
     }
 }
 
+/// A prefab entity.
 pub struct Entity {
     model: NodeRef<StaticObjectModel>,
     rotation: Quat,

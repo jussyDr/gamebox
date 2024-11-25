@@ -1,13 +1,13 @@
 #![warn(missing_docs, clippy::print_stdout)]
 
-//! A GameBox file reader and writer.
+//! GameBox file reading and writing.
 
 pub mod game;
 pub mod plug;
 pub mod read;
 pub mod script;
 
-use std::{path::PathBuf, sync::Arc};
+use std::path::PathBuf;
 
 pub use read::{read, read_file};
 
@@ -52,6 +52,14 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    pub const fn from_array(array: [f32; 3]) -> Self {
+        Self {
+            x: array[0],
+            y: array[1],
+            z: array[2],
+        }
+    }
+
     /// `[x, y, z]`.
     pub const fn to_array(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
@@ -104,4 +112,19 @@ pub enum PackDesc {
         locator_url: String,
         checksum: [u8; 32],
     },
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Texcoord {
+    pub u: f32,
+    pub v: f32,
+}
+
+impl Texcoord {
+    pub const fn from_array(array: [f32; 2]) -> Self {
+        Self {
+            u: array[0],
+            v: array[1],
+        }
+    }
 }

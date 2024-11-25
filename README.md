@@ -1,3 +1,3 @@
  # GameBox
  
-A GameBox file reader and writer.
+GameBox file reading and writing.

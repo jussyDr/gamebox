@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, Texcoord, Vec3};
 
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
@@ -8,7 +8,7 @@ use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator}
 pub struct Crystal {
     parent: TreeGenerator,
     materials: Vec<Arc<MaterialUserInst>>,
-    layers: Vec<Layer>,
+    geometry_layer: Mesh,
 }
 
 impl Class for Crystal {
@@ -20,15 +20,50 @@ impl Crystal {
         &self.materials
     }
 
-    pub const fn layers(&self) -> &Vec<Layer> {
-        &self.layers
+    pub const fn geometry_layer(&self) -> &Mesh {
+        &self.geometry_layer
     }
 }
 
-pub enum Layer {
-    Geometry,
-    Trigger,
-    SpawnPosition,
+#[derive(Default)]
+pub struct Mesh {
+    positions: Vec<Vec3>,
+    faces: Vec<Face>,
+}
+
+impl Mesh {
+    pub const fn positions(&self) -> &Vec<Vec3> {
+        &self.positions
+    }
+
+    pub const fn faces(&self) -> &Vec<Face> {
+        &self.faces
+    }
+}
+
+pub struct Face {
+    indices: Vec<u32>,
+    texcoords: Vec<Texcoord>,
+    material_index: u32,
+    group_index: u32,
+}
+
+impl Face {
+    pub const fn indices(&self) -> &Vec<u32> {
+        &self.indices
+    }
+
+    pub const fn texcoords(&self) -> &Vec<Texcoord> {
+        &self.texcoords
+    }
+
+    pub const fn material_index(&self) -> u32 {
+        self.material_index
+    }
+
+    pub const fn group_index(&self) -> u32 {
+        self.group_index
+    }
 }
 
 mod read {
@@ -41,9 +76,10 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
         },
+        Texcoord,
     };
 
-    use super::{Crystal, Layer};
+    use super::{Crystal, Face, Mesh};
 
     impl ReadBody for Crystal {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -121,10 +157,12 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.layers = r.list(|r| {
+            let num_layers = r.u32()?;
+
+            for _ in 0..num_layers {
                 let layer_type = r.u32()?;
 
-                let layer = match layer_type {
+                match layer_type {
                     0 => {
                         let version = r.u32()?;
 
@@ -142,12 +180,12 @@ mod read {
                             return Err(Error::version("geometry", geometry_version));
                         }
 
-                        read_crystal(r)?;
+                        let mesh = read_mesh(r)?;
                         r.list(|r| r.u32())?;
                         let _is_visible = r.bool()?;
                         let _is_collidable = r.bool()?;
 
-                        Layer::Geometry
+                        self.geometry_layer = mesh;
                     }
                     14 => {
                         let version = r.u32()?;
@@ -166,10 +204,8 @@ mod read {
                             return Err(Error::version("trigger", trigger_version));
                         }
 
-                        read_crystal(r)?;
+                        read_mesh(r)?;
                         r.list(|r| r.u32())?;
-
-                        Layer::Trigger
                     }
                     15 => {
                         let version = r.u32()?;
@@ -204,14 +240,10 @@ mod read {
                         let _horizontal_angle = r.f32()?;
                         let _vertical_angle = r.f32()?;
                         let _roll_angle = r.f32()?;
-
-                        Layer::SpawnPosition
                     }
                     _ => return Err(Error::new(ErrorKind::Unsupported("layer type".to_string()))),
-                };
-
-                Ok(layer)
-            })?;
+                }
+            }
 
             Ok(())
         }
@@ -242,7 +274,7 @@ mod read {
         }
     }
 
-    fn read_crystal<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+    fn read_mesh<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Mesh, Error> {
         let crystal_version = r.u32()?;
 
         if crystal_version != 32 {
@@ -279,25 +311,30 @@ mod read {
             Ok(())
         })?;
         let _is_embedded_crystal = r.bool()?;
-        let _positions = r.list(|r| r.vec3())?;
+        let positions = r.list(|r| r.vec3())?;
         let _edges = r.list(|r| {
             r.u32()?;
             r.u32()?;
 
             Ok(())
         })?;
-        let _faces = r.list(|r| {
+        let faces = r.list(|r| {
             let indices = r.list(|r| r.u32())?;
-            let _texcoords = r.repeat(indices.len(), |r| {
-                r.f32()?;
-                r.f32()?;
+            let texcoords = r.repeat(indices.len(), |r| {
+                let u = r.f32()?;
+                let v = r.f32()?;
 
-                Ok(())
+                Ok(Texcoord { u, v })
             })?;
-            let _material_index = r.u32()?;
-            let _group_index = r.u32()?;
+            let material_index = r.u32()?;
+            let group_index = r.u32()?;
 
-            Ok(())
+            Ok(Face {
+                indices,
+                texcoords,
+                material_index,
+                group_index,
+            })
         })?;
         r.u32()?;
         let num_faces = r.u32()? as usize;
@@ -308,6 +345,6 @@ mod read {
         r.repeat(num_vertices, |r| r.u32())?;
         r.u32()?;
 
-        Ok(())
+        Ok(Mesh { positions, faces })
     }
 }

@@ -1,13 +1,13 @@
-use crate::Class;
+use crate::{Class, Texcoord, Vec3};
 
 /// A vertex stream.
 #[derive(Default)]
 pub struct VertexStream {
     normals: Vec<[f32; 3]>,
-    positions: Vec<[f32; 3]>,
+    positions: Vec<Vec3>,
     tangent_u: Vec<[f32; 3]>,
     tangent_v: Vec<[f32; 3]>,
-    texcoords_0: Vec<[f32; 2]>,
+    texcoords_0: Vec<Texcoord>,
     color_0: Option<Vec<[u8; 4]>>,
     texcoords_1: Option<Vec<[f32; 2]>>,
 }
@@ -21,7 +21,7 @@ impl VertexStream {
         &self.normals
     }
 
-    pub fn positions(&self) -> &[[f32; 3]] {
+    pub const fn positions(&self) -> &Vec<Vec3> {
         &self.positions
     }
 
@@ -33,7 +33,7 @@ impl VertexStream {
         &self.tangent_v
     }
 
-    pub fn texcoords_0(&self) -> &[[f32; 2]] {
+    pub const fn texcoords_0(&self) -> &Vec<Texcoord> {
         &self.texcoords_0
     }
 
@@ -53,10 +53,13 @@ struct DataDecl {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::read::{
-        read_body_chunks,
-        reader::{IdStateMut, NodeStateMut, Reader},
-        BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
+    use crate::{
+        read::{
+            read_body_chunks,
+            reader::{IdStateMut, NodeStateMut, Reader},
+            BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
+        },
+        Texcoord, Vec3,
     };
 
     use super::{DataDecl, VertexStream};
@@ -118,23 +121,28 @@ mod read {
                         })?;
 
                         match weight_count {
-                            10 => self.texcoords_0 = data,
+                            10 => {
+                                self.texcoords_0 =
+                                    data.into_iter().map(Texcoord::from_array).collect()
+                            }
                             11 => self.texcoords_1 = Some(data),
                             _ => todo!("{weight_count}"),
                         }
                     }
-                    2 => match weight_count {
-                        0 => {
-                            self.positions = r.repeat(count as usize, |r| {
-                                let x = r.f32()?;
-                                let y = r.f32()?;
-                                let z = r.f32()?;
+                    2 => {
+                        let data = r.repeat(count as usize, |r| {
+                            let x = r.f32()?;
+                            let y = r.f32()?;
+                            let z = r.f32()?;
 
-                                Ok([x, y, z])
-                            })?;
+                            Ok([x, y, z])
+                        })?;
+
+                        match weight_count {
+                            0 => self.positions = data.into_iter().map(Vec3::from_array).collect(),
+                            _ => todo!("{weight_count}"),
                         }
-                        _ => todo!("{weight_count}"),
-                    },
+                    }
                     4 => match weight_count {
                         8 => {
                             self.color_0 = Some(r.repeat(count as usize, |r| {
