@@ -15,6 +15,7 @@ use reader::{ExternalNodeRef, IdState, IdStateMut, NodeState, NodeStateMut, Read
 
 use crate::Class;
 
+/// Error while reading.
 #[derive(Debug)]
 pub struct Error {
     kind: ErrorKind,
@@ -92,26 +93,26 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     let version = r.u16()?;
 
     if version != 6 {
-        return Err(Error::version("file", version as u32));
+        return Err(Error::version("gamebox file", version as u32));
     }
 
-    let format = r.u8()?;
+    let format = r.enum_u8::<Format>()?;
 
-    if format != b'B' {
+    if !matches!(format, Format::Binary) {
         return Err(Error::new(ErrorKind::Unsupported(
             "file format".to_string(),
         )));
     }
 
-    let ref_table_compression = r.u8()?;
+    let ref_table_compression = r.enum_u8::<Compression>()?;
 
-    if ref_table_compression != b'U' {
+    if !matches!(ref_table_compression, Compression::Uncompressed) {
         return Err(Error::new(ErrorKind::Unsupported(
             "reference table compression".to_string(),
         )));
     }
 
-    let body_compression = Compression::read(&mut r)?;
+    let body_compression = r.enum_u8::<Compression>()?;
 
     if r.u8()? != b'R' {
         return Err(Error::new(ErrorKind::Unsupported("".to_string())));
@@ -269,6 +270,7 @@ fn read_folders_inner<R: Read, I, N>(
     Ok(())
 }
 
+/// A readable class.
 pub trait Readable: Sealed {}
 
 pub trait Sealed: Class + ReadBody {}
@@ -397,19 +399,36 @@ impl<T, R, I, N> BodyChunk<T, R, I, N> {
     }
 }
 
-pub enum Compression {
+enum Format {
+    Binary,
+    Text,
+}
+
+impl TryFrom<u8> for Format {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            b'B' => Ok(Self::Binary),
+            b'T' => Ok(Self::Text),
+            _ => Err(()),
+        }
+    }
+}
+
+enum Compression {
     Compressed,
     Uncompressed,
 }
 
-impl Compression {
-    pub fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        match r.u8()? {
+impl TryFrom<u8> for Compression {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
             b'C' => Ok(Self::Compressed),
             b'U' => Ok(Self::Uncompressed),
-            _ => Err(Error::new(ErrorKind::Unsupported(
-                "compression".to_string(),
-            ))),
+            _ => Err(()),
         }
     }
 }

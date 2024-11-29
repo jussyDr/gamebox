@@ -1,5 +1,8 @@
+//! Traits metadata.
+
 use crate::Class;
 
+/// A traits metadata.
 #[derive(Default)]
 pub struct TraitsMetadata;
 
@@ -7,7 +10,7 @@ impl Class for TraitsMetadata {
     const CLASS_ID: u32 = 0x11002000;
 }
 
-pub enum Type {
+enum Type {
     Void,
     Boolean,
     Integer,

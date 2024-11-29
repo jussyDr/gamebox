@@ -4,6 +4,7 @@ use crate::{Class, Texcoord, Vec3};
 
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
+/// A crystal.
 #[derive(Default)]
 pub struct Crystal {
     parent: TreeGenerator,
@@ -25,6 +26,7 @@ impl Crystal {
     }
 }
 
+/// Mesh of a crystal.
 #[derive(Default)]
 pub struct Mesh {
     positions: Vec<Vec3>,
@@ -41,6 +43,7 @@ impl Mesh {
     }
 }
 
+/// Face of a crystal mesh.
 pub struct Face {
     indices: Vec<u32>,
     texcoords: Vec<Texcoord>,

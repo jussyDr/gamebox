@@ -1,3 +1,5 @@
+//! Prefab.
+
 use crate::{read::reader::NodeRef, Class, Quat, Vec3};
 
 use super::static_object_model::StaticObjectModel;
@@ -13,7 +15,7 @@ impl Class for Prefab {
 }
 
 impl Prefab {
-    pub fn entities(&self) -> &[Entity] {
+    pub const fn entities(&self) -> &Vec<Entity> {
         &self.entities
     }
 }
@@ -26,21 +28,16 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub fn model(&self) -> &NodeRef<StaticObjectModel> {
+    pub const fn model(&self) -> &NodeRef<StaticObjectModel> {
         &self.model
     }
 
-    pub fn rotation(&self) -> [f32; 4] {
-        [
-            self.rotation.x,
-            self.rotation.y,
-            self.rotation.z,
-            self.rotation.w,
-        ]
+    pub const fn rotation(&self) -> Quat {
+        self.rotation
     }
 
-    pub fn position(&self) -> [f32; 3] {
-        [self.position.x, self.position.y, self.position.z]
+    pub const fn position(&self) -> Vec3 {
+        self.position
     }
 }
 

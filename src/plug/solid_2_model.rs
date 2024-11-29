@@ -1,3 +1,5 @@
+//! Solid 2 model.
+
 use std::sync::Arc;
 
 use crate::{read::reader::ExternalNodeRef, Class};
@@ -17,15 +19,15 @@ impl Class for Solid2Model {
 }
 
 impl Solid2Model {
-    pub fn shaded_geoms(&self) -> &[ShadedGeom] {
+    pub const fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
         &self.shaded_geoms
     }
 
-    pub fn visuals(&self) -> &[Arc<VisualIndexedTriangles>] {
+    pub const fn visuals(&self) -> &Vec<Arc<VisualIndexedTriangles>> {
         &self.visuals
     }
 
-    pub fn materials(&self) -> &[ExternalNodeRef] {
+    pub const fn materials(&self) -> &Vec<ExternalNodeRef> {
         &self.materials
     }
 }

@@ -1,3 +1,5 @@
+//! Material.
+
 use std::sync::Arc;
 
 use crate::Class;
@@ -15,7 +17,7 @@ impl Class for Material {
 }
 
 impl Material {
-    pub fn custom_material(&self) -> &MaterialCustom {
+    pub const fn custom_material(&self) -> &Arc<MaterialCustom> {
         &self.custom_material
     }
 }

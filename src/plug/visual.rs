@@ -1,3 +1,5 @@
+//! Visual.
+
 use std::sync::Arc;
 
 use crate::Class;
@@ -15,7 +17,7 @@ impl Class for Visual {
 }
 
 impl Visual {
-    pub fn vertex_streams(&self) -> &[Arc<VertexStream>] {
+    pub const fn vertex_streams(&self) -> &Vec<Arc<VertexStream>> {
         &self.vertex_streams
     }
 }

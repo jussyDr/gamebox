@@ -3,7 +3,7 @@ use crate::{read::reader::ExternalNodeRef, Class};
 /// A block info mobil.
 #[derive(Default)]
 pub struct BlockInfoMobil {
-    prefab_fid: ExternalNodeRef,
+    prefab: ExternalNodeRef,
 }
 
 impl Class for BlockInfoMobil {
@@ -11,8 +11,8 @@ impl Class for BlockInfoMobil {
 }
 
 impl BlockInfoMobil {
-    pub const fn prefab_fid(&self) -> &ExternalNodeRef {
-        &self.prefab_fid
+    pub const fn prefab(&self) -> &ExternalNodeRef {
+        &self.prefab
     }
 }
 
@@ -81,7 +81,7 @@ mod read {
 
             r.u32()?;
             r.u32()?;
-            self.prefab_fid = r.external_node_ref::<()>()?;
+            self.prefab = r.external_node_ref::<()>()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

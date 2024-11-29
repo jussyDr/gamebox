@@ -1,3 +1,5 @@
+//! Auto terrain.
+
 use crate::Class;
 
 /// An auto terrain.

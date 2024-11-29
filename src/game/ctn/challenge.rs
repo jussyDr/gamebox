@@ -647,3 +647,11 @@ mod read {
         }
     }
 }
+
+mod write {
+    use crate::write::Writable;
+
+    use super::Challenge;
+
+    impl Writable for Challenge {}
+}

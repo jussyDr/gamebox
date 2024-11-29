@@ -1,5 +1,8 @@
+//! Media clip group.
+
 use crate::Class;
 
+/// A media clip group.
 #[derive(Default)]
 pub struct MediaClipGroup;
 

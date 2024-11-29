@@ -1,3 +1,5 @@
+//! Index buffer.
+
 use crate::Class;
 
 /// An index buffer.
@@ -11,7 +13,7 @@ impl Class for IndexBuffer {
 }
 
 impl IndexBuffer {
-    pub fn indices(&self) -> &[u32] {
+    pub fn indices(&self) -> &Vec<u32> {
         &self.indices
     }
 }

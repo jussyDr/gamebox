@@ -6,10 +6,11 @@ pub mod game;
 pub mod plug;
 pub mod read;
 pub mod script;
-
-use std::path::PathBuf;
+pub mod write;
 
 pub use read::{read, read_file};
+
+use std::path::PathBuf;
 
 pub trait Class: Sized {
     const CLASS_ID: u32;
@@ -18,9 +19,13 @@ pub trait Class: Sized {
 /// A quaternion.
 #[derive(Clone, Copy)]
 pub struct Quat {
+    /// X component.
     pub x: f32,
+    /// Y component.
     pub y: f32,
+    /// Z component.
     pub z: f32,
+    /// W component.
     pub w: f32,
 }
 
@@ -114,9 +119,12 @@ pub enum PackDesc {
     },
 }
 
+/// A texture coordinate.
 #[derive(Clone, Copy, Default)]
 pub struct Texcoord {
+    /// U component.
     pub u: f32,
+    /// V component.
     pub v: f32,
 }
 

@@ -1,5 +1,8 @@
+//! Ghost.
+
 use crate::Class;
 
+/// A ghost.
 #[derive(Default)]
 pub struct Ghost;
 

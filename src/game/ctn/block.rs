@@ -1,3 +1,5 @@
+//! Block.
+
 use std::sync::Arc;
 
 use crate::Byte3;

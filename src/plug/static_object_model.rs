@@ -1,3 +1,5 @@
+//! Static object model.
+
 use crate::{read::reader::NodeRef, Class};
 
 use super::{solid_2_model::Solid2Model, surface::Surface};
@@ -14,7 +16,7 @@ impl Class for StaticObjectModel {
 }
 
 impl StaticObjectModel {
-    pub fn mesh(&self) -> &NodeRef<Solid2Model> {
+    pub const fn mesh(&self) -> &NodeRef<Solid2Model> {
         &self.mesh
     }
 }

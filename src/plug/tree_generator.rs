@@ -1,5 +1,8 @@
+//! Tree generator.
+
 use crate::Class;
 
+/// A tree generator.
 #[derive(Default)]
 pub struct TreeGenerator;
 

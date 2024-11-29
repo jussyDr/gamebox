@@ -1,3 +1,5 @@
+//! Vertex stream.
+
 use crate::{Class, Texcoord, Vec3};
 
 /// A vertex stream.
@@ -5,11 +7,11 @@ use crate::{Class, Texcoord, Vec3};
 pub struct VertexStream {
     normals: Vec<[f32; 3]>,
     positions: Vec<Vec3>,
-    tangent_u: Vec<[f32; 3]>,
-    tangent_v: Vec<[f32; 3]>,
+    tangents_u: Vec<[f32; 3]>,
+    tangents_v: Vec<[f32; 3]>,
     texcoords_0: Vec<Texcoord>,
-    color_0: Option<Vec<[u8; 4]>>,
-    texcoords_1: Option<Vec<[f32; 2]>>,
+    colors_0: Option<Vec<[u8; 4]>>,
+    texcoords_1: Option<Vec<Texcoord>>,
 }
 
 impl Class for VertexStream {
@@ -17,7 +19,7 @@ impl Class for VertexStream {
 }
 
 impl VertexStream {
-    pub fn normals(&self) -> &[[f32; 3]] {
+    pub fn normals(&self) -> &Vec<[f32; 3]> {
         &self.normals
     }
 
@@ -25,24 +27,24 @@ impl VertexStream {
         &self.positions
     }
 
-    pub fn tangent_u(&self) -> &[[f32; 3]] {
-        &self.tangent_u
+    pub fn tangents_u(&self) -> &Vec<[f32; 3]> {
+        &self.tangents_u
     }
 
-    pub fn tangent_v(&self) -> &[[f32; 3]] {
-        &self.tangent_v
+    pub fn tangents_v(&self) -> &Vec<[f32; 3]> {
+        &self.tangents_v
     }
 
     pub const fn texcoords_0(&self) -> &Vec<Texcoord> {
         &self.texcoords_0
     }
 
-    pub fn color_0(&self) -> Option<&[[u8; 4]]> {
-        self.color_0.as_deref()
+    pub fn colors_0(&self) -> Option<&Vec<[u8; 4]>> {
+        self.colors_0.as_ref()
     }
 
-    pub fn texcoords_1(&self) -> Option<&[[f32; 2]]> {
-        self.texcoords_1.as_deref()
+    pub fn texcoords_1(&self) -> Option<&Vec<Texcoord>> {
+        self.texcoords_1.as_ref()
     }
 }
 
@@ -125,7 +127,10 @@ mod read {
                                 self.texcoords_0 =
                                     data.into_iter().map(Texcoord::from_array).collect()
                             }
-                            11 => self.texcoords_1 = Some(data),
+                            11 => {
+                                self.texcoords_1 =
+                                    Some(data.into_iter().map(Texcoord::from_array).collect())
+                            }
                             _ => todo!("{weight_count}"),
                         }
                     }
@@ -145,7 +150,7 @@ mod read {
                     }
                     4 => match weight_count {
                         8 => {
-                            self.color_0 = Some(r.repeat(count as usize, |r| {
+                            self.colors_0 = Some(r.repeat(count as usize, |r| {
                                 let a = r.u8()?;
                                 let b = r.u8()?;
                                 let c = r.u8()?;
@@ -169,8 +174,8 @@ mod read {
 
                         match weight_count {
                             5 => self.normals = data,
-                            18 => self.tangent_u = data,
-                            20 => self.tangent_v = data,
+                            18 => self.tangents_u = data,
+                            20 => self.tangents_v = data,
                             _ => todo!("{weight_count}"),
                         }
                     }

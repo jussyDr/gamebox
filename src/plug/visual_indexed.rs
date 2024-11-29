@@ -1,3 +1,5 @@
+//! Visual indexed.
+
 use std::ops::Deref;
 
 use crate::Class;

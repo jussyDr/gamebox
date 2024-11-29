@@ -1,5 +1,8 @@
+//! Material user inst.
+
 use crate::Class;
 
+/// A material user inst.
 #[derive(Default)]
 pub struct MaterialUserInst;
 

@@ -1,3 +1,5 @@
+//! Visual indexed triangles.
+
 use std::ops::Deref;
 
 use crate::Class;

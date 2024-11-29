@@ -1,5 +1,8 @@
+//! Item placement param.
+
 use crate::Class;
 
+/// An item placement param.
 #[derive(Default)]
 pub struct ItemPlacementParam;
 

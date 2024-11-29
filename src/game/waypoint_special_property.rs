@@ -1,5 +1,8 @@
+//! Waypoint special property.
+
 use crate::Class;
 
+/// A waypoint special property.
 #[derive(Default)]
 pub struct WaypointSpecialProperty;
 
