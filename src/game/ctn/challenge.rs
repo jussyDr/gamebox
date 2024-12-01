@@ -11,6 +11,8 @@ use super::block::Block;
 pub struct Challenge {
     decoration_id: Arc<str>,
     blocks: Vec<Block>,
+    anchored_objects: Vec<()>,
+    baked_blocks: Vec<Block>,
 }
 
 impl Class for Challenge {
@@ -102,6 +104,16 @@ mod read {
                 BodyChunk::skippable(93, Self::read_chunk_93),
                 BodyChunk::skippable(94, Self::read_chunk_94),
                 BodyChunk::skippable(95, Self::read_chunk_95),
+                BodyChunk::skippable(96, Self::read_chunk_96),
+                BodyChunk::skippable(97, Self::read_chunk_97),
+                BodyChunk::skippable(98, Self::read_chunk_98),
+                BodyChunk::skippable(99, Self::read_chunk_99),
+                BodyChunk::skippable(100, Self::read_chunk_100),
+                BodyChunk::skippable(101, Self::read_chunk_101),
+                BodyChunk::skippable(103, Self::read_chunk_103),
+                BodyChunk::skippable(104, Self::read_chunk_104),
+                BodyChunk::skippable(105, Self::read_chunk_105),
+                BodyChunk::skippable(107, Self::read_chunk_107),
                 BodyChunk::skippable(108, Self::read_chunk_108),
             ]
             .into_iter()
@@ -155,7 +167,7 @@ mod read {
             self.decoration_id = r.id()?;
             let _decoration_collection = r.id()?;
             let _decoration_author = r.id()?;
-            let _size = r.nat3()?;
+            let _size = r.vec3::<u32>()?;
             let _need_unlock = r.bool()?;
             let blocks_version = r.u32()?;
 
@@ -209,10 +221,10 @@ mod read {
 
             if has_custom_cam_thumbnail {
                 r.u8()?;
-                r.vec3()?;
-                r.vec3()?;
-                r.vec3()?;
-                let _thumbnail_position = r.vec3()?;
+                r.vec3::<f32>()?;
+                r.vec3::<f32>()?;
+                r.vec3::<f32>()?;
+                let _thumbnail_position = r.vec3::<f32>()?;
                 let _thumbnail_fov = r.f32()?;
                 let _thumbnail_near_clip_plame = r.f32()?;
                 let _thumbnail_far_clip_plane = r.f32()?;
@@ -243,8 +255,8 @@ mod read {
         }
 
         fn read_chunk_54<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _thumbnail_position = r.vec3()?;
-            let _thumbnail_pitch_yaw_roll = r.vec3()?;
+            let _thumbnail_position = r.vec3::<f32>()?;
+            let _thumbnail_pitch_yaw_roll = r.vec3::<f32>()?;
             let _thumbnail_fov = r.f32()?;
             r.f32()?;
             r.f32()?;
@@ -285,7 +297,7 @@ mod read {
 
             r.u32()?;
             r.encapsulation(|r| {
-                let _anchored_objects = r.list_with_version(|r| {
+                self.anchored_objects = r.list_with_version(|r| {
                     todo!();
                     Ok(())
                 })?;
@@ -370,7 +382,7 @@ mod read {
                 return Err(Error::version("blocks", blocks_version));
             }
 
-            r.list(|r| Block::read_from_body(r))?;
+            self.baked_blocks = r.list(|r| Block::read_from_body(r))?;
             r.u32()?;
             r.u32()?;
 
@@ -392,7 +404,7 @@ mod read {
             let _clip_group_in_game = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             let _clip_group_end_race = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             let _clip_ambiance = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _clip_trigger_size = r.nat3()?;
+            let _clip_trigger_size = r.vec3::<u32>()?;
 
             Ok(())
         }
@@ -425,7 +437,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _offzone_trigger_size = r.nat3()?;
+            let _offzone_trigger_size = r.vec3::<u32>()?;
             let _offzones = r.list(|r| r.box3d())?;
 
             Ok(())
@@ -542,7 +554,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _world_distortion = r.vec3()?;
+            let _world_distortion = r.vec3::<u32>()?;
             r.bool()?;
             r.u32()?;
             r.u32()?;
@@ -582,23 +594,27 @@ mod read {
             if has_lightmaps {
                 let lightmaps_version = r.u32()?;
 
-                if lightmaps_version != 8 {
+                if !matches!(lightmaps_version, 8 | 10) {
                     return Err(Error::version("lightmaps", lightmaps_version));
                 }
 
-                r.u32()?;
-                let _webp = r.byte_buf()?;
-                let _webp = r.byte_buf()?;
-                let _webp = r.byte_buf()?;
-                let _webp = r.byte_buf()?;
-                r.u32()?;
-                r.u32()?;
-                let _webp = r.byte_buf()?;
-                r.u32()?;
-                r.u32()?;
+                if lightmaps_version == 10 {
+                    r.u32()?;
+                } else {
+                    r.u32()?;
+                    let _webp = r.byte_buf()?;
+                    let _webp = r.byte_buf()?;
+                    let _webp = r.byte_buf()?;
+                    let _webp = r.byte_buf()?;
+                    r.u32()?;
+                    r.u32()?;
+                    let _webp = r.byte_buf()?;
+                    r.u32()?;
+                    r.u32()?;
 
-                let _lightmap_cache_data_size = r.u32()?;
-                let _compressed_lightmap_cache_data = r.byte_buf()?;
+                    let _lightmap_cache_data_size = r.u32()?;
+                    let _compressed_lightmap_cache_data = r.byte_buf()?;
+                }
             }
 
             Ok(())
@@ -635,6 +651,154 @@ mod read {
             if version != 0 {
                 return Err(Error::chunk_version(version));
             }
+
+            Ok(())
+        }
+
+        fn read_chunk_96<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_97<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_98<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::chunk_version(version));
+            }
+
+            for _ in &self.blocks {
+                r.u8()?;
+            }
+
+            for _ in &self.baked_blocks {
+                r.u8()?;
+            }
+
+            for _ in &self.anchored_objects {
+                r.u8()?;
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_99<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::chunk_version(version));
+            }
+
+            for _ in &self.anchored_objects {
+                r.u8()?;
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_100<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_101<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::chunk_version(version));
+            }
+
+            for _ in &self.anchored_objects {
+                if r.bool8()? {
+                    todo!()
+                }
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_103<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_104<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error::chunk_version(version));
+            }
+
+            for _ in &self.blocks {
+                r.u8()?;
+            }
+
+            for _ in &self.baked_blocks {
+                r.u8()?;
+            }
+
+            for _ in &self.anchored_objects {
+                r.u8()?;
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_105<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::chunk_version(version));
+            }
+
+            for _ in &self.blocks {
+                if r.u32()? != 0xffffffff {
+                    todo!()
+                }
+            }
+
+            for _ in &self.anchored_objects {
+                if r.u32()? != 0xffffffff {
+                    todo!()
+                }
+            }
+
+            let _id_flags_pair = r.list(|r| {
+                r.u32()?;
+                r.u32()?;
+
+                Ok(())
+            })?;
+
+            Ok(())
+        }
+
+        fn read_chunk_107<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            let _day_time = r.u32()?;
+            r.u32()?;
+            let _dynamic_daylight = r.bool()?;
+            let _day_duration = r.u32()?;
 
             Ok(())
         }

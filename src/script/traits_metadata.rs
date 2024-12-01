@@ -10,6 +10,7 @@ impl Class for TraitsMetadata {
     const CLASS_ID: u32 = 0x11002000;
 }
 
+#[derive(Debug)]
 enum Type {
     Void,
     Boolean,
@@ -66,7 +67,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 6 {
-                return Err(Error::version("traits metadata", version));
+                return Err(Error::chunk_version(version));
             }
 
             let type_count = read_len(r)? as usize;
@@ -74,7 +75,7 @@ mod read {
             let trait_count = read_len(r)? as usize;
             let _traits = r.repeat(trait_count, |r| {
                 let name_len = read_len(r)? as usize;
-                let _name = r.bytes(name_len);
+                let _name = r.bytes(name_len)?;
                 let type_index = read_len(r)? as usize;
                 read_value(r, &types[type_index])?;
 
@@ -134,14 +135,14 @@ mod read {
                 Ok(Type::Struct { member_types })
             }
             16 => Ok(Type::ValueNotComputed),
-            _ => todo!(),
+            value => Err(Error::enum_variant("script type", value as u32)),
         }
     }
 
     fn read_value<I, N>(r: &mut Reader<impl Read, I, N>, ty: &Type) -> Result<(), Error> {
         match ty {
             Type::Boolean => {
-                r.bool()?;
+                r.bool8()?;
             }
             Type::Integer => {
                 r.i32()?;
@@ -165,22 +166,16 @@ mod read {
                 }
             }
             Type::Vec2 => {
-                r.f32()?;
-                r.f32()?;
+                r.vec2::<f32>()?;
             }
             Type::Vec3 => {
-                r.f32()?;
-                r.f32()?;
-                r.f32()?;
+                r.vec3::<f32>()?;
             }
             Type::Int2 => {
-                r.i32()?;
-                r.i32()?;
+                r.vec2::<i32>()?;
             }
             Type::Int3 => {
-                r.i32()?;
-                r.i32()?;
-                r.i32()?;
+                r.vec3::<i32>()?;
             }
             Type::Struct { member_types } => {
                 for member_type in member_types {

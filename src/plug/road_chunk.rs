@@ -1,3 +1,5 @@
+//! Road chunk.
+
 use crate::Class;
 
 /// A road chunk.

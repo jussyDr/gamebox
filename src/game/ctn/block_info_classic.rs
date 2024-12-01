@@ -1,3 +1,5 @@
+//! Block info classic.
+
 use std::ops::Deref;
 
 use crate::Class;

@@ -1,3 +1,5 @@
+//! Block info clip.
+
 use crate::Class;
 
 use super::block_info::BlockInfo;

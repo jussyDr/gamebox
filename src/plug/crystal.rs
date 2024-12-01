@@ -1,3 +1,5 @@
+//! Crystal.
+
 use std::sync::Arc;
 
 use crate::{Class, Texcoord, Vec3};
@@ -29,12 +31,12 @@ impl Crystal {
 /// Mesh of a crystal.
 #[derive(Default)]
 pub struct Mesh {
-    positions: Vec<Vec3>,
+    positions: Vec<Vec3<f32>>,
     faces: Vec<Face>,
 }
 
 impl Mesh {
-    pub const fn positions(&self) -> &Vec<Vec3> {
+    pub const fn positions(&self) -> &Vec<Vec3<f32>> {
         &self.positions
     }
 
@@ -239,7 +241,7 @@ mod read {
                             return Err(Error::version("spawn position", spawn_position_version));
                         }
 
-                        let _spawn_position = r.vec3()?;
+                        let _spawn_position = r.vec3::<f32>()?;
                         let _horizontal_angle = r.f32()?;
                         let _vertical_angle = r.f32()?;
                         let _roll_angle = r.f32()?;
@@ -294,10 +296,10 @@ mod read {
         let _anchor_infos = r.list(|r| {
             r.bool()?;
             r.bool()?;
-            r.vec3()?;
-            r.vec3()?;
-            r.vec3()?;
-            r.vec3()?;
+            r.vec3::<f32>()?;
+            r.vec3::<f32>()?;
+            r.vec3::<f32>()?;
+            r.vec3::<f32>()?;
             r.string()?;
             r.u32()?;
 

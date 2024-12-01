@@ -1,3 +1,5 @@
+//! Block info.
+
 use std::sync::Arc;
 
 use crate::{game::ctn::collector::Collector, Class};

@@ -52,6 +52,13 @@ impl Error {
     pub fn chunk_version(version: u32) -> Self {
         Self::version("chunk", version)
     }
+
+    pub fn enum_variant(name: &str, value: u32) -> Self {
+        Self {
+            kind: ErrorKind::Unsupported(format!("{name} variant: {value}")),
+            trace: VecDeque::new(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -335,7 +342,7 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
         let chunk = chunks
             .find(|chunk| chunk.num == chunk_num)
             .ok_or(Error::new(ErrorKind::Unsupported(format!(
-                "chunk: {chunk_num}"
+                "unknown chunk: {chunk_num}"
             ))))?;
 
         match chunk.read_fn {

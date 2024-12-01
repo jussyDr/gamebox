@@ -1,3 +1,5 @@
+//! Bitmap.
+
 use crate::{read::reader::ExternalNodeRef, Class};
 
 /// A bitmap.

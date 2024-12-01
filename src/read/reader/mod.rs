@@ -14,9 +14,31 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{Nat3, PackDesc, Quat, Vec3};
+use crate::{PackDesc, Quat, Vec2, Vec3};
 
 use super::{Error, ErrorKind};
+
+pub trait ReadNum: Sized {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error>;
+}
+
+impl ReadNum for u32 {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        r.u32()
+    }
+}
+
+impl ReadNum for i32 {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        r.i32()
+    }
+}
+
+impl ReadNum for f32 {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        r.f32()
+    }
+}
 
 /// Low-level GameBox reader.
 pub struct Reader<R, I, N> {
@@ -158,12 +180,19 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(f32::from_le_bytes(bytes))
     }
 
-    pub fn nat3(&mut self) -> Result<Nat3, Error> {
-        let x = self.u32()?;
-        let y = self.u32()?;
-        let z = self.u32()?;
+    pub fn vec2<T: ReadNum>(&mut self) -> Result<Vec2<T>, Error> {
+        let x = T::read(self)?;
+        let y = T::read(self)?;
 
-        Ok(Nat3 { x, y, z })
+        Ok(Vec2 { x, y })
+    }
+
+    pub fn vec3<T: ReadNum>(&mut self) -> Result<Vec3<T>, Error> {
+        let x = T::read(self)?;
+        let y = T::read(self)?;
+        let z = T::read(self)?;
+
+        Ok(Vec3 { x, y, z })
     }
 
     pub fn enum_u32<T: TryFrom<u32>>(&mut self) -> Result<T, Error> {
@@ -194,14 +223,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
             locator_url,
             checksum,
         })
-    }
-
-    pub fn vec3(&mut self) -> Result<Vec3, Error> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
-
-        Ok(Vec3 { x, y, z })
     }
 
     pub fn quat(&mut self) -> Result<Quat, Error> {

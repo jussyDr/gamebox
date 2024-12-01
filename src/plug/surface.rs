@@ -71,7 +71,7 @@ mod read {
                         return Err(Error::version("surface mesh", version));
                     }
 
-                    let _vertices = r.list(|r| r.vec3())?;
+                    let _vertices = r.list(|r| r.vec3::<f32>())?;
                     let _triangles = r.list(|r| {
                         r.u32()?;
                         r.u32()?;
@@ -88,7 +88,7 @@ mod read {
                 }
             }
 
-            r.vec3()?;
+            r.vec3::<f32>()?;
             let _materials: Vec<()> = r.list(|r| {
                 if r.bool()? {
                     r.external_node_ref::<Material>()?;

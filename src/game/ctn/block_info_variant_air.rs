@@ -1,3 +1,5 @@
+//! Block info variant air.
+
 use std::ops::Deref;
 
 use crate::Class;

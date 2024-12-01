@@ -24,7 +24,7 @@ impl Prefab {
 pub struct Entity {
     model: NodeRef<StaticObjectModel>,
     rotation: Quat,
-    position: Vec3,
+    position: Vec3<f32>,
 }
 
 impl Entity {
@@ -36,7 +36,7 @@ impl Entity {
         self.rotation
     }
 
-    pub const fn position(&self) -> Vec3 {
+    pub const fn position(&self) -> Vec3<f32> {
         self.position
     }
 }

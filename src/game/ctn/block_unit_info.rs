@@ -1,9 +1,11 @@
-use crate::{read::reader::ExternalNodeRef, Class, Nat3};
+//! Block unit info.
+
+use crate::{read::reader::ExternalNodeRef, Class, Vec3};
 
 /// A block unit info.
 #[derive(Default)]
 pub struct BlockUnitInfo {
-    relative_offset: Nat3,
+    relative_offset: Vec3<u32>,
     clips_north: Vec<ExternalNodeRef>,
     clips_east: Vec<ExternalNodeRef>,
     clips_south: Vec<ExternalNodeRef>,
@@ -64,7 +66,7 @@ mod read {
             let _place_pylons = r.u32()?;
             r.bool()?;
             r.bool()?;
-            self.relative_offset = r.nat3()?;
+            self.relative_offset = r.vec3()?;
             let _clips = r.list(|r| r.external_node_ref::<()>())?;
 
             Ok(())

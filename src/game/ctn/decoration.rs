@@ -1,3 +1,5 @@
+//! Decoration.
+
 use crate::{read::reader::ExternalNodeRef, Class};
 
 use super::collector::Collector;

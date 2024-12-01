@@ -1,3 +1,5 @@
+//! Block info variant.
+
 use std::sync::Arc;
 
 use crate::Class;

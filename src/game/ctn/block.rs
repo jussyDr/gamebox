@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::Byte3;
+use crate::Vec3;
 
 use super::Direction;
 
@@ -11,7 +11,7 @@ use super::Direction;
 pub struct Block {
     id: Arc<str>,
     direction: Direction,
-    coord: Byte3,
+    coord: Vec3<u8>,
     has_flags: bool,
 }
 
@@ -24,7 +24,7 @@ impl Block {
         self.direction
     }
 
-    pub const fn coord(&self) -> Byte3 {
+    pub const fn coord(&self) -> Vec3<u8> {
         self.coord
     }
 

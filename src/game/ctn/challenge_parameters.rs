@@ -1,3 +1,5 @@
+//! Challenge parameters.
+
 use crate::Class;
 
 /// A challenge parameters.

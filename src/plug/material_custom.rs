@@ -1,3 +1,5 @@
+//! Material custom.
+
 use crate::{read::reader::ExternalNodeRef, Class};
 
 /// A custom material.

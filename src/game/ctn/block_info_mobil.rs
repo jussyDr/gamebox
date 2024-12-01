@@ -1,3 +1,5 @@
+//! Block info mobil.
+
 use crate::{read::reader::ExternalNodeRef, Class};
 
 /// A block info mobil.

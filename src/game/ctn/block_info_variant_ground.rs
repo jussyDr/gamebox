@@ -1,3 +1,5 @@
+//! Block info variant ground.
+
 use std::ops::Deref;
 
 use crate::Class;

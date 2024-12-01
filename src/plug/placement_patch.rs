@@ -1,3 +1,5 @@
+//! Placement patch.
+
 use std::ops::Deref;
 
 use crate::Class;

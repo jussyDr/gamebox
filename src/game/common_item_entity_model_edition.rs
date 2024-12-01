@@ -1,7 +1,10 @@
+//! Common item entity model edition.
+
 use std::sync::Arc;
 
 use crate::{plug::crystal::Crystal, Class};
 
+/// A common item entity model edition.
 #[derive(Default)]
 pub struct CommonItemEntityModelEdition {
     mesh_crystal: Arc<Crystal>,
@@ -78,10 +81,10 @@ mod read {
             r.f32()?;
             r.f32()?;
             r.f32()?;
-            r.vec3()?;
-            r.vec3()?;
-            r.vec3()?;
-            r.vec3()?;
+            r.vec3::<f32>()?;
+            r.vec3::<f32>()?;
+            r.vec3::<f32>()?;
+            r.vec3::<f32>()?;
             r.bool()?;
             r.bool()?;
             r.u32()?;

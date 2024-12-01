@@ -1,3 +1,5 @@
+//! Visual 3D.
+
 use std::ops::Deref;
 
 use crate::Class;

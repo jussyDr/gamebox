@@ -1,5 +1,8 @@
+//! Block skin.
+
 use crate::Class;
 
+/// A block skin.
 #[derive(Default)]
 pub struct BlockSkin;
 

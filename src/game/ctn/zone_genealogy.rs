@@ -1,3 +1,5 @@
+//! Zone genealogy.
+
 use crate::Class;
 
 /// A zone genealogy.

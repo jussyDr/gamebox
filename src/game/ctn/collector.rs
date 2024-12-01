@@ -1,3 +1,5 @@
+//! Collector.
+
 use crate::Class;
 
 /// A collector.

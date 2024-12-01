@@ -6,7 +6,7 @@ use crate::{Class, Texcoord, Vec3};
 #[derive(Default)]
 pub struct VertexStream {
     normals: Vec<[f32; 3]>,
-    positions: Vec<Vec3>,
+    positions: Vec<Vec3<f32>>,
     tangents_u: Vec<[f32; 3]>,
     tangents_v: Vec<[f32; 3]>,
     texcoords_0: Vec<Texcoord>,
@@ -23,7 +23,7 @@ impl VertexStream {
         &self.normals
     }
 
-    pub const fn positions(&self) -> &Vec<Vec3> {
+    pub const fn positions(&self) -> &Vec<Vec3<f32>> {
         &self.positions
     }
 
