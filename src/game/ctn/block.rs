@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::Vec3;
+use crate::{game::WaypointSpecialProperty, Vec3};
 
 use super::Direction;
 
@@ -13,6 +13,7 @@ pub struct Block {
     direction: Direction,
     coord: Vec3<u8>,
     has_flags: bool,
+    waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
 }
 
 impl Block {
@@ -26,6 +27,10 @@ impl Block {
 
     pub const fn coord(&self) -> Vec3<u8> {
         self.coord
+    }
+
+    pub const fn waypoint_special_property(&self) -> Option<&Arc<WaypointSpecialProperty>> {
+        self.waypoint_special_property.as_ref()
     }
 
     pub(crate) const fn has_flags(&self) -> bool {
@@ -55,7 +60,7 @@ mod read {
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
             self.id = r.id()?;
-            let _direction = r.enum_u8::<Direction>()?;
+            self.direction = r.enum_u8::<Direction>()?;
             self.coord.x = r.u8()?;
             self.coord.y = r.u8()?;
             self.coord.z = r.u8()?;
@@ -70,8 +75,8 @@ mod read {
                 }
 
                 if flags & 0x00080000 != 0 || flags & 0x00100000 != 0 {
-                    let _waypoint_special_property =
-                        r.internal_node_ref::<WaypointSpecialProperty>()?;
+                    self.waypoint_special_property =
+                        Some(r.internal_node_ref::<WaypointSpecialProperty>()?);
                 }
             }
 

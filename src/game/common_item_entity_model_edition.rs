@@ -7,7 +7,7 @@ use crate::{plug::crystal::Crystal, Class};
 /// A common item entity model edition.
 #[derive(PartialEq, Default, Debug)]
 pub struct CommonItemEntityModelEdition {
-    mesh_crystal: Arc<Crystal>,
+    crystal: Arc<Crystal>,
 }
 
 impl Class for CommonItemEntityModelEdition {
@@ -15,8 +15,8 @@ impl Class for CommonItemEntityModelEdition {
 }
 
 impl CommonItemEntityModelEdition {
-    pub const fn mesh_crystal(&self) -> &Arc<Crystal> {
-        &self.mesh_crystal
+    pub const fn crystal(&self) -> &Arc<Crystal> {
+        &self.crystal
     }
 }
 
@@ -66,7 +66,7 @@ mod read {
             }
 
             let _item_type = r.u32()?;
-            self.mesh_crystal = r.internal_node_ref::<Crystal>()?;
+            self.crystal = r.internal_node_ref::<Crystal>()?;
             r.string()?;
             r.u32()?;
             r.u32()?;

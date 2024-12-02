@@ -198,9 +198,14 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(())
     }
 
-    /// Read an UTF-8 string.
     pub fn string(&mut self) -> Result<String, Error> {
-        let bytes = self.byte_buf()?;
+        let len = self.u32()? as usize;
+
+        self.string_of_len(len)
+    }
+
+    pub fn string_of_len(&mut self, len: usize) -> Result<String, Error> {
+        let bytes = self.bytes(len)?;
 
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8")))
     }

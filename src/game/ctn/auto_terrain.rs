@@ -1,10 +1,17 @@
 //! Auto terrain.
 
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{Class, Vec3};
+
+use super::ZoneGenealogy;
 
 /// An auto terrain.
 #[derive(Default)]
-pub struct AutoTerrain;
+pub struct AutoTerrain {
+    offset: Vec3<u32>,
+    genealogy: Arc<ZoneGenealogy>,
+}
 
 impl Class for AutoTerrain {
     const CLASS_ID: u32 = 0x03120000;
@@ -45,10 +52,8 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _offset = r.u32()?;
-            let _offset = r.u32()?;
-            let _offset = r.u32()?;
-            let _genealogy = r.internal_node_ref::<ZoneGenealogy>()?;
+            self.offset = r.vec3::<u32>()?;
+            self.genealogy = r.internal_node_ref::<ZoneGenealogy>()?;
 
             Ok(())
         }

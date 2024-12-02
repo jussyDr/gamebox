@@ -8,6 +8,9 @@ use super::collector::Collector;
 #[derive(Default)]
 pub struct Decoration {
     parent: Collector,
+    size: ExternalNodeRef,
+    mood: ExternalNodeRef,
+    audio: ExternalNodeRef,
     map: Option<ExternalNodeRef>,
 }
 
@@ -16,7 +19,7 @@ impl Class for Decoration {
 }
 
 impl Decoration {
-    pub fn map(&self) -> Option<&ExternalNodeRef> {
+    pub const fn map(&self) -> Option<&ExternalNodeRef> {
         self.map.as_ref()
     }
 }
@@ -77,7 +80,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _deco_size = r.external_node_ref::<()>()?;
+            self.size = r.external_node_ref::<()>()?;
 
             Ok(())
         }
@@ -86,7 +89,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _deco_mood = r.external_node_ref::<()>()?;
+            self.mood = r.external_node_ref::<()>()?;
 
             Ok(())
         }
@@ -157,7 +160,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _deco_audio = r.external_node_ref::<()>()?;
+            self.audio = r.external_node_ref::<()>()?;
             let _deco_audio_ambient = r.u32()?;
 
             Ok(())

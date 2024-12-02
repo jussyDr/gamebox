@@ -1,15 +1,16 @@
 //! Block info variant ground.
 
-use std::ops::Deref;
+use std::{ops::Deref, sync::Arc};
 
 use crate::Class;
 
-use super::block_info_variant::BlockInfoVariant;
+use super::{block_info_variant::BlockInfoVariant, AutoTerrain};
 
 /// A block info variant ground.
 #[derive(Default)]
 pub struct BlockInfoVariantGround {
     parent: BlockInfoVariant,
+    auto_terrains: Vec<Arc<AutoTerrain>>,
 }
 
 impl Class for BlockInfoVariantGround {
@@ -69,7 +70,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _auto_terrains = r.list_with_version(|r| r.internal_node_ref::<AutoTerrain>())?;
+            self.auto_terrains = r.list_with_version(|r| r.internal_node_ref::<AutoTerrain>())?;
             let _auto_terrain_height_offset = r.u32()?;
             let _auto_terrain_place_type = r.u32()?;
 

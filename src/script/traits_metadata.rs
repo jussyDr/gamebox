@@ -1,13 +1,50 @@
 //! Traits metadata.
 
-use crate::Class;
+use std::collections::HashMap;
+
+use crate::{Class, Vec2, Vec3};
 
 /// A traits metadata.
 #[derive(Default)]
-pub struct TraitsMetadata;
+pub struct TraitsMetadata {
+    traits: HashMap<String, Trait>,
+}
 
 impl Class for TraitsMetadata {
     const CLASS_ID: u32 = 0x11002000;
+}
+
+impl TraitsMetadata {
+    pub const fn traits(&self) -> &HashMap<String, Trait> {
+        &self.traits
+    }
+}
+
+/// A trait
+pub enum Trait {
+    Void,
+    Boolean(bool),
+    Integer(i32),
+    Real(f32),
+    Class,
+    Text(String),
+    Enum,
+    Array {
+        keys: Vec<Trait>,
+        values: Vec<Trait>,
+    },
+    ParamArray,
+    Vec2(Vec2<f32>),
+    Vec3(Vec3<f32>),
+    Int3(Vec3<i32>),
+    Iso4,
+    Ident,
+    Int2(Vec2<i32>),
+    Struct {
+        name: String,
+        members: HashMap<String, Trait>,
+    },
+    ValueNotComputed,
 }
 
 #[derive(Debug)]
@@ -31,13 +68,17 @@ enum Type {
     Ident,
     Int2,
     Struct {
-        member_types: Vec<Type>,
+        name: String,
+        member_types: Vec<(String, Type)>,
     },
     ValueNotComputed,
 }
 
 mod read {
-    use std::io::{Read, Seek};
+    use std::{
+        collections::HashMap,
+        io::{Read, Seek},
+    };
 
     use crate::read::{
         read_body_chunks,
@@ -45,7 +86,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{TraitsMetadata, Type};
+    use super::{Trait, TraitsMetadata, Type};
 
     impl ReadBody for TraitsMetadata {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -73,14 +114,16 @@ mod read {
             let type_count = read_len(r)? as usize;
             let types = r.repeat(type_count, |r| read_type(r))?;
             let trait_count = read_len(r)? as usize;
-            let _traits = r.repeat(trait_count, |r| {
-                let name_len = read_len(r)? as usize;
-                let _name = r.bytes(name_len)?;
-                let type_index = read_len(r)? as usize;
-                read_value(r, &types[type_index])?;
+            self.traits = HashMap::new();
 
-                Ok(())
-            })?;
+            for _ in 0..trait_count {
+                let name_len = read_len(r)? as usize;
+                let name = r.string_of_len(name_len)?;
+                let type_index = read_len(r)? as usize;
+                let tr = read_contents(r, &types[type_index])?;
+
+                self.traits.insert(name, tr);
+            }
 
             Ok(())
         }
@@ -121,70 +164,78 @@ mod read {
             14 => Ok(Type::Int2),
             15 => {
                 let member_count = r.u8()?;
-                let _name = r.string()?;
+                let name = r.string()?;
 
                 let mut member_types = vec![];
 
                 for _ in 0..member_count {
-                    let _name = r.string()?;
+                    let name = r.string()?;
                     let ty = read_type(r)?;
 
-                    member_types.push(ty);
+                    member_types.push((name, ty));
                 }
 
-                Ok(Type::Struct { member_types })
+                Ok(Type::Struct { name, member_types })
             }
             16 => Ok(Type::ValueNotComputed),
             value => Err(Error::enum_variant("script type", value as u32)),
         }
     }
 
-    fn read_value<I, N>(r: &mut Reader<impl Read, I, N>, ty: &Type) -> Result<(), Error> {
+    fn read_contents<I, N>(r: &mut Reader<impl Read, I, N>, ty: &Type) -> Result<Trait, Error> {
         match ty {
-            Type::Boolean => {
-                r.bool8()?;
-            }
-            Type::Integer => {
-                r.i32()?;
-            }
-            Type::Real => {
-                r.f32()?;
-            }
+            Type::Void => Ok(Trait::Void),
+            Type::Boolean => Ok(Trait::Boolean(r.bool8()?)),
+            Type::Integer => Ok(Trait::Integer(r.i32()?)),
+            Type::Real => Ok(Trait::Real(r.f32()?)),
+            Type::Class => Ok(Trait::Class),
             Type::Text => {
-                let len = read_len(r)?;
-                r.bytes(len as usize)?;
+                let len = read_len(r)? as usize;
+
+                Ok(Trait::Text(r.string_of_len(len)?))
             }
+            Type::Enum => Ok(Trait::Enum),
             Type::Array {
                 key_type,
                 value_type,
             } => {
                 let len = read_len(r)?;
 
-                for _ in 0..len {
-                    read_value(r, key_type)?;
-                    read_value(r, value_type)?;
-                }
-            }
-            Type::Vec2 => {
-                r.vec2::<f32>()?;
-            }
-            Type::Vec3 => {
-                r.vec3::<f32>()?;
-            }
-            Type::Int2 => {
-                r.vec2::<i32>()?;
-            }
-            Type::Int3 => {
-                r.vec3::<i32>()?;
-            }
-            Type::Struct { member_types } => {
-                for member_type in member_types {
-                    read_value(r, member_type)?;
-                }
-            }
-            _ => {}
-        }
+                let mut keys = vec![];
+                let mut values = vec![];
 
-        Ok(())
+                for _ in 0..len {
+                    let key = read_contents(r, key_type)?;
+                    let value = read_contents(r, value_type)?;
+
+                    keys.push(key);
+                    values.push(value);
+                }
+
+                Ok(Trait::Array { keys, values })
+            }
+            Type::ParamArray => Ok(Trait::ParamArray),
+            Type::Vec2 => Ok(Trait::Vec2(r.vec2::<f32>()?)),
+            Type::Vec3 => Ok(Trait::Vec3(r.vec3::<f32>()?)),
+            Type::Int3 => Ok(Trait::Int3(r.vec3::<i32>()?)),
+            Type::Iso4 => Ok(Trait::Iso4),
+            Type::Ident => Ok(Trait::Ident),
+            Type::Int2 => Ok(Trait::Int2(r.vec2::<i32>()?)),
+            Type::Struct { name, member_types } => {
+                let mut members = HashMap::new();
+
+                for (member_name, member_type) in member_types {
+                    let member = read_contents(r, member_type)?;
+
+                    members.insert(member_name.clone(), member);
+                }
+
+                Ok(Trait::Struct {
+                    name: name.clone(),
+                    members,
+                })
+            }
+            Type::ValueNotComputed => Ok(Trait::ValueNotComputed),
+        }
     }
 }

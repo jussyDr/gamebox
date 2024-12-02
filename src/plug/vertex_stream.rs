@@ -19,7 +19,7 @@ impl Class for VertexStream {
 }
 
 impl VertexStream {
-    pub fn normals(&self) -> &Vec<[f32; 3]> {
+    pub const fn normals(&self) -> &Vec<[f32; 3]> {
         &self.normals
     }
 
@@ -27,11 +27,11 @@ impl VertexStream {
         &self.positions
     }
 
-    pub fn tangents_u(&self) -> &Vec<[f32; 3]> {
+    pub const fn tangents_u(&self) -> &Vec<[f32; 3]> {
         &self.tangents_u
     }
 
-    pub fn tangents_v(&self) -> &Vec<[f32; 3]> {
+    pub const fn tangents_v(&self) -> &Vec<[f32; 3]> {
         &self.tangents_v
     }
 
@@ -39,11 +39,11 @@ impl VertexStream {
         &self.texcoords_0
     }
 
-    pub fn colors_0(&self) -> Option<&Vec<[u8; 4]>> {
+    pub const fn colors_0(&self) -> Option<&Vec<[u8; 4]>> {
         self.colors_0.as_ref()
     }
 
-    pub fn texcoords_1(&self) -> Option<&Vec<Texcoord>> {
+    pub const fn texcoords_1(&self) -> Option<&Vec<Texcoord>> {
         self.texcoords_1.as_ref()
     }
 }

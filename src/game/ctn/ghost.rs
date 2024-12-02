@@ -1,15 +1,25 @@
 //! Ghost.
 
-use crate::Class;
+use std::ops::Deref;
+
+use crate::{game::ghost, Class};
 
 /// A Ghost.
 #[derive(PartialEq, Default, Debug)]
 pub struct Ghost {
-    parent: crate::game::ghost::Ghost,
+    parent: ghost::Ghost,
 }
 
 impl Class for Ghost {
     const CLASS_ID: u32 = 0x03092000;
+}
+
+impl Deref for Ghost {
+    type Target = ghost::Ghost;
+
+    fn deref(&self) -> &ghost::Ghost {
+        &self.parent
+    }
 }
 
 mod read {

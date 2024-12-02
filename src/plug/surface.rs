@@ -1,13 +1,29 @@
 //! Surface.
 
-use crate::Class;
+use crate::{Class, Vec3};
 
 /// A surface.
 #[derive(Default)]
-pub struct Surface;
+pub struct Surface {
+    ty: SurfaceType,
+    materials: Vec<()>,
+}
 
 impl Class for Surface {
     const CLASS_ID: u32 = 0x0900c000;
+}
+
+/// A surface type.
+pub enum SurfaceType {
+    Mesh { vertices: Vec<Vec3<f32>> },
+}
+
+impl Default for SurfaceType {
+    fn default() -> Self {
+        Self::Mesh {
+            vertices: Default::default(),
+        }
+    }
 }
 
 mod read {
@@ -23,7 +39,7 @@ mod read {
         },
     };
 
-    use super::Surface;
+    use super::{Surface, SurfaceType};
 
     impl Readable for Surface {}
 
@@ -64,7 +80,7 @@ mod read {
 
             let surface_type = r.u32()?;
 
-            match surface_type {
+            self.ty = match surface_type {
                 7 => {
                     let version = r.u32()?;
 
@@ -72,7 +88,7 @@ mod read {
                         return Err(Error::version("surface mesh", version));
                     }
 
-                    let _vertices = r.list(|r| r.vec3::<f32>())?;
+                    let vertices = r.list(|r| r.vec3::<f32>())?;
                     let _triangles = r.list(|r| {
                         r.u32()?;
                         r.u32()?;
@@ -81,16 +97,18 @@ mod read {
 
                         Ok(())
                     })?;
+
+                    SurfaceType::Mesh { vertices }
                 }
                 _ => {
                     return Err(Error::new(ErrorKind::Unsupported(
                         "surface type".to_string(),
                     )))
                 }
-            }
+            };
 
             r.vec3::<f32>()?;
-            let _materials: Vec<()> = r.list(|r| {
+            self.materials = r.list(|r| {
                 if r.bool()? {
                     r.external_node_ref::<Material>()?;
                 } else {

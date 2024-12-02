@@ -3,8 +3,11 @@
 use crate::Class;
 
 /// A waypoint special property.
-#[derive(Default)]
-pub struct WaypointSpecialProperty;
+#[derive(PartialEq, Default, Debug)]
+pub struct WaypointSpecialProperty {
+    tag: String,
+    order: u32,
+}
 
 impl Class for WaypointSpecialProperty {
     const CLASS_ID: u32 = 0x2e009000;
@@ -49,8 +52,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _tag = r.string()?;
-            let _order = r.u32()?;
+            self.tag = r.string()?;
+            self.order = r.u32()?;
 
             Ok(())
         }

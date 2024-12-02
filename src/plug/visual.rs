@@ -104,7 +104,6 @@ mod read {
             let _num_texcoord_sets = r.u32()?;
             let _count = r.u32()?;
             self.vertex_streams = r.list(|r| r.internal_node_ref::<VertexStream>())?;
-
             let _bounding_box = r.box3d()?;
             r.u32()?;
             r.list(|r| r.u16())?;

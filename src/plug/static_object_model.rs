@@ -8,6 +8,7 @@ use super::{solid_2_model::Solid2Model, surface::Surface};
 #[derive(Default)]
 pub struct StaticObjectModel {
     mesh: NodeRef<Solid2Model>,
+    is_collidable: bool,
     hit_shape: Option<NodeRef<Surface>>,
 }
 
@@ -51,9 +52,9 @@ mod read {
             }
 
             self.mesh = r.node_ref::<Solid2Model>()?;
-            let is_mesh_collidable = r.bool8()?;
+            self.is_collidable = r.bool8()?;
 
-            if !is_mesh_collidable {
+            if !self.is_collidable {
                 self.hit_shape = r.node_ref_or_null::<Surface>()?;
             }
 
