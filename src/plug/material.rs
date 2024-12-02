@@ -28,9 +28,9 @@ mod read {
     use crate::{
         plug::material_custom::MaterialCustom,
         read::{
-            read_body_chunks,
+            read_body_chunks, readable,
             reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, Sealed,
+            BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
     };
 
@@ -38,7 +38,7 @@ mod read {
 
     impl Readable for Material {}
 
-    impl Sealed for Material {}
+    impl readable::Sealed for Material {}
 
     impl ReadBody for Material {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

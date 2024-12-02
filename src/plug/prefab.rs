@@ -47,8 +47,9 @@ mod read {
     use crate::{
         plug::static_object_model::StaticObjectModel,
         read::{
+            readable::Sealed,
             reader::{IdStateMut, NodeStateMut, Reader},
-            Error, ReadBody, Readable, Sealed,
+            Error, ReadBody, Readable,
         },
     };
 

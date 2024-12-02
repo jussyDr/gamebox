@@ -1,10 +1,12 @@
+use std::io::Cursor;
+
 use gamebox::{
     game::{
         ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration},
         item_model::ItemModel,
     },
     plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
-    read_file,
+    read, read_file, write,
 };
 
 #[test]
@@ -90,4 +92,26 @@ fn read_prefab_straight_air() {
 #[test]
 fn read_texture_technics_trims_d() {
     read_file::<Bitmap>("tests/files/texture/TechnicsTrims_D.Texture.Gbx").unwrap();
+}
+
+#[test]
+fn write_item() {
+    let item = ItemModel::default();
+
+    let mut buf = vec![];
+    write(&item, Cursor::new(&mut buf)).unwrap();
+
+    let item_2 = read::<ItemModel>(Cursor::new(buf)).unwrap();
+    assert_eq!(item, item_2);
+}
+
+#[test]
+fn write_map() {
+    let map = Challenge::default();
+
+    let mut buf = vec![];
+    write(&map, Cursor::new(&mut buf)).unwrap();
+
+    let map_2 = read::<Challenge>(Cursor::new(buf)).unwrap();
+    assert_eq!(map, map_2);
 }

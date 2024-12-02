@@ -10,12 +10,10 @@ pub mod write;
 
 #[doc(inline)]
 pub use read::{read, read_file};
+#[doc(inline)]
+pub use write::{write, write_file};
 
 use std::path::PathBuf;
-
-pub trait Class: Sized {
-    const CLASS_ID: u32;
-}
 
 /// A 2-dimensional vector of type `T`.
 pub struct Vec2<T> {
@@ -26,7 +24,7 @@ pub struct Vec2<T> {
 }
 
 /// A 3-dimensional vector of type `T`.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub struct Vec3<T> {
     /// X component.
     pub x: T,
@@ -60,7 +58,7 @@ pub struct Quat {
 }
 
 /// A texture coordinate.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub struct Texcoord {
     /// U component.
     pub u: f32,
@@ -87,4 +85,14 @@ pub enum PackDesc {
         locator_url: String,
         checksum: [u8; 32],
     },
+}
+
+const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
+
+const SKIPPABLE_CHUNK_MARKER: u32 = 0x534B4950;
+
+const END_OF_NODE_MARKER: u32 = 0xfacade01;
+
+trait Class: Sized {
+    const CLASS_ID: u32;
 }

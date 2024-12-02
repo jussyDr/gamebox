@@ -7,7 +7,7 @@ use crate::Vec3;
 use super::Direction;
 
 /// A block.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Block {
     id: Arc<str>,
     direction: Direction,

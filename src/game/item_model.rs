@@ -9,7 +9,7 @@ use super::{
 };
 
 /// An item model.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct ItemModel {
     parent: Collector,
     entity_model_edition: Arc<CommonItemEntityModelEdition>,
@@ -35,8 +35,9 @@ mod read {
         },
         read::{
             read_body_chunks,
+            readable::Sealed,
             reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, Sealed,
+            BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
     };
 
@@ -278,6 +279,24 @@ mod read {
             r.f32()?;
 
             Ok(())
+        }
+    }
+}
+
+mod write {
+    use crate::write::{writable, Writable};
+
+    use self::writable::BodyChunks;
+
+    use super::ItemModel;
+
+    impl Writable for ItemModel {}
+
+    impl writable::Sealed for ItemModel {}
+
+    impl BodyChunks for ItemModel {
+        fn body_chunks<W, I, N>() -> impl Iterator<Item = writable::BodyChunk<Self, W, I, N>> {
+            [].into_iter()
         }
     }
 }

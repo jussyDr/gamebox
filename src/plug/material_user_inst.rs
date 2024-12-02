@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// A material user inst.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct MaterialUserInst;
 
 impl Class for MaterialUserInst {

@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// A collector.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Collector;
 
 impl Class for Collector {

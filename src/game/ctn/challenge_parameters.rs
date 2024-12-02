@@ -1,10 +1,20 @@
 //! Challenge parameters.
 
+use std::sync::Arc;
+
 use crate::Class;
 
+use super::Ghost;
+
 /// A challenge parameters.
-#[derive(Default)]
-pub struct ChallengeParameters;
+#[derive(PartialEq, Default, Debug)]
+pub struct ChallengeParameters {
+    bronze_time: u32,
+    silver_time: u32,
+    gold_time: u32,
+    author_time: u32,
+    validation_ghost: Option<Arc<Ghost>>,
+}
 
 impl Class for ChallengeParameters {
     const CLASS_ID: u32 = 0x0305b000;
@@ -59,10 +69,10 @@ mod read {
         }
 
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _bronze_time = r.u32()?;
-            let _silver_time = r.u32()?;
-            let _gold_time = r.u32()?;
-            let _author_time = r.u32()?;
+            self.bronze_time = r.u32()?;
+            self.silver_time = r.u32()?;
+            self.gold_time = r.u32()?;
+            self.author_time = r.u32()?;
             r.u32()?;
 
             Ok(())
@@ -77,10 +87,10 @@ mod read {
 
         fn read_chunk_10<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _tip = r.string()?;
-            let _bronze_time = r.u32()?;
-            let _silver_time = r.u32()?;
-            let _gold_time = r.u32()?;
-            let _author_time = r.u32()?;
+            self.bronze_time = r.u32()?;
+            self.silver_time = r.u32()?;
+            self.gold_time = r.u32()?;
+            self.author_time = r.u32()?;
             let _time_limit = r.u32()?;
             let _author_score = r.u32()?;
 
@@ -91,7 +101,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _race_validate_ghost = r.internal_node_ref_or_null::<Ghost>()?;
+            self.validation_ghost = r.internal_node_ref_or_null::<Ghost>()?;
 
             Ok(())
         }

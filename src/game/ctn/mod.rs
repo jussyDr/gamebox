@@ -63,7 +63,7 @@ pub use media_clip_group::MediaClipGroup;
 pub use zone_genealogy::ZoneGenealogy;
 
 /// Cardinal direction.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum Direction {
     /// North.
     #[default]

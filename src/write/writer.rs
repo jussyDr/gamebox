@@ -1,6 +1,207 @@
 //! Low-level GameBox writer.
 
+use std::{
+    any::Any,
+    hash::{Hash, Hasher},
+    io::{Error, Seek, SeekFrom, Write},
+    sync::Arc,
+};
+
+use indexmap::{indexset, IndexSet};
+
+use crate::Class;
+
+use super::{write_body, BodyChunks};
+
+pub struct IdState {
+    seen_id: bool,
+    ids: IndexSet<Arc<str>>,
+}
+
+impl IdState {
+    pub fn new() -> Self {
+        Self {
+            seen_id: false,
+            ids: indexset![],
+        }
+    }
+}
+
+pub trait IdStateMut {
+    fn get_mut(&mut self) -> &mut IdState;
+}
+
+struct InternalNode {
+    node: Arc<dyn Any>,
+}
+
+impl PartialEq for InternalNode {
+    fn eq(&self, other: &Self) -> bool {
+        todo!()
+    }
+}
+
+impl Eq for InternalNode {}
+
+impl Hash for InternalNode {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        todo!()
+    }
+}
+
+pub struct NodeState {
+    nodes: IndexSet<InternalNode>,
+}
+
+impl NodeState {
+    pub fn new() -> Self {
+        Self { nodes: indexset![] }
+    }
+
+    pub fn num_nodes(&self) -> usize {
+        self.nodes.len()
+    }
+}
+
+pub trait NodeStateMut {
+    fn get_mut(&mut self) -> &mut NodeState;
+}
+
 /// Low-level GameBox writer.
-pub struct Writer<W> {
+pub struct Writer<W, I, N> {
     inner: W,
+    id_state: I,
+    node_state: N,
+}
+
+impl<W, I, N> Writer<W, I, N> {
+    pub const fn new(inner: W, id_state: I, node_state: N) -> Self {
+        Self {
+            inner,
+            id_state,
+            node_state,
+        }
+    }
+}
+
+impl<W: Write, I, N> Writer<W, I, N> {
+    pub fn bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        self.inner.write_all(bytes)?;
+
+        Ok(())
+    }
+
+    pub fn u8(&mut self, value: u8) -> Result<(), Error> {
+        self.bytes(&[value])
+    }
+
+    pub fn u16(&mut self, value: u16) -> Result<(), Error> {
+        self.bytes(&value.to_le_bytes())
+    }
+
+    pub fn u32(&mut self, value: u32) -> Result<(), Error> {
+        self.bytes(&value.to_le_bytes())
+    }
+
+    pub fn string(&mut self, value: &str) -> Result<(), Error> {
+        self.u32(value.len() as u32)?;
+        self.bytes(value.as_bytes())?;
+
+        Ok(())
+    }
+}
+
+impl<W: Write + Seek, I, N> Writer<W, I, N> {
+    pub fn byte_buf(
+        &mut self,
+        mut write_fn: impl FnMut(&mut Self) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        let len_pos = self.inner.stream_position()?;
+        let start_pos = self.inner.seek(SeekFrom::Current(4))?;
+
+        write_fn(self)?;
+
+        let end_pos = self.inner.stream_position()?;
+
+        self.inner.seek(SeekFrom::Start(len_pos))?;
+        self.u32((end_pos - start_pos) as u32)?;
+
+        self.inner.seek(SeekFrom::Start(end_pos))?;
+
+        Ok(())
+    }
+}
+
+impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
+    pub fn id_or_null(&mut self, id: Option<Arc<str>>) -> Result<(), Error> {
+        if !self.id_state.get_mut().seen_id {
+            self.u32(3)?;
+
+            self.id_state.get_mut().seen_id = true;
+        }
+
+        match id {
+            Some(id) => match self.id_state.get_mut().ids.get_index_of(&id) {
+                Some(index) => {
+                    self.u32(((index as u32) + 1) | 0x40000000)?;
+                }
+                None => {
+                    self.u32(0x40000000)?;
+                    self.string(&id)?;
+
+                    self.id_state.get_mut().ids.insert(id);
+                }
+            },
+            None => {
+                self.u32(0xffffffff)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn id(&mut self, id: Arc<str>) -> Result<(), Error> {
+        self.id_or_null(Some(id))
+    }
+}
+
+impl<W: Write + Seek, I, N: NodeStateMut> Writer<W, I, N> {
+    pub fn internal_node_ref_or_null<T: 'static + Class + BodyChunks>(
+        &mut self,
+        node: Option<Arc<T>>,
+    ) -> Result<(), Error> {
+        match node {
+            Some(node) => {
+                let internal_node = InternalNode {
+                    node: Arc::clone(&node) as Arc<dyn Any>,
+                };
+
+                match self.node_state.get_mut().nodes.get_index_of(&internal_node) {
+                    Some(index) => {
+                        self.u32(index as u32 + 1)?;
+                    }
+                    None => {
+                        let index = self.node_state.get_mut().nodes.len() as u32 + 1;
+                        self.u32(index);
+                        self.u32(T::CLASS_ID)?;
+                        write_body(self, node.as_ref())?;
+
+                        self.node_state.get_mut().nodes.insert(internal_node);
+                    }
+                }
+            }
+            None => {
+                self.u32(0xffffffff)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn internal_node_ref<T: 'static + Class + BodyChunks>(
+        &mut self,
+        node: Arc<T>,
+    ) -> Result<(), Error> {
+        self.internal_node_ref_or_null(Some(node))
+    }
 }

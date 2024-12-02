@@ -67,6 +67,7 @@ impl<R, I, N> Reader<R, I, N> {
 }
 
 impl<R: Read, I, N> Reader<R, I, N> {
+    /// Read `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>, Error> {
         let mut buf = vec![0; n];
 
@@ -75,6 +76,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(buf)
     }
 
+    /// Read a byte array of length `S`.
     pub fn byte_array<const S: usize>(&mut self) -> Result<[u8; S], Error> {
         let mut buf = [0; S];
 
@@ -89,50 +91,114 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.bytes(size as usize)
     }
 
+    /// Read a signed 16-bit integer.
     pub fn i16(&mut self) -> Result<i16, Error> {
         let bytes = self.byte_array()?;
 
         Ok(i16::from_le_bytes(bytes))
     }
 
+    /// Read a signed 32-bit integer.
     pub fn i32(&mut self) -> Result<i32, Error> {
         let bytes = self.byte_array()?;
 
         Ok(i32::from_le_bytes(bytes))
     }
 
+    /// Read an unsigned 8-bit integer.
     pub fn u8(&mut self) -> Result<u8, Error> {
         let [byte] = self.byte_array()?;
 
         Ok(byte)
     }
 
+    /// Read an unsigned 16-bit integer.
     pub fn u16(&mut self) -> Result<u16, Error> {
         let bytes = self.byte_array()?;
 
         Ok(u16::from_le_bytes(bytes))
     }
 
+    /// Read an unsigned 32-bit integer.
     pub fn u32(&mut self) -> Result<u32, Error> {
         let bytes = self.byte_array()?;
 
         Ok(u32::from_le_bytes(bytes))
     }
 
+    /// Read an unsigned 64-bit integer.
     pub fn u64(&mut self) -> Result<u64, Error> {
         let bytes = self.byte_array()?;
 
         Ok(u64::from_le_bytes(bytes))
     }
 
+    /// Read a 32-bit floating point number.
+    pub fn f32(&mut self) -> Result<f32, Error> {
+        let bytes = self.byte_array()?;
+
+        Ok(f32::from_le_bytes(bytes))
+    }
+
     pub fn bool(&mut self) -> Result<bool, Error> {
-        bool_from_u8(self.u32()? as u8)
+        bool_from_u32(self.u32()?)
     }
 
     pub fn bool8(&mut self) -> Result<bool, Error> {
-        bool_from_u8(self.u8()?)
+        bool_from_u32(self.u8()? as u32)
     }
 
+    pub fn enum_u32<T: TryFrom<u32>>(&mut self) -> Result<T, Error> {
+        self.u32()?
+            .try_into()
+            .map_err(|_| Error::new(ErrorKind::Format("enum")))
+    }
+
+    pub fn enum_u8<T: TryFrom<u8>>(&mut self) -> Result<T, Error> {
+        self.u8()?
+            .try_into()
+            .map_err(|_| Error::new(ErrorKind::Format("enum")))
+    }
+
+    /// Read a 2-dimensional vector of type `T`.
+    pub fn vec2<T: ReadNum>(&mut self) -> Result<Vec2<T>, Error> {
+        let x = T::read(self)?;
+        let y = T::read(self)?;
+
+        Ok(Vec2 { x, y })
+    }
+
+    /// Read a 3-dimensional vector of type `T`.
+    pub fn vec3<T: ReadNum>(&mut self) -> Result<Vec3<T>, Error> {
+        let x = T::read(self)?;
+        let y = T::read(self)?;
+        let z = T::read(self)?;
+
+        Ok(Vec3 { x, y, z })
+    }
+
+    /// Read a quaternion.
+    pub fn quat(&mut self) -> Result<Quat, Error> {
+        let x = self.f32()?;
+        let y = self.f32()?;
+        let z = self.f32()?;
+        let w = self.f32()?;
+
+        Ok(Quat { x, y, z, w })
+    }
+
+    pub fn box3d(&mut self) -> Result<(), Error> {
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+
+        Ok(())
+    }
+
+    /// Read an UTF-8 string.
     pub fn string(&mut self) -> Result<String, Error> {
         let bytes = self.byte_buf()?;
 
@@ -174,39 +240,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(())
     }
 
-    pub fn f32(&mut self) -> Result<f32, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(f32::from_le_bytes(bytes))
-    }
-
-    pub fn vec2<T: ReadNum>(&mut self) -> Result<Vec2<T>, Error> {
-        let x = T::read(self)?;
-        let y = T::read(self)?;
-
-        Ok(Vec2 { x, y })
-    }
-
-    pub fn vec3<T: ReadNum>(&mut self) -> Result<Vec3<T>, Error> {
-        let x = T::read(self)?;
-        let y = T::read(self)?;
-        let z = T::read(self)?;
-
-        Ok(Vec3 { x, y, z })
-    }
-
-    pub fn enum_u32<T: TryFrom<u32>>(&mut self) -> Result<T, Error> {
-        self.u32()?
-            .try_into()
-            .map_err(|_| Error::new(ErrorKind::Format("enum")))
-    }
-
-    pub fn enum_u8<T: TryFrom<u8>>(&mut self) -> Result<T, Error> {
-        self.u8()?
-            .try_into()
-            .map_err(|_| Error::new(ErrorKind::Format("enum")))
-    }
-
     pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
         let version = self.u8()?;
 
@@ -223,26 +256,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
             locator_url,
             checksum,
         })
-    }
-
-    pub fn quat(&mut self) -> Result<Quat, Error> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
-        let w = self.f32()?;
-
-        Ok(Quat { x, y, z, w })
-    }
-
-    pub fn box3d(&mut self) -> Result<(), Error> {
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-
-        Ok(())
     }
 
     pub fn list<T>(
@@ -270,7 +283,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     }
 }
 
-fn bool_from_u8(value: u8) -> Result<bool, Error> {
+fn bool_from_u32(value: u32) -> Result<bool, Error> {
     match value {
         0 => Ok(false),
         1 => Ok(true),

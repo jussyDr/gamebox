@@ -23,8 +23,9 @@ mod read {
 
     use crate::read::{
         read_body_chunks,
+        readable::Sealed,
         reader::{IdStateMut, NodeStateMut, Reader},
-        BodyChunk, BodyChunks, Error, ReadBody, Readable, Sealed,
+        BodyChunk, BodyChunks, Error, ReadBody, Readable,
     };
 
     use super::Bitmap;

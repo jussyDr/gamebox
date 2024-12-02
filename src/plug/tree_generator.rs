@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// A tree generator.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct TreeGenerator;
 
 impl Class for TreeGenerator {

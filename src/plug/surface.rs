@@ -17,8 +17,9 @@ mod read {
         plug::material::Material,
         read::{
             read_body_chunks,
+            readable::Sealed,
             reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable, Sealed,
+            BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
     };
 

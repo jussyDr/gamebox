@@ -4,11 +4,12 @@ use std::sync::Arc;
 
 use crate::Class;
 
-use super::block::Block;
+use super::{block::Block, ChallengeParameters};
 
 /// A challenge.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Challenge {
+    parameters: Arc<ChallengeParameters>,
     decoration_id: Arc<str>,
     blocks: Vec<Block>,
     anchored_objects: Vec<()>,
@@ -20,6 +21,10 @@ impl Class for Challenge {
 }
 
 impl Challenge {
+    pub const fn parameters(&self) -> &Arc<ChallengeParameters> {
+        &self.parameters
+    }
+
     pub const fn decoration_id(&self) -> &Arc<str> {
         &self.decoration_id
     }
@@ -39,8 +44,9 @@ mod read {
         },
         read::{
             read_body_chunks,
+            readable::Sealed,
             reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, Sealed,
+            BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
         script::traits_metadata::TraitsMetadata,
     };
@@ -137,7 +143,7 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _block_stock = r.internal_node_ref::<CollectorList>()?;
-            let _challenge_parameters = r.internal_node_ref::<ChallengeParameters>()?;
+            self.parameters = r.internal_node_ref::<ChallengeParameters>()?;
             let _kind = r.u32()?;
 
             Ok(())
@@ -813,9 +819,17 @@ mod read {
 }
 
 mod write {
-    use crate::write::Writable;
+    use crate::write::{writable, BodyChunk, BodyChunks, Writable};
 
     use super::Challenge;
 
     impl Writable for Challenge {}
+
+    impl writable::Sealed for Challenge {}
+
+    impl BodyChunks for Challenge {
+        fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [].into_iter()
+        }
+    }
 }

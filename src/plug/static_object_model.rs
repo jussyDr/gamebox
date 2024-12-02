@@ -27,8 +27,9 @@ mod read {
     use crate::{
         plug::{solid_2_model::Solid2Model, surface::Surface},
         read::{
+            readable::Sealed,
             reader::{IdStateMut, NodeStateMut, Reader},
-            Error, ReadBody, Readable, Sealed,
+            Error, ReadBody, Readable,
         },
     };
 

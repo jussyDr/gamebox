@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// A Ghost.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Ghost {
     parent: crate::game::ghost::Ghost,
 }

@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// A ghost.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Ghost;
 
 impl Class for Ghost {
