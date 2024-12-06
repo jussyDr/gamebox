@@ -64,8 +64,6 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
 
         let chunk_num = (chunk_id & 0x00000fff) as u16;
 
-        println!("{:08X?}, {}", class_id, chunk_num);
-
         let chunk = chunks
             .find(|chunk| chunk.num == chunk_num)
             .ok_or(Error::new(ErrorKind::Unsupported(format!(
@@ -118,7 +116,7 @@ pub type BodyChunkReadFnSkippable<T, R, I, N> =
     fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>;
 
 impl<T, R, I, N> BodyChunk<T, R, I, N> {
-    pub const fn new(num: u16, read_fn: BodyChunkReadFnNormal<T, R, I, N>) -> Self {
+    pub const fn normal(num: u16, read_fn: BodyChunkReadFnNormal<T, R, I, N>) -> Self {
         Self {
             num,
             read_fn: BodyChunkReadFn::Normal(read_fn),

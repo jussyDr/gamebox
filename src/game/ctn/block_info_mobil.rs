@@ -45,9 +45,9 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(2, Self::read_chunk_2),
-                BodyChunk::new(3, Self::read_chunk_3),
-                BodyChunk::new(4, Self::read_chunk_4),
+                BodyChunk::normal(2, Self::read_chunk_2),
+                BodyChunk::normal(3, Self::read_chunk_3),
+                BodyChunk::normal(4, Self::read_chunk_4),
             ]
             .into_iter()
         }
@@ -55,11 +55,7 @@ mod read {
 
     impl BlockInfoMobil {
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _solid_decals = r.list_with_version(|r| {
-                todo!();
-
-                Ok(())
-            })?;
+            let _solid_decals = r.list_with_version(|_| Ok(()))?;
             r.u32()?;
 
             Ok(())
@@ -111,11 +107,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _dyna_links = r.list_with_version(|r| {
-                todo!();
-
-                Ok(())
-            })?;
+            let _dyna_links = r.list_with_version(|_| Ok(()))?;
 
             Ok(())
         }

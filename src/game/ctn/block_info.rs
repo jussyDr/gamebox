@@ -64,20 +64,20 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(15, Self::read_chunk_15),
-                BodyChunk::new(19, Self::read_chunk_19),
-                BodyChunk::new(23, Self::read_chunk_23),
-                BodyChunk::new(32, Self::read_chunk_32),
-                BodyChunk::new(35, Self::read_chunk_35),
-                BodyChunk::new(38, Self::read_chunk_38),
-                BodyChunk::new(39, Self::read_chunk_39),
-                BodyChunk::new(40, Self::read_chunk_40),
-                BodyChunk::new(41, Self::read_chunk_41),
-                BodyChunk::new(42, Self::read_chunk_42),
-                BodyChunk::new(43, Self::read_chunk_43),
-                BodyChunk::new(44, Self::read_chunk_44),
-                BodyChunk::new(47, Self::read_chunk_47),
-                BodyChunk::new(49, Self::read_chunk_49),
+                BodyChunk::normal(15, Self::read_chunk_15),
+                BodyChunk::normal(19, Self::read_chunk_19),
+                BodyChunk::normal(23, Self::read_chunk_23),
+                BodyChunk::normal(32, Self::read_chunk_32),
+                BodyChunk::normal(35, Self::read_chunk_35),
+                BodyChunk::normal(38, Self::read_chunk_38),
+                BodyChunk::normal(39, Self::read_chunk_39),
+                BodyChunk::normal(40, Self::read_chunk_40),
+                BodyChunk::normal(41, Self::read_chunk_41),
+                BodyChunk::normal(42, Self::read_chunk_42),
+                BodyChunk::normal(43, Self::read_chunk_43),
+                BodyChunk::normal(44, Self::read_chunk_44),
+                BodyChunk::normal(47, Self::read_chunk_47),
+                BodyChunk::normal(49, Self::read_chunk_49),
             ]
             .into_iter()
         }

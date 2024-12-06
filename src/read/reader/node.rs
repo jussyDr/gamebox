@@ -1,6 +1,5 @@
 use std::{
     any::Any,
-    cell::OnceCell,
     io::{Read, Seek},
     iter,
     path::{Path, PathBuf},
@@ -16,32 +15,38 @@ use super::{IdStateMut, Reader};
 
 /// Node state.
 pub struct NodeState {
-    node_refs: Box<[OnceCell<NodeRef<dyn Any + Send + Sync>>]>,
+    node_refs: Box<[Option<NodeRef<dyn Any + Send + Sync>>]>,
 }
 
 impl NodeState {
     pub fn new(num_node_refs: usize) -> Self {
         Self {
-            node_refs: iter::repeat_with(OnceCell::new)
-                .take(num_node_refs)
-                .collect(),
+            node_refs: iter::repeat_with(|| None).take(num_node_refs).collect(),
         }
     }
 
-    fn get_entry(&self, index: usize) -> Result<&OnceCell<NodeRef<dyn Any + Send + Sync>>, Error> {
+    fn get_entry(
+        &mut self,
+        index: usize,
+    ) -> Result<&mut Option<NodeRef<dyn Any + Send + Sync>>, Error> {
         self.node_refs
-            .get(index)
-            .ok_or(Error::new(ErrorKind::Format("index")))
+            .get_mut(index)
+            .ok_or(Error::new(ErrorKind::Format("index zz")))
     }
 
     fn set_node_ref(
-        &self,
+        &mut self,
         index: usize,
         node_ref: NodeRef<dyn Any + Send + Sync>,
     ) -> Result<(), Error> {
-        self.get_entry(index)?
-            .set(node_ref)
-            .map_err(|_| Error::new(ErrorKind::Format("index")))
+        match self.get_entry(index)? {
+            Some(_) => Err(Error::new(ErrorKind::Format("index yy"))),
+            entry => {
+                *entry = Some(node_ref);
+
+                Ok(())
+            }
+        }
     }
 
     pub fn set_external_node_ref(
@@ -140,6 +145,37 @@ impl NodeStateMut for NullNodeState {
     }
 }
 
+impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
+    pub fn external_node_ref<T>(&mut self) -> Result<ExternalNodeRef, Error> {
+        let index = self.u32()?;
+        let ref_index = index
+            .checked_sub(1)
+            .ok_or(Error::new(ErrorKind::Format("index q")))?;
+
+        match self.node_state.get_mut().get_entry(ref_index as usize)? {
+            Some(NodeRef::External(external_node_ref)) => Ok(external_node_ref.clone()),
+            _ => Err(Error::new(ErrorKind::Format("wat"))),
+        }
+    }
+
+    pub fn external_node_ref_or_null<T>(&mut self) -> Result<Option<ExternalNodeRef>, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let ref_index = index
+            .checked_sub(1)
+            .ok_or(Error::new(ErrorKind::Format("index v")))?;
+
+        match self.node_state.get_mut().get_entry(ref_index as usize)? {
+            Some(NodeRef::External(external_node_ref)) => Ok(Some(external_node_ref.clone())),
+            _ => Err(Error::new(ErrorKind::Format("wat"))),
+        }
+    }
+}
+
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     pub fn node<T: 'static + Class + ReadBody>(&mut self) -> Result<T, Error> {
         let class_id = self.u32()?;
@@ -176,14 +212,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
         let ref_index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index")))?;
+            .ok_or(Error::new(ErrorKind::Format("index e")))?;
 
-        match self
-            .node_state
-            .get_mut()
-            .get_entry(ref_index as usize)?
-            .get()
-        {
+        match self.node_state.get_mut().get_entry(ref_index as usize)? {
             Some(node_ref) => Ok(Some(node_ref.clone().downcast()?)),
             entry => {
                 let class_id = self.u32()?;
@@ -212,9 +243,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
                 self.node_state
                     .get_mut()
-                    .get_entry(ref_index as usize)?
-                    .set(node_ref.clone())
-                    .map_err(|_| Error::new(ErrorKind::Format("index")))?;
+                    .set_node_ref(ref_index as usize, node_ref.clone())?;
 
                 Ok(Some(node_ref.downcast().unwrap()))
             }
@@ -226,14 +255,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
         let ref_index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index")))?;
+            .ok_or(Error::new(ErrorKind::Format("index b")))?;
 
-        match self
-            .node_state
-            .get_mut()
-            .get_entry(ref_index as usize)?
-            .get()
-        {
+        match self.node_state.get_mut().get_entry(ref_index as usize)? {
             Some(node_ref) => Ok(node_ref.clone().downcast()?),
             entry => {
                 let class_id = self.u32()?;
@@ -262,9 +286,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
                 self.node_state
                     .get_mut()
-                    .get_entry(ref_index as usize)?
-                    .set(node_ref.clone())
-                    .map_err(|_| Error::new(ErrorKind::Format("index")))?;
+                    .set_node_ref(ref_index as usize, node_ref.clone())?;
 
                 Ok(node_ref.downcast().unwrap())
             }
@@ -292,42 +314,23 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         }
     }
 
-    pub fn external_node_ref<T>(&mut self) -> Result<ExternalNodeRef, Error> {
-        let index = self.u32()?;
-        let ref_index = index
-            .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index")))?;
+    pub fn test<T>(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
+    ) -> Result<Arc<T>, Error> {
+        let index = self.u32()? - 1;
 
-        match self
-            .node_state
-            .get_mut()
-            .get_entry(ref_index as usize)?
-            .get()
-        {
-            Some(NodeRef::External(external_node_ref)) => Ok(external_node_ref.clone()),
-            _ => Err(Error::new(ErrorKind::Format("wat"))),
-        }
-    }
+        match self.node_state.get_mut().get_entry(index as usize)? {
+            None => {
+                let class_id = self.u32()?;
+                let node = Arc::new(read_fn(self, class_id)?);
 
-    pub fn external_node_ref_or_null<T>(&mut self) -> Result<Option<ExternalNodeRef>, Error> {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return Ok(None);
-        }
-
-        let ref_index = index
-            .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index")))?;
-
-        match self
-            .node_state
-            .get_mut()
-            .get_entry(ref_index as usize)?
-            .get()
-        {
-            Some(NodeRef::External(external_node_ref)) => Ok(Some(external_node_ref.clone())),
-            _ => Err(Error::new(ErrorKind::Format("wat"))),
+                Ok(node)
+            }
+            Some(node_ref) => match node_ref {
+                NodeRef::Internal { .. } => todo!(),
+                NodeRef::External(_) => todo!(),
+            },
         }
     }
 }

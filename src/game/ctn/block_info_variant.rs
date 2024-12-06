@@ -44,17 +44,17 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(2, Self::read_chunk_2),
-                BodyChunk::new(3, Self::read_chunk_3),
-                BodyChunk::new(4, Self::read_chunk_4),
-                BodyChunk::new(5, Self::read_chunk_5),
-                BodyChunk::new(6, Self::read_chunk_6),
-                BodyChunk::new(7, Self::read_chunk_7),
-                BodyChunk::new(8, Self::read_chunk_8),
-                BodyChunk::new(9, Self::read_chunk_9),
-                BodyChunk::new(10, Self::read_chunk_10),
-                BodyChunk::new(11, Self::read_chunk_11),
-                BodyChunk::new(13, Self::read_chunk_13),
+                BodyChunk::normal(2, Self::read_chunk_2),
+                BodyChunk::normal(3, Self::read_chunk_3),
+                BodyChunk::normal(4, Self::read_chunk_4),
+                BodyChunk::normal(5, Self::read_chunk_5),
+                BodyChunk::normal(6, Self::read_chunk_6),
+                BodyChunk::normal(7, Self::read_chunk_7),
+                BodyChunk::normal(8, Self::read_chunk_8),
+                BodyChunk::normal(9, Self::read_chunk_9),
+                BodyChunk::normal(10, Self::read_chunk_10),
+                BodyChunk::normal(11, Self::read_chunk_11),
+                BodyChunk::normal(13, Self::read_chunk_13),
             ]
             .into_iter()
         }
@@ -123,7 +123,7 @@ mod read {
             r.u32()?;
             r.u32()?;
             r.u32()?;
-            let _entity_spawners: Vec<()> = r.list(|r| todo!())?;
+            let _entity_spawners: Vec<()> = r.list(|_| todo!())?;
 
             Ok(())
         }

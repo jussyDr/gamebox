@@ -32,7 +32,33 @@ mod read {
 
     impl BodyChunks for BlockSkin {
         fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [].into_iter()
+            [
+                BodyChunk::normal(2, Self::read_chunk_2),
+                BodyChunk::normal(3, Self::read_chunk_3),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl BlockSkin {
+        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _text = r.string()?;
+            let _pack_desc = r.pack_desc()?;
+            let _parent_pack_desc = r.pack_desc()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_3<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let _foreground_pack_desc = r.pack_desc()?;
+
+            Ok(())
         }
     }
 }

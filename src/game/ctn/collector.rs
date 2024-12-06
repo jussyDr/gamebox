@@ -24,14 +24,14 @@ mod read {
         fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>>
         {
             [
-                BodyChunk::new(9, Self::read_chunk_9),
-                BodyChunk::new(11, Self::read_chunk_11),
-                BodyChunk::new(12, Self::read_chunk_12),
-                BodyChunk::new(13, Self::read_chunk_13),
-                BodyChunk::new(14, Self::read_chunk_14),
-                BodyChunk::new(16, Self::read_chunk_16),
-                BodyChunk::new(17, Self::read_chunk_17),
-                BodyChunk::new(18, Self::read_chunk_18),
+                BodyChunk::normal(9, Self::read_chunk_9),
+                BodyChunk::normal(11, Self::read_chunk_11),
+                BodyChunk::normal(12, Self::read_chunk_12),
+                BodyChunk::normal(13, Self::read_chunk_13),
+                BodyChunk::normal(14, Self::read_chunk_14),
+                BodyChunk::normal(16, Self::read_chunk_16),
+                BodyChunk::normal(17, Self::read_chunk_17),
+                BodyChunk::normal(18, Self::read_chunk_18),
             ]
             .into_iter()
         }

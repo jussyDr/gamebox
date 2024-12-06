@@ -57,7 +57,7 @@ mod read {
     impl BodyChunks for Surface {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(3, Self::read_chunk_3)].into_iter()
+            [BodyChunk::normal(3, Self::read_chunk_3)].into_iter()
         }
     }
 

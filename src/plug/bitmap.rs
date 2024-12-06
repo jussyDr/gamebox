@@ -47,22 +47,22 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(25, Self::read_chunk_25),
-                BodyChunk::new(32, Self::read_chunk_32),
-                BodyChunk::new(35, Self::read_chunk_35),
-                BodyChunk::new(37, Self::read_chunk_37),
-                BodyChunk::new(40, Self::read_chunk_40),
-                BodyChunk::new(42, Self::read_chunk_42),
-                BodyChunk::new(44, Self::read_chunk_44),
-                BodyChunk::new(45, Self::read_chunk_45),
-                BodyChunk::new(48, Self::read_chunk_48),
-                BodyChunk::new(50, Self::read_chunk_50),
-                BodyChunk::new(51, Self::read_chunk_51),
-                BodyChunk::new(52, Self::read_chunk_52),
-                BodyChunk::new(53, Self::read_chunk_53),
-                BodyChunk::new(54, Self::read_chunk_54),
-                BodyChunk::new(55, Self::read_chunk_55),
-                BodyChunk::new(56, Self::read_chunk_56),
+                BodyChunk::normal(25, Self::read_chunk_25),
+                BodyChunk::normal(32, Self::read_chunk_32),
+                BodyChunk::normal(35, Self::read_chunk_35),
+                BodyChunk::normal(37, Self::read_chunk_37),
+                BodyChunk::normal(40, Self::read_chunk_40),
+                BodyChunk::normal(42, Self::read_chunk_42),
+                BodyChunk::normal(44, Self::read_chunk_44),
+                BodyChunk::normal(45, Self::read_chunk_45),
+                BodyChunk::normal(48, Self::read_chunk_48),
+                BodyChunk::normal(50, Self::read_chunk_50),
+                BodyChunk::normal(51, Self::read_chunk_51),
+                BodyChunk::normal(52, Self::read_chunk_52),
+                BodyChunk::normal(53, Self::read_chunk_53),
+                BodyChunk::normal(54, Self::read_chunk_54),
+                BodyChunk::normal(55, Self::read_chunk_55),
+                BodyChunk::normal(56, Self::read_chunk_56),
             ]
             .into_iter()
         }

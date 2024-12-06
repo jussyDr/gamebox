@@ -22,6 +22,12 @@ pub trait ReadNum: Sized {
     fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error>;
 }
 
+impl ReadNum for u8 {
+    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
+        r.u8()
+    }
+}
+
 impl ReadNum for u32 {
     fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
         r.u32()

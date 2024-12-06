@@ -33,7 +33,7 @@ mod read {
     impl BodyChunks for ZoneGenealogy {
         fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(2, Self::read_chunk_2)].into_iter()
+            [BodyChunk::normal(2, Self::read_chunk_2)].into_iter()
         }
     }
 

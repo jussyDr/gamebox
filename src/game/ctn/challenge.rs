@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::Class;
 
-use super::{block::Block, ChallengeParameters};
+use super::{block::Block, AnchoredObject, ChallengeParameters};
 
 /// A challenge.
 #[derive(PartialEq, Default, Debug)]
@@ -12,7 +12,7 @@ pub struct Challenge {
     parameters: Arc<ChallengeParameters>,
     decoration_id: Arc<str>,
     blocks: Vec<Block>,
-    anchored_objects: Vec<()>,
+    anchored_objects: Vec<AnchoredObject>,
     baked_blocks: Vec<Block>,
 }
 
@@ -41,6 +41,7 @@ mod read {
         game::ctn::{
             block::Block, challenge_parameters::ChallengeParameters, collector_list::CollectorList,
             media_clip::MediaClip, media_clip_group::MediaClipGroup, zone_genealogy::ZoneGenealogy,
+            AnchoredObject,
         },
         read::{
             read_body_chunks,
@@ -70,18 +71,18 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(13, Self::read_chunk_13),
-                BodyChunk::new(17, Self::read_chunk_17),
+                BodyChunk::normal(13, Self::read_chunk_13),
+                BodyChunk::normal(17, Self::read_chunk_17),
                 BodyChunk::skippable(24, Self::read_chunk_24),
                 BodyChunk::skippable(25, Self::read_chunk_25),
-                BodyChunk::new(31, Self::read_chunk_31),
-                BodyChunk::new(34, Self::read_chunk_34),
-                BodyChunk::new(36, Self::read_chunk_36),
-                BodyChunk::new(37, Self::read_chunk_37),
-                BodyChunk::new(38, Self::read_chunk_38),
-                BodyChunk::new(40, Self::read_chunk_40),
+                BodyChunk::normal(31, Self::read_chunk_31),
+                BodyChunk::normal(34, Self::read_chunk_34),
+                BodyChunk::normal(36, Self::read_chunk_36),
+                BodyChunk::normal(37, Self::read_chunk_37),
+                BodyChunk::normal(38, Self::read_chunk_38),
+                BodyChunk::normal(40, Self::read_chunk_40),
                 BodyChunk::skippable(41, Self::read_chunk_41),
-                BodyChunk::new(42, Self::read_chunk_42),
+                BodyChunk::normal(42, Self::read_chunk_42),
                 BodyChunk::skippable(52, Self::read_chunk_52),
                 BodyChunk::skippable(54, Self::read_chunk_54),
                 BodyChunk::skippable(56, Self::read_chunk_56),
@@ -91,7 +92,7 @@ mod read {
                 BodyChunk::skippable(67, Self::read_chunk_67),
                 BodyChunk::skippable(68, Self::read_chunk_68),
                 BodyChunk::skippable(72, Self::read_chunk_72),
-                BodyChunk::new(73, Self::read_chunk_73),
+                BodyChunk::normal(73, Self::read_chunk_73),
                 BodyChunk::skippable(75, Self::read_chunk_75),
                 BodyChunk::skippable(79, Self::read_chunk_79),
                 BodyChunk::skippable(80, Self::read_chunk_80),
@@ -131,9 +132,9 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            let _player_model = r.id_or_null()?;
-            let _player_model = r.id_or_null()?;
-            let _player_model = r.id_or_null()?;
+            let _player_model_id = r.id_or_null()?;
+            let _player_model_collection = r.id_or_null()?;
+            let _player_model_author = r.id_or_null()?;
 
             Ok(())
         }
@@ -286,27 +287,29 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _car_marks_buffer = r.list_with_version(|r| {
-                todo!();
-                Ok(())
-            })?;
+            let _car_marks_buffer = r.list_with_version(|_| Ok(()))?;
 
             Ok(())
         }
 
-        fn read_chunk_64<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_64<I, N>(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, I, N>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if !matches!(version, 5 | 8) {
+            if !matches!(version, 5 | 7 | 8) {
                 return Err(Error::chunk_version(version));
             }
 
             r.u32()?;
             r.encapsulation(|r| {
-                self.anchored_objects = r.list_with_version(|r| {
-                    todo!();
-                    Ok(())
-                })?;
+                self.anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+
+                if version == 7 {
+                    let _items_on_item = r.list(|r| r.vec2::<u32>())?;
+                }
+
                 let _block_indices = r.list(|r| r.u32())?;
 
                 if version >= 6 {

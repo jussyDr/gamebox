@@ -71,7 +71,7 @@ mod read {
 
                 if flags & 0x00008000 != 0 {
                     let _author = r.id()?;
-                    let _skin = r.internal_node_ref::<BlockSkin>()?;
+                    let _skin = r.internal_node_ref_or_null::<BlockSkin>()?;
                 }
 
                 if flags & 0x00080000 != 0 || flags & 0x00100000 != 0 {

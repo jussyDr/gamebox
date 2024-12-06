@@ -1,5 +1,6 @@
 //! Game ctn engine.
 
+pub mod anchored_object;
 pub mod auto_terrain;
 pub mod block;
 pub mod block_info;
@@ -17,10 +18,20 @@ pub mod collector;
 pub mod collector_list;
 pub mod decoration;
 pub mod ghost;
+pub mod media_block;
+pub mod media_block_camera_custom;
+pub mod media_block_fog;
+pub mod media_block_mania_link;
+pub mod media_block_transition_fade;
+pub mod media_block_triangles;
+pub mod media_block_triangles_3d;
 pub mod media_clip;
 pub mod media_clip_group;
+pub mod media_track;
 pub mod zone_genealogy;
 
+#[doc(inline)]
+pub use anchored_object::AnchoredObject;
 #[doc(inline)]
 pub use auto_terrain::AutoTerrain;
 #[doc(inline)]
@@ -56,9 +67,23 @@ pub use decoration::Decoration;
 #[doc(inline)]
 pub use ghost::Ghost;
 #[doc(inline)]
+pub use media_block::MediaBlock;
+#[doc(inline)]
+pub use media_block_camera_custom::MediaBlockCameraCustom;
+#[doc(inline)]
+pub use media_block_fog::MediaBlockFog;
+#[doc(inline)]
+pub use media_block_mania_link::MediaBlockManialink;
+#[doc(inline)]
+pub use media_block_transition_fade::MediaBlockTransitionFade;
+#[doc(inline)]
+pub use media_block_triangles_3d::MediaBlockTriangles3D;
+#[doc(inline)]
 pub use media_clip::MediaClip;
 #[doc(inline)]
 pub use media_clip_group::MediaClipGroup;
+#[doc(inline)]
+pub use media_track::MediaTrack;
 #[doc(inline)]
 pub use zone_genealogy::ZoneGenealogy;
 

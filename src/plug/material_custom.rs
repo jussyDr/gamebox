@@ -52,16 +52,16 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(4, Self::read_chunk_4),
-                BodyChunk::new(10, Self::read_chunk_10),
-                BodyChunk::new(12, Self::read_chunk_12),
+                BodyChunk::normal(4, Self::read_chunk_4),
+                BodyChunk::normal(10, Self::read_chunk_10),
+                BodyChunk::normal(12, Self::read_chunk_12),
                 BodyChunk::skippable(15, Self::read_chunk_15),
                 BodyChunk::skippable(17, Self::read_chunk_17),
-                BodyChunk::new(18, Self::read_chunk_18),
-                BodyChunk::new(19, Self::read_chunk_19),
-                BodyChunk::new(20, Self::read_chunk_20),
-                BodyChunk::new(21, Self::read_chunk_21),
-                BodyChunk::new(22, Self::read_chunk_22),
+                BodyChunk::normal(18, Self::read_chunk_18),
+                BodyChunk::normal(19, Self::read_chunk_19),
+                BodyChunk::normal(20, Self::read_chunk_20),
+                BodyChunk::normal(21, Self::read_chunk_21),
+                BodyChunk::normal(22, Self::read_chunk_22),
             ]
             .into_iter()
         }

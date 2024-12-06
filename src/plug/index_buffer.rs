@@ -40,7 +40,7 @@ mod read {
 
     impl BodyChunks for IndexBuffer {
         fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(1, Self::read_chunk_1)].into_iter()
+            [BodyChunk::normal(1, Self::read_chunk_1)].into_iter()
         }
     }
 

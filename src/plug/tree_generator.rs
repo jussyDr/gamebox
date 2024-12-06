@@ -19,7 +19,7 @@ mod read {
 
     impl BodyChunks for TreeGenerator {
         fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0, Self::read_chunk_0)].into_iter()
+            [BodyChunk::normal(0, Self::read_chunk_0)].into_iter()
         }
     }
 
