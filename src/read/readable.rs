@@ -64,11 +64,11 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
 
         let chunk_num = (chunk_id & 0x00000fff) as u16;
 
-        let chunk = chunks
-            .find(|chunk| chunk.num == chunk_num)
-            .ok_or(Error::new(ErrorKind::Unsupported(format!(
+        let chunk = chunks.find(|chunk| chunk.num == chunk_num).ok_or_else(|| {
+            Error::new(ErrorKind::Unsupported(format!(
                 "unknown chunk: {chunk_num}"
-            ))))?;
+            )))
+        })?;
 
         match chunk.read_fn {
             BodyChunkReadFn::Normal(read_fn) => {
