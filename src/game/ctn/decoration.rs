@@ -4,7 +4,7 @@ use crate::{read::reader::ExternalNodeRef, Class};
 
 use super::collector::Collector;
 
-/// A decoration.
+/// Decoration of a challenge.
 #[derive(Default)]
 pub struct Decoration {
     parent: Collector,
@@ -19,6 +19,22 @@ impl Class for Decoration {
 }
 
 impl Decoration {
+    /// Decoration size.
+    pub const fn size(&self) -> &ExternalNodeRef {
+        &self.size
+    }
+
+    /// Decoration mood.
+    pub const fn mood(&self) -> &ExternalNodeRef {
+        &self.mood
+    }
+
+    /// Decoration audio.
+    pub const fn audio(&self) -> &ExternalNodeRef {
+        &self.audio
+    }
+
+    /// Decoration map.
     pub const fn map(&self) -> Option<&ExternalNodeRef> {
         self.map.as_ref()
     }

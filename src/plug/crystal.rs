@@ -6,7 +6,7 @@ use crate::{Class, Texcoord, Vec3};
 
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
-/// A crystal.
+/// Crystal.
 #[derive(PartialEq, Default, Debug)]
 pub struct Crystal {
     parent: TreeGenerator,
@@ -19,10 +19,12 @@ impl Class for Crystal {
 }
 
 impl Crystal {
+    /// Materials of the crystal.
     pub const fn materials(&self) -> &Vec<Arc<MaterialUserInst>> {
         &self.materials
     }
 
+    /// Geometry of the crystal.
     pub const fn geometry_layer(&self) -> &Mesh {
         &self.geometry_layer
     }
@@ -36,10 +38,12 @@ pub struct Mesh {
 }
 
 impl Mesh {
+    /// Position data.
     pub const fn positions(&self) -> &Vec<Vec3<f32>> {
         &self.positions
     }
 
+    /// Faces of the mesh.
     pub const fn faces(&self) -> &Vec<Face> {
         &self.faces
     }

@@ -6,29 +6,38 @@ use crate::{game::WaypointSpecialProperty, Vec3};
 
 use super::Direction;
 
-/// A block.
+/// Block placed in a Challenge.
 #[derive(PartialEq, Default, Debug)]
 pub struct Block {
-    id: Arc<str>,
+    block_model_id: Arc<str>,
     direction: Direction,
     coord: Vec3<u8>,
+    is_free: bool,
     has_flags: bool,
     waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
 }
 
 impl Block {
-    pub const fn id(&self) -> &Arc<str> {
-        &self.id
+    /// Identifier of the block's model.
+    pub const fn block_model_id(&self) -> &Arc<str> {
+        &self.block_model_id
     }
 
+    /// Cardinal direction of the block.
     pub const fn direction(&self) -> Direction {
         self.direction
     }
 
+    /// Coordinate of the block.
     pub const fn coord(&self) -> Vec3<u8> {
         self.coord
     }
 
+    pub const fn is_free(&self) -> bool {
+        self.is_free
+    }
+
+    /// Waypoint property of the block.
     pub const fn waypoint_special_property(&self) -> Option<&Arc<WaypointSpecialProperty>> {
         self.waypoint_special_property.as_ref()
     }
@@ -59,12 +68,13 @@ mod read {
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
-            self.id = r.id()?;
+            self.block_model_id = r.id()?;
             self.direction = r.enum_u8::<Direction>()?;
             self.coord.x = r.u8()?;
             self.coord.y = r.u8()?;
             self.coord.z = r.u8()?;
             let flags = r.u32()?;
+            self.is_free = flags & 0x20000000 != 0;
 
             if flags != 0xffffffff {
                 self.has_flags = true;

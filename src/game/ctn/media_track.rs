@@ -6,7 +6,7 @@ use crate::Class;
 
 use super::MediaBlock;
 
-/// A media track.
+/// Media track.
 #[derive(Default)]
 pub struct MediaTrack {
     name: String,
@@ -18,10 +18,12 @@ impl Class for MediaTrack {
 }
 
 impl MediaTrack {
+    /// Name of the media track.
     pub const fn name(&self) -> &String {
         &self.name
     }
 
+    /// Media blocks of the media track.
     pub const fn blocks(&self) -> &Vec<Arc<MediaBlock>> {
         &self.blocks
     }

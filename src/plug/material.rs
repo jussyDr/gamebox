@@ -6,7 +6,7 @@ use crate::Class;
 
 use super::material_custom::MaterialCustom;
 
-/// A material.
+/// Material.
 #[derive(Default)]
 pub struct Material {
     custom_material: Arc<MaterialCustom>,
@@ -17,6 +17,7 @@ impl Class for Material {
 }
 
 impl Material {
+    /// Custom material.
     pub const fn custom_material(&self) -> &Arc<MaterialCustom> {
         &self.custom_material
     }

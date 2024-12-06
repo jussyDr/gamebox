@@ -13,6 +13,7 @@ impl Class for BlockInfoMobil {
 }
 
 impl BlockInfoMobil {
+    /// Prefab of the mobil.
     pub const fn prefab(&self) -> &ExternalNodeRef {
         &self.prefab
     }

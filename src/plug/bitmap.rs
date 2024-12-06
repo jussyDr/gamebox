@@ -2,7 +2,7 @@
 
 use crate::{read::reader::ExternalNodeRef, Class};
 
-/// A bitmap.
+/// Bitmap.
 #[derive(Default)]
 pub struct Bitmap {
     image: ExternalNodeRef,
@@ -13,6 +13,7 @@ impl Class for Bitmap {
 }
 
 impl Bitmap {
+    /// Image of the bitmap.
     pub const fn image(&self) -> &ExternalNodeRef {
         &self.image
     }

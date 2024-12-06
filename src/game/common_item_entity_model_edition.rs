@@ -15,6 +15,7 @@ impl Class for CommonItemEntityModelEdition {
 }
 
 impl CommonItemEntityModelEdition {
+    /// Item model crystal.
     pub const fn crystal(&self) -> &Arc<Crystal> {
         &self.crystal
     }

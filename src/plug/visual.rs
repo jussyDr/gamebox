@@ -17,6 +17,7 @@ impl Class for Visual {
 }
 
 impl Visual {
+    /// Vertex streams of the visual.
     pub const fn vertex_streams(&self) -> &Vec<Arc<VertexStream>> {
         &self.vertex_streams
     }

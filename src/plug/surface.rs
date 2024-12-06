@@ -13,8 +13,9 @@ impl Class for Surface {
     const CLASS_ID: u32 = 0x0900c000;
 }
 
-/// A surface type.
+/// Surface type.
 pub enum SurfaceType {
+    /// Mesh surface.
     Mesh { vertices: Vec<Vec3<f32>> },
 }
 

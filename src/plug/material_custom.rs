@@ -15,14 +15,17 @@ impl Class for MaterialCustom {
 }
 
 impl MaterialCustom {
+    /// Base color texture.
     pub const fn base_color_texture(&self) -> &ExternalNodeRef {
         &self.base_color_texture
     }
 
+    /// Normal map texture.
     pub const fn normal_texture(&self) -> &ExternalNodeRef {
         &self.normal_texture
     }
 
+    /// Metallic roughness texture.
     pub const fn metallic_roughness_texture(&self) -> &ExternalNodeRef {
         &self.metallic_roughness_texture
     }

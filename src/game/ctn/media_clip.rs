@@ -36,7 +36,11 @@ mod read {
     impl BodyChunks for MediaClip {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::normal(13, Self::read_chunk_13)].into_iter()
+            [
+                BodyChunk::normal(13, Self::read_chunk_13),
+                BodyChunk::skippable(14, Self::read_chunk_14),
+            ]
+            .into_iter()
         }
     }
 
@@ -53,7 +57,19 @@ mod read {
 
             let _tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
             let _name = r.string()?;
+            let _stop_when_leave = r.bool()?;
             r.bool()?;
+            let _stop_when_respawn = r.bool()?;
+            r.string()?;
+            r.f32()?;
+            let _local_player_clip_ent_index = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_14<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         }

@@ -6,7 +6,7 @@ use crate::{read::reader::ExternalNodeRef, Class};
 
 use super::visual_indexed_triangles::VisualIndexedTriangles;
 
-/// A solid 2 model.
+/// Solid 2 model.
 #[derive(Default)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,

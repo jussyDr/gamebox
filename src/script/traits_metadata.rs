@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::{Class, Vec2, Vec3};
 
-/// A traits metadata.
+/// Traits metadata.
 #[derive(Default)]
 pub struct TraitsMetadata {
     traits: HashMap<String, Trait>,
@@ -15,31 +15,43 @@ impl Class for TraitsMetadata {
 }
 
 impl TraitsMetadata {
+    /// Metadata traits.
     pub const fn traits(&self) -> &HashMap<String, Trait> {
         &self.traits
     }
 }
 
-/// A trait
+/// A trait.
 pub enum Trait {
+    /// Void.
     Void,
+    /// Boolean.
     Boolean(bool),
+    /// Integer.
     Integer(i32),
+    /// Real number.
     Real(f32),
     Class,
+    /// Text.
     Text(String),
     Enum,
+    /// Associative array.
     Array {
         keys: Vec<Trait>,
         values: Vec<Trait>,
     },
     ParamArray,
+    /// 2-dimensional vector.
     Vec2(Vec2<f32>),
+    /// 3-dimensional vector.
     Vec3(Vec3<f32>),
+    /// 3-dimensional vector.
     Int3(Vec3<i32>),
     Iso4,
     Ident,
+    /// 2-dimensional vector.
     Int2(Vec2<i32>),
+    /// A struct.
     Struct {
         name: String,
         members: HashMap<String, Trait>,

@@ -8,7 +8,7 @@ use super::{
     block_info_variant_air::BlockInfoVariantAir, block_info_variant_ground::BlockInfoVariantGround,
 };
 
-/// A block info.
+/// Block info.
 #[derive(Default)]
 pub struct BlockInfo {
     parent: Collector,
@@ -23,18 +23,22 @@ impl Class for BlockInfo {
 }
 
 impl BlockInfo {
+    /// Base ground variant.
     pub const fn variant_base_ground(&self) -> &BlockInfoVariantGround {
         &self.variant_base_ground
     }
 
+    /// Base air variant.
     pub const fn variant_base_air(&self) -> &BlockInfoVariantAir {
         &self.variant_base_air
     }
 
+    /// Additional ground variants.
     pub fn additional_variants_ground(&self) -> &[Arc<BlockInfoVariantGround>] {
         &self.additional_variants_ground
     }
 
+    /// Additional air variants.
     pub fn additional_variants_air(&self) -> &[Arc<BlockInfoVariantAir>] {
         &self.additional_variants_air
     }

@@ -26,6 +26,7 @@ impl Deref for VisualIndexed {
 }
 
 impl VisualIndexed {
+    /// Index buffer of the visual.
     pub const fn index_buffer(&self) -> &IndexBuffer {
         &self.index_buffer
     }

@@ -14,6 +14,7 @@ pub struct Challenge {
     blocks: Vec<Block>,
     anchored_objects: Vec<AnchoredObject>,
     baked_blocks: Vec<Block>,
+    embedded_objects: Vec<u8>,
 }
 
 impl Class for Challenge {
@@ -31,6 +32,10 @@ impl Challenge {
 
     pub const fn blocks(&self) -> &Vec<Block> {
         &self.blocks
+    }
+
+    pub const fn embedded_objects(&self) -> &Vec<u8> {
+        &self.embedded_objects
     }
 }
 
@@ -508,7 +513,7 @@ mod read {
 
                     Ok(())
                 })?;
-                let _embedded_zip_data = r.byte_buf()?;
+                self.embedded_objects = r.byte_buf()?;
                 let _textures = r.list(|r| r.string())?;
 
                 Ok(())
@@ -607,10 +612,7 @@ mod read {
                     return Err(Error::version("lightmaps", lightmaps_version));
                 }
 
-                if lightmaps_version == 10 {
-                    r.u32()?;
-                } else {
-                    r.u32()?;
+                if r.u32()? != 0 {
                     let _webp = r.byte_buf()?;
                     let _webp = r.byte_buf()?;
                     let _webp = r.byte_buf()?;
@@ -620,7 +622,6 @@ mod read {
                     let _webp = r.byte_buf()?;
                     r.u32()?;
                     r.u32()?;
-
                     let _lightmap_cache_data_size = r.u32()?;
                     let _compressed_lightmap_cache_data = r.byte_buf()?;
                 }
@@ -639,7 +640,10 @@ mod read {
 
         fn read_chunk_93<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             r.u32()?;
-            r.u32()?;
+
+            if r.bool()? {
+                r.bytes(51071)?;
+            }
 
             Ok(())
         }
@@ -659,6 +663,20 @@ mod read {
 
             if version != 0 {
                 return Err(Error::chunk_version(version));
+            }
+
+            for block in &self.blocks {
+                if block.is_free() {
+                    let _absolute_position = r.vec3::<f32>()?;
+                    let _pitch_yaw_roll = r.vec3::<f32>()?;
+                }
+            }
+
+            for baked_block in &self.baked_blocks {
+                if baked_block.is_free() {
+                    let _absolute_position = r.vec3::<f32>()?;
+                    let _pitch_yaw_roll = r.vec3::<f32>()?;
+                }
             }
 
             Ok(())
@@ -735,7 +753,7 @@ mod read {
 
             for _ in &self.anchored_objects {
                 if r.bool8()? {
-                    todo!()
+                    let _foreground_pack_desc = r.pack_desc()?;
                 }
             }
 
@@ -781,15 +799,11 @@ mod read {
             }
 
             for _ in &self.blocks {
-                if r.u32()? != 0xffffffff {
-                    todo!()
-                }
+                r.u32()?;
             }
 
             for _ in &self.anchored_objects {
-                if r.u32()? != 0xffffffff {
-                    todo!()
-                }
+                r.u32()?;
             }
 
             let _id_flags_pair = r.list(|r| {
