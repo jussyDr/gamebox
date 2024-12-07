@@ -85,7 +85,7 @@ mod read {
 
             let v = r.u32()?;
 
-            if !matches!(v, 6 | 8) {
+            if !matches!(v, 6 | 8 | 10) {
                 return Err(Error::version("", v));
             }
 

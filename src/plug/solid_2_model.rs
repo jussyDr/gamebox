@@ -102,7 +102,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if !matches!(version, 30 | 34) {
+            if !matches!(version, 30 | 32 | 34) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -231,6 +231,9 @@ mod read {
 
             if version >= 31 {
                 r.u32()?;
+            }
+
+            if version >= 33 {
                 r.u32()?;
             }
 
