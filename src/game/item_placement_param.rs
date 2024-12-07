@@ -83,13 +83,25 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
+            let v = r.u32()?;
+
+            if !matches!(v, 6 | 8) {
+                return Err(Error::version("", v));
+            }
+
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
-            r.u32()?;
+
+            if v >= 8 {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }

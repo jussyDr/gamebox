@@ -226,7 +226,7 @@ mod read {
         fn read_chunk_31<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if !matches!(version, 10 | 12) {
+            if !matches!(version, 10..=12) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -234,8 +234,11 @@ mod read {
             let _disable_lightmap = r.bool()?;
             r.u32()?;
 
-            if version >= 12 {
+            if version >= 11 {
                 r.u8()?;
+            }
+
+            if version >= 12 {
                 r.u32()?;
                 r.u32()?;
             }

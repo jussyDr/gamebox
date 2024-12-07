@@ -47,7 +47,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 6 {
+            if !matches!(version, 4 | 6) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -59,6 +59,11 @@ mod read {
             r.vec3::<f32>()?;
             r.u32()?;
             r.u32()?;
+
+            if version < 5 {
+                r.u32()?;
+            }
+
             r.string()?;
             r.string()?;
             r.string()?;
@@ -69,7 +74,10 @@ mod read {
             r.vec3::<f32>()?;
             r.vec3::<f32>()?;
             r.u32()?;
-            r.u8()?;
+
+            if version >= 5 {
+                r.u8()?;
+            }
 
             Ok(())
         }

@@ -102,7 +102,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 34 {
+            if !matches!(version, 30 | 34) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -112,7 +112,10 @@ mod read {
                 let material_index = r.u32()?;
                 r.u32()?;
                 let _lod = r.u32()?;
-                r.u32()?;
+
+                if version >= 32 {
+                    r.u32()?;
+                }
 
                 Ok(ShadedGeom {
                     visual_index,
@@ -225,8 +228,11 @@ mod read {
             r.u32()?;
             r.u32()?;
             r.u32()?;
-            r.u32()?;
-            r.u32()?;
+
+            if version >= 31 {
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }

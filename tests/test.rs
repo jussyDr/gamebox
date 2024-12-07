@@ -44,6 +44,11 @@ fn read_iten_pt_triangle_up_right_front_yellow_booster() {
 }
 
 #[test]
+fn read_item_rock_plate_2_gray() {
+    read_file::<ItemModel>("tests/files/item/Rock_Plate_2_gray.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_map_deco_48x48() {
     read_file::<Challenge>("tests/files/map/Deco48x48.Map.Gbx").unwrap();
 }
