@@ -2,12 +2,38 @@
 
 use crate::Class;
 
-/// A collector.
-#[derive(PartialEq, Default, Debug)]
-pub struct Collector;
+/// Collector.
+#[derive(Default)]
+pub struct Collector {
+    icon: Option<Icon>,
+    name: String,
+}
 
 impl Class for Collector {
     const CLASS_ID: u32 = 0x2e001000;
+}
+
+impl Collector {
+    /// Icon.
+    pub const fn icon(&self) -> Option<&Icon> {
+        self.icon.as_ref()
+    }
+
+    /// Name.
+    pub const fn name(&self) -> &String {
+        &self.name
+    }
+}
+
+/// Collector icon.
+pub enum Icon {
+    /// Normal icon.
+    Normal,
+    /// WebP icon.
+    WebP {
+        /// WebP file data.
+        data: Vec<u8>,
+    },
 }
 
 mod read {
@@ -19,7 +45,7 @@ mod read {
         BodyChunk, BodyChunks, Error,
     };
 
-    use super::Collector;
+    use super::{Collector, Icon};
 
     impl HeaderChunks for Collector {
         fn header_chunks<R: Read, I: IdStateMut, N>(
@@ -80,12 +106,16 @@ mod read {
 
             let is_webp = width & 0x8000 != 0 && height & 0x8000 != 0;
 
-            if is_webp {
+            self.icon = Some(if is_webp {
                 r.u16()?;
-                r.byte_buf()?;
+                let data = r.byte_buf()?;
+
+                Icon::WebP { data }
             } else {
                 let _icon_data = r.repeat((width as usize) + (height as usize), |r| r.u32())?;
-            }
+
+                Icon::Normal
+            });
 
             Ok(())
         }
@@ -123,7 +153,7 @@ mod read {
         }
 
         fn read_chunk_12<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _name = r.string()?;
+            self.name = r.string()?;
 
             Ok(())
         }

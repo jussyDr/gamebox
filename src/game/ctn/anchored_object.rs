@@ -2,12 +2,13 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, Vec3};
 
 /// An anchored object.
 #[derive(PartialEq, Default, Debug)]
 pub struct AnchoredObject {
     model_id: Arc<str>,
+    pos: Vec3<f32>,
 }
 
 impl Class for AnchoredObject {
@@ -18,6 +19,11 @@ impl AnchoredObject {
     /// Item model identifier.
     pub const fn model_id(&self) -> &Arc<str> {
         &self.model_id
+    }
+
+    /// Position.
+    pub const fn pos(&self) -> Vec3<f32> {
+        self.pos
     }
 }
 
@@ -73,7 +79,7 @@ mod read {
             let _pitch_yaw_roll = r.vec3::<f32>()?;
             let _block_unit_coord = r.vec3::<u8>()?;
             let _anchor_tree_id = r.id_or_null()?;
-            let _absolute_position = r.vec3::<f32>()?;
+            self.pos = r.vec3()?;
             let _waypoint_special_property =
                 r.internal_node_ref_or_null::<WaypointSpecialProperty>()?;
             let flags = r.u16()?;
