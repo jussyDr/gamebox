@@ -261,11 +261,15 @@ mod read {
         fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 1 {
+            if !matches!(version, 0 | 1) {
                 return Err(Error::chunk_version(version));
             }
 
-            r.list(|r| r.u32())?;
+            if version == 0 {
+                r.list(|r| r.vec2::<f32>())?;
+            } else {
+                r.list(|r| r.u32())?;
+            }
 
             Ok(())
         }

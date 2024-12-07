@@ -18,10 +18,12 @@ impl Class for BlockInfoVariant {
 }
 
 impl BlockInfoVariant {
+    /// Mobils.
     pub fn mobils(&self) -> &[Vec<Arc<BlockInfoMobil>>] {
         &self.mobils
     }
 
+    /// Block unit models.
     pub fn block_unit_models(&self) -> &[Arc<BlockUnitInfo>] {
         &self.block_unit_models
     }

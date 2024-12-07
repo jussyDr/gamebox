@@ -22,18 +22,26 @@ impl Class for Challenge {
 }
 
 impl Challenge {
+    /// Challenge parameters.
     pub const fn parameters(&self) -> &Arc<ChallengeParameters> {
         &self.parameters
     }
 
+    /// Identifier of the decoration.
     pub const fn decoration_id(&self) -> &Arc<str> {
         &self.decoration_id
     }
 
+    /// Blocks placed in this challenge.
     pub const fn blocks(&self) -> &Vec<Block> {
         &self.blocks
     }
 
+    pub const fn anchored_objects(&self) -> &Vec<AnchoredObject> {
+        &self.anchored_objects
+    }
+
+    /// Block and item models embedded in this challenge.
     pub const fn embedded_objects(&self) -> &Vec<u8> {
         &self.embedded_objects
     }

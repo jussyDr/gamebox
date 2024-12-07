@@ -10,6 +10,11 @@ use gamebox::{
 };
 
 #[test]
+fn read_block_grass_remover() {
+    read_file::<ItemModel>("tests/files/block/GrassRemover.Block.Gbx").unwrap();
+}
+
+#[test]
 fn read_decoration_base_48x48_day() {
     read_file::<Decoration>("tests/files/decoration/Base48x48Day.Decoration.Gbx").unwrap();
 }

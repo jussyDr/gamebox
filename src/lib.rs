@@ -26,6 +26,7 @@ pub struct Vec2<T> {
 
 /// A 3-dimensional vector of type `T`.
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
+#[repr(C)]
 pub struct Vec3<T> {
     /// X component.
     pub x: T,
@@ -45,6 +46,30 @@ impl<T: Copy> Vec3<T> {
     }
 }
 
+/// A 3-dimensional vector of type `T`.
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
+pub struct Vec4<T> {
+    /// X component.
+    pub x: T,
+    /// Y component.
+    pub y: T,
+    /// Z component.
+    pub z: T,
+    /// W component.
+    pub w: T,
+}
+
+impl<T: Copy> Vec4<T> {
+    pub const fn from_array(array: [T; 4]) -> Self {
+        Self {
+            x: array[0],
+            y: array[1],
+            z: array[2],
+            w: array[3],
+        }
+    }
+}
+
 /// A quaternion.
 #[derive(Clone, Copy)]
 pub struct Quat {
@@ -56,6 +81,12 @@ pub struct Quat {
     pub z: f32,
     /// W component.
     pub w: f32,
+}
+
+pub struct Iso4 {
+    pub x: Vec4<f32>,
+    pub y: Vec4<f32>,
+    pub z: Vec4<f32>,
 }
 
 /// A texture coordinate.

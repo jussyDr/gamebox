@@ -146,10 +146,12 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(f32::from_le_bytes(bytes))
     }
 
+    /// Read a 32-bit boolean value.
     pub fn bool(&mut self) -> Result<bool, Error> {
         bool_from_u32(self.u32()?)
     }
 
+    /// Read an 8-bit boolean value.
     pub fn bool8(&mut self) -> Result<bool, Error> {
         bool_from_u32(self.u8()? as u32)
     }
@@ -216,41 +218,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8")))
     }
 
-    pub fn encapsulation(
-        &mut self,
-        mut read_fn: impl FnMut(&mut Reader<&mut R, IdState, NullNodeState>) -> Result<(), Error>,
-    ) -> Result<(), Error> {
-        let size = self.u32()?;
-
-        let mut reader = Reader::new(&mut self.inner, IdState::new(), NullNodeState);
-
-        read_fn(&mut reader)?;
-
-        // reader.expect_eof()?;
-
-        Ok(())
-    }
-
-    pub fn repeat<T>(
-        &mut self,
-        n: usize,
-        mut read_fn: impl FnMut(&mut Self) -> Result<T, Error>,
-    ) -> Result<Vec<T>, Error> {
-        iter::repeat_with(|| read_fn(self)).take(n).collect()
-    }
-
-    pub fn expect_eof(&mut self) -> Result<(), Error> {
-        let mut buf = [0];
-
-        let n = self.inner.read(&mut buf).map_err(Error::io)?;
-
-        if n != 0 {
-            return Err(Error::new(ErrorKind::Format("expected EOF")));
-        }
-
-        Ok(())
-    }
-
     pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
         let version = self.u8()?;
 
@@ -267,6 +234,14 @@ impl<R: Read, I, N> Reader<R, I, N> {
             locator_url,
             checksum,
         })
+    }
+
+    pub fn repeat<T>(
+        &mut self,
+        n: usize,
+        mut read_fn: impl FnMut(&mut Self) -> Result<T, Error>,
+    ) -> Result<Vec<T>, Error> {
+        iter::repeat_with(|| read_fn(self)).take(n).collect()
     }
 
     pub fn list<T>(
@@ -291,6 +266,33 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
 
         self.list(read_elem_fn)
+    }
+
+    pub fn encapsulation(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Reader<&mut R, IdState, NullNodeState>) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        let size = self.u32()?;
+
+        let mut reader = Reader::new(&mut self.inner, IdState::new(), NullNodeState);
+
+        read_fn(&mut reader)?;
+
+        // reader.expect_eof()?;
+
+        Ok(())
+    }
+
+    pub fn expect_eof(&mut self) -> Result<(), Error> {
+        let mut buf = [0];
+
+        let n = self.inner.read(&mut buf).map_err(Error::io)?;
+
+        if n != 0 {
+            return Err(Error::new(ErrorKind::Format("expected EOF")));
+        }
+
+        Ok(())
     }
 }
 

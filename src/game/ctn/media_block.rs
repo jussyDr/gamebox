@@ -107,11 +107,9 @@ mod read {
 
                     Ok(Self::Fog(media_block_fog))
                 }
-                _ => {
-                    return Err(Error::new(ErrorKind::Unsupported(format!(
-                        "{class_id:08x?}"
-                    ))))
-                }
+                _ => Err(Error::new(ErrorKind::Unsupported(format!(
+                    "{class_id:08x?}"
+                )))),
             }
         }
     }

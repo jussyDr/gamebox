@@ -1,28 +1,17 @@
 //! Item model.
 
-use std::sync::Arc;
-
 use crate::Class;
 
-use super::{
-    common_item_entity_model_edition::CommonItemEntityModelEdition, ctn::collector::Collector,
-};
+use super::ctn::collector::Collector;
 
 /// An item model.
 #[derive(PartialEq, Default, Debug)]
 pub struct ItemModel {
     parent: Collector,
-    entity_model_edition: Arc<CommonItemEntityModelEdition>,
 }
 
 impl Class for ItemModel {
     const CLASS_ID: u32 = 0x2e002000;
-}
-
-impl ItemModel {
-    pub const fn entity_model_edition(&self) -> &Arc<CommonItemEntityModelEdition> {
-        &self.entity_model_edition
-    }
 }
 
 mod read {
@@ -31,13 +20,13 @@ mod read {
     use crate::{
         game::{
             common_item_entity_model_edition::CommonItemEntityModelEdition,
-            item_placement_param::ItemPlacementParam,
+            item_placement_param::ItemPlacementParam, BlockItem,
         },
         read::{
             read_body_chunks,
             readable::Sealed,
             reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody, Readable,
+            BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
     };
 
@@ -135,7 +124,21 @@ mod read {
             let _vis_custom_model = r.u32()?;
             let _actions = r.list(|r| r.u32())?;
             let _default_cam = r.u32()?;
-            self.entity_model_edition = r.internal_node_ref::<CommonItemEntityModelEdition>()?;
+            r.test(|r, class_id| match class_id {
+                0x2e025000 => {
+                    let mut block_item = BlockItem::default();
+                    block_item.read_body(r)?;
+
+                    Ok(())
+                }
+                0x2e026000 => {
+                    let mut entity_model_edition = CommonItemEntityModelEdition::default();
+                    entity_model_edition.read_body(r)?;
+
+                    Ok(())
+                }
+                _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
+            })?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
