@@ -49,6 +49,11 @@ fn read_item_rock_plate_2_gray() {
 }
 
 #[test]
+fn read_item_piege_gbx() {
+    read_file::<ItemModel>("tests/files/item/Piege.Gbx.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_item_wrh_p_ql_r_3_2() {
     read_file::<ItemModel>("tests/files/item/WRH_P_QL_R_3_2.Item.Gbx").unwrap();
 }

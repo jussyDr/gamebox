@@ -75,7 +75,7 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        plug::material_user_inst::MaterialUserInst,
+        plug::{material_user_inst::MaterialUserInst, LightUserModel},
         read::{
             read_body_chunks,
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -152,9 +152,9 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_5<N>(
+        fn read_chunk_5(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, N>,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -246,7 +246,52 @@ mod read {
                         let _vertical_angle = r.f32()?;
                         let _roll_angle = r.f32()?;
                     }
-                    _ => return Err(Error::new(ErrorKind::Unsupported("layer type".to_string()))),
+                    18 => {
+                        let version = r.u32()?;
+
+                        if version != 2 {
+                            return Err(Error::version("layer", version));
+                        }
+
+                        let _crystal_enabled = r.bool()?;
+                        let _layer_id = r.id()?;
+                        let _layer_name = r.string()?;
+                        let _is_enabled = r.bool()?;
+                        let modifier_version = r.u32()?;
+
+                        if modifier_version != 0 {
+                            return Err(Error::version("modifier", modifier_version));
+                        }
+
+                        let _mask = r.list(|r| {
+                            let _group_index = r.u32()?;
+                            let _layer_id = r.id()?;
+
+                            Ok(())
+                        })?;
+
+                        let light_version = r.u32()?;
+
+                        if light_version != 0 {
+                            return Err(Error::version("light", light_version));
+                        }
+
+                        let _lights = r.list(|r| r.internal_node_ref::<LightUserModel>())?;
+                        let _light_positions = r.list(|r| {
+                            r.u32()?;
+                            r.vec3::<f32>()?;
+                            r.vec3::<f32>()?;
+                            r.vec3::<f32>()?;
+                            r.vec3::<f32>()?;
+
+                            Ok(())
+                        })?;
+                    }
+                    _ => {
+                        return Err(Error::new(ErrorKind::Unsupported(format!(
+                            "layer type variant: {layer_type}"
+                        ))))
+                    }
                 }
             }
 

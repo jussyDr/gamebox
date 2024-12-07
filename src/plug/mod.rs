@@ -5,6 +5,7 @@ pub mod crystal;
 pub mod index_buffer;
 pub mod item_placement;
 pub mod light;
+pub mod light_user_model;
 pub mod material;
 pub mod material_custom;
 pub mod material_user_inst;
@@ -29,6 +30,8 @@ pub use crystal::Crystal;
 pub use index_buffer::IndexBuffer;
 #[doc(inline)]
 pub use light::Light;
+#[doc(inline)]
+pub use light_user_model::LightUserModel;
 #[doc(inline)]
 pub use material::Material;
 #[doc(inline)]
