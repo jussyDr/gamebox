@@ -17,6 +17,18 @@ impl Class for AutoTerrain {
     const CLASS_ID: u32 = 0x03120000;
 }
 
+impl AutoTerrain {
+    /// Offset.
+    pub const fn offset(&self) -> &Vec3<u32> {
+        &self.offset
+    }
+
+    /// Genealogy.
+    pub const fn genealogy(&self) -> &Arc<ZoneGenealogy> {
+        &self.genealogy
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 

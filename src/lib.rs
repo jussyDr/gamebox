@@ -107,6 +107,16 @@ impl Texcoord {
     }
 }
 
+/// Rotation represented as pitch, yaw, and roll angles.
+pub struct PitchYawRoll {
+    /// Pitch angle.
+    pub pitch: f32,
+    /// Yaw angle.
+    pub yaw: f32,
+    /// Roll angle.
+    pub roll: f32,
+}
+
 /// A pack desc.
 pub enum PackDesc {
     Internal {

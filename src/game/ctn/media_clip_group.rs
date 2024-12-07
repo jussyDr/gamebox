@@ -1,13 +1,38 @@
 //! Media clip group.
 
+use std::sync::Arc;
+
 use crate::Class;
+
+use super::MediaClip;
 
 /// A media clip group.
 #[derive(Default)]
-pub struct MediaClipGroup;
+pub struct MediaClipGroup {
+    clips: Vec<ClipTrigger>,
+}
 
 impl Class for MediaClipGroup {
     const CLASS_ID: u32 = 0x0307a000;
+}
+
+impl MediaClipGroup {
+    /// Clips.
+    pub const fn clips(&self) -> &Vec<ClipTrigger> {
+        &self.clips
+    }
+}
+
+/// Clip trigger.
+pub struct ClipTrigger {
+    clip: Arc<MediaClip>,
+}
+
+impl ClipTrigger {
+    /// Clip.
+    pub const fn clip(&self) -> &Arc<MediaClip> {
+        &self.clip
+    }
 }
 
 mod read {
@@ -22,7 +47,7 @@ mod read {
         },
     };
 
-    use super::MediaClipGroup;
+    use super::{ClipTrigger, MediaClipGroup};
 
     impl ReadBody for MediaClipGroup {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -45,7 +70,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _clips = r.list_with_version(|r| r.internal_node_ref::<MediaClip>())?;
+            let clips = r.list_with_version(|r| r.internal_node_ref::<MediaClip>())?;
             let _triggers = r.list(|r| {
                 r.u32()?;
                 r.u32()?;
@@ -57,6 +82,8 @@ mod read {
 
                 Ok(())
             })?;
+
+            self.clips = clips.into_iter().map(|clip| ClipTrigger { clip }).collect();
 
             Ok(())
         }

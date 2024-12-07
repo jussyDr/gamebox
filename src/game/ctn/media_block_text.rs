@@ -1,13 +1,30 @@
 //! Media block text.
 
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{control::EffectSimi, Class};
 
 /// Text media block.
 #[derive(Default)]
-pub struct MediaBlockText;
+pub struct MediaBlockText {
+    text: String,
+    effect: Arc<EffectSimi>,
+}
 
 impl Class for MediaBlockText {
     const CLASS_ID: u32 = 0x030a8000;
+}
+
+impl MediaBlockText {
+    /// Text.
+    pub const fn text(&self) -> &String {
+        &self.text
+    }
+
+    /// Effect.
+    pub const fn effect(&self) -> &Arc<EffectSimi> {
+        &self.effect
+    }
 }
 
 mod read {
@@ -49,8 +66,8 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _text = r.string()?;
-            let _effect = r.internal_node_ref::<EffectSimi>()?;
+            self.text = r.string()?;
+            self.effect = r.internal_node_ref::<EffectSimi>()?;
 
             Ok(())
         }

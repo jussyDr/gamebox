@@ -13,6 +13,18 @@ impl Class for WaypointSpecialProperty {
     const CLASS_ID: u32 = 0x2e009000;
 }
 
+impl WaypointSpecialProperty {
+    /// Tag.
+    pub const fn tag(&self) -> &String {
+        &self.tag
+    }
+
+    /// Order.
+    pub const fn order(&self) -> u32 {
+        self.order
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 

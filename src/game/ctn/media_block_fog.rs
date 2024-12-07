@@ -4,11 +4,23 @@ use crate::Class;
 
 /// A media block fog.
 #[derive(Default)]
-pub struct MediaBlockFog;
+pub struct MediaBlockFog {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockFog {
     const CLASS_ID: u32 = 0x03199000;
 }
+
+impl MediaBlockFog {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Fog media block key.
+pub struct Key;
 
 mod read {
     use std::io::{Read, Seek};
@@ -19,7 +31,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockFog;
+    use super::{Key, MediaBlockFog};
 
     impl ReadBody for MediaBlockFog {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -44,7 +56,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _keys = r.list(|r| {
+            self.keys = r.list(|r| {
                 let _time = r.f32()?;
                 let _intensity = r.f32()?;
                 let _sky_intensity = r.f32()?;
@@ -54,7 +66,7 @@ mod read {
                 let _clouds_opacity = r.f32()?;
                 let _clouds_speed = r.f32()?;
 
-                Ok(())
+                Ok(Key)
             })?;
 
             Ok(())

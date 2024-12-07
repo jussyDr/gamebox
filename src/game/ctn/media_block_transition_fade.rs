@@ -4,11 +4,23 @@ use crate::Class;
 
 /// A media block transition fade.
 #[derive(Default)]
-pub struct MediaBlockTransitionFade;
+pub struct MediaBlockTransitionFade {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockTransitionFade {
     const CLASS_ID: u32 = 0x030ab000;
 }
+
+impl MediaBlockTransitionFade {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Fading transition media block key.
+pub struct Key;
 
 mod read {
     use std::io::{Read, Seek};
@@ -19,7 +31,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockTransitionFade;
+    use super::{Key, MediaBlockTransitionFade};
 
     impl ReadBody for MediaBlockTransitionFade {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -38,11 +50,11 @@ mod read {
 
     impl MediaBlockTransitionFade {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _keys = r.list(|r| {
+            self.keys = r.list(|r| {
                 let _time = r.f32()?;
                 let _opacity = r.f32()?;
 
-                Ok(())
+                Ok(Key)
             })?;
             let _color = r.vec3::<f32>()?;
             r.f32()?;

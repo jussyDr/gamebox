@@ -1,13 +1,32 @@
 //! Media clip.
 
+use std::sync::Arc;
+
 use crate::Class;
+
+use super::MediaTrack;
 
 /// A media clip.
 #[derive(Default)]
-pub struct MediaClip;
+pub struct MediaClip {
+    tracks: Vec<Arc<MediaTrack>>,
+    name: String,
+}
 
 impl Class for MediaClip {
     const CLASS_ID: u32 = 0x03079000;
+}
+
+impl MediaClip {
+    /// Tracks.
+    pub const fn tracks(&self) -> &Vec<Arc<MediaTrack>> {
+        &self.tracks
+    }
+
+    /// Name.
+    pub const fn name(&self) -> &String {
+        &self.name
+    }
 }
 
 mod read {
@@ -55,8 +74,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
-            let _name = r.string()?;
+            self.tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
+            self.name = r.string()?;
             let _stop_when_leave = r.bool()?;
             r.bool()?;
             let _stop_when_respawn = r.bool()?;

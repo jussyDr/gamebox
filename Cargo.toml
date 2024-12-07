@@ -7,7 +7,6 @@ edition = "2021"
 name = "bench"
 harness = false
 
-
 [dependencies]
 indexmap = "2.7.0"
 lzo1x = "0.2.0"

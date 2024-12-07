@@ -4,11 +4,23 @@ use crate::Class;
 
 /// Sound media block.
 #[derive(Default)]
-pub struct MediaBlockSound;
+pub struct MediaBlockSound {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockSound {
     const CLASS_ID: u32 = 0x030a7000;
 }
+
+impl MediaBlockSound {
+    /// Keys
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Sound media block key.
+pub struct Key;
 
 mod read {
     use std::io::{Read, Seek};
@@ -19,7 +31,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockSound;
+    use super::{Key, MediaBlockSound};
 
     impl ReadBody for MediaBlockSound {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -67,13 +79,13 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _keys = r.list(|r| {
+            self.keys = r.list(|r| {
                 let _time = r.f32()?;
                 let _volume = r.f32()?;
                 let _pan = r.f32()?;
                 let _position = r.vec3::<f32>()?;
 
-                Ok(())
+                Ok(Key)
             })?;
 
             Ok(())

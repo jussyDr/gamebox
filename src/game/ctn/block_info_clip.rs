@@ -1,5 +1,7 @@
 //! Block info clip.
 
+use std::ops::Deref;
+
 use crate::Class;
 
 use super::block_info::BlockInfo;
@@ -12,6 +14,14 @@ pub struct BlockInfoClip {
 
 impl Class for BlockInfoClip {
     const CLASS_ID: u32 = 0x03053000;
+}
+
+impl Deref for BlockInfoClip {
+    type Target = BlockInfo;
+
+    fn deref(&self) -> &BlockInfo {
+        &self.parent
+    }
 }
 
 mod read {

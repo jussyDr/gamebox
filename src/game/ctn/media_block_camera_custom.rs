@@ -4,11 +4,23 @@ use crate::Class;
 
 /// A media block camera custom.
 #[derive(Default)]
-pub struct MediaBlockCameraCustom;
+pub struct MediaBlockCameraCustom {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockCameraCustom {
     const CLASS_ID: u32 = 0x030a2000;
 }
+
+impl MediaBlockCameraCustom {
+    /// Keys
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Custom camera media block key.
+pub struct Key;
 
 mod read {
     use std::io::{Read, Seek};
@@ -19,7 +31,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockCameraCustom;
+    use super::{Key, MediaBlockCameraCustom};
 
     impl ReadBody for MediaBlockCameraCustom {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -44,7 +56,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _keys = r.list(|r| {
+            self.keys = r.list(|r| {
                 let _time = r.f32()?;
                 let _interpolation = r.u32()?;
                 let _anchor_rot = r.bool()?;
@@ -67,7 +79,7 @@ mod read {
                 let _target_position = r.vec3::<f32>()?;
                 let _near_z = r.f32()?;
 
-                Ok(())
+                Ok(Key)
             })?;
 
             Ok(())

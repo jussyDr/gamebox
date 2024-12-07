@@ -1,13 +1,24 @@
 //! Anchored object.
 
+use std::sync::Arc;
+
 use crate::Class;
 
 /// An anchored object.
 #[derive(PartialEq, Default, Debug)]
-pub struct AnchoredObject;
+pub struct AnchoredObject {
+    model_id: Arc<str>,
+}
 
 impl Class for AnchoredObject {
     const CLASS_ID: u32 = 0x03101000;
+}
+
+impl AnchoredObject {
+    /// Item model identifier.
+    pub const fn model_id(&self) -> &Arc<str> {
+        &self.model_id
+    }
 }
 
 mod read {
@@ -56,7 +67,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _item_model_id = r.id_or_null()?;
+            self.model_id = r.id()?;
             let _item_model_collection = r.id_or_null()?;
             let _item_model_author = r.id_or_null()?;
             let _pitch_yaw_roll = r.vec3::<f32>()?;

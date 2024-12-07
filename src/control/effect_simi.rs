@@ -4,11 +4,23 @@ use crate::Class;
 
 /// Effect simi.
 #[derive(Default)]
-pub struct EffectSimi;
+pub struct EffectSimi {
+    keys: Vec<Key>,
+}
 
 impl Class for EffectSimi {
     const CLASS_ID: u32 = 0x07010000;
 }
+
+impl EffectSimi {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Effect simi key.
+pub struct Key;
 
 mod read {
     use std::io::{Read, Seek};
@@ -19,7 +31,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::EffectSimi;
+    use super::{EffectSimi, Key};
 
     impl ReadBody for EffectSimi {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -38,7 +50,7 @@ mod read {
 
     impl EffectSimi {
         fn read_chunk_5<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _keys = r.list(|r| {
+            self.keys = r.list(|r| {
                 let _time = r.f32()?;
                 let _position = r.vec2::<f32>()?;
                 let _rotation = r.f32()?;
@@ -50,7 +62,7 @@ mod read {
                 r.f32()?;
                 r.f32()?;
 
-                Ok(())
+                Ok(Key)
             })?;
             let _centered = r.bool()?;
             let _color_blend_mode = r.u32()?;
