@@ -333,4 +333,30 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
             },
         }
     }
+
+    pub fn test_or_null<T>(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
+    ) -> Result<Option<Arc<T>>, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let index = index - 1;
+
+        match self.node_state.get_mut().get_entry(index as usize)? {
+            None => {
+                let class_id = self.u32()?;
+                let node = Arc::new(read_fn(self, class_id)?);
+
+                Ok(Some(node))
+            }
+            Some(node_ref) => match node_ref {
+                NodeRef::Internal { .. } => todo!(),
+                NodeRef::External(_) => todo!(),
+            },
+        }
+    }
 }

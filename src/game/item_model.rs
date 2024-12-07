@@ -20,7 +20,7 @@ mod read {
     use crate::{
         game::{
             common_item_entity_model_edition::CommonItemEntityModelEdition,
-            item_placement_param::ItemPlacementParam, BlockItem,
+            item_placement_param::ItemPlacementParam, BlockItem, CommonItemEntityModel,
         },
         read::{
             read_body_chunks,
@@ -73,6 +73,7 @@ mod read {
                 BodyChunk::normal(18, Self::read_chunk_18),
                 BodyChunk::normal(21, Self::read_chunk_21),
                 BodyChunk::normal(25, Self::read_chunk_25),
+                BodyChunk::normal(26, Self::read_chunk_26),
                 BodyChunk::normal(28, Self::read_chunk_28),
                 BodyChunk::normal(30, Self::read_chunk_30),
                 BodyChunk::normal(31, Self::read_chunk_31),
@@ -141,7 +142,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 13 {
+            if !matches!(version, 13 | 15) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -150,7 +151,7 @@ mod read {
             let _vis_custom_model = r.u32()?;
             let _actions = r.list(|r| r.u32())?;
             let _default_cam = r.u32()?;
-            r.test(|r, class_id| match class_id {
+            let x = r.test_or_null(|r, class_id| match class_id {
                 0x2e025000 => {
                     let mut block_item = BlockItem::default();
                     block_item.read_body(r)?;
@@ -165,8 +166,21 @@ mod read {
                 }
                 _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
             })?;
+
+            if x.is_none() {
+                let _entity_model = r.internal_node_ref_or_null::<CommonItemEntityModel>()?;
+            }
+
             r.u32()?;
-            r.u32()?;
+
+            if version >= 15 {
+                r.u32()?;
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_26<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             r.u32()?;
 
             Ok(())
@@ -190,7 +204,7 @@ mod read {
         fn read_chunk_30<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 6 {
+            if !matches!(version, 6 | 7) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -202,19 +216,29 @@ mod read {
 
             r.string()?;
 
+            if version >= 7 {
+                r.u32()?;
+            }
+
             Ok(())
         }
 
         fn read_chunk_31<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 10 {
+            if !matches!(version, 10 | 12) {
                 return Err(Error::chunk_version(version));
             }
 
             let _waypoint_type = r.u32()?;
             let _disable_lightmap = r.bool()?;
             r.u32()?;
+
+            if version >= 12 {
+                r.u8()?;
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }

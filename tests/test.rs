@@ -35,6 +35,12 @@ fn read_item_cp_stripe() {
 }
 
 #[test]
+fn read_iten_pt_triangle_up_right_front_yellow_booster() {
+    read_file::<ItemModel>("tests/files/item/PT_Triangle_Up_Right_Front_Yellow_Booster.Item.gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_map_deco_48x48() {
     read_file::<Challenge>("tests/files/map/Deco48x48.Map.Gbx").unwrap();
 }

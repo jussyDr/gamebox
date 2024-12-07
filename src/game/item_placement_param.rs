@@ -13,10 +13,13 @@ impl Class for ItemPlacementParam {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::read::{
-        read_body_chunks,
-        reader::{IdStateMut, NodeStateMut, Reader},
-        BodyChunk, BodyChunks, Error, ReadBody,
+    use crate::{
+        plug::item_placement::ItemPlacement,
+        read::{
+            read_body_chunks,
+            reader::{IdStateMut, NodeStateMut, Reader},
+            BodyChunk, BodyChunks, Error, ReadBody,
+        },
     };
 
     use super::ItemPlacementParam;
@@ -31,11 +34,14 @@ mod read {
     }
 
     impl BodyChunks for ItemPlacementParam {
-        fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::skippable(0, Self::read_chunk_0),
                 BodyChunk::skippable(1, Self::read_chunk_1),
                 BodyChunk::skippable(3, Self::read_chunk_3),
+                BodyChunk::skippable(4, Self::read_chunk_4),
+                BodyChunk::skippable(5, Self::read_chunk_5),
             ]
             .into_iter()
         }
@@ -84,6 +90,22 @@ mod read {
             r.u32()?;
             r.u32()?;
             r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_5(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            r.internal_node_ref::<ItemPlacement>()?;
 
             Ok(())
         }

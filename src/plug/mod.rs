@@ -3,6 +3,7 @@
 pub mod bitmap;
 pub mod crystal;
 pub mod index_buffer;
+pub mod item_placement;
 pub mod light;
 pub mod material;
 pub mod material_custom;

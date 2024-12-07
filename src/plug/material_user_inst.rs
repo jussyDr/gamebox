@@ -49,16 +49,23 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 10 {
+            if !matches!(version, 10 | 11) {
                 return Err(Error::chunk_version(version));
             }
 
+            let is_using_game_material = if version >= 11 { r.bool8()? } else { false };
             let _material_name = r.id_or_null()?;
             let _model = r.id_or_null()?;
             let _base_texture = r.string()?;
             let _surface_physic_id = r.u8()?;
             let _surface_gameplay_id = r.u8()?;
-            let _link = r.string()?;
+
+            if version >= 11 && !is_using_game_material {
+                let _link = r.id()?;
+            } else {
+                let _link = r.string()?;
+            }
+
             let _csts = r.list(|r| {
                 r.id()?;
                 r.id()?;

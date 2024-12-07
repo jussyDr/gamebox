@@ -53,6 +53,7 @@ mod read {
     use crate::{
         plug::{
             light::Light, material::Material, visual_indexed_triangles::VisualIndexedTriangles,
+            MaterialUserInst,
         },
         read::{
             read_body_chunks,
@@ -207,8 +208,14 @@ mod read {
             let _damage_zone = r.u32()?;
             let _flags = r.u32()?;
             r.u32()?;
+            r.string()?;
             r.u32()?;
-            r.u32()?;
+            r.repeat(material_count as usize, |r| {
+                let _name = r.string()?;
+                let _material = r.internal_node_ref::<MaterialUserInst>()?;
+
+                Ok(())
+            })?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
