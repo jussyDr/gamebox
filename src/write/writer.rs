@@ -13,6 +13,7 @@ use crate::Class;
 
 use super::{write_body, BodyChunks};
 
+/// Identifier state.
 pub struct IdState {
     seen_id: bool,
     ids: IndexSet<Arc<str>>,
@@ -49,6 +50,7 @@ impl Hash for InternalNode {
     }
 }
 
+/// Node state.
 pub struct NodeState {
     nodes: IndexSet<InternalNode>,
 }
@@ -75,6 +77,7 @@ pub struct Writer<W, I, N> {
 }
 
 impl<W, I, N> Writer<W, I, N> {
+    /// Create a new writer.
     pub const fn new(inner: W, id_state: I, node_state: N) -> Self {
         Self {
             inner,
@@ -85,20 +88,24 @@ impl<W, I, N> Writer<W, I, N> {
 }
 
 impl<W: Write, I, N> Writer<W, I, N> {
+    /// Write bytes.
     pub fn bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
         self.inner.write_all(bytes)?;
 
         Ok(())
     }
 
+    /// Write an unsigned 8-bit integer.
     pub fn u8(&mut self, value: u8) -> Result<(), Error> {
         self.bytes(&[value])
     }
 
+    /// Write an unsigned 16-bit integer.
     pub fn u16(&mut self, value: u16) -> Result<(), Error> {
         self.bytes(&value.to_le_bytes())
     }
 
+    /// Write an unsigned 32-bit integer.
     pub fn u32(&mut self, value: u32) -> Result<(), Error> {
         self.bytes(&value.to_le_bytes())
     }
@@ -182,7 +189,7 @@ impl<W: Write + Seek, I, N: NodeStateMut> Writer<W, I, N> {
                     }
                     None => {
                         let index = self.node_state.get_mut().nodes.len() as u32 + 1;
-                        self.u32(index);
+                        self.u32(index)?;
                         self.u32(T::CLASS_ID)?;
                         write_body(self, node.as_ref())?;
 

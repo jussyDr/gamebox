@@ -218,7 +218,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8")))
     }
 
-    pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
+    pub fn pack_desc_or_null(&mut self) -> Result<Option<PackDesc>, Error> {
         let version = self.u8()?;
 
         if version != 3 {
@@ -229,11 +229,18 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let path = PathBuf::from(self.string()?);
         let locator_url = self.string()?;
 
-        Ok(PackDesc::External {
+        Ok(Some(PackDesc::External {
             path,
             locator_url,
             checksum,
-        })
+        }))
+    }
+
+    pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
+        match self.pack_desc_or_null()? {
+            Some(pack_desc) => Ok(pack_desc),
+            None => Err(Error::new(ErrorKind::Format("pack desc null"))),
+        }
     }
 
     pub fn repeat<T>(

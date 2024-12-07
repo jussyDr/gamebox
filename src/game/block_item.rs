@@ -1,13 +1,30 @@
 //! Block item.
 
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{plug::Crystal, Class};
 
 /// A block item.
 #[derive(Default)]
-pub struct BlockItem;
+pub struct BlockItem {
+    archetype: Arc<str>,
+    variants: Vec<Arc<Crystal>>,
+}
 
 impl Class for BlockItem {
     const CLASS_ID: u32 = 0x2e025000;
+}
+
+impl BlockItem {
+    /// Archetype block info identifier.
+    pub const fn archetype(&self) -> &Arc<str> {
+        &self.archetype
+    }
+
+    /// Variants.
+    pub const fn variants(&self) -> &Vec<Arc<Crystal>> {
+        &self.variants
+    }
 }
 
 mod read {
@@ -57,13 +74,13 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _archetype_block_info_id = r.id()?;
+            self.archetype = r.id()?;
             let _archetype_block_info_collection_id = r.id()?;
-            let _customized_variants = r.list(|r| {
+            self.variants = r.list(|r| {
                 let _id = r.u32()?;
-                let _crystal = r.internal_node_ref::<Crystal>()?;
+                let crystal = r.internal_node_ref::<Crystal>()?;
 
-                Ok(())
+                Ok(crystal)
             })?;
 
             Ok(())

@@ -118,6 +118,7 @@ pub struct PitchYawRoll {
 }
 
 /// A pack desc.
+#[derive(PartialEq, Debug)]
 pub enum PackDesc {
     Internal {
         path: PathBuf,

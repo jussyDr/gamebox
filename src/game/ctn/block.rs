@@ -7,12 +7,10 @@ use crate::{game::WaypointSpecialProperty, Vec3};
 use super::Direction;
 
 /// Block placed in a Challenge.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct Block {
     block_model_id: Arc<str>,
-    direction: Direction,
-    coord: Vec3<u8>,
-    is_free: bool,
+    pub(crate) ty: BlockType,
     has_flags: bool,
     waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
 }
@@ -23,18 +21,9 @@ impl Block {
         &self.block_model_id
     }
 
-    /// Cardinal direction of the block.
-    pub const fn direction(&self) -> Direction {
-        self.direction
-    }
-
-    /// Coordinate of the block.
-    pub const fn coord(&self) -> Vec3<u8> {
-        self.coord
-    }
-
-    pub const fn is_free(&self) -> bool {
-        self.is_free
+    /// Type.
+    pub const fn ty(&self) -> &BlockType {
+        &self.ty
     }
 
     /// Waypoint property of the block.
@@ -44,6 +33,31 @@ impl Block {
 
     pub(crate) const fn has_flags(&self) -> bool {
         self.has_flags
+    }
+}
+
+/// Type of block.
+pub enum BlockType {
+    /// Normal block.
+    Normal {
+        /// Cardinal direction.
+        dir: Direction,
+        /// Coordinate.
+        coord: Vec3<u8>,
+    },
+    /// Free block.
+    Free {
+        /// Position.
+        pos: Vec3<f32>,
+    },
+}
+
+impl Default for BlockType {
+    fn default() -> Self {
+        BlockType::Normal {
+            dir: Direction::default(),
+            coord: Vec3::default(),
+        }
     }
 }
 
@@ -59,9 +73,10 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             Error, ReadBody,
         },
+        Vec3,
     };
 
-    use super::Block;
+    use super::{Block, BlockType};
 
     impl ReadBody for Block {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -69,12 +84,9 @@ mod read {
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
             self.block_model_id = r.id()?;
-            self.direction = r.enum_u8::<Direction>()?;
-            self.coord.x = r.u8()?;
-            self.coord.y = r.u8()?;
-            self.coord.z = r.u8()?;
+            let dir = r.enum_u8::<Direction>()?;
+            let coord = r.vec3()?;
             let flags = r.u32()?;
-            self.is_free = flags & 0x20000000 != 0;
 
             if flags != 0xffffffff {
                 self.has_flags = true;
@@ -87,6 +99,14 @@ mod read {
                 if flags & 0x00080000 != 0 || flags & 0x00100000 != 0 {
                     self.waypoint_special_property =
                         Some(r.internal_node_ref::<WaypointSpecialProperty>()?);
+                }
+
+                if flags & 0x20000000 == 0 {
+                    self.ty = BlockType::Normal { dir, coord };
+                } else {
+                    self.ty = BlockType::Free {
+                        pos: Vec3::default(),
+                    };
                 }
             }
 

@@ -4,7 +4,18 @@ use crate::{Class, END_OF_NODE_MARKER, SKIPPABLE_CHUNK_MARKER};
 
 use super::writer::Writer;
 
-pub trait Sealed: Class + BodyChunks {}
+pub trait Sealed: Class + HeaderChunks + BodyChunks {}
+
+pub trait HeaderChunks: Sized {
+    fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>>;
+}
+
+pub struct HeaderChunk<T, W, I, N> {
+    num: u16,
+    write_fn: HeaderChunkWriteFn<T, W, I, N>,
+}
+
+type HeaderChunkWriteFn<T, W, I, N> = fn(&mut T, &mut Writer<W, I, N>) -> Result<(), Error>;
 
 pub trait BodyChunks: Sized {
     fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>>;

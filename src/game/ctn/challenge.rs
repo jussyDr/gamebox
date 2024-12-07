@@ -2,18 +2,29 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, PackDesc, Vec3};
 
-use super::{block::Block, AnchoredObject, ChallengeParameters};
+use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
 /// A challenge.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct Challenge {
+    id: Arc<str>,
+    author_id: Arc<str>,
+    name: String,
+    deco_id: Arc<str>,
     parameters: Arc<ChallengeParameters>,
-    decoration_id: Arc<str>,
+    texture_mod: Option<PackDesc>,
+    size: Vec3<u32>,
     blocks: Vec<Block>,
+    music: Option<PackDesc>,
     anchored_objects: Vec<AnchoredObject>,
     baked_blocks: Vec<Block>,
+    intro_clip: Option<Arc<MediaClip>>,
+    podium_clip: Option<Arc<MediaClip>>,
+    in_game_clips: Option<Arc<MediaClipGroup>>,
+    end_race_clips: Option<Arc<MediaClipGroup>>,
+    ambiance_clip: Option<Arc<MediaClip>>,
     embedded_objects: Vec<u8>,
 }
 
@@ -22,14 +33,39 @@ impl Class for Challenge {
 }
 
 impl Challenge {
+    /// Identifier.
+    pub const fn id(&self) -> &Arc<str> {
+        &self.id
+    }
+
+    /// Author identifier.
+    pub const fn author_id(&self) -> &Arc<str> {
+        &self.author_id
+    }
+
+    /// Name.
+    pub const fn name(&self) -> &String {
+        &self.name
+    }
+
+    /// Decoration identifier.
+    pub const fn deco_id(&self) -> &Arc<str> {
+        &self.deco_id
+    }
+
     /// Challenge parameters.
     pub const fn parameters(&self) -> &Arc<ChallengeParameters> {
         &self.parameters
     }
 
-    /// Identifier of the decoration.
-    pub const fn decoration_id(&self) -> &Arc<str> {
-        &self.decoration_id
+    /// Texture mod.
+    pub const fn texture_mod(&self) -> Option<&PackDesc> {
+        self.texture_mod.as_ref()
+    }
+
+    /// Size.
+    pub const fn size(&self) -> &Vec3<u32> {
+        &self.size
     }
 
     /// Blocks placed in this challenge.
@@ -37,8 +73,39 @@ impl Challenge {
         &self.blocks
     }
 
+    /// Music.
+    pub const fn music(&self) -> Option<&PackDesc> {
+        self.music.as_ref()
+    }
+
+    /// Anchored objects.
     pub const fn anchored_objects(&self) -> &Vec<AnchoredObject> {
         &self.anchored_objects
+    }
+
+    /// Intro media clip.
+    pub const fn intro_clip(&self) -> Option<&Arc<MediaClip>> {
+        self.intro_clip.as_ref()
+    }
+
+    /// Podium media clip.
+    pub const fn podium_clip(&self) -> Option<&Arc<MediaClip>> {
+        self.podium_clip.as_ref()
+    }
+
+    /// In game media clip group.
+    pub const fn in_game_clips(&self) -> Option<&Arc<MediaClipGroup>> {
+        self.in_game_clips.as_ref()
+    }
+
+    /// End race media clip group.
+    pub const fn end_race_clips(&self) -> Option<&Arc<MediaClipGroup>> {
+        self.end_race_clips.as_ref()
+    }
+
+    /// Ambiance media clip.
+    pub const fn ambiance_clip(&self) -> Option<&Arc<MediaClip>> {
+        self.ambiance_clip.as_ref()
     }
 
     /// Block and item models embedded in this challenge.
@@ -52,8 +119,12 @@ mod read {
 
     use crate::{
         game::ctn::{
-            block::Block, challenge_parameters::ChallengeParameters, collector_list::CollectorList,
-            media_clip::MediaClip, media_clip_group::MediaClipGroup, zone_genealogy::ZoneGenealogy,
+            block::{Block, BlockType},
+            challenge_parameters::ChallengeParameters,
+            collector_list::CollectorList,
+            media_clip::MediaClip,
+            media_clip_group::MediaClipGroup,
+            zone_genealogy::ZoneGenealogy,
             AnchoredObject,
         },
         read::{
@@ -191,14 +262,14 @@ mod read {
                 return Err(Error::chunk_version(version as u32));
             }
 
-            let _map_id = r.id()?;
+            self.id = r.id()?;
             r.id()?;
-            let _map_author = r.id()?;
-            let _map_name = r.string()?;
+            self.author_id = r.id()?;
+            self.name = r.string()?;
             let _map_kind = r.u8()?;
             r.u32()?;
             let _password = r.string()?;
-            let _deco_id = r.id()?;
+            self.deco_id = r.id()?;
             r.id()?;
             let _deco_author = r.id()?;
             let _map_coord_origin = r.vec2::<f32>()?;
@@ -294,7 +365,7 @@ mod read {
         }
 
         fn read_chunk_25<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _mod_pack_desc = r.pack_desc()?;
+            self.texture_mod = r.pack_desc_or_null()?;
 
             Ok(())
         }
@@ -303,14 +374,14 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _map_id = r.id()?;
-            let _map_collection = r.id()?;
-            let _map_author = r.id()?;
-            let _name = r.string()?;
-            self.decoration_id = r.id()?;
-            let _decoration_collection = r.id()?;
-            let _decoration_author = r.id()?;
-            let _size = r.vec3::<u32>()?;
+            self.id = r.id()?;
+            let _collection = r.id()?;
+            self.author_id = r.id()?;
+            self.name = r.string()?;
+            self.deco_id = r.id()?;
+            let _deco_collection = r.id()?;
+            let _deco_author = r.id()?;
+            self.size = r.vec3()?;
             let _need_unlock = r.bool()?;
             let blocks_version = r.u32()?;
 
@@ -339,7 +410,7 @@ mod read {
         }
 
         fn read_chunk_36<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _custom_music_pack_desc = r.pack_desc()?;
+            self.music = r.pack_desc_or_null()?;
 
             Ok(())
         }
@@ -544,11 +615,11 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _clip_intro = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _clip_podium = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _clip_group_in_game = r.internal_node_ref_or_null::<MediaClipGroup>()?;
-            let _clip_group_end_race = r.internal_node_ref_or_null::<MediaClipGroup>()?;
-            let _clip_ambiance = r.internal_node_ref_or_null::<MediaClip>()?;
+            self.intro_clip = r.internal_node_ref_or_null::<MediaClip>()?;
+            self.podium_clip = r.internal_node_ref_or_null::<MediaClip>()?;
+            self.in_game_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
+            self.end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
+            self.ambiance_clip = r.internal_node_ref_or_null::<MediaClip>()?;
             let _clip_trigger_size = r.vec3::<u32>()?;
 
             Ok(())
@@ -796,16 +867,16 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for block in &self.blocks {
-                if block.is_free() {
-                    let _absolute_position = r.vec3::<f32>()?;
+            for block in &mut self.blocks {
+                if let BlockType::Free { pos } = &mut block.ty {
+                    *pos = r.vec3()?;
                     let _pitch_yaw_roll = r.vec3::<f32>()?;
                 }
             }
 
-            for baked_block in &self.baked_blocks {
-                if baked_block.is_free() {
-                    let _absolute_position = r.vec3::<f32>()?;
+            for baked_block in &mut self.baked_blocks {
+                if let BlockType::Free { pos } = &mut baked_block.ty {
+                    *pos = r.vec3()?;
                     let _pitch_yaw_roll = r.vec3::<f32>()?;
                 }
             }
@@ -969,11 +1040,19 @@ mod read {
 mod write {
     use crate::write::{writable, BodyChunk, BodyChunks, Writable};
 
+    use self::writable::{HeaderChunk, HeaderChunks};
+
     use super::Challenge;
 
     impl Writable for Challenge {}
 
     impl writable::Sealed for Challenge {}
+
+    impl HeaderChunks for Challenge {
+        fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl BodyChunks for Challenge {
         fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {

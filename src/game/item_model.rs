@@ -5,7 +5,7 @@ use crate::Class;
 use super::ctn::collector::Collector;
 
 /// An item model.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct ItemModel {
     parent: Collector,
 }
@@ -315,13 +315,19 @@ mod read {
 mod write {
     use crate::write::{writable, Writable};
 
-    use self::writable::BodyChunks;
+    use self::writable::{BodyChunks, HeaderChunk, HeaderChunks};
 
     use super::ItemModel;
 
     impl Writable for ItemModel {}
 
     impl writable::Sealed for ItemModel {}
+
+    impl HeaderChunks for ItemModel {
+        fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl BodyChunks for ItemModel {
         fn body_chunks<W, I, N>() -> impl Iterator<Item = writable::BodyChunk<Self, W, I, N>> {
