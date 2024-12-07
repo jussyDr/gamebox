@@ -70,7 +70,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 0 {
+            if !matches!(version, 0 | 1) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -82,6 +82,10 @@ mod read {
 
                 Ok(crystal)
             })?;
+
+            if version >= 1 && r.bool8()? {
+                todo!()
+            }
 
             Ok(())
         }

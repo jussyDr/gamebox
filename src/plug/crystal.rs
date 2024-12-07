@@ -53,7 +53,6 @@ impl Mesh {
 #[derive(PartialEq, Debug)]
 pub struct Face {
     indices: Vec<u32>,
-    texcoords: Vec<Texcoord>,
     material_index: u32,
     group_index: u32,
 }
@@ -61,10 +60,6 @@ pub struct Face {
 impl Face {
     pub const fn indices(&self) -> &Vec<u32> {
         &self.indices
-    }
-
-    pub const fn texcoords(&self) -> &Vec<Texcoord> {
-        &self.texcoords
     }
 
     pub const fn material_index(&self) -> u32 {
@@ -190,7 +185,7 @@ mod read {
                             return Err(Error::version("geometry", geometry_version));
                         }
 
-                        let mesh = read_mesh(r)?;
+                        let mesh = read_mesh(r, self.materials.len() as u32)?;
                         r.list(|r| r.u32())?;
                         let _is_visible = r.bool()?;
                         let _is_collidable = r.bool()?;
@@ -214,7 +209,7 @@ mod read {
                             return Err(Error::version("trigger", trigger_version));
                         }
 
-                        read_mesh(r)?;
+                        read_mesh(r, self.materials.len() as u32)?;
                         r.list(|r| r.u32())?;
                     }
                     15 => {
@@ -261,7 +256,7 @@ mod read {
         fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if !matches!(version, 0 | 1) {
+            if !matches!(version, 0..=2) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -269,6 +264,11 @@ mod read {
                 r.list(|r| r.vec2::<f32>())?;
             } else {
                 r.list(|r| r.u32())?;
+
+                if version >= 2 {
+                    let num = r.u32()?;
+                    r.repeat(num as usize, |r| read_index(r, num))?;
+                }
             }
 
             Ok(())
@@ -288,11 +288,11 @@ mod read {
         }
     }
 
-    fn read_mesh<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Mesh, Error> {
-        let crystal_version = r.u32()?;
+    fn read_mesh<I, N>(r: &mut Reader<impl Read, I, N>, num_materials: u32) -> Result<Mesh, Error> {
+        let mesh_version = r.u32()?;
 
-        if crystal_version != 32 {
-            return Err(Error::version("crystal", crystal_version));
+        if !matches!(mesh_version, 32 | 37) {
+            return Err(Error::version("crystal mesh", mesh_version));
         }
 
         r.u32()?;
@@ -314,9 +314,15 @@ mod read {
 
             Ok(())
         })?;
-        let _groups = r.list(|r| {
+        let groups = r.list(|r| {
             r.u32()?;
-            r.u32()?;
+
+            if mesh_version >= 36 {
+                r.u8()?;
+            } else {
+                r.u32()?;
+            }
+
             r.u32()?;
             r.string()?;
             r.u32()?;
@@ -324,41 +330,108 @@ mod read {
 
             Ok(())
         })?;
-        let _is_embedded_crystal = r.bool()?;
+
+        let _is_embedded_crystal = if mesh_version >= 34 {
+            r.bool8()?
+        } else {
+            r.bool()?
+        };
+
+        if mesh_version >= 33 {
+            r.u32()?;
+            r.u32()?;
+        }
+
         let positions = r.list(|r| r.vec3())?;
-        let _edges = r.list(|r| {
-            r.u32()?;
-            r.u32()?;
+        let mut num_edges = r.u32()?;
+
+        if mesh_version >= 35 {
+            num_edges = r.u32()?;
+        }
+
+        let _edges = r.repeat(num_edges as usize, |r| {
+            if mesh_version >= 35 {
+                read_index(r, num_edges)?;
+                read_index(r, num_edges)?;
+            } else {
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         })?;
-        let faces = r.list(|r| {
-            let indices = r.list(|r| r.u32())?;
-            let texcoords = r.repeat(indices.len(), |r| {
-                let u = r.f32()?;
-                let v = r.f32()?;
+        let num_faces = r.u32()?;
 
-                Ok(Texcoord { u, v })
+        if mesh_version >= 37 {
+            let _texcoords = r.list(|r| r.vec2::<f32>())?;
+            let num_texcoord_indices = r.u32()?;
+            let _texcoord_indices = r.repeat(num_texcoord_indices as usize, |r| {
+                read_index(r, num_texcoord_indices)
             })?;
-            let material_index = r.u32()?;
-            let group_index = r.u32()?;
+        }
+
+        let faces = r.repeat(num_faces as usize, |r| {
+            let num_verts = if mesh_version >= 35 {
+                r.u8()? as u32 + 3
+            } else {
+                r.u32()?
+            };
+            let indices = r.repeat(num_verts as usize, |r| {
+                if mesh_version >= 34 {
+                    read_index(r, positions.len() as u32)
+                } else {
+                    r.u32()
+                }
+            })?;
+            if mesh_version < 37 {
+                let _texcoords = r.repeat(indices.len(), |r| {
+                    let u = r.f32()?;
+                    let v = r.f32()?;
+
+                    Ok(Texcoord { u, v })
+                })?;
+            }
+            let material_index = if mesh_version >= 33 {
+                read_index(r, num_materials)?
+            } else {
+                r.u32()?
+            };
+            let group_index = if mesh_version >= 33 {
+                read_index(r, groups.len() as u32)?
+            } else {
+                r.u32()?
+            };
 
             Ok(Face {
                 indices,
-                texcoords,
                 material_index,
                 group_index,
             })
         })?;
         r.u32()?;
-        let num_faces = r.u32()? as usize;
-        let num_edges = r.u32()? as usize;
-        let num_vertices = r.u32()? as usize;
-        r.repeat(num_faces, |r| r.u32())?;
-        r.repeat(num_edges, |r| r.u32())?;
-        r.repeat(num_vertices, |r| r.u32())?;
-        r.u32()?;
+
+        if mesh_version < 36 {
+            let num_faces = r.u32()? as usize;
+            let num_edges = r.u32()? as usize;
+            let num_vertices = r.u32()? as usize;
+            r.repeat(num_faces, |r| r.u32())?;
+            r.repeat(num_edges, |r| r.u32())?;
+            r.repeat(num_vertices, |r| r.u32())?;
+            r.u32()?;
+        }
 
         Ok(Mesh { positions, faces })
+    }
+
+    fn read_index<I, N>(r: &mut Reader<impl Read, I, N>, max: u32) -> Result<u32, Error> {
+        let value = if max <= u8::MAX as u32 {
+            r.u8()? as u32
+        } else if max <= u16::MAX as u32 {
+            r.u16()? as u32
+        } else {
+            r.u32()?
+        };
+
+        Ok(value)
     }
 }

@@ -1,17 +1,20 @@
-use std::io::Cursor;
-
 use gamebox::{
     game::{
         ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration},
         item_model::ItemModel,
     },
     plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
-    read, read_file, write,
+    read_file,
 };
 
 #[test]
 fn read_block_grass_remover() {
     read_file::<ItemModel>("tests/files/block/GrassRemover.Block.Gbx").unwrap();
+}
+
+#[test]
+fn read_block_rally_road_ice_high_curve_2_snow() {
+    read_file::<ItemModel>("tests/files/block/RallyRoadIceHighCurve2-Snow.Block.Gbx").unwrap();
 }
 
 #[test]
