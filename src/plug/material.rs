@@ -35,11 +35,19 @@ mod read {
         },
     };
 
+    use self::readable::{HeaderChunk, HeaderChunks};
+
     use super::Material;
 
     impl Readable for Material {}
 
     impl readable::Sealed for Material {}
+
+    impl HeaderChunks for Material {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for Material {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

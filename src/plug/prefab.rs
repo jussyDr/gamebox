@@ -51,7 +51,7 @@ mod read {
     use crate::{
         plug::static_object_model::StaticObjectModel,
         read::{
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             Error, ReadBody, Readable,
         },
@@ -62,6 +62,12 @@ mod read {
     impl Readable for Prefab {}
 
     impl Sealed for Prefab {}
+
+    impl HeaderChunks for Prefab {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for Prefab {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

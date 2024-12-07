@@ -58,7 +58,7 @@ mod read {
         },
         read::{
             read_body_chunks,
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
@@ -70,6 +70,21 @@ mod read {
     impl Readable for Challenge {}
 
     impl Sealed for Challenge {}
+
+    impl HeaderChunks for Challenge {
+        fn header_chunks<R: Read, I: IdStateMut, N>(
+        ) -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [
+                HeaderChunk::new(2, Self::read_chunk_2),
+                HeaderChunk::new(3, Self::read_chunk_3),
+                HeaderChunk::new(4, Self::read_chunk_4),
+                HeaderChunk::new(5, Self::read_chunk_5),
+                HeaderChunk::new(7, Self::read_chunk_7),
+                HeaderChunk::new(8, Self::read_chunk_8),
+            ]
+            .into_iter()
+        }
+    }
 
     impl ReadBody for Challenge {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -141,6 +156,114 @@ mod read {
     }
 
     impl Challenge {
+        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u8()?;
+
+            if version != 13 {
+                return Err(Error::chunk_version(version as u32));
+            }
+
+            r.bool()?;
+            let _bronze_time = r.u32()?;
+            let _silver_time = r.u32()?;
+            let _gold_time = r.u32()?;
+            let _author_time = r.u32()?;
+            let _cost = r.u32()?;
+            let _is_lap_race = r.bool()?;
+            let _mode = r.u32()?;
+            r.u32()?;
+            let _author_score = r.u32()?;
+            let _editor = r.u32()?;
+            r.u32()?;
+            let _num_checkpoints = r.u32()?;
+            let _num_laps = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_3<N>(
+            &mut self,
+            r: &mut Reader<impl Read, impl IdStateMut, N>,
+        ) -> Result<(), Error> {
+            let version = r.u8()?;
+
+            if version != 11 {
+                return Err(Error::chunk_version(version as u32));
+            }
+
+            let _map_id = r.id()?;
+            r.id()?;
+            let _map_author = r.id()?;
+            let _map_name = r.string()?;
+            let _map_kind = r.u8()?;
+            r.u32()?;
+            let _password = r.string()?;
+            let _deco_id = r.id()?;
+            r.id()?;
+            let _deco_author = r.id()?;
+            let _map_coord_origin = r.vec2::<f32>()?;
+            let _map_coord_target = r.vec2::<f32>()?;
+            let _pack_mask = r.byte_array::<16>()?;
+            let _map_type = r.string()?;
+            let _map_style = r.string()?;
+            let _lightmap_cache_uid = r.u64()?;
+            let _lightmap_version = r.u8()?;
+            let _title_id = r.id()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _version = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_5<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _xml = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_7<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let thumbnail_size = r.u32()?;
+            r.byte_array::<15>()?;
+            r.bytes(thumbnail_size as usize)?;
+            r.byte_array::<16>()?;
+            r.byte_array::<10>()?;
+            r.string()?;
+            r.byte_array::<11>()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_8<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let author_version = r.u32()?;
+
+            if author_version != 0 {
+                return Err(Error::version("author", author_version));
+            }
+
+            let _author_login = r.string()?;
+            let _author_nickname = r.string()?;
+            let _author_zone = r.string()?;
+            let _author_extra_info = r.string()?;
+
+            Ok(())
+        }
+
         fn read_chunk_13<N>(
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,

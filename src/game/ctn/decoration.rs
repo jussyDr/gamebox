@@ -47,7 +47,7 @@ mod read {
         game::ctn::challenge::Challenge,
         read::{
             read_body_chunks,
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
@@ -58,6 +58,12 @@ mod read {
     impl Readable for Decoration {}
 
     impl Sealed for Decoration {}
+
+    impl HeaderChunks for Decoration {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for Decoration {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

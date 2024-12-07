@@ -24,7 +24,7 @@ mod read {
 
     use crate::read::{
         read_body_chunks,
-        readable::Sealed,
+        readable::{HeaderChunk, HeaderChunks, Sealed},
         reader::{IdStateMut, NodeStateMut, Reader},
         BodyChunk, BodyChunks, Error, ReadBody, Readable,
     };
@@ -34,6 +34,12 @@ mod read {
     impl Readable for Bitmap {}
 
     impl Sealed for Bitmap {}
+
+    impl HeaderChunks for Bitmap {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for Bitmap {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

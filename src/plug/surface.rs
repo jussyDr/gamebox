@@ -34,7 +34,7 @@ mod read {
         plug::material::Material,
         read::{
             read_body_chunks,
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
@@ -45,6 +45,12 @@ mod read {
     impl Readable for Surface {}
 
     impl Sealed for Surface {}
+
+    impl HeaderChunks for Surface {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for Surface {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

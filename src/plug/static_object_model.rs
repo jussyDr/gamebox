@@ -29,7 +29,7 @@ mod read {
     use crate::{
         plug::{solid_2_model::Solid2Model, surface::Surface},
         read::{
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             Error, ReadBody, Readable,
         },
@@ -40,6 +40,12 @@ mod read {
     impl Readable for StaticObjectModel {}
 
     impl Sealed for StaticObjectModel {}
+
+    impl HeaderChunks for StaticObjectModel {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for StaticObjectModel {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

@@ -56,7 +56,7 @@ mod read {
         },
         read::{
             read_body_chunks,
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
@@ -67,6 +67,12 @@ mod read {
     impl Readable for Solid2Model {}
 
     impl Sealed for Solid2Model {}
+
+    impl HeaderChunks for Solid2Model {
+        fn header_chunks<R, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl ReadBody for Solid2Model {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

@@ -7,7 +7,28 @@ use super::{
     Error,
 };
 
-pub trait Sealed: Class + ReadBody {}
+pub trait Sealed: HeaderChunks + ReadBody {}
+
+pub trait HeaderChunks: Sized + Class {
+    fn parent(&mut self) -> Option<&mut impl HeaderChunks> {
+        None::<&mut Self>
+    }
+
+    fn header_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>>;
+}
+
+pub struct HeaderChunk<T, R, I, N> {
+    pub num: u16,
+    pub read_fn: HeaderChunkReadFn<T, R, I, N>,
+}
+
+impl<T, R, I, N> HeaderChunk<T, R, I, N> {
+    pub const fn new(num: u16, read_fn: HeaderChunkReadFn<T, R, I, N>) -> Self {
+        Self { num, read_fn }
+    }
+}
+
+pub type HeaderChunkReadFn<T, R, I, N> = fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>;
 
 pub trait ReadBody: Send + Sync + Default {
     fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(

@@ -24,7 +24,7 @@ mod read {
         },
         read::{
             read_body_chunks,
-            readable::Sealed,
+            readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
@@ -35,6 +35,20 @@ mod read {
     impl Readable for ItemModel {}
 
     impl Sealed for ItemModel {}
+
+    impl HeaderChunks for ItemModel {
+        fn parent(&mut self) -> Option<&mut impl HeaderChunks> {
+            Some(&mut self.parent)
+        }
+
+        fn header_chunks<R: Read, I, N>() -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [
+                HeaderChunk::new(0, Self::read_chunk_0),
+                HeaderChunk::new(1, Self::read_chunk_1),
+            ]
+            .into_iter()
+        }
+    }
 
     impl ReadBody for ItemModel {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -75,6 +89,18 @@ mod read {
     }
 
     impl ItemModel {
+        fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _item_type = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+
+            Ok(())
+        }
+
         fn read_chunk_8<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _nadeo_skin_fids = r.list(|r| r.u32())?;
 

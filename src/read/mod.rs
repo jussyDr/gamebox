@@ -4,6 +4,7 @@ pub mod reader;
 
 pub(crate) mod readable;
 
+use readable::HeaderChunks;
 pub(crate) use readable::{read_body_chunks, BodyChunk, BodyChunks, ReadBody};
 
 use std::{
@@ -15,7 +16,7 @@ use std::{
     sync::Arc,
 };
 
-use reader::{ExternalNodeRef, IdState, NodeState, Reader};
+use reader::{ExternalNodeRef, IdState, IdStateMut, NodeState, Reader};
 
 use crate::FILE_SIGNATURE;
 
@@ -140,10 +141,27 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
 
     let mut node = T::default();
 
-    let header_data = r.byte_buf()?;
+    let header_data_size = r.u32()?;
 
-    if !header_data.is_empty() {
-        // TODO
+    if header_data_size != 0 {
+        let header_data = r.bytes(header_data_size as usize)?;
+
+        let mut r = Reader::new(Cursor::new(header_data), IdState::new(), ());
+
+        let header_chunks = r.list(|r| {
+            let chunk_id = r.u32()?;
+            let chunk_size = r.u32()?;
+
+            Ok((chunk_id, chunk_size))
+        })?;
+
+        let rem = read_header_chunks(&mut node, &mut r, &header_chunks)?;
+
+        if let Some((chunk_id, _)) = rem.first() {
+            return Err(Error::new(ErrorKind::Unsupported(format!(
+                "header chunk: {chunk_id:08X?}"
+            ))));
+        }
     }
 
     let num_nodes = r.u32()?;
@@ -282,6 +300,43 @@ fn read_folders_inner<R: Read, I, N>(
     }
 
     Ok(())
+}
+
+fn read_header_chunks<'a, T: HeaderChunks, N>(
+    node: &mut T,
+    r: &mut Reader<impl Read, impl IdStateMut, N>,
+    header_chunks: &'a [(u32, u32)],
+) -> Result<&'a [(u32, u32)], Error> {
+    let mut header_chunks = match node.parent() {
+        Some(parent) => read_header_chunks(parent, r, header_chunks)?,
+        None => header_chunks,
+    };
+
+    let mut h = T::header_chunks();
+
+    while let Some((chunk_id, chunk_size)) = header_chunks.first() {
+        let class_id = chunk_id & 0xfffff000;
+
+        if class_id != T::CLASS_ID {
+            break;
+        }
+
+        let chunk_num = (chunk_id & 0x00000fff) as u16;
+
+        let chunk = h
+            .find(|header_chunk| header_chunk.num == chunk_num)
+            .ok_or_else(|| {
+                Error::new(ErrorKind::Unsupported(format!(
+                    "header chunk: {chunk_id:08X?}"
+                )))
+            })?;
+
+        (chunk.read_fn)(node, r)?;
+
+        header_chunks = &header_chunks[1..];
+    }
+
+    Ok(header_chunks)
 }
 
 enum Format {
