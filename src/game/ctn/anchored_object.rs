@@ -80,8 +80,7 @@ mod read {
             let _block_unit_coord = r.vec3::<u8>()?;
             let _anchor_tree_id = r.id_or_null()?;
             self.pos = r.vec3()?;
-            let _waypoint_special_property =
-                r.internal_node_ref_or_null::<WaypointSpecialProperty>()?;
+            let _waypoint_special_property = r.node_or_null::<WaypointSpecialProperty>()?;
             let flags = r.u16()?;
             let _pivot_position = r.vec3::<f32>()?;
             let _scale = r.f32()?;

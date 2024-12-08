@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{Class, Texcoord, Vec3};
+use crate::{Class, Vec3};
 
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
@@ -19,18 +19,18 @@ impl Class for Crystal {
 }
 
 impl Crystal {
-    /// Materials of the crystal.
+    /// Materials.
     pub const fn materials(&self) -> &Vec<Arc<MaterialUserInst>> {
         &self.materials
     }
 
-    /// Geometry of the crystal.
+    /// Geometry layer.
     pub const fn geometry_layer(&self) -> &Mesh {
         &self.geometry_layer
     }
 }
 
-/// Mesh of a crystal.
+/// Crystal mesh.
 #[derive(PartialEq, Default, Debug)]
 pub struct Mesh {
     positions: Vec<Vec3<f32>>,
@@ -38,12 +38,12 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    /// Position data.
+    /// Positions.
     pub const fn positions(&self) -> &Vec<Vec3<f32>> {
         &self.positions
     }
 
-    /// Faces of the mesh.
+    /// Faces.
     pub const fn faces(&self) -> &Vec<Face> {
         &self.faces
     }
@@ -58,14 +58,17 @@ pub struct Face {
 }
 
 impl Face {
+    /// Indices
     pub const fn indices(&self) -> &Vec<u32> {
         &self.indices
     }
 
+    /// Material index.
     pub const fn material_index(&self) -> u32 {
         self.material_index
     }
 
+    /// Group index.
     pub const fn group_index(&self) -> u32 {
         self.group_index
     }

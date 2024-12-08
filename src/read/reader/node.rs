@@ -58,6 +58,7 @@ impl NodeState {
     }
 }
 
+/// Reference to a node.
 pub enum NodeRef<T: ?Sized> {
     Internal { node: Arc<T> },
     External(ExternalNodeRef),
@@ -177,8 +178,12 @@ impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
 }
 
 impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
-    pub fn node<T: 'static + Class + ReadBody>(&mut self) -> Result<T, Error> {
+    pub fn node_or_null<T: 'static + Class + ReadBody>(&mut self) -> Result<Option<T>, Error> {
         let class_id = self.u32()?;
+
+        if class_id == 0xffffffff {
+            return Ok(None);
+        }
 
         if class_id != T::CLASS_ID {
             return Err(Error::new(ErrorKind::Format("class id")));
@@ -198,7 +203,14 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
             }
         }
 
-        Ok(node)
+        Ok(Some(node))
+    }
+
+    pub fn node<T: 'static + Class + ReadBody>(&mut self) -> Result<T, Error> {
+        match self.node_or_null()? {
+            Some(node) => Ok(node),
+            None => Err(Error::new(ErrorKind::Format(""))),
+        }
     }
 
     pub fn node_ref_or_null<T: 'static + Class + ReadBody>(

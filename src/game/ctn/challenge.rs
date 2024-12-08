@@ -833,9 +833,10 @@ mod read {
         }
 
         fn read_chunk_92<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
+            if !r.bool()? {
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }
@@ -844,7 +845,18 @@ mod read {
             r.u32()?;
 
             if r.bool()? {
-                r.bytes(51071)?;
+                r.u32()?; // 256
+                let x = r.u32()?;
+
+                match x {
+                    221 => {
+                        r.bytes(83844)?;
+                    }
+                    87 => {
+                        r.bytes(51063)?;
+                    }
+                    _ => todo!("{x}"),
+                }
             }
 
             Ok(())
