@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::{game::WaypointSpecialProperty, Vec3};
 
-use super::Direction;
+use super::{Direction, ElemColor, LightmapQuality};
 
 /// Block placed in a Challenge.
 #[derive(Default)]
@@ -13,6 +13,8 @@ pub struct Block {
     pub(crate) ty: BlockType,
     has_flags: bool,
     waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
+    pub(crate) elem_color: ElemColor,
+    pub(crate) lightmap_quality: LightmapQuality,
 }
 
 impl Block {
@@ -29,6 +31,16 @@ impl Block {
     /// Waypoint property of the block.
     pub const fn waypoint_special_property(&self) -> Option<&Arc<WaypointSpecialProperty>> {
         self.waypoint_special_property.as_ref()
+    }
+
+    /// Element color.
+    pub const fn elem_color(&self) -> ElemColor {
+        self.elem_color
+    }
+
+    /// Lightmap quality.
+    pub const fn lightmap_quality(&self) -> LightmapQuality {
+        self.lightmap_quality
     }
 
     pub(crate) const fn has_flags(&self) -> bool {

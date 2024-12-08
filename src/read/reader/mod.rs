@@ -195,7 +195,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(Quat { x, y, z, w })
     }
 
-    pub fn box3d(&mut self) -> Result<(), Error> {
+    pub fn box3d(&mut self) -> Result<u8, Error> {
         self.f32()?;
         self.f32()?;
         self.f32()?;
@@ -203,7 +203,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.f32()?;
         self.f32()?;
 
-        Ok(())
+        Ok(0)
     }
 
     pub fn string(&mut self) -> Result<String, Error> {

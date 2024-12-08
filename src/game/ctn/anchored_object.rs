@@ -2,13 +2,19 @@
 
 use std::sync::Arc;
 
-use crate::{Class, Vec3};
+use crate::{Class, PackDesc, Vec3};
+
+use super::{ElemColor, LightmapQuality};
 
 /// An anchored object.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct AnchoredObject {
     model_id: Arc<str>,
     pos: Vec3<f32>,
+    pub(crate) elem_color: ElemColor,
+    pub(crate) anim_offset: PhaseOffset,
+    pub(crate) foreground_pack_desc: Option<PackDesc>,
+    pub(crate) lightmap_quality: LightmapQuality,
 }
 
 impl Class for AnchoredObject {
@@ -24,6 +30,61 @@ impl AnchoredObject {
     /// Position.
     pub const fn pos(&self) -> Vec3<f32> {
         self.pos
+    }
+
+    /// Element color.
+    pub const fn elem_color(&self) -> ElemColor {
+        self.elem_color
+    }
+
+    /// Animation offset.
+    pub const fn anim_offset(&self) -> PhaseOffset {
+        self.anim_offset
+    }
+
+    /// Lightmap quality.
+    pub const fn lightmap_quality(&self) -> LightmapQuality {
+        self.lightmap_quality
+    }
+}
+
+/// Animation phase offset.
+#[derive(Clone, Copy, Default)]
+pub enum PhaseOffset {
+    /// No offset.
+    #[default]
+    None,
+    /// No offset.
+    One8th,
+    /// No offset.
+    Two8th,
+    /// No offset.
+    Three8th,
+    /// No offset.
+    Four8th,
+    /// No offset.
+    Five8th,
+    /// No offset.
+    Six8th,
+    /// No offset.
+    Seven8th,
+}
+
+impl TryFrom<u8> for PhaseOffset {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, ()> {
+        match value {
+            0 => Ok(Self::None),
+            1 => Ok(Self::One8th),
+            2 => Ok(Self::Two8th),
+            3 => Ok(Self::Three8th),
+            4 => Ok(Self::Four8th),
+            5 => Ok(Self::Five8th),
+            6 => Ok(Self::Six8th),
+            7 => Ok(Self::Seven8th),
+            _ => Err(()),
+        }
     }
 }
 

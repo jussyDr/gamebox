@@ -4,7 +4,9 @@ use crate::Class;
 
 /// A media block manialink.
 #[derive(Default)]
-pub struct MediaBlockManialink;
+pub struct MediaBlockManialink {
+    url: String,
+}
 
 impl Class for MediaBlockManialink {
     const CLASS_ID: u32 = 0x0312a000;
@@ -46,7 +48,7 @@ mod read {
 
             let _start = r.f32()?;
             let _end = r.f32()?;
-            let _manialink_url = r.string()?;
+            self.url = r.string()?;
 
             Ok(())
         }

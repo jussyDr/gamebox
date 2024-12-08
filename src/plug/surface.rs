@@ -16,7 +16,10 @@ impl Class for Surface {
 /// Surface type.
 pub enum SurfaceType {
     /// Mesh surface.
-    Mesh { vertices: Vec<Vec3<f32>> },
+    Mesh {
+        /// Vertices.
+        vertices: Vec<Vec3<f32>>,
+    },
 }
 
 impl Default for SurfaceType {

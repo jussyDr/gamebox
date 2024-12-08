@@ -37,11 +37,7 @@ mod read {
             let _align_to_interior = r.bool()?;
             let _align_to_world_dir = r.bool()?;
             let _world_dir = r.vec3::<f32>()?;
-            let _patch_layouts = r.list(|r| {
-                todo!();
-
-                Ok(())
-            })?;
+            let _patch_layouts: Vec<()> = r.list(|_| todo!())?;
             let _group_cur_patch_layouts = r.list(|r| r.u32())?;
 
             Ok(())

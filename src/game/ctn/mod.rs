@@ -140,3 +140,74 @@ impl TryFrom<u8> for Direction {
         (value as u32).try_into()
     }
 }
+
+/// Element color.
+#[derive(Clone, Copy, Default)]
+pub enum ElemColor {
+    /// Default color.
+    #[default]
+    Default,
+    /// White.
+    White,
+    /// Green.
+    Green,
+    /// Blue.
+    Blue,
+    /// Red.
+    Red,
+    /// Black.
+    Black,
+}
+
+impl TryFrom<u8> for ElemColor {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, ()> {
+        match value {
+            0 => Ok(Self::Default),
+            1 => Ok(Self::White),
+            2 => Ok(Self::Green),
+            3 => Ok(Self::Blue),
+            4 => Ok(Self::Red),
+            5 => Ok(Self::Black),
+            _ => Err(()),
+        }
+    }
+}
+
+/// Lightmap quality
+#[derive(Clone, Copy, Default)]
+pub enum LightmapQuality {
+    /// Normal quality.
+    #[default]
+    Normal,
+    /// High quality.
+    High,
+    /// Very high quality.
+    VeryHigh,
+    /// Highest quality.
+    Highest,
+    /// Low quality.
+    Low,
+    /// Very low quality.
+    VeryLow,
+    /// Lowest quality.
+    Lowest,
+}
+
+impl TryFrom<u8> for LightmapQuality {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, ()> {
+        match value {
+            0 => Ok(Self::Normal),
+            1 => Ok(Self::High),
+            2 => Ok(Self::VeryHigh),
+            3 => Ok(Self::Highest),
+            4 => Ok(Self::Low),
+            5 => Ok(Self::VeryLow),
+            6 => Ok(Self::Lowest),
+            _ => Err(()),
+        }
+    }
+}

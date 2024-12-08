@@ -108,7 +108,7 @@ impl Challenge {
         self.ambiance_clip.as_ref()
     }
 
-    /// Block and item models embedded in this challenge.
+    /// ZIP archive containing embedded block and item models.
     pub const fn embedded_objects(&self) -> &Vec<u8> {
         &self.embedded_objects
     }
@@ -920,16 +920,16 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for _ in &self.blocks {
-                r.u8()?;
+            for block in &mut self.blocks {
+                block.elem_color = r.enum_u8()?;
             }
 
-            for _ in &self.baked_blocks {
-                r.u8()?;
+            for baked_block in &mut self.baked_blocks {
+                baked_block.elem_color = r.enum_u8()?;
             }
 
-            for _ in &self.anchored_objects {
-                r.u8()?;
+            for anchored_object in &mut self.anchored_objects {
+                anchored_object.elem_color = r.enum_u8()?;
             }
 
             Ok(())
@@ -942,8 +942,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for _ in &self.anchored_objects {
-                r.u8()?;
+            for anchored_object in &mut self.anchored_objects {
+                anchored_object.anim_offset = r.enum_u8()?;
             }
 
             Ok(())
@@ -965,9 +965,9 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for _ in &self.anchored_objects {
+            for anchored_object in &mut self.anchored_objects {
                 if r.bool8()? {
-                    let _foreground_pack_desc = r.pack_desc()?;
+                    anchored_object.foreground_pack_desc = Some(r.pack_desc()?);
                 }
             }
 
@@ -990,16 +990,16 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for _ in &self.blocks {
-                r.u8()?;
+            for block in &mut self.blocks {
+                block.lightmap_quality = r.enum_u8()?;
             }
 
-            for _ in &self.baked_blocks {
-                r.u8()?;
+            for baked_block in &mut self.baked_blocks {
+                baked_block.lightmap_quality = r.enum_u8()?;
             }
 
-            for _ in &self.anchored_objects {
-                r.u8()?;
+            for anchored_object in &mut self.anchored_objects {
+                anchored_object.lightmap_quality = r.enum_u8()?;
             }
 
             Ok(())
