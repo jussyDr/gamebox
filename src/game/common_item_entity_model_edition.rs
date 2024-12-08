@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::{plug::crystal::Crystal, Class};
 
 /// A common item entity model edition.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct CommonItemEntityModelEdition {
     crystal: Arc<Crystal>,
 }

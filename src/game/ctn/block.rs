@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, Vec3};
+use crate::{game::WaypointSpecialProperty, PitchYawRoll, Vec3};
 
 use super::{Direction, ElemColor, LightmapQuality};
 
@@ -60,7 +60,9 @@ pub enum BlockType {
     /// Free block.
     Free {
         /// Position.
-        pos: Vec3<f32>,
+        position: Vec3<f32>,
+        /// Rotation.
+        rotation: PitchYawRoll,
     },
 }
 
@@ -85,7 +87,7 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             Error, ReadBody,
         },
-        Vec3,
+        PitchYawRoll, Vec3,
     };
 
     use super::{Block, BlockType};
@@ -117,7 +119,8 @@ mod read {
                     self.ty = BlockType::Normal { dir, coord };
                 } else {
                     self.ty = BlockType::Free {
-                        pos: Vec3::default(),
+                        position: Vec3::default(),
+                        rotation: PitchYawRoll::default(),
                     };
                 }
             }

@@ -94,7 +94,7 @@ mod read {
             r.id_or_null()?;
             let _flags = r.u32()?;
             let _catalog_position = r.u16()?;
-            let _name = r.string()?;
+            self.name = r.string()?;
             let _prod_state = r.u8()?;
 
             Ok(())

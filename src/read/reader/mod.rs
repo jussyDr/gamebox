@@ -14,7 +14,7 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{PackDesc, Quat, Vec2, Vec3};
+use crate::{PackDesc, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
 
 use super::{Error, ErrorKind};
 
@@ -183,6 +183,22 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let z = T::read(self)?;
 
         Ok(Vec3 { x, y, z })
+    }
+
+    pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
+        let pitch = self.f32()?;
+        let yaw = self.f32()?;
+        let roll = self.f32()?;
+
+        Ok(PitchYawRoll { pitch, yaw, roll })
+    }
+
+    pub fn rgb<T: ReadNum>(&mut self) -> Result<Rgb<T>, Error> {
+        let r = T::read(self)?;
+        let g = T::read(self)?;
+        let b = T::read(self)?;
+
+        Ok(Rgb { r, g, b })
     }
 
     /// Read a quaternion.

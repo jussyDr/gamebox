@@ -20,6 +20,33 @@ impl Class for ChallengeParameters {
     const CLASS_ID: u32 = 0x0305b000;
 }
 
+impl ChallengeParameters {
+    /// Bronze time.
+    pub const fn bronze_time(&self) -> u32 {
+        self.bronze_time
+    }
+
+    /// Silver time.
+    pub const fn silver_time(&self) -> u32 {
+        self.silver_time
+    }
+
+    /// Gold time.
+    pub const fn gold_time(&self) -> u32 {
+        self.gold_time
+    }
+
+    /// Author time.
+    pub const fn author_time(&self) -> u32 {
+        self.author_time
+    }
+
+    /// Validation ghost.
+    pub const fn validation_ghost(&self) -> Option<&Arc<Ghost>> {
+        self.validation_ghost.as_ref()
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 

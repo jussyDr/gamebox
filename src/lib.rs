@@ -17,6 +17,7 @@ pub use write::{write, write_file};
 use std::path::PathBuf;
 
 /// A 2-dimensional vector of type `T`.
+#[derive(Clone, Copy, Default)]
 pub struct Vec2<T> {
     /// X component.
     pub x: T,
@@ -25,8 +26,7 @@ pub struct Vec2<T> {
 }
 
 /// A 3-dimensional vector of type `T`.
-#[derive(Clone, Copy, PartialEq, Default, Debug)]
-#[repr(C)]
+#[derive(Clone, Copy, Default)]
 pub struct Vec3<T> {
     /// X component.
     pub x: T,
@@ -46,8 +46,8 @@ impl<T: Copy> Vec3<T> {
     }
 }
 
-/// A 3-dimensional vector of type `T`.
-#[derive(Clone, Copy, PartialEq, Default, Debug)]
+/// A 4-dimensional vector of type `T`.
+#[derive(Clone, Copy, Default)]
 pub struct Vec4<T> {
     /// X component.
     pub x: T,
@@ -90,7 +90,7 @@ pub struct Iso4 {
 }
 
 /// A texture coordinate.
-#[derive(Clone, Copy, PartialEq, Default, Debug)]
+#[derive(Clone, Copy, Default)]
 pub struct Texcoord {
     /// U component.
     pub u: f32,
@@ -108,6 +108,7 @@ impl Texcoord {
 }
 
 /// Rotation represented as pitch, yaw, and roll angles.
+#[derive(Clone, Copy, Default)]
 pub struct PitchYawRoll {
     /// Pitch angle.
     pub pitch: f32,
@@ -117,17 +118,33 @@ pub struct PitchYawRoll {
     pub roll: f32,
 }
 
-/// A pack desc.
-#[derive(PartialEq, Debug)]
+/// A pack descriptor.
 pub enum PackDesc {
+    /// Reference to an internal game file.
     Internal {
+        /// Path.
         path: PathBuf,
     },
+    /// Reference to an external file.
     External {
-        path: PathBuf,
-        locator_url: String,
+        /// Checksum.
         checksum: [u8; 32],
+        /// Path.
+        path: PathBuf,
+        /// Locator URL.
+        locator_url: String,
     },
+}
+
+/// RGB color.
+#[derive(Clone, Copy, Default)]
+pub struct Rgb<T> {
+    /// Red.
+    pub r: T,
+    /// Green.
+    pub g: T,
+    /// Blue.
+    pub b: T,
 }
 
 const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];

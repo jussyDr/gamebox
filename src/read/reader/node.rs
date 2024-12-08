@@ -97,7 +97,7 @@ impl<T: Default> Default for NodeRef<T> {
 }
 
 /// Reference to a node in an external file.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ExternalNodeRef {
     pub(crate) path: Arc<Path>,
     pub(crate) ancestor_level: u8,

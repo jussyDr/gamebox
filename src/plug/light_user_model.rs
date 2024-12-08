@@ -1,13 +1,40 @@
 //! Light user model.
 
-use crate::Class;
+use crate::{Class, Rgb};
 
 /// Light user model.
 #[derive(Default)]
-pub struct LightUserModel;
+pub struct LightUserModel {
+    color: Rgb<f32>,
+    intensity: f32,
+    distance: f32,
+    night_only: bool,
+}
 
 impl Class for LightUserModel {
     const CLASS_ID: u32 = 0x090f9000;
+}
+
+impl LightUserModel {
+    /// Color.
+    pub const fn color(&self) -> Rgb<f32> {
+        self.color
+    }
+
+    /// Intensity.
+    pub const fn intensity(&self) -> f32 {
+        self.intensity
+    }
+
+    /// Distance.
+    pub const fn distance(&self) -> f32 {
+        self.distance
+    }
+
+    /// Night only.
+    pub const fn night_only(&self) -> bool {
+        self.night_only
+    }
 }
 
 mod read {
@@ -45,16 +72,16 @@ mod read {
             }
 
             r.u32()?;
-            let _color = r.vec3::<f32>()?;
-            let _intensity = r.f32()?;
-            let _distance = r.f32()?;
+            self.color = r.rgb()?;
+            self.intensity = r.f32()?;
+            self.distance = r.f32()?;
             let _point_emission_radius = r.f32()?;
             let _point_emission_length = r.f32()?;
             let _spot_inner_angle = r.f32()?;
             let _spot_outer_angle = r.f32()?;
             let _spot_emission_size_x = r.f32()?;
             let _spot_emission_size_y = r.f32()?;
-            let _night_only = r.bool()?;
+            self.night_only = r.bool()?;
 
             Ok(())
         }

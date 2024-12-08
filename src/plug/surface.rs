@@ -1,12 +1,12 @@
 //! Surface.
 
-use crate::{Class, Vec3};
+use crate::{read::reader::ExternalNodeRef, Class, Vec3};
 
 /// A surface.
 #[derive(Default)]
 pub struct Surface {
     ty: SurfaceType,
-    materials: Vec<()>,
+    materials: Vec<ExternalNodeRef>,
 }
 
 impl Class for Surface {
@@ -119,13 +119,13 @@ mod read {
 
             r.vec3::<f32>()?;
             self.materials = r.list(|r| {
-                if r.bool()? {
-                    r.external_node_ref::<Material>()?;
+                let material = if r.bool()? {
+                    r.external_node_ref::<Material>()?
                 } else {
                     todo!()
-                }
+                };
 
-                Ok(())
+                Ok(material)
             })?;
 
             r.u32()?;

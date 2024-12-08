@@ -2,13 +2,18 @@
 
 use std::sync::Arc;
 
-use crate::{Class, PackDesc, Vec3};
+use crate::{script::TraitsMetadata, Class, PackDesc, Vec3};
 
 use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
 /// A challenge.
 #[derive(Default)]
 pub struct Challenge {
+    bronze_time: u32,
+    silver_time: u32,
+    gold_time: u32,
+    author_time: u32,
+    cost: u32,
     id: Arc<str>,
     author_id: Arc<str>,
     name: String,
@@ -19,6 +24,7 @@ pub struct Challenge {
     blocks: Vec<Block>,
     music: Option<PackDesc>,
     anchored_objects: Vec<AnchoredObject>,
+    script_metadata: TraitsMetadata,
     baked_blocks: Vec<Block>,
     intro_clip: Option<Arc<MediaClip>>,
     podium_clip: Option<Arc<MediaClip>>,
@@ -33,6 +39,31 @@ impl Class for Challenge {
 }
 
 impl Challenge {
+    /// Bronze time.
+    pub const fn bronze_time(&self) -> u32 {
+        self.bronze_time
+    }
+
+    /// Silver time.
+    pub const fn silver_time(&self) -> u32 {
+        self.silver_time
+    }
+
+    /// Gold time.
+    pub const fn gold_time(&self) -> u32 {
+        self.gold_time
+    }
+
+    /// Author time.
+    pub const fn author_time(&self) -> u32 {
+        self.author_time
+    }
+
+    /// Cost.
+    pub const fn cost(&self) -> u32 {
+        self.cost
+    }
+
     /// Identifier.
     pub const fn id(&self) -> &Arc<str> {
         &self.id
@@ -81,6 +112,11 @@ impl Challenge {
     /// Anchored objects.
     pub const fn anchored_objects(&self) -> &Vec<AnchoredObject> {
         &self.anchored_objects
+    }
+
+    /// Script metadata.
+    pub const fn script_metadata(&self) -> &TraitsMetadata {
+        &self.script_metadata
     }
 
     /// Intro media clip.
@@ -235,11 +271,11 @@ mod read {
             }
 
             r.bool()?;
-            let _bronze_time = r.u32()?;
-            let _silver_time = r.u32()?;
-            let _gold_time = r.u32()?;
-            let _author_time = r.u32()?;
-            let _cost = r.u32()?;
+            self.bronze_time = r.u32()?;
+            self.silver_time = r.u32()?;
+            self.gold_time = r.u32()?;
+            self.author_time = r.u32()?;
+            self.cost = r.u32()?;
             let _is_lap_race = r.bool()?;
             let _mode = r.u32()?;
             r.u32()?;
@@ -270,7 +306,7 @@ mod read {
             r.u32()?;
             let _password = r.string()?;
             self.deco_id = r.id()?;
-            r.id()?;
+            let _deco_collection = r.id()?;
             let _deco_author = r.id()?;
             let _map_coord_origin = r.vec2::<f32>()?;
             let _map_coord_target = r.vec2::<f32>()?;
@@ -416,10 +452,8 @@ mod read {
         }
 
         fn read_chunk_37<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _map_coord_origin = r.f32()?;
-            r.f32()?;
-            let _map_coord_target = r.f32()?;
-            r.f32()?;
+            let _map_coord_origin = r.vec2::<f32>()?;
+            let _map_coord_target = r.vec2::<f32>()?;
 
             Ok(())
         }
@@ -574,7 +608,7 @@ mod read {
         ) -> Result<(), Error> {
             r.u32()?;
             r.encapsulation(|r| {
-                let _script_metadata = TraitsMetadata::read_from_body(r)?;
+                self.script_metadata = TraitsMetadata::read_from_body(r)?;
 
                 Ok(())
             })?;
@@ -880,16 +914,16 @@ mod read {
             }
 
             for block in &mut self.blocks {
-                if let BlockType::Free { pos } = &mut block.ty {
-                    *pos = r.vec3()?;
-                    let _pitch_yaw_roll = r.vec3::<f32>()?;
+                if let BlockType::Free { position, rotation } = &mut block.ty {
+                    *position = r.vec3()?;
+                    *rotation = r.pitch_yaw_roll()?;
                 }
             }
 
             for baked_block in &mut self.baked_blocks {
-                if let BlockType::Free { pos } = &mut baked_block.ty {
-                    *pos = r.vec3()?;
-                    let _pitch_yaw_roll = r.vec3::<f32>()?;
+                if let BlockType::Free { position, rotation } = &mut baked_block.ty {
+                    *position = r.vec3()?;
+                    *rotation = r.pitch_yaw_roll()?;
                 }
             }
 

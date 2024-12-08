@@ -2,16 +2,16 @@
 
 use std::sync::Arc;
 
-use crate::{read::reader::ExternalNodeRef, Class};
+use crate::{read::reader::NodeRef, Class};
 
-use super::visual_indexed_triangles::VisualIndexedTriangles;
+use super::{visual_indexed_triangles::VisualIndexedTriangles, MaterialUserInst};
 
 /// Solid 2 model.
 #[derive(Default)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
     visuals: Vec<Arc<VisualIndexedTriangles>>,
-    materials: Vec<ExternalNodeRef>,
+    materials: Vec<NodeRef<MaterialUserInst>>,
 }
 
 impl Class for Solid2Model {
@@ -27,7 +27,7 @@ impl Solid2Model {
         &self.visuals
     }
 
-    pub const fn materials(&self) -> &Vec<ExternalNodeRef> {
+    pub const fn materials(&self) -> &Vec<NodeRef<MaterialUserInst>> {
         &self.materials
     }
 }
@@ -58,7 +58,7 @@ mod read {
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
-            reader::{IdStateMut, NodeStateMut, Reader},
+            reader::{IdStateMut, NodeRef, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
     };
@@ -128,7 +128,11 @@ mod read {
             let material_count = r.u32()?;
 
             if material_count == 0 {
-                self.materials = r.list_with_version(|r| r.external_node_ref::<Material>())?;
+                self.materials = r.list_with_version(|r| {
+                    let material = r.external_node_ref::<Material>()?;
+
+                    Ok(NodeRef::External(material))
+                })?;
             }
 
             let _skel = r.u32()?;
@@ -206,18 +210,18 @@ mod read {
 
                 Ok(())
             })?;
-            let _light_user_models: Vec<()> = r.list(|r| todo!())?;
-            let _light_insts: Vec<()> = r.list(|r| todo!())?;
+            let _light_user_models: Vec<()> = r.list(|_| todo!())?;
+            let _light_insts: Vec<()> = r.list(|_| todo!())?;
             let _damage_zone = r.u32()?;
             let _flags = r.u32()?;
             r.u32()?;
             r.string()?;
             r.u32()?;
-            r.repeat(material_count as usize, |r| {
+            self.materials = r.repeat(material_count as usize, |r| {
                 let _name = r.string()?;
-                let _material = r.internal_node_ref::<MaterialUserInst>()?;
+                let material = r.internal_node_ref::<MaterialUserInst>()?;
 
-                Ok(())
+                Ok(NodeRef::Internal { node: material })
             })?;
             r.u32()?;
             r.u32()?;

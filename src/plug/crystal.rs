@@ -7,11 +7,13 @@ use crate::{Class, Vec3};
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
 /// Crystal.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct Crystal {
     parent: TreeGenerator,
     materials: Vec<Arc<MaterialUserInst>>,
-    geometry_layer: Mesh,
+    geometry: Mesh,
+    trigger: Option<Mesh>,
+    spawn_position: Option<SpawnPosition>,
 }
 
 impl Class for Crystal {
@@ -24,14 +26,24 @@ impl Crystal {
         &self.materials
     }
 
-    /// Geometry layer.
-    pub const fn geometry_layer(&self) -> &Mesh {
-        &self.geometry_layer
+    /// Geometry.
+    pub const fn geometry(&self) -> &Mesh {
+        &self.geometry
+    }
+
+    /// Trigger.
+    pub const fn trigger(&self) -> Option<&Mesh> {
+        self.trigger.as_ref()
+    }
+
+    /// Spawn position.
+    pub const fn spawn_position(&self) -> Option<&SpawnPosition> {
+        self.spawn_position.as_ref()
     }
 }
 
 /// Crystal mesh.
-#[derive(PartialEq, Default, Debug)]
+#[derive(Default)]
 pub struct Mesh {
     positions: Vec<Vec3<f32>>,
     faces: Vec<Face>,
@@ -50,7 +62,6 @@ impl Mesh {
 }
 
 /// Face of a crystal mesh.
-#[derive(PartialEq, Debug)]
 pub struct Face {
     indices: Vec<u32>,
     material_index: u32,
@@ -74,6 +85,9 @@ impl Face {
     }
 }
 
+/// Spawn position.
+pub struct SpawnPosition;
+
 mod read {
     use std::io::{Read, Seek};
 
@@ -87,7 +101,7 @@ mod read {
         Texcoord,
     };
 
-    use super::{Crystal, Face, Mesh};
+    use super::{Crystal, Face, Mesh, SpawnPosition};
 
     impl ReadBody for Crystal {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -188,12 +202,10 @@ mod read {
                             return Err(Error::version("geometry", geometry_version));
                         }
 
-                        let mesh = read_mesh(r, self.materials.len() as u32)?;
+                        self.geometry = read_mesh(r, self.materials.len() as u32)?;
                         r.list(|r| r.u32())?;
                         let _is_visible = r.bool()?;
                         let _is_collidable = r.bool()?;
-
-                        self.geometry_layer = mesh;
                     }
                     14 => {
                         let version = r.u32()?;
@@ -212,7 +224,7 @@ mod read {
                             return Err(Error::version("trigger", trigger_version));
                         }
 
-                        read_mesh(r, self.materials.len() as u32)?;
+                        self.trigger = Some(read_mesh(r, self.materials.len() as u32)?);
                         r.list(|r| r.u32())?;
                     }
                     15 => {
@@ -248,6 +260,8 @@ mod read {
                         let _horizontal_angle = r.f32()?;
                         let _vertical_angle = r.f32()?;
                         let _roll_angle = r.f32()?;
+
+                        self.spawn_position = Some(SpawnPosition);
                     }
                     18 => {
                         let version = r.u32()?;

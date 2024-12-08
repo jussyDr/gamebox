@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{Class, PackDesc, Vec3};
+use crate::{game::WaypointSpecialProperty, Class, PackDesc, PitchYawRoll, Vec3};
 
 use super::{ElemColor, LightmapQuality};
 
@@ -10,7 +10,12 @@ use super::{ElemColor, LightmapQuality};
 #[derive(Default)]
 pub struct AnchoredObject {
     model_id: Arc<str>,
-    pos: Vec3<f32>,
+    rotation: PitchYawRoll,
+    unit_coord: Vec3<u8>,
+    position: Vec3<f32>,
+    waypoint_property: Option<WaypointSpecialProperty>,
+    pivot_position: Vec3<f32>,
+    scale: f32,
     pub(crate) elem_color: ElemColor,
     pub(crate) anim_offset: PhaseOffset,
     pub(crate) foreground_pack_desc: Option<PackDesc>,
@@ -27,9 +32,34 @@ impl AnchoredObject {
         &self.model_id
     }
 
+    /// Rotation.
+    pub const fn rotation(&self) -> PitchYawRoll {
+        self.rotation
+    }
+
+    /// Block unit coordinate.
+    pub const fn unit_coord(&self) -> Vec3<u8> {
+        self.unit_coord
+    }
+
     /// Position.
-    pub const fn pos(&self) -> Vec3<f32> {
-        self.pos
+    pub const fn position(&self) -> Vec3<f32> {
+        self.position
+    }
+
+    /// Waypoint property.
+    pub const fn waypoint_property(&self) -> Option<&WaypointSpecialProperty> {
+        self.waypoint_property.as_ref()
+    }
+
+    /// Pivot position.
+    pub const fn pivot_position(&self) -> Vec3<f32> {
+        self.pivot_position
+    }
+
+    /// Scale.
+    pub const fn scale(&self) -> f32 {
+        self.scale
     }
 
     /// Element color.
@@ -135,16 +165,16 @@ mod read {
             }
 
             self.model_id = r.id()?;
-            let _item_model_collection = r.id_or_null()?;
-            let _item_model_author = r.id_or_null()?;
-            let _pitch_yaw_roll = r.vec3::<f32>()?;
-            let _block_unit_coord = r.vec3::<u8>()?;
+            let _model_collection = r.id_or_null()?;
+            let _model_author = r.id_or_null()?;
+            self.rotation = r.pitch_yaw_roll()?;
+            self.unit_coord = r.vec3()?;
             let _anchor_tree_id = r.id_or_null()?;
-            self.pos = r.vec3()?;
-            let _waypoint_special_property = r.node_or_null::<WaypointSpecialProperty>()?;
+            self.position = r.vec3()?;
+            self.waypoint_property = r.node_or_null::<WaypointSpecialProperty>()?;
             let flags = r.u16()?;
-            let _pivot_position = r.vec3::<f32>()?;
-            let _scale = r.f32()?;
+            self.pivot_position = r.vec3()?;
+            self.scale = r.f32()?;
 
             if flags & 4 != 0 {
                 let _pack_desc = r.pack_desc()?;

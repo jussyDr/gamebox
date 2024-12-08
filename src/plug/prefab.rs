@@ -25,7 +25,7 @@ impl Prefab {
 pub struct Entity {
     model: NodeRef<StaticObjectModel>,
     rotation: Quat,
-    position: Vec3<f32>,
+    pos: Vec3<f32>,
 }
 
 impl Entity {
@@ -40,8 +40,8 @@ impl Entity {
     }
 
     /// Position of the entity.
-    pub const fn position(&self) -> Vec3<f32> {
-        self.position
+    pub const fn pos(&self) -> Vec3<f32> {
+        self.pos
     }
 }
 
@@ -88,14 +88,14 @@ mod read {
             self.entities = r.repeat(num_entities as usize, |r| {
                 let model = r.node_ref::<StaticObjectModel>()?;
                 let rotation = r.quat()?;
-                let position = r.vec3()?;
+                let pos = r.vec3()?;
                 r.u32()?;
                 let _u01 = r.string()?;
 
                 Ok(Entity {
                     model,
                     rotation,
-                    position,
+                    pos,
                 })
             })?;
 
