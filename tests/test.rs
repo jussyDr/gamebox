@@ -45,7 +45,7 @@ fn read_iten_pt_triangle_up_right_front_yellow_booster() {
 
 #[test]
 fn read_item_rock_plate_2_gray() {
-    read_file::<ItemModel>("tests/files/item/Rock_Plate_2_gray.Item.Gbx").unwrap();
+    read_file::<ItemModel>("tests/files/item/Rock_Plate_2_gray.Item.gbx").unwrap();
 }
 
 #[test]
@@ -85,7 +85,7 @@ fn read_map_training_01() {
 
 #[test]
 fn read_material_decal_paint_2_logo_4x1() {
-    read_file::<Material>("tests/files/material/DecalPaint2Logo4x1.Material.Gbx").unwrap();
+    read_file::<Material>("tests/files/material/DecalPaint2Logo4x1.Material.gbx").unwrap();
 }
 
 #[test]
@@ -130,5 +130,5 @@ fn read_prefab_straight_air() {
 
 #[test]
 fn read_texture_technics_trims_d() {
-    read_file::<Bitmap>("tests/files/texture/TechnicsTrims_D.Texture.Gbx").unwrap();
+    read_file::<Bitmap>("tests/files/texture/TechnicsTrims_D.Texture.gbx").unwrap();
 }
