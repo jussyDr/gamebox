@@ -23,17 +23,11 @@ impl Prefab {
 
 /// A prefab entity.
 pub struct Entity {
-    model: NodeRef<StaticObjectModel>,
     rotation: Quat,
     pos: Vec3<f32>,
 }
 
 impl Entity {
-    /// Model of the entity.
-    pub const fn model(&self) -> &NodeRef<StaticObjectModel> {
-        &self.model
-    }
-
     /// Rotation of the entity.
     pub const fn rotation(&self) -> Quat {
         self.rotation
@@ -49,7 +43,10 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        plug::static_object_model::StaticObjectModel,
+        plug::{
+            dyna_kinematic_contraint::DynaKinematicConstraint,
+            static_object_model::StaticObjectModel, DynaObjectModel,
+        },
         read::{
             readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -86,17 +83,63 @@ mod read {
             let num_entities = r.u32()?;
             let _u02 = r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let model = r.node_ref::<StaticObjectModel>()?;
+                let _model = r.test_or_ext(|r, class_id| {
+                    match class_id {
+                        0x09144000 => {
+                            let mut m = DynaObjectModel::default();
+                            m.read_body(r)?;
+                        }
+                        0x09159000 => {
+                            let mut m = StaticObjectModel::default();
+                            m.read_body(r)?;
+                        }
+                        0x2f0ca000 => {
+                            let mut m = DynaKinematicConstraint::default();
+                            m.read_body(r)?;
+                        }
+                        _ => todo!("{:08X?}", class_id),
+                    }
+
+                    Ok(())
+                })?;
                 let rotation = r.quat()?;
                 let pos = r.vec3()?;
-                r.u32()?;
-                let _u01 = r.string()?;
 
-                Ok(Entity {
-                    model,
-                    rotation,
-                    pos,
-                })
+                match r.u32()? {
+                    0x2f0b6000 => {
+                        let version = r.u32()?;
+
+                        if version != 2 {
+                            return Err(Error::version("instance params", version));
+                        }
+
+                        let _period_sc = r.f32()?;
+                        let _texture_id = r.u32()?;
+                        let _is_kinematic = r.bool()?;
+                        let _period_sc_max = r.f32()?;
+                        let _phase_01 = r.f32()?;
+                        let _phase_01_max = r.f32()?;
+                        r.u32()?;
+                    }
+                    0x2f0c8000 => {
+                        let version = r.u32()?;
+
+                        if version != 0 {
+                            return Err(Error::version("instance params", version));
+                        }
+
+                        let _ent_1 = r.u32()?;
+                        let _ent_2 = r.u32()?;
+                        let _position_1 = r.vec3::<f32>()?;
+                        let _position_2 = r.vec3::<f32>()?;
+                    }
+                    0xffffffff => {}
+                    x => todo!("{x:08X?}"),
+                }
+
+                r.string()?;
+
+                Ok(Entity { rotation, pos })
             })?;
 
             Ok(())

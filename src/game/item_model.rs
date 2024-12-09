@@ -50,6 +50,7 @@ mod read {
             common_item_entity_model_edition::CommonItemEntityModelEdition,
             item_placement_param::ItemPlacementParam, BlockItem, CommonItemEntityModel,
         },
+        plug::Prefab,
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
@@ -198,7 +199,21 @@ mod read {
             match model_edition {
                 Some(_) => {}
                 None => {
-                    self.ty = Type::Item(r.internal_node_ref::<CommonItemEntityModel>()?);
+                    r.test(|r, class_id| {
+                        match class_id {
+                            0x09145000 => {
+                                let mut model = Prefab::default();
+                                model.read_body(r)?;
+                            }
+                            0x2E027000 => {
+                                let mut model = CommonItemEntityModel::default();
+                                read_body_chunks(&mut model, r)?;
+                            }
+                            _ => panic!(),
+                        }
+
+                        Ok(())
+                    })?;
                 }
             }
 

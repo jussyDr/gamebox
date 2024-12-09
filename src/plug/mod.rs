@@ -2,6 +2,8 @@
 
 pub mod bitmap;
 pub mod crystal;
+pub mod dyna_kinematic_contraint;
+pub mod dyna_object_model;
 pub mod index_buffer;
 pub mod item_placement;
 pub mod light;
@@ -26,6 +28,8 @@ pub mod visual_indexed_triangles;
 pub use bitmap::Bitmap;
 #[doc(inline)]
 pub use crystal::Crystal;
+#[doc(inline)]
+pub use dyna_object_model::DynaObjectModel;
 #[doc(inline)]
 pub use index_buffer::IndexBuffer;
 #[doc(inline)]

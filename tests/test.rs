@@ -38,6 +38,11 @@ fn read_ed_classic_road_tech_straight() {
 }
 
 #[test]
+fn read_item_blue() {
+    read_file::<ItemModel>("tests/files/item/blue.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_item_cp_stripe() {
     read_file::<ItemModel>("tests/files/item/CP-stripe.Item.Gbx").unwrap();
 }
