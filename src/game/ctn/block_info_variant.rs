@@ -206,14 +206,29 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_11<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_11<N>(
+            &mut self,
+            r: &mut Reader<impl Read, impl IdStateMut, N>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 1 {
                 return Err(Error::chunk_version(version));
             }
 
-            r.u32()?;
+            let _water_volumes = r.list(|r| {
+                r.list(|r| r.box3d())?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.id()?;
+
+                Ok(())
+            })?;
 
             Ok(())
         }
