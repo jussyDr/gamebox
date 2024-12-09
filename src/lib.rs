@@ -44,6 +44,10 @@ impl<T: Copy> Vec3<T> {
             z: array[2],
         }
     }
+
+    pub const fn to_array(self) -> [T; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 /// 4-dimensional vector.

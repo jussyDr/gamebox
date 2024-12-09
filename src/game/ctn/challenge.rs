@@ -23,7 +23,7 @@ pub struct Challenge {
     size: Vec3<u32>,
     blocks: Vec<Block>,
     music: Option<PackDesc>,
-    anchored_objects: Vec<AnchoredObject>,
+    items: Vec<AnchoredObject>,
     script_metadata: TraitsMetadata,
     baked_blocks: Vec<Block>,
     intro_clip: Option<Arc<MediaClip>>,
@@ -109,9 +109,9 @@ impl Challenge {
         self.music.as_ref()
     }
 
-    /// Anchored objects.
-    pub const fn anchored_objects(&self) -> &Vec<AnchoredObject> {
-        &self.anchored_objects
+    /// Items.
+    pub const fn items(&self) -> &Vec<AnchoredObject> {
+        &self.items
     }
 
     /// Script metadata.
@@ -545,7 +545,7 @@ mod read {
 
             r.u32()?;
             r.encapsulation(|r| {
-                self.anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+                self.items = r.list_with_version(|r| r.node::<AnchoredObject>())?;
 
                 if version == 7 {
                     let _items_on_item = r.list(|r| r.vec2::<u32>())?;
@@ -962,8 +962,8 @@ mod read {
                 baked_block.elem_color = r.enum_u8()?;
             }
 
-            for anchored_object in &mut self.anchored_objects {
-                anchored_object.elem_color = r.enum_u8()?;
+            for item in &mut self.items {
+                item.elem_color = r.enum_u8()?;
             }
 
             Ok(())
@@ -976,8 +976,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for anchored_object in &mut self.anchored_objects {
-                anchored_object.anim_offset = r.enum_u8()?;
+            for item in &mut self.items {
+                item.anim_offset = r.enum_u8()?;
             }
 
             Ok(())
@@ -999,9 +999,9 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            for anchored_object in &mut self.anchored_objects {
+            for item in &mut self.items {
                 if r.bool8()? {
-                    anchored_object.foreground_pack_desc = Some(r.pack_desc()?);
+                    item.foreground_pack_desc = Some(r.pack_desc()?);
                 }
             }
 
@@ -1032,8 +1032,8 @@ mod read {
                 baked_block.lightmap_quality = r.enum_u8()?;
             }
 
-            for anchored_object in &mut self.anchored_objects {
-                anchored_object.lightmap_quality = r.enum_u8()?;
+            for item in &mut self.items {
+                item.lightmap_quality = r.enum_u8()?;
             }
 
             Ok(())
@@ -1050,7 +1050,7 @@ mod read {
                 r.u32()?;
             }
 
-            for _ in &self.anchored_objects {
+            for _ in &self.items {
                 r.u32()?;
             }
 
