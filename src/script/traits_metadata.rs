@@ -31,15 +31,20 @@ pub enum Trait {
     Integer(i32),
     /// Real number.
     Real(f32),
+    /// Class.
     Class,
     /// Text.
     Text(String),
+    /// Enum.
     Enum,
     /// Associative array.
     Array {
+        /// Keys.
         keys: Vec<Trait>,
+        /// Values.
         values: Vec<Trait>,
     },
+    /// Parameter array.
     ParamArray,
     /// 2-dimensional vector.
     Vec2(Vec2<f32>),
@@ -47,15 +52,20 @@ pub enum Trait {
     Vec3(Vec3<f32>),
     /// 3-dimensional vector.
     Int3(Vec3<i32>),
+    /// Iso4.
     Iso4,
+    /// Identifier.
     Ident,
     /// 2-dimensional vector.
     Int2(Vec2<i32>),
     /// A struct.
     Struct {
+        /// Name.
         name: String,
+        /// Members.
         members: HashMap<String, Trait>,
     },
+    /// Value not computed.
     ValueNotComputed,
 }
 

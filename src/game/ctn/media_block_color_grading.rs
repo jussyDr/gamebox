@@ -20,7 +20,22 @@ impl MediaBlockColorGrading {
 }
 
 /// Color grading media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    intensity: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Intensity.
+    pub const fn intensity(&self) -> f32 {
+        self.intensity
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -61,10 +76,10 @@ mod read {
 
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _intensity = r.f32()?;
+                let time = r.f32()?;
+                let intensity = r.f32()?;
 
-                Ok(Key)
+                Ok(Key { time, intensity })
             })?;
 
             Ok(())

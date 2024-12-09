@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, Vec3};
 
 use super::MediaClip;
 
@@ -26,12 +26,18 @@ impl MediaClipGroup {
 /// Clip trigger.
 pub struct ClipTrigger {
     clip: Arc<MediaClip>,
+    coords: Vec<Vec3<u32>>,
 }
 
 impl ClipTrigger {
     /// Clip.
     pub const fn clip(&self) -> &Arc<MediaClip> {
         &self.clip
+    }
+
+    /// Coords.
+    pub const fn coords(&self) -> &Vec<Vec3<u32>> {
+        &self.coords
     }
 }
 
@@ -71,19 +77,23 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let clips = r.list_with_version(|r| r.internal_node_ref::<MediaClip>())?;
-            let _triggers = r.list(|r| {
+            let num_triggers = r.u32()?;
+
+            self.clips = vec![];
+
+            for trigger_index in 0..num_triggers {
+                let clip = clips[trigger_index as usize].clone();
+
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
                 let _condition = r.u32()?;
                 let _condition_value = r.f32()?;
-                let _coords = r.list(|r| r.vec3::<u32>())?;
+                let coords = r.list(|r| r.vec3::<u32>())?;
 
-                Ok(())
-            })?;
-
-            self.clips = clips.into_iter().map(|clip| ClipTrigger { clip }).collect();
+                self.clips.push(ClipTrigger { clip, coords });
+            }
 
             Ok(())
         }

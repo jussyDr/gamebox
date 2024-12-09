@@ -136,14 +136,22 @@ pub enum PackDesc {
     },
 }
 
-/// RGB color.
+impl Default for PackDesc {
+    fn default() -> Self {
+        Self::Internal {
+            path: PathBuf::default(),
+        }
+    }
+}
+
+/// Color represented by red, green, and blue components.
 #[derive(Clone, Copy, Default)]
 pub struct Rgb<T> {
-    /// Red.
+    /// Red component.
     pub r: T,
-    /// Green.
+    /// Green component.
     pub g: T,
-    /// Blue.
+    /// Blue component.
     pub b: T,
 }
 

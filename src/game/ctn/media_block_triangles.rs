@@ -1,6 +1,6 @@
 //! Media block triangles.
 
-use crate::Class;
+use crate::{Class, Vec3};
 
 /// A media block triangles.
 #[derive(Default)]
@@ -20,7 +20,22 @@ impl MediaBlockTriangles {
 }
 
 /// Triangles media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    positions: Vec<Vec3<f32>>,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Positions.
+    pub const fn positions(&self) -> &Vec<Vec3<f32>> {
+        &self.positions
+    }
+}
 
 mod read {
     use std::io::Read;
@@ -42,18 +57,20 @@ mod read {
     impl MediaBlockTriangles {
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
+                let time = r.f32()?;
 
-                Ok(Key)
+                Ok(Key {
+                    time,
+                    positions: Vec::default(),
+                })
             })?;
 
             let num_keys = r.u32()?;
             let num_verts = r.u32()?;
 
-            for _ in 0..num_keys {
-                for _ in 0..num_verts {
-                    let _position = r.vec3::<f32>()?;
-                }
+            for key_index in 0..num_keys {
+                let key = self.keys.get_mut(key_index as usize).unwrap();
+                key.positions = r.repeat(num_verts as usize, |r| r.vec3())?;
             }
 
             let _vertices = r.list(|r| {

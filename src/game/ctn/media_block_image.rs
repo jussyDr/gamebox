@@ -2,12 +2,13 @@
 
 use std::sync::Arc;
 
-use crate::{control::EffectSimi, Class};
+use crate::{control::EffectSimi, Class, PackDesc};
 
 /// Image media block.
 #[derive(Default)]
 pub struct MediaBlockImage {
     effect: Arc<EffectSimi>,
+    image: PackDesc,
 }
 
 impl Class for MediaBlockImage {
@@ -15,9 +16,14 @@ impl Class for MediaBlockImage {
 }
 
 impl MediaBlockImage {
-    /// Effect
+    /// Effect.
     pub const fn effect(&self) -> &Arc<EffectSimi> {
         &self.effect
+    }
+
+    /// Image.
+    pub const fn image(&self) -> &PackDesc {
+        &self.image
     }
 }
 
@@ -54,7 +60,7 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.effect = r.internal_node_ref()?;
-            let _image = r.pack_desc()?;
+            self.image = r.pack_desc()?;
 
             Ok(())
         }

@@ -1,11 +1,12 @@
 //! Media block transition fade.
 
-use crate::Class;
+use crate::{Class, Rgb};
 
 /// A media block transition fade.
 #[derive(Default)]
 pub struct MediaBlockTransitionFade {
     keys: Vec<Key>,
+    color: Rgb<f32>,
 }
 
 impl Class for MediaBlockTransitionFade {
@@ -17,10 +18,30 @@ impl MediaBlockTransitionFade {
     pub const fn keys(&self) -> &Vec<Key> {
         &self.keys
     }
+
+    /// Color.
+    pub const fn color(&self) -> Rgb<f32> {
+        self.color
+    }
 }
 
 /// Fading transition media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    opacity: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Opacity.
+    pub const fn opacity(&self) -> f32 {
+        self.opacity
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -51,12 +72,12 @@ mod read {
     impl MediaBlockTransitionFade {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _opacity = r.f32()?;
+                let time = r.f32()?;
+                let opacity = r.f32()?;
 
-                Ok(Key)
+                Ok(Key { time, opacity })
             })?;
-            let _color = r.vec3::<f32>()?;
+            self.color = r.rgb()?;
             r.f32()?;
 
             Ok(())

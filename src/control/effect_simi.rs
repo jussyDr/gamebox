@@ -1,6 +1,6 @@
 //! Effect simi.
 
-use crate::Class;
+use crate::{Class, Vec2};
 
 /// Effect simi.
 #[derive(Default)]
@@ -20,7 +20,46 @@ impl EffectSimi {
 }
 
 /// Effect simi key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    position: Vec2<f32>,
+    rotation: f32,
+    scale: Vec2<f32>,
+    opacity: f32,
+    depth: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Position.
+    pub const fn position(&self) -> Vec2<f32> {
+        self.position
+    }
+
+    /// Rotation.
+    pub const fn rotation(&self) -> f32 {
+        self.rotation
+    }
+
+    /// Scale.
+    pub const fn scale(&self) -> Vec2<f32> {
+        self.scale
+    }
+
+    /// Opacity.
+    pub const fn opacity(&self) -> f32 {
+        self.opacity
+    }
+
+    /// Depth.
+    pub const fn depth(&self) -> f32 {
+        self.depth
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -51,18 +90,25 @@ mod read {
     impl EffectSimi {
         fn read_chunk_5<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _position = r.vec2::<f32>()?;
-                let _rotation = r.f32()?;
-                let _scale = r.vec2::<f32>()?;
-                let _opacity = r.f32()?;
-                let _depth = r.f32()?;
+                let time = r.f32()?;
+                let position = r.vec2()?;
+                let rotation = r.f32()?;
+                let scale = r.vec2()?;
+                let opacity = r.f32()?;
+                let depth = r.f32()?;
                 r.f32()?;
                 r.f32()?;
                 r.f32()?;
                 r.f32()?;
 
-                Ok(Key)
+                Ok(Key {
+                    time,
+                    position,
+                    rotation,
+                    scale,
+                    opacity,
+                    depth,
+                })
             })?;
             let _centered = r.bool()?;
             let _color_blend_mode = r.u32()?;

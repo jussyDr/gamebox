@@ -1,6 +1,6 @@
 //! Media block fog.
 
-use crate::Class;
+use crate::{Class, Rgb};
 
 /// A media block fog.
 #[derive(Default)]
@@ -20,7 +20,58 @@ impl MediaBlockFog {
 }
 
 /// Fog media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    intensity: f32,
+    sky_intensity: f32,
+    distance: f32,
+    coefficient: f32,
+    color: Rgb<f32>,
+    clouds_opacity: f32,
+    clouds_speed: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Intensity.
+    pub const fn intensity(&self) -> f32 {
+        self.intensity
+    }
+
+    /// Sky intensity.
+    pub const fn sky_intensity(&self) -> f32 {
+        self.sky_intensity
+    }
+
+    /// Distance.
+    pub const fn distance(&self) -> f32 {
+        self.distance
+    }
+
+    /// Coefficient.
+    pub const fn coefficient(&self) -> f32 {
+        self.coefficient
+    }
+
+    /// Color
+    pub const fn color(&self) -> Rgb<f32> {
+        self.color
+    }
+
+    /// Clouds opacity.
+    pub const fn clouds_opacity(&self) -> f32 {
+        self.clouds_opacity
+    }
+
+    /// Clouds speed.
+    pub const fn clouds_speed(&self) -> f32 {
+        self.clouds_speed
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -57,16 +108,25 @@ mod read {
             }
 
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _intensity = r.f32()?;
-                let _sky_intensity = r.f32()?;
-                let _distance = r.f32()?;
-                let _coefficient = r.f32()?;
-                let _color = r.vec3::<f32>()?;
-                let _clouds_opacity = r.f32()?;
-                let _clouds_speed = r.f32()?;
+                let time = r.f32()?;
+                let intensity = r.f32()?;
+                let sky_intensity = r.f32()?;
+                let distance = r.f32()?;
+                let coefficient = r.f32()?;
+                let color = r.rgb()?;
+                let clouds_opacity = r.f32()?;
+                let clouds_speed = r.f32()?;
 
-                Ok(Key)
+                Ok(Key {
+                    time,
+                    intensity,
+                    sky_intensity,
+                    distance,
+                    coefficient,
+                    color,
+                    clouds_opacity,
+                    clouds_speed,
+                })
             })?;
 
             Ok(())

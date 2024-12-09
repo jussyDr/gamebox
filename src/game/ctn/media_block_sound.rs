@@ -1,10 +1,11 @@
 //! Media block sound.
 
-use crate::Class;
+use crate::{Class, PackDesc, Vec3};
 
 /// Sound media block.
 #[derive(Default)]
 pub struct MediaBlockSound {
+    sound: PackDesc,
     keys: Vec<Key>,
 }
 
@@ -13,14 +14,46 @@ impl Class for MediaBlockSound {
 }
 
 impl MediaBlockSound {
-    /// Keys
+    /// Sound.
+    pub const fn sound(&self) -> &PackDesc {
+        &self.sound
+    }
+
+    /// Keys.
     pub const fn keys(&self) -> &Vec<Key> {
         &self.keys
     }
 }
 
 /// Sound media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    volume: f32,
+    pan: f32,
+    position: Vec3<f32>,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Volume.
+    pub const fn volume(&self) -> f32 {
+        self.volume
+    }
+
+    /// Pan.
+    pub const fn pan(&self) -> f32 {
+        self.pan
+    }
+
+    /// Position.
+    pub const fn position(&self) -> Vec3<f32> {
+        self.position
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -71,7 +104,7 @@ mod read {
         }
 
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _sound = r.pack_desc()?;
+            self.sound = r.pack_desc()?;
 
             let version = r.u32()?;
 
@@ -80,12 +113,17 @@ mod read {
             }
 
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _volume = r.f32()?;
-                let _pan = r.f32()?;
-                let _position = r.vec3::<f32>()?;
+                let time = r.f32()?;
+                let volume = r.f32()?;
+                let pan = r.f32()?;
+                let position = r.vec3()?;
 
-                Ok(Key)
+                Ok(Key {
+                    time,
+                    volume,
+                    pan,
+                    position,
+                })
             })?;
 
             Ok(())

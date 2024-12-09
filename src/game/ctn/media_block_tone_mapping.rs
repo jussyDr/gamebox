@@ -20,7 +20,34 @@ impl MediaBlockToneMapping {
 }
 
 /// Tone mapping media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+    exposure: f32,
+    max_hdr: f32,
+    light_trail_scale: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Exposure.
+    pub const fn exposure(&self) -> f32 {
+        self.exposure
+    }
+
+    /// Max HDR.
+    pub const fn max_hdr(&self) -> f32 {
+        self.max_hdr
+    }
+
+    /// Light trail scale.
+    pub const fn light_trail_scale(&self) -> f32 {
+        self.light_trail_scale
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -51,13 +78,18 @@ mod read {
     impl MediaBlockToneMapping {
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _exposure = r.f32()?;
-                let _max_hdr = r.f32()?;
-                let _light_trail_scale = r.f32()?;
+                let time = r.f32()?;
+                let exposure = r.f32()?;
+                let max_hdr = r.f32()?;
+                let light_trail_scale = r.f32()?;
                 r.u32()?;
 
-                Ok(Key)
+                Ok(Key {
+                    time,
+                    exposure,
+                    max_hdr,
+                    light_trail_scale,
+                })
             })?;
 
             Ok(())

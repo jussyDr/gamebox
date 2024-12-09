@@ -2,13 +2,14 @@
 
 use std::sync::Arc;
 
-use crate::{control::EffectSimi, Class};
+use crate::{control::EffectSimi, Class, Rgb};
 
 /// Text media block.
 #[derive(Default)]
 pub struct MediaBlockText {
     text: String,
     effect: Arc<EffectSimi>,
+    color: Rgb<f32>,
 }
 
 impl Class for MediaBlockText {
@@ -24,6 +25,11 @@ impl MediaBlockText {
     /// Effect.
     pub const fn effect(&self) -> &Arc<EffectSimi> {
         &self.effect
+    }
+
+    /// Color.
+    pub const fn color(&self) -> Rgb<f32> {
+        self.color
     }
 }
 
@@ -73,7 +79,7 @@ mod read {
         }
 
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _color = r.vec3::<f32>()?;
+            self.color = r.rgb()?;
 
             Ok(())
         }

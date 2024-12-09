@@ -1,13 +1,24 @@
 //! Common item entity model.
 
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{plug::StaticObjectModel, Class};
 
 /// A common item entity model.
 #[derive(Default)]
-pub struct CommonItemEntityModel;
+pub struct CommonItemEntityModel {
+    model: Arc<StaticObjectModel>,
+}
 
 impl Class for CommonItemEntityModel {
     const CLASS_ID: u32 = 0x2e027000;
+}
+
+impl CommonItemEntityModel {
+    /// Model.
+    pub const fn model(&self) -> &Arc<StaticObjectModel> {
+        &self.model
+    }
 }
 
 mod read {
@@ -51,7 +62,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _static_object = r.internal_node_ref::<StaticObjectModel>()?;
+            self.model = r.internal_node_ref::<StaticObjectModel>()?;
             let _trigger_shape = r.u32()?;
             r.vec3::<f32>()?;
             r.vec3::<f32>()?;

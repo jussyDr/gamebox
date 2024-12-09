@@ -14,6 +14,12 @@ impl Class for ItemModel {
     const CLASS_ID: u32 = 0x2e002000;
 }
 
+pub enum Model {
+    Block,
+    EntityEdition,
+    Entity,
+}
+
 mod read {
     use std::io::{Read, Seek};
 
@@ -151,7 +157,7 @@ mod read {
             let _vis_custom_model = r.u32()?;
             let _actions = r.list(|r| r.u32())?;
             let _default_cam = r.u32()?;
-            let x = r.test_or_null(|r, class_id| match class_id {
+            let model_edition = r.test_or_null(|r, class_id| match class_id {
                 0x2e025000 => {
                     let mut block_item = BlockItem::default();
                     block_item.read_body(r)?;
@@ -167,7 +173,7 @@ mod read {
                 _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
             })?;
 
-            if x.is_none() {
+            if model_edition.is_none() {
                 let _entity_model = r.internal_node_ref_or_null::<CommonItemEntityModel>()?;
             }
 

@@ -4,10 +4,37 @@ use crate::Class;
 
 /// Interface media block.
 #[derive(Default)]
-pub struct MediaBlockInterface {}
+pub struct MediaBlockInterface {
+    start_time: f32,
+    end_time: f32,
+    show: bool,
+    manialink: String,
+}
 
 impl Class for MediaBlockInterface {
     const CLASS_ID: u32 = 0x03195000;
+}
+
+impl MediaBlockInterface {
+    /// Start time.
+    pub const fn start_time(&self) -> f32 {
+        self.start_time
+    }
+
+    /// End time.
+    pub const fn end_time(&self) -> f32 {
+        self.end_time
+    }
+
+    /// Show.
+    pub const fn show(&self) -> bool {
+        self.show
+    }
+
+    /// Manialink.
+    pub const fn manialink(&self) -> &String {
+        &self.manialink
+    }
 }
 
 mod read {
@@ -44,10 +71,10 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _start = r.f32()?;
-            let _end = r.f32()?;
-            let _show_interface = r.bool()?;
-            let _manialink = r.string()?;
+            self.start_time = r.f32()?;
+            self.end_time = r.f32()?;
+            self.show = r.bool()?;
+            self.manialink = r.string()?;
 
             Ok(())
         }
