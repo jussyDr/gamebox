@@ -8,7 +8,6 @@ use crate::{plug::Crystal, Class};
 #[derive(Default)]
 pub struct BlockItem {
     archetype: Arc<str>,
-    variants: Vec<Arc<Crystal>>,
 }
 
 impl Class for BlockItem {
@@ -19,11 +18,6 @@ impl BlockItem {
     /// Archetype block info identifier.
     pub const fn archetype(&self) -> &Arc<str> {
         &self.archetype
-    }
-
-    /// Variants.
-    pub const fn variants(&self) -> &Vec<Arc<Crystal>> {
-        &self.variants
     }
 }
 
@@ -76,15 +70,21 @@ mod read {
 
             self.archetype = r.id()?;
             let _archetype_block_info_collection_id = r.id()?;
-            self.variants = r.list(|r| {
+            let variants = r.list(|r| {
                 let _id = r.u32()?;
-                let crystal = r.internal_node_ref::<Crystal>()?;
+                let _crystal = r.internal_node_ref_or_null::<Crystal>()?;
 
-                Ok(crystal)
+                Ok(())
             })?;
 
             if version >= 1 && r.bool8()? {
-                todo!()
+                for _ in 0..variants.len() {
+                    let flags = r.u8()?;
+
+                    if flags & 0x01 != 0 {
+                        r.u32()?;
+                    }
+                }
             }
 
             Ok(())

@@ -13,6 +13,11 @@ fn read_block_grass_remover() {
 }
 
 #[test]
+fn read_block_grass_remover2() {
+    read_file::<ItemModel>("tests/files/block/GrassRemover2.Block.Gbx").unwrap();
+}
+
+#[test]
 fn read_block_rally_road_ice_high_curve_2_snow() {
     read_file::<ItemModel>("tests/files/block/RallyRoadIceHighCurve2-Snow.Block.Gbx").unwrap();
 }
