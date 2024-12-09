@@ -39,6 +39,14 @@ fn read_ed_classic_deco_cliff_mid_corner_in() {
 }
 
 #[test]
+fn read_ed_classic_deco_wall_slope_2_u_buttom_in_ground() {
+    read_file::<BlockInfoClassic>(
+        "tests/files/ed_classic/DecoWallSlope2UBottomInGround.EDClassic.Gbx",
+    )
+    .unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
 }
