@@ -9,7 +9,7 @@ use super::{Direction, ElemColor, LightmapQuality};
 /// Block placed in a Challenge.
 #[derive(Default)]
 pub struct Block {
-    block_model_id: Arc<str>,
+    model_id: Arc<str>,
     pub(crate) ty: BlockType,
     has_flags: bool,
     waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
@@ -18,9 +18,9 @@ pub struct Block {
 }
 
 impl Block {
-    /// Identifier of the block's model.
-    pub const fn block_model_id(&self) -> &Arc<str> {
-        &self.block_model_id
+    /// Model identifier.
+    pub const fn model_id(&self) -> &Arc<str> {
+        &self.model_id
     }
 
     /// Type.
@@ -97,7 +97,7 @@ mod read {
             &mut self,
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
-            self.block_model_id = r.id()?;
+            self.model_id = r.id()?;
             let dir = r.enum_u8::<Direction>()?;
             let coord = r.vec3()?;
             let flags = r.u32()?;

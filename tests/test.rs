@@ -33,6 +33,12 @@ fn read_decoration_day_16x12() {
 }
 
 #[test]
+fn read_ed_classic_deco_cliff_mid_corner_in() {
+    read_file::<BlockInfoClassic>("tests/files/ed_classic/DecoCliffIceMidCornerIn.EDClassic.Gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
 }
