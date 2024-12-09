@@ -128,7 +128,10 @@ mod read {
                 Ok(material)
             })?;
 
-            r.u32()?;
+            if !self.materials.is_empty() {
+                r.u32()?;
+            }
+
             r.list(|r| r.u16())?;
             r.u32()?;
 

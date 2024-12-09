@@ -38,19 +38,24 @@ fn read_item_cp_stripe() {
 }
 
 #[test]
+fn read_item_piege_gbx() {
+    read_file::<ItemModel>("tests/files/item/Piege.Gbx.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_iten_pt_triangle_up_right_front_yellow_booster() {
     read_file::<ItemModel>("tests/files/item/PT_Triangle_Up_Right_Front_Yellow_Booster.Item.gbx")
         .unwrap();
 }
 
 #[test]
-fn read_item_rock_plate_2_gray() {
-    read_file::<ItemModel>("tests/files/item/Rock_Plate_2_gray.Item.gbx").unwrap();
+fn read_item_ramp_2k() {
+    read_file::<ItemModel>("tests/files/item/Ramp2k.Item.Gbx").unwrap();
 }
 
 #[test]
-fn read_item_piege_gbx() {
-    read_file::<ItemModel>("tests/files/item/Piege.Gbx.Item.Gbx").unwrap();
+fn read_item_rock_plate_2_gray() {
+    read_file::<ItemModel>("tests/files/item/Rock_Plate_2_gray.Item.gbx").unwrap();
 }
 
 #[test]
