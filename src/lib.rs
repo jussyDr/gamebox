@@ -16,7 +16,7 @@ pub use write::{write, write_file};
 
 use std::path::PathBuf;
 
-/// A 2-dimensional vector of type `T`.
+/// 2-dimensional vector.
 #[derive(Clone, Copy, Default)]
 pub struct Vec2<T> {
     /// X component.
@@ -25,7 +25,7 @@ pub struct Vec2<T> {
     pub y: T,
 }
 
-/// A 3-dimensional vector of type `T`.
+/// 3-dimensional vector.
 #[derive(Clone, Copy, Default)]
 pub struct Vec3<T> {
     /// X component.
@@ -46,7 +46,7 @@ impl<T: Copy> Vec3<T> {
     }
 }
 
-/// A 4-dimensional vector of type `T`.
+/// 4-dimensional vector.
 #[derive(Clone, Copy, Default)]
 pub struct Vec4<T> {
     /// X component.
@@ -70,7 +70,7 @@ impl<T: Copy> Vec4<T> {
     }
 }
 
-/// A quaternion.
+/// Quaternion.
 #[derive(Clone, Copy)]
 pub struct Quat {
     /// X component.
@@ -89,7 +89,7 @@ pub struct Iso4 {
     pub z: Vec4<f32>,
 }
 
-/// A texture coordinate.
+/// Texture coordinate.
 #[derive(Clone, Copy, Default)]
 pub struct Texcoord {
     /// U component.
@@ -118,7 +118,7 @@ pub struct PitchYawRoll {
     pub roll: f32,
 }
 
-/// A pack descriptor.
+/// Pack descriptor.
 pub enum PackDesc {
     /// Reference to an internal game file.
     Internal {

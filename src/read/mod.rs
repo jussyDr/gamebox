@@ -95,7 +95,7 @@ impl Debug for TraceEntry {
     }
 }
 
-/// Read a node of type `T` from the given `reader`.
+/// Read a node from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     let mut r = Reader::new(reader, (), ());
 
@@ -262,7 +262,7 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     Ok(node)
 }
 
-/// Read a node of type `T` from a file at the given `path`.
+/// Read a node from a file at the given `path`.
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
     let file = File::open(path).map_err(Error::io)?;
     let reader = BufReader::new(file);

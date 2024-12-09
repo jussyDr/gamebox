@@ -1,7 +1,12 @@
 [package]
 name = "gamebox"
 version = "0.1.0"
+authors = ["Justin de Ruiter <justinderuiter@ziggo.nl>"]
 edition = "2021"
+rust-version = "1.80.1"
+description = "GameBox file reading and writing"
+repository = "https://github.com/jussyDr/gamebox"
+license = "GPL-2.0"
 
 [[bench]]
 name = "bench"
