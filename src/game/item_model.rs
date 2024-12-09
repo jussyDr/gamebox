@@ -1,23 +1,45 @@
 //! Item model.
 
+use std::sync::Arc;
+
 use crate::Class;
 
-use super::ctn::collector::Collector;
+use super::{
+    ctn::collector::Collector, BlockItem, CommonItemEntityModel, CommonItemEntityModelEdition,
+};
 
-/// An item model.
+/// Item model.
 #[derive(Default)]
 pub struct ItemModel {
     parent: Collector,
+    ty: Type,
 }
 
 impl Class for ItemModel {
     const CLASS_ID: u32 = 0x2e002000;
 }
 
-pub enum Model {
-    Block,
-    EntityEdition,
-    Entity,
+impl ItemModel {
+    /// Type.
+    pub const fn ty(&self) -> &Type {
+        &self.ty
+    }
+}
+
+/// Item model type.
+pub enum Type {
+    /// Block item.
+    Block(Arc<BlockItem>),
+    /// Entity edition.
+    ItemEdition(Arc<CommonItemEntityModelEdition>),
+    /// Entity.
+    Item(Arc<CommonItemEntityModel>),
+}
+
+impl Default for Type {
+    fn default() -> Self {
+        Self::Item(Default::default())
+    }
 }
 
 mod read {
@@ -36,7 +58,7 @@ mod read {
         },
     };
 
-    use super::ItemModel;
+    use super::{ItemModel, Type};
 
     impl Readable for ItemModel {}
 
@@ -173,8 +195,11 @@ mod read {
                 _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
             })?;
 
-            if model_edition.is_none() {
-                let _entity_model = r.internal_node_ref_or_null::<CommonItemEntityModel>()?;
+            match model_edition {
+                Some(_) => {}
+                None => {
+                    self.ty = Type::Item(r.internal_node_ref::<CommonItemEntityModel>()?);
+                }
             }
 
             r.u32()?;

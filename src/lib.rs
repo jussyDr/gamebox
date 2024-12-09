@@ -1,4 +1,4 @@
-#![warn(missing_docs, clippy::print_stdout)]
+#![warn(missing_docs, clippy::unwrap_used, clippy::print_stdout)]
 
 //! GameBox file reading and writing.
 
@@ -160,6 +160,8 @@ const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 const SKIPPABLE_CHUNK_MARKER: u32 = 0x534B4950;
 
 const END_OF_NODE_MARKER: u32 = 0xfacade01;
+
+const ID_MARKER_BIT: u32 = 0x40000000;
 
 trait Class: Sized {
     const CLASS_ID: u32;

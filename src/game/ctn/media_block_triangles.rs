@@ -40,7 +40,7 @@ impl Key {
 mod read {
     use std::io::Read;
 
-    use crate::read::{reader::Reader, BodyChunk, BodyChunks, Error};
+    use crate::read::{reader::Reader, BodyChunk, BodyChunks, Error, ErrorKind};
 
     use super::{Key, MediaBlockTriangles};
 
@@ -69,7 +69,11 @@ mod read {
             let num_verts = r.u32()?;
 
             for key_index in 0..num_keys {
-                let key = self.keys.get_mut(key_index as usize).unwrap();
+                let key = self
+                    .keys
+                    .get_mut(key_index as usize)
+                    .ok_or_else(|| Error::new(ErrorKind::Format("index")))?;
+
                 key.positions = r.repeat(num_verts as usize, |r| r.vec3())?;
             }
 

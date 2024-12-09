@@ -43,9 +43,9 @@ mod read {
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             let _collector_stock = r.list(|r| {
-                let _block_model = r.id()?;
-                let _block_model = r.id()?;
-                let _block_model = r.id()?;
+                let _block_model_id = r.id()?;
+                let _block_model_collection_id = r.id()?;
+                let _block_model_author_id = r.id()?;
                 let _count = r.u32()?;
 
                 Ok(())

@@ -28,7 +28,7 @@ pub enum Compression {
 
 /// Write the given `node` to the given `writer`.
 pub fn write<T: Writable>(node: &T, writer: impl Write + Seek) -> Result<(), Error> {
-    let compression = Compression::Compress {
+    let body_compression = Compression::Compress {
         level: CompressLevel::default(),
     };
 
@@ -39,18 +39,45 @@ pub fn write<T: Writable>(node: &T, writer: impl Write + Seek) -> Result<(), Err
     w.u8(b'B')?;
     w.u8(b'U')?;
 
-    match compression {
+    match body_compression {
         Compression::None => w.u8(b'U')?,
         Compression::Compress { .. } => w.u8(b'C')?,
     }
 
     w.u8(b'R')?;
     w.u32(T::CLASS_ID)?;
-    w.u32(0)?;
+    w.byte_buf_inline(|w| {
+        let header_chunks = T::header_chunks();
+
+        let mut hh = vec![];
+
+        for header_chunk in header_chunks {
+            let mut w2 = Writer::new(vec![], (), ());
+            (header_chunk.write_fn)(node, &mut w2)?;
+            let buf = w2.into_inner();
+
+            let mut len = buf.len() as u32;
+
+            if header_chunk.heavy {
+                len |= 0x80000000;
+            }
+
+            w.u32(T::CLASS_ID | header_chunk.num as u32)?;
+            w.u32(len)?;
+
+            hh.push(buf);
+        }
+
+        for h in hh {
+            w.bytes(&h)?;
+        }
+
+        Ok(())
+    })?;
     w.u32(1)?;
     w.u32(0)?;
 
-    match compression {
+    match body_compression {
         Compression::None => {
             write_body(&mut w, node)?;
         }

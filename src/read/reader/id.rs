@@ -1,6 +1,9 @@
 use std::{io::Read, sync::Arc};
 
-use crate::read::{Error, ErrorKind};
+use crate::{
+    read::{Error, ErrorKind},
+    ID_MARKER_BIT,
+};
 
 use super::Reader;
 
@@ -65,7 +68,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
             return Ok(Some(Arc::from("Unassigned")));
         }
 
-        if index & 0x40000000 == 0 {
+        if index & ID_MARKER_BIT == 0 {
             return Err(Error::new(ErrorKind::Format("index")));
         }
 

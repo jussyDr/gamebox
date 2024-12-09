@@ -11,29 +11,31 @@ pub trait HeaderChunks: Sized {
 }
 
 pub struct HeaderChunk<T, W, I, N> {
-    num: u16,
-    write_fn: HeaderChunkWriteFn<T, W, I, N>,
+    pub num: u16,
+    pub write_fn: HeaderChunkWriteFn<T, W, I, N>,
+    pub heavy: bool,
 }
 
-type HeaderChunkWriteFn<T, W, I, N> = fn(&mut T, &mut Writer<W, I, N>) -> Result<(), Error>;
+type HeaderChunkWriteFn<T, W, I, N> = fn(&T, &mut Writer<W, I, N>) -> Result<(), Error>;
 
 pub trait BodyChunks: Sized {
     fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>>;
 }
 
 pub struct BodyChunk<T, W, I, N> {
-    num: u16,
-    write_fn: BodyChunkWriteFn<T, W, I, N>,
+    pub num: u16,
+    pub write_fn: BodyChunkWriteFn<T, W, I, N>,
 }
 
-enum BodyChunkWriteFn<T, W, I, N> {
+pub enum BodyChunkWriteFn<T, W, I, N> {
     Normal(BodyChunkWriteFnNormal<T, W, I, N>),
-    Skippable(BodyChunkWriteFnSkippable<T, W, I, N>),
+    Skippable(BodyChunkWriteFnSkippable<T, I, N>),
 }
 
 type BodyChunkWriteFnNormal<T, W, I, N> = fn(&T, &mut Writer<W, I, N>) -> Result<(), Error>;
 
-type BodyChunkWriteFnSkippable<T, W, I, N> = fn(&T, &mut Writer<W, I, N>) -> Result<(), Error>;
+type BodyChunkWriteFnSkippable<T, I, N> =
+    fn(&T, &mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>;
 
 pub fn write_body<T: Class + BodyChunks, I, N>(
     w: &mut Writer<impl Write + Seek, I, N>,
@@ -48,7 +50,7 @@ pub fn write_body<T: Class + BodyChunks, I, N>(
             }
             BodyChunkWriteFn::Skippable(write_fn) => {
                 w.u32(SKIPPABLE_CHUNK_MARKER)?;
-                w.byte_buf(|w| write_fn(node, w))?;
+                w.byte_buf_inline(|w| write_fn(node, w))?;
             }
         }
     }

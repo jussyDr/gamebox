@@ -3,13 +3,13 @@
 use std::{
     any::Any,
     hash::{Hash, Hasher},
-    io::{Error, Seek, SeekFrom, Write},
+    io::{Error, Seek, Write},
     sync::Arc,
 };
 
 use indexmap::{indexset, IndexSet};
 
-use crate::Class;
+use crate::{Class, ID_MARKER_BIT};
 
 use super::{write_body, BodyChunks};
 
@@ -85,6 +85,21 @@ impl<W, I, N> Writer<W, I, N> {
             node_state,
         }
     }
+
+    pub fn into_inner(self) -> W {
+        self.inner
+    }
+
+    pub fn to_buf_inline(
+        &mut self,
+        mut write_fn: impl FnMut(&mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>,
+    ) -> Result<Vec<u8>, Error> {
+        let mut w = Writer::new(vec![], &mut self.id_state, &mut self.node_state);
+
+        write_fn(&mut w)?;
+
+        Ok(w.inner)
+    }
 }
 
 impl<W: Write, I, N> Writer<W, I, N> {
@@ -110,32 +125,21 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.bytes(&value.to_le_bytes())
     }
 
-    pub fn string(&mut self, value: &str) -> Result<(), Error> {
-        self.u32(value.len() as u32)?;
-        self.bytes(value.as_bytes())?;
-
-        Ok(())
+    pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        self.u32(bytes.len() as u32)?;
+        self.bytes(bytes)
     }
-}
 
-impl<W: Write + Seek, I, N> Writer<W, I, N> {
-    pub fn byte_buf(
+    pub fn byte_buf_inline(
         &mut self,
-        mut write_fn: impl FnMut(&mut Self) -> Result<(), Error>,
+        write_fn: impl FnMut(&mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>,
     ) -> Result<(), Error> {
-        let len_pos = self.inner.stream_position()?;
-        let start_pos = self.inner.seek(SeekFrom::Current(4))?;
+        let buf = self.to_buf_inline(write_fn)?;
+        self.byte_buf(&buf)
+    }
 
-        write_fn(self)?;
-
-        let end_pos = self.inner.stream_position()?;
-
-        self.inner.seek(SeekFrom::Start(len_pos))?;
-        self.u32((end_pos - start_pos) as u32)?;
-
-        self.inner.seek(SeekFrom::Start(end_pos))?;
-
-        Ok(())
+    pub fn string(&mut self, value: &str) -> Result<(), Error> {
+        self.byte_buf(value.as_bytes())
     }
 }
 
@@ -150,10 +154,10 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
         match id {
             Some(id) => match self.id_state.get_mut().ids.get_index_of(&id) {
                 Some(index) => {
-                    self.u32(((index as u32) + 1) | 0x40000000)?;
+                    self.u32(((index as u32) + 1) | ID_MARKER_BIT)?;
                 }
                 None => {
-                    self.u32(0x40000000)?;
+                    self.u32(ID_MARKER_BIT)?;
                     self.string(&id)?;
 
                     self.id_state.get_mut().ids.insert(id);
