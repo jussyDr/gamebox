@@ -1,5 +1,7 @@
 //! Decoration.
 
+use std::ops::Deref;
+
 use crate::{read::reader::ExternalNodeRef, Class};
 
 use super::collector::Collector;
@@ -16,6 +18,14 @@ pub struct Decoration {
 
 impl Class for Decoration {
     const CLASS_ID: u32 = 0x03038000;
+}
+
+impl Deref for Decoration {
+    type Target = Collector;
+
+    fn deref(&self) -> &Collector {
+        &self.parent
+    }
 }
 
 impl Decoration {
