@@ -34,6 +34,7 @@ mod read {
 
     use crate::{
         game::ctn::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo},
+        plug::{Solid, Tree},
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error,
@@ -108,7 +109,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_6(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 11 {
@@ -116,7 +120,7 @@ mod read {
             }
 
             r.u32()?;
-            r.u32()?;
+            r.internal_node_ref_or_null::<Solid>()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

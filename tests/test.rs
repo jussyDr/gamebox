@@ -53,6 +53,11 @@ fn read_ed_classic_deco_wall_water_base() {
 }
 
 #[test]
+fn read_ed_classic_gate_special_boost() {
+    read_file::<BlockInfoClassic>("tests/files/ed_classic/GateSpecialBoost.EDClassic.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
 }

@@ -14,9 +14,11 @@ pub mod material_user_inst;
 pub mod placement_patch;
 pub mod prefab;
 pub mod road_chunk;
+pub mod solid;
 pub mod solid_2_model;
 pub mod static_object_model;
 pub mod surface;
+pub mod tree;
 pub mod tree_generator;
 pub mod vertex_stream;
 pub mod visual;
@@ -49,11 +51,15 @@ pub use prefab::Prefab;
 #[doc(inline)]
 pub use road_chunk::RoadChunk;
 #[doc(inline)]
+pub use solid::Solid;
+#[doc(inline)]
 pub use solid_2_model::Solid2Model;
 #[doc(inline)]
 pub use static_object_model::StaticObjectModel;
 #[doc(inline)]
 pub use surface::Surface;
+#[doc(inline)]
+pub use tree::Tree;
 #[doc(inline)]
 pub use tree_generator::TreeGenerator;
 #[doc(inline)]
