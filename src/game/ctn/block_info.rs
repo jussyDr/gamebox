@@ -1,6 +1,6 @@
 //! Block info.
 
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 use crate::{game::ctn::collector::Collector, Class};
 
@@ -20,6 +20,14 @@ pub struct BlockInfo {
 
 impl Class for BlockInfo {
     const CLASS_ID: u32 = 0x0304e000;
+}
+
+impl Deref for BlockInfo {
+    type Target = Collector;
+
+    fn deref(&self) -> &Collector {
+        &self.parent
+    }
 }
 
 impl BlockInfo {
