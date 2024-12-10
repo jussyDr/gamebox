@@ -32,7 +32,12 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            r.u32()?;
+            let version = r.u32()?;
+
+            if version != 12 {
+                return Err(Error::chunk_version(version));
+            }
+
             r.u32()?;
             r.u32()?;
             r.u32()?;
@@ -52,19 +57,29 @@ mod read {
             })?;
             r.u32()?;
             r.u32()?;
+            r.u8()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u16()?;
-            r.u8()?;
             r.id()?;
-            r.u32()?;
+            r.list(|r| {
+                r.list(|r| {
+                    r.f32()?;
+                    r.f32()?;
+                    r.f32()?;
+
+                    Ok(())
+                })?;
+
+                Ok(())
+            })?;
             r.u8()?;
             r.u32()?;
             r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
 
             Ok(())
         }

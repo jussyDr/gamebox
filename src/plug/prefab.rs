@@ -1,8 +1,6 @@
 //! Prefab.
 
-use crate::{read::reader::NodeRef, Class, Quat, Vec3};
-
-use super::static_object_model::StaticObjectModel;
+use crate::{Class, Quat, Vec3};
 
 /// Prefab.
 #[derive(Default)]

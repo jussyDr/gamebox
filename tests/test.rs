@@ -58,6 +58,12 @@ fn read_ed_classic_gate_special_boost() {
 }
 
 #[test]
+fn read_ed_classic_road_bump_special_boost_slope() {
+    read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadBumpSpecialBoostSlope.EDClassic.Gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
 }
