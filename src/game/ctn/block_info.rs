@@ -181,8 +181,22 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _sound_1 = r.external_node_ref_or_null::<()>()?;
-            let _sound_2 = r.external_node_ref_or_null::<()>()?;
+            let sound_1 = r.external_node_ref_or_null::<()>()?;
+            let sound_2 = r.external_node_ref_or_null::<()>()?;
+
+            if sound_1.is_some() {
+                let _sound_1_location = r.vec3::<f32>()?;
+                let _sound_1_location = r.vec3::<f32>()?;
+                let _sound_1_location = r.vec3::<f32>()?;
+                let _sound_1_location = r.vec3::<f32>()?;
+            }
+
+            if sound_2.is_some() {
+                let _sound_2_location = r.vec3::<f32>()?;
+                let _sound_2_location = r.vec3::<f32>()?;
+                let _sound_2_location = r.vec3::<f32>()?;
+                let _sound_2_location = r.vec3::<f32>()?;
+            }
 
             Ok(())
         }
