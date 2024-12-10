@@ -1,6 +1,6 @@
 //! Item model.
 
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 use crate::{
     plug::{item_variant_list::ItemVariantList, Prefab},
@@ -20,6 +20,14 @@ pub struct ItemModel {
 
 impl Class for ItemModel {
     const CLASS_ID: u32 = 0x2e002000;
+}
+
+impl Deref for ItemModel {
+    type Target = Collector;
+
+    fn deref(&self) -> &Collector {
+        &self.parent
+    }
 }
 
 impl ItemModel {
