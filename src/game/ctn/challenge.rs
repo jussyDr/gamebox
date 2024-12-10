@@ -119,6 +119,11 @@ impl Challenge {
         &self.script_metadata
     }
 
+    /// Baked blocks.
+    pub const fn baked_blocks(&self) -> &Vec<Block> {
+        &self.baked_blocks
+    }
+
     /// Intro media clip.
     pub const fn intro_clip(&self) -> Option<&Arc<MediaClip>> {
         self.intro_clip.as_ref()
