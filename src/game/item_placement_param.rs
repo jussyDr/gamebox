@@ -127,7 +127,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            r.internal_node_ref::<ItemPlacement>()?;
+            r.node_ref::<ItemPlacement>()?;
 
             Ok(())
         }
