@@ -2,7 +2,7 @@ use gamebox::{
     game::{
         ctn::{
             block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration,
-            BlockInfoClip, BlockInfoFlat,
+            BlockInfoClip, BlockInfoClipHorizontal, BlockInfoClipVertical, BlockInfoFlat,
         },
         item_model::ItemModel,
     },
@@ -106,6 +106,22 @@ fn read_ed_clip_canopy_border_beam_curve_in_fc_left() {
 #[test]
 fn read_ed_flat_grass() {
     read_file::<BlockInfoFlat>("tests/files/ed_flat/Grass.EDFlat.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_horizontal_clip_canopy_center_flat_curve_in_hfc_left() {
+    read_file::<BlockInfoClipHorizontal>(
+        "tests/files/ed_horizontal_clip/CanopyCenterFlatCurveInHFCLeft.EDHorizontalClip.Gbx",
+    )
+    .unwrap();
+}
+
+#[test]
+fn read_ed_vertical_clip_deco_cliff_corner_in_left_vfc() {
+    read_file::<BlockInfoClipVertical>(
+        "tests/files/ed_vertical_clip/DecoCliffCornerInLeftVFC.EDVerticalClip.Gbx",
+    )
+    .unwrap();
 }
 
 #[test]

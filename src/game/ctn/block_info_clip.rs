@@ -84,7 +84,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            let _asymmetrical_clip_id = r.id()?;
+            let _asymmetrical_clip_id = r.id_or_null()?;
 
             Ok(())
         }
