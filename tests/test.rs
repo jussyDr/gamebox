@@ -1,6 +1,9 @@
 use gamebox::{
     game::{
-        ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration},
+        ctn::{
+            block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration,
+            BlockInfoClip, BlockInfoFlat,
+        },
         item_model::ItemModel,
     },
     plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
@@ -92,6 +95,17 @@ fn read_ed_classic_track_wall_chicane_2x_left_pillar() {
         "tests/files/ed_classic/TrackWallChicaneX2LeftPillar.EDClassic.Gbx",
     )
     .unwrap();
+}
+
+#[test]
+fn read_ed_clip_canopy_border_beam_curve_in_fc_left() {
+    read_file::<BlockInfoClip>("tests/files/ed_clip/CanopyBorderBeamCurveInFCLeft.EDClip.Gbx")
+        .unwrap();
+}
+
+#[test]
+fn read_ed_flat_grass() {
+    read_file::<BlockInfoFlat>("tests/files/ed_flat/Grass.EDFlat.Gbx").unwrap();
 }
 
 #[test]

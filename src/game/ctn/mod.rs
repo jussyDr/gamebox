@@ -6,6 +6,7 @@ pub mod block;
 pub mod block_info;
 pub mod block_info_classic;
 pub mod block_info_clip;
+pub mod block_info_flat;
 pub mod block_info_mobil;
 pub mod block_info_variant;
 pub mod block_info_variant_air;
@@ -50,6 +51,8 @@ pub use block_info::BlockInfo;
 pub use block_info_classic::BlockInfoClassic;
 #[doc(inline)]
 pub use block_info_clip::BlockInfoClip;
+#[doc(inline)]
+pub use block_info_flat::BlockInfoFlat;
 #[doc(inline)]
 pub use block_info_mobil::BlockInfoMobil;
 #[doc(inline)]

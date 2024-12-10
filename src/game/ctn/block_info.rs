@@ -56,21 +56,30 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::{
-            ctn::{
-                block_info_variant_air::BlockInfoVariantAir,
-                block_info_variant_ground::BlockInfoVariantGround, Direction,
-            },
-            podium_info::PodiumInfo,
+        game::ctn::{
+            block_info_variant_air::BlockInfoVariantAir,
+            block_info_variant_ground::BlockInfoVariantGround, Direction,
         },
         plug::MediaClipList,
         read::{
+            readable::{HeaderChunk, HeaderChunks},
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody,
         },
     };
 
     use super::BlockInfo;
+
+    impl HeaderChunks for BlockInfo {
+        fn parent(&mut self) -> Option<&mut impl HeaderChunks> {
+            Some(&mut self.parent)
+        }
+
+        fn header_chunks<R: Read, I: IdStateMut, N>(
+        ) -> impl Iterator<Item = HeaderChunk<Self, R, I, N>> {
+            [].into_iter()
+        }
+    }
 
     impl BodyChunks for BlockInfo {
         fn parent(&mut self) -> Option<&mut impl BodyChunks> {

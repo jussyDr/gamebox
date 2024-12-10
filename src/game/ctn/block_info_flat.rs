@@ -1,22 +1,22 @@
-//! Block info classic.
+//! Block info flat.
 
 use std::ops::Deref;
 
 use crate::Class;
 
-use super::block_info::BlockInfo;
+use super::BlockInfo;
 
-/// A block info classic
+/// Block info flat.
 #[derive(Default)]
-pub struct BlockInfoClassic {
+pub struct BlockInfoFlat {
     parent: BlockInfo,
 }
 
-impl Class for BlockInfoClassic {
-    const CLASS_ID: u32 = 0x03051000;
+impl Class for BlockInfoFlat {
+    const CLASS_ID: u32 = 0x0304f000;
 }
 
-impl Deref for BlockInfoClassic {
+impl Deref for BlockInfoFlat {
     type Target = BlockInfo;
 
     fn deref(&self) -> &BlockInfo {
@@ -28,19 +28,22 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::read::{
-        read_body_chunks,
-        readable::{HeaderChunk, HeaderChunks, Sealed},
+        readable,
         reader::{IdStateMut, NodeStateMut, Reader},
-        BodyChunk, BodyChunks, Error, ReadBody, Readable,
+        Error, Readable,
     };
 
-    use super::BlockInfoClassic;
+    use self::readable::{
+        read_body_chunks, BodyChunk, BodyChunks, HeaderChunk, HeaderChunks, ReadBody,
+    };
 
-    impl Readable for BlockInfoClassic {}
+    use super::BlockInfoFlat;
 
-    impl Sealed for BlockInfoClassic {}
+    impl Readable for BlockInfoFlat {}
 
-    impl HeaderChunks for BlockInfoClassic {
+    impl readable::Sealed for BlockInfoFlat {}
+
+    impl HeaderChunks for BlockInfoFlat {
         fn parent(&mut self) -> Option<&mut impl HeaderChunks> {
             Some(&mut self.parent)
         }
@@ -50,7 +53,7 @@ mod read {
         }
     }
 
-    impl ReadBody for BlockInfoClassic {
+    impl ReadBody for BlockInfoFlat {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
             &mut self,
             r: &mut Reader<R, I, N>,
@@ -59,12 +62,12 @@ mod read {
         }
     }
 
-    impl BodyChunks for BlockInfoClassic {
+    impl BodyChunks for BlockInfoFlat {
         fn parent(&mut self) -> Option<&mut impl BodyChunks> {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [].into_iter()
         }
     }
