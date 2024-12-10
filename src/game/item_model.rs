@@ -224,7 +224,7 @@ mod read {
             r.u32()?;
 
             if version >= 15 {
-                r.internal_node_ref_or_null::<GameSkinAndFolder>()?;
+                r.node_ref_or_null::<GameSkinAndFolder>()?;
             }
 
             Ok(())

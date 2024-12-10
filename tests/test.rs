@@ -112,8 +112,8 @@ fn read_item_gate_checkpoint_center_16_m() {
 }
 
 #[test]
-fn read_item_light_tube_big_16m() {
-    read_file::<ItemModel>("tests/files/item/LightTubeBig16m.Item.Gbx").unwrap();
+fn read_item_gate_gameplay_desert_16_m() {
+    read_file::<ItemModel>("tests/files/item/GateGameplayDesert16m.Item.Gbx").unwrap();
 }
 
 #[test]
