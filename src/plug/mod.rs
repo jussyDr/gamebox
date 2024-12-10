@@ -11,6 +11,7 @@ pub mod light_user_model;
 pub mod material;
 pub mod material_custom;
 pub mod material_user_inst;
+pub mod media_clip_list;
 pub mod placement_patch;
 pub mod prefab;
 pub mod road_chunk;
@@ -44,6 +45,8 @@ pub use material::Material;
 pub use material_custom::MaterialCustom;
 #[doc(inline)]
 pub use material_user_inst::MaterialUserInst;
+#[doc(inline)]
+pub use media_clip_list::MediaClipList;
 #[doc(inline)]
 pub use placement_patch::PlacementPatch;
 #[doc(inline)]

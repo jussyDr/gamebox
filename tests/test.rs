@@ -70,6 +70,12 @@ fn read_ed_classic_platform_dir_curve_2_in() {
 }
 
 #[test]
+fn read_ed_classic_platform_dirt_finish() {
+    read_file::<BlockInfoClassic>("tests/files/ed_classic/PlatformDirtFinish.EDClassic.Gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_bump_special_boost_slope() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadBumpSpecialBoostSlope.EDClassic.Gbx")
         .unwrap();

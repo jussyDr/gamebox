@@ -48,10 +48,14 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::ctn::{
-            block_info_variant_air::BlockInfoVariantAir,
-            block_info_variant_ground::BlockInfoVariantGround, Direction,
+        game::{
+            ctn::{
+                block_info_variant_air::BlockInfoVariantAir,
+                block_info_variant_ground::BlockInfoVariantGround, Direction,
+            },
+            podium_info::PodiumInfo,
         },
+        plug::MediaClipList,
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody,
@@ -106,7 +110,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_32<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_32(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 8 {
@@ -114,8 +121,8 @@ mod read {
             }
 
             r.u32()?;
-            r.u32()?;
-            r.u32()?;
+            let _podium_info = r.u32()?;
+            let _intro_info = r.internal_node_ref_or_null::<MediaClipList>()?;
             let _char_phy_special_property_customizable = r.bool()?;
 
             if r.bool()? {
