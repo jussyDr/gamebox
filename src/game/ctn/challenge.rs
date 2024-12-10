@@ -31,7 +31,7 @@ pub struct Challenge {
     in_game_clips: Option<Arc<MediaClipGroup>>,
     end_race_clips: Option<Arc<MediaClipGroup>>,
     ambiance_clip: Option<Arc<MediaClip>>,
-    embedded_objects: Vec<u8>,
+    embedded_items: Option<EmbeddedItems>,
 }
 
 impl Class for Challenge {
@@ -144,9 +144,27 @@ impl Challenge {
         self.ambiance_clip.as_ref()
     }
 
-    /// ZIP archive containing embedded block and item models.
-    pub const fn embedded_objects(&self) -> &Vec<u8> {
-        &self.embedded_objects
+    /// Embedded items.
+    pub const fn embedded_items(&self) -> Option<&EmbeddedItems> {
+        self.embedded_items.as_ref()
+    }
+}
+
+/// Embedded items.
+pub struct EmbeddedItems {
+    ids: Vec<Arc<str>>,
+    zip: Vec<u8>,
+}
+
+impl EmbeddedItems {
+    /// Identifiers.
+    pub const fn ids(&self) -> &Vec<Arc<str>> {
+        &self.ids
+    }
+
+    /// Zip.
+    pub const fn zip(&self) -> &Vec<u8> {
+        &self.zip
     }
 }
 
@@ -172,7 +190,7 @@ mod read {
         script::traits_metadata::TraitsMetadata,
     };
 
-    use super::Challenge;
+    use super::{Challenge, EmbeddedItems};
 
     impl Readable for Challenge {}
 
@@ -742,15 +760,19 @@ mod read {
 
             r.u32()?;
             r.encapsulation(|r| {
-                let _embedded_item_models = r.list(|r| {
-                    r.id()?;
+                let ids = r.list(|r| {
+                    let id = r.id()?;
                     r.id()?;
                     r.id()?;
 
-                    Ok(())
+                    Ok(id)
                 })?;
-                self.embedded_objects = r.byte_buf()?;
+                let zip = r.byte_buf()?;
                 let _textures = r.list(|r| r.string())?;
+
+                if !zip.is_empty() {
+                    self.embedded_items = Some(EmbeddedItems { ids, zip })
+                }
 
                 Ok(())
             })?;
