@@ -64,6 +64,12 @@ fn read_ed_classic_open_dirt_road_checkpoint() {
 }
 
 #[test]
+fn read_ed_classic_platform_dir_curve_2_in() {
+    read_file::<BlockInfoClassic>("tests/files/ed_classic/PlatformDirtCurve2In.EDClassic.Gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_bump_special_boost_slope() {
     read_file::<BlockInfoClassic>("tests/files/ed_classic/RoadBumpSpecialBoostSlope.EDClassic.Gbx")
         .unwrap();
