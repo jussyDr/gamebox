@@ -117,6 +117,11 @@ fn read_item_piege_gbx() {
 }
 
 #[test]
+fn read_item_podium() {
+    read_file::<ItemModel>("tests/files/item/Podium.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_iten_pt_triangle_up_right_front_yellow_booster() {
     read_file::<ItemModel>("tests/files/item/PT_Triangle_Up_Right_Front_Yellow_Booster.Item.gbx")
         .unwrap();

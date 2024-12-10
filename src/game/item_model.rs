@@ -50,7 +50,7 @@ mod read {
             common_item_entity_model_edition::CommonItemEntityModelEdition,
             item_placement_param::ItemPlacementParam, BlockItem, CommonItemEntityModel,
         },
-        plug::{item_variant_list::ItemVariantList, Prefab},
+        plug::{item_variant_list::ItemVariantList, MediaClipList, Prefab},
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
@@ -273,7 +273,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_31<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_31(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
             if !matches!(version, 10..=12) {
@@ -289,7 +292,7 @@ mod read {
             }
 
             if version >= 12 {
-                r.u32()?;
+                r.internal_node_ref_or_null::<MediaClipList>()?;
                 r.u32()?;
             }
 
