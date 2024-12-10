@@ -4,6 +4,8 @@ pub mod bitmap;
 pub mod crystal;
 pub mod dyna_kinematic_contraint;
 pub mod dyna_object_model;
+pub mod game_skin;
+pub mod game_skin_and_folder;
 pub mod index_buffer;
 pub mod item_placement;
 pub mod item_variant_list;
@@ -34,6 +36,10 @@ pub use bitmap::Bitmap;
 pub use crystal::Crystal;
 #[doc(inline)]
 pub use dyna_object_model::DynaObjectModel;
+#[doc(inline)]
+pub use game_skin::GameSkin;
+#[doc(inline)]
+pub use game_skin_and_folder::GameSkinAndFolder;
 #[doc(inline)]
 pub use index_buffer::IndexBuffer;
 #[doc(inline)]

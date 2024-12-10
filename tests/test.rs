@@ -102,6 +102,11 @@ fn read_item_cp_stripe() {
 }
 
 #[test]
+fn read_item_desert_gate_gameplay() {
+    read_file::<ItemModel>("tests/files/item/DesertGateGameplay.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_item_gate_checkpoint_center_16_m() {
     read_file::<ItemModel>("tests/files/item/GateCheckpointCenter16m.Item.Gbx").unwrap();
 }

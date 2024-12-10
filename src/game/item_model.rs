@@ -50,7 +50,7 @@ mod read {
             common_item_entity_model_edition::CommonItemEntityModelEdition,
             item_placement_param::ItemPlacementParam, BlockItem, CommonItemEntityModel,
         },
-        plug::{item_variant_list::ItemVariantList, MediaClipList, Prefab},
+        plug::{item_variant_list::ItemVariantList, GameSkinAndFolder, MediaClipList, Prefab},
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
@@ -224,7 +224,7 @@ mod read {
             r.u32()?;
 
             if version >= 15 {
-                r.u32()?;
+                r.internal_node_ref_or_null::<GameSkinAndFolder>()?;
             }
 
             Ok(())
