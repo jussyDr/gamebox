@@ -199,7 +199,7 @@ mod read {
             match model_edition {
                 Some(_) => {}
                 None => {
-                    r.test(|r, class_id| {
+                    r.test_or_ext(|r, class_id| {
                         match class_id {
                             0x09145000 => {
                                 let mut model = Prefab::default();
