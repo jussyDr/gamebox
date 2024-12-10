@@ -2,7 +2,10 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{
+    plug::{item_variant_list::ItemVariantList, Prefab},
+    Class,
+};
 
 use super::{
     ctn::collector::Collector, BlockItem, CommonItemEntityModel, CommonItemEntityModelEdition,
@@ -12,7 +15,7 @@ use super::{
 #[derive(Default)]
 pub struct ItemModel {
     parent: Collector,
-    ty: Type,
+    ty: ModelType,
 }
 
 impl Class for ItemModel {
@@ -21,24 +24,28 @@ impl Class for ItemModel {
 
 impl ItemModel {
     /// Type.
-    pub const fn ty(&self) -> &Type {
+    pub const fn ty(&self) -> &ModelType {
         &self.ty
     }
 }
 
 /// Item model type.
-pub enum Type {
+pub enum ModelType {
     /// Block item.
-    Block(Arc<BlockItem>),
-    /// Entity edition.
-    ItemEdition(Arc<CommonItemEntityModelEdition>),
-    /// Entity.
-    Item(Arc<CommonItemEntityModel>),
+    BlockItem(Arc<BlockItem>),
+    /// Common item entity model.
+    CommonItemEntityModel(Arc<CommonItemEntityModel>),
+    /// Common item entity model edition.
+    CommonItemEntityModelEdition(Arc<CommonItemEntityModelEdition>),
+    /// Item variant list.
+    ItemVariantList(Arc<ItemVariantList>),
+    /// Prefab.
+    Prefab(Arc<Prefab>),
 }
 
-impl Default for Type {
+impl Default for ModelType {
     fn default() -> Self {
-        Self::Item(Default::default())
+        Self::CommonItemEntityModel(Default::default())
     }
 }
 
@@ -59,7 +66,7 @@ mod read {
         },
     };
 
-    use super::{ItemModel, Type};
+    use super::ItemModel;
 
     impl Readable for ItemModel {}
 

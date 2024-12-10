@@ -87,6 +87,14 @@ fn read_ed_classic_road_tech_straight() {
 }
 
 #[test]
+fn read_ed_classic_track_wall_chicane_2x_left_pillar() {
+    read_file::<BlockInfoClassic>(
+        "tests/files/ed_classic/TrackWallChicaneX2LeftPillar.EDClassic.Gbx",
+    )
+    .unwrap();
+}
+
+#[test]
 fn read_item_blue() {
     read_file::<ItemModel>("tests/files/item/blue.Item.Gbx").unwrap();
 }

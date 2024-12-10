@@ -33,7 +33,9 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::ctn::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo},
+        game::ctn::{
+            block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo, BlockInfoClassic,
+        },
         plug::{Solid, Tree},
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -168,7 +170,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_9<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_9(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 1 {
@@ -176,7 +181,7 @@ mod read {
             }
 
             r.list(|r| {
-                r.u32()?;
+                r.node_ref::<BlockInfoClassic>()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
@@ -185,7 +190,7 @@ mod read {
                 Ok(())
             })?;
             r.list(|r| {
-                r.u32()?;
+                r.node_ref::<BlockInfoClassic>()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
