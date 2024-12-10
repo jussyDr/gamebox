@@ -92,6 +92,11 @@ fn read_item_blue() {
 }
 
 #[test]
+fn read_item_cactus_medium() {
+    read_file::<ItemModel>("tests/files/item/CactusMedium.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_item_cp_stripe() {
     read_file::<ItemModel>("tests/files/item/CP-stripe.Item.Gbx").unwrap();
 }

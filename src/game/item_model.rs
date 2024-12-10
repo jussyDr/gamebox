@@ -50,7 +50,7 @@ mod read {
             common_item_entity_model_edition::CommonItemEntityModelEdition,
             item_placement_param::ItemPlacementParam, BlockItem, CommonItemEntityModel,
         },
-        plug::Prefab,
+        plug::{item_variant_list::ItemVariantList, Prefab},
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
@@ -205,11 +205,15 @@ mod read {
                                 let mut model = Prefab::default();
                                 model.read_body(r)?;
                             }
-                            0x2E027000 => {
+                            0x2e027000 => {
                                 let mut model = CommonItemEntityModel::default();
-                                read_body_chunks(&mut model, r)?;
+                                model.read_body(r)?;
                             }
-                            _ => panic!(),
+                            0x2f0bc000 => {
+                                let mut model = ItemVariantList::default();
+                                model.read_body(r)?;
+                            }
+                            _ => panic!("{class_id:08X?}"),
                         }
 
                         Ok(())
@@ -242,7 +246,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _default_placement = r.internal_node_ref::<ItemPlacementParam>()?;
+            let _default_placement = r.node_ref::<ItemPlacementParam>()?;
 
             Ok(())
         }

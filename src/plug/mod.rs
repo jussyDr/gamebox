@@ -6,6 +6,7 @@ pub mod dyna_kinematic_contraint;
 pub mod dyna_object_model;
 pub mod index_buffer;
 pub mod item_placement;
+pub mod item_variant_list;
 pub mod light;
 pub mod light_user_model;
 pub mod material;
