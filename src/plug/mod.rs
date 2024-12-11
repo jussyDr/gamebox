@@ -2,8 +2,10 @@
 
 pub mod bitmap;
 pub mod crystal;
+pub mod curve_simple_nod;
 pub mod dyna_kinematic_contraint;
 pub mod dyna_object_model;
+pub mod fx_hdr_scales_tech_3;
 pub mod game_skin;
 pub mod game_skin_and_folder;
 pub mod index_buffer;
@@ -35,7 +37,11 @@ pub use bitmap::Bitmap;
 #[doc(inline)]
 pub use crystal::Crystal;
 #[doc(inline)]
+pub use curve_simple_nod::CurveSimpleNod;
+#[doc(inline)]
 pub use dyna_object_model::DynaObjectModel;
+#[doc(inline)]
+pub use fx_hdr_scales_tech_3::FxHdrScalesTech3;
 #[doc(inline)]
 pub use game_skin::GameSkin;
 #[doc(inline)]

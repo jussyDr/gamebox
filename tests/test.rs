@@ -3,6 +3,7 @@ use gamebox::{
         ctn::{
             block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration,
             BlockInfoClip, BlockInfoClipHorizontal, BlockInfoClipVertical, BlockInfoFlat,
+            DecorationMood,
         },
         item_model::ItemModel,
     },
@@ -33,6 +34,11 @@ fn read_decoration_base_48x48_day() {
 #[test]
 fn read_decoration_day_16x12() {
     read_file::<Decoration>("tests/files/decoration/Day16x12.Decoration.Gbx").unwrap();
+}
+
+#[test]
+fn read_decoration_mood_day() {
+    read_file::<DecorationMood>("tests/files/decoration_mood/Day.DecorationMood.Gbx").unwrap();
 }
 
 #[test]

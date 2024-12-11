@@ -20,6 +20,7 @@ pub mod challenge_parameters;
 pub mod collector;
 pub mod collector_list;
 pub mod decoration;
+pub mod decoration_mood;
 pub mod ghost;
 pub mod media_block;
 pub mod media_block_camera_custom;
@@ -81,6 +82,8 @@ pub use collector::Collector;
 pub use collector_list::CollectorList;
 #[doc(inline)]
 pub use decoration::Decoration;
+#[doc(inline)]
+pub use decoration_mood::DecorationMood;
 #[doc(inline)]
 pub use ghost::Ghost;
 #[doc(inline)]
