@@ -80,7 +80,7 @@ mod read {
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             r.u32()?;
-            r.id()?;
+            r.id_or_null()?;
 
             Ok(())
         }

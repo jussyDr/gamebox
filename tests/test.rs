@@ -125,6 +125,14 @@ fn read_ed_vertical_clip_deco_cliff_corner_in_left_vfc() {
 }
 
 #[test]
+fn read_ed_vertical_clip_gate_expandable_checkpoint_left_vfc() {
+    read_file::<BlockInfoClipVertical>(
+        "tests/files/ed_vertical_clip/GateExpandableCheckpointLeftVFC.EDVerticalClip.Gbx",
+    )
+    .unwrap();
+}
+
+#[test]
 fn read_item_blue() {
     read_file::<ItemModel>("tests/files/item/blue.Item.Gbx").unwrap();
 }
