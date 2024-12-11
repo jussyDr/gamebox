@@ -138,6 +138,14 @@ fn read_ed_horizontal_clip_canopy_center_flat_curve_in_hfc_left() {
 }
 
 #[test]
+fn read_ed_horizontal_clip_platform_water_hfc_inside() {
+    read_file::<BlockInfoClipHorizontal>(
+        "tests/files/ed_horizontal_clip/PlatformWaterHFCInside.EDHorizontalClip.Gbx",
+    )
+    .unwrap();
+}
+
+#[test]
 fn read_ed_vertical_clip_deco_cliff_corner_in_left_vfc() {
     read_file::<BlockInfoClipVertical>(
         "tests/files/ed_vertical_clip/DecoCliffCornerInLeftVFC.EDVerticalClip.Gbx",
