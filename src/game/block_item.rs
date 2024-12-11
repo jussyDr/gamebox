@@ -23,6 +23,11 @@ impl BlockItem {
     pub const fn archetype(&self) -> &Arc<str> {
         &self.archetype
     }
+
+    /// Variants.
+    pub const fn variants(&self) -> &Vec<BlockItemVariant> {
+        &self.variants
+    }
 }
 
 /// Block item variant.
