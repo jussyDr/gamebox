@@ -109,8 +109,13 @@ fn read_ed_clip_grass_clip() {
 }
 
 #[test]
-fn read_ed_clip_open_dir_border_fc_left() {
+fn read_ed_clip_open_dirt_border_fc_left() {
     read_file::<BlockInfoClip>("tests/files/ed_clip/OpenDirtBorderFCLeft.EDClip.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_clip_open_dirt_road_fc() {
+    read_file::<BlockInfoClip>("tests/files/ed_clip/OpenDirtRoadFC.EDClip.Gbx").unwrap();
 }
 
 #[test]
