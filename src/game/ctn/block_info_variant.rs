@@ -36,7 +36,7 @@ mod read {
         game::ctn::{
             block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo, BlockInfoClassic,
         },
-        plug::{Solid, Tree},
+        plug::Solid,
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error,
@@ -160,10 +160,10 @@ mod read {
 
             self.block_unit_models = r.list(|r| r.internal_node_ref::<BlockUnitInfo>())?;
             r.u32()?;
-            let _has_symmetry_h = r.bool()?;
-            let _has_symmetry_v = r.bool()?;
-            let _has_symmetry_d1 = r.bool()?;
-            let _has_symmetry_d2 = r.bool()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
             r.box3d()?;
             let _name = r.string()?;
 

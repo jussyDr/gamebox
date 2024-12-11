@@ -104,6 +104,11 @@ fn read_ed_clip_canopy_border_beam_curve_in_fc_left() {
 }
 
 #[test]
+fn read_ed_clip_grass_clip() {
+    read_file::<BlockInfoClip>("tests/files/ed_clip/GrassClip.EDClip.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_flat_grass() {
     read_file::<BlockInfoFlat>("tests/files/ed_flat/Grass.EDFlat.Gbx").unwrap();
 }
