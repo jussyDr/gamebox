@@ -32,20 +32,14 @@ impl BlockItem {
 
 /// Block item variant.
 pub struct BlockItemVariant {
-    index: u8,
-    is_ground: bool,
+    flags: u32,
     model: Option<BlockItemVariantModel>,
 }
 
 impl BlockItemVariant {
-    /// Index.
-    pub const fn index(&self) -> u8 {
-        self.index
-    }
-
-    /// Is ground.
-    pub const fn is_ground(&self) -> bool {
-        self.is_ground
+    /// Flags.
+    pub const fn flags(&self) -> u32 {
+        self.flags
     }
 
     /// Model.
@@ -113,13 +107,10 @@ mod read {
             let _archetype_block_info_collection_id = r.id()?;
             self.variants = r.list(|r| {
                 let flags = r.u32()?;
-                let index = ((flags >> 12) & 0x0000003f) as u8;
-                let is_ground = flags & 0x01000000 != 0;
                 let crystal = r.internal_node_ref_or_null::<Crystal>()?;
 
                 Ok(BlockItemVariant {
-                    index,
-                    is_ground,
+                    flags,
                     model: crystal.map(BlockItemVariantModel::Crystal),
                 })
             })?;
