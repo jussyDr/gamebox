@@ -32,26 +32,34 @@ impl BlockItem {
 
 /// Block item variant.
 pub struct BlockItemVariant {
-    id: u32,
-    crystal: Option<Arc<Crystal>>,
-    model: Option<Arc<StaticObjectModel>>,
+    index: u8,
+    is_ground: bool,
+    model: Option<BlockItemVariantModel>,
 }
 
 impl BlockItemVariant {
-    /// Id.
-    pub const fn id(&self) -> u32 {
-        self.id
+    /// Index.
+    pub const fn index(&self) -> u8 {
+        self.index
     }
 
-    /// Crystal.
-    pub const fn crystal(&self) -> Option<&Arc<Crystal>> {
-        self.crystal.as_ref()
+    /// Is ground.
+    pub const fn is_ground(&self) -> bool {
+        self.is_ground
     }
 
     /// Model.
-    pub const fn model(&self) -> Option<&Arc<StaticObjectModel>> {
+    pub const fn model(&self) -> Option<&BlockItemVariantModel> {
         self.model.as_ref()
     }
+}
+
+/// Block item variant model.
+pub enum BlockItemVariantModel {
+    /// Crystal.
+    Crystal(Arc<Crystal>),
+    /// Static object.
+    StaticObject(Arc<StaticObjectModel>),
 }
 
 mod read {
@@ -66,7 +74,7 @@ mod read {
         },
     };
 
-    use super::{BlockItem, BlockItemVariant};
+    use super::{BlockItem, BlockItemVariant, BlockItemVariantModel};
 
     impl ReadBody for BlockItem {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -104,13 +112,15 @@ mod read {
             self.archetype = r.id()?;
             let _archetype_block_info_collection_id = r.id()?;
             self.variants = r.list(|r| {
-                let id = r.u32()?;
+                let flags = r.u32()?;
+                let index = ((flags >> 12) & 0x0000003f) as u8;
+                let is_ground = flags & 0x01000000 != 0;
                 let crystal = r.internal_node_ref_or_null::<Crystal>()?;
 
                 Ok(BlockItemVariant {
-                    id,
-                    crystal,
-                    model: None,
+                    index,
+                    is_ground,
+                    model: crystal.map(BlockItemVariantModel::Crystal),
                 })
             })?;
 
@@ -119,7 +129,11 @@ mod read {
                     let flags = r.u8()?;
 
                     if flags & 0x01 != 0 {
-                        variant.model = r.internal_node_ref_or_null::<StaticObjectModel>()?;
+                        if let Some(static_object) =
+                            r.internal_node_ref_or_null::<StaticObjectModel>()?
+                        {
+                            variant.model = Some(BlockItemVariantModel::StaticObject(static_object))
+                        }
                     }
                 }
             }
