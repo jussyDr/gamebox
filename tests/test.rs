@@ -119,6 +119,12 @@ fn read_ed_clip_open_dirt_road_fc() {
 }
 
 #[test]
+fn read_ed_clip_platform_slope_2_end_curve_2_in_fcb() {
+    read_file::<BlockInfoClip>("tests/files/ed_clip/PlatformSlope2EndCurve2InFCB.EDClip.Gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_ed_flat_grass() {
     read_file::<BlockInfoFlat>("tests/files/ed_flat/Grass.EDFlat.Gbx").unwrap();
 }

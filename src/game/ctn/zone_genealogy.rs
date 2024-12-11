@@ -45,7 +45,7 @@ mod read {
             let _zone_ids = r.list(|r| r.id())?;
             let _current_index = r.u32()?;
             let _dir = r.u32()?;
-            let _current_zone_id = r.id()?;
+            let _current_zone_id = r.id_or_null()?;
 
             Ok(())
         }
