@@ -131,7 +131,7 @@ mod read {
             let _clip_group_id = r.id_or_null()?;
             let _symmetrical_clip_group_id = r.id_or_null()?;
             r.u32()?;
-            r.u32()?;
+            r.id_or_null()?;
 
             Ok(())
         }

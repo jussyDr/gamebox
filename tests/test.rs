@@ -109,6 +109,11 @@ fn read_ed_clip_grass_clip() {
 }
 
 #[test]
+fn read_ed_clip_open_dir_border_fc_left() {
+    read_file::<BlockInfoClip>("tests/files/ed_clip/OpenDirtBorderFCLeft.EDClip.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_flat_grass() {
     read_file::<BlockInfoFlat>("tests/files/ed_flat/Grass.EDFlat.Gbx").unwrap();
 }
