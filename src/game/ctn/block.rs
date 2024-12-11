@@ -137,8 +137,6 @@ mod read {
 
                 self.variant_index = ((flags >> 21) & 0x0000003f) as u8;
 
-                println!("{}", self.variant_index);
-
                 if flags & 0x20000000 == 0 {
                     self.ty = BlockType::Normal { dir, coord };
                 } else {
