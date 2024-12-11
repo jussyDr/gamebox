@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::{game::WaypointSpecialProperty, PitchYawRoll, Vec3};
 
-use super::{Direction, ElemColor, LightmapQuality};
+use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 
 /// Block placed in a Challenge.
 #[derive(Default)]
@@ -12,7 +12,10 @@ pub struct Block {
     model_id: Arc<str>,
     pub(crate) ty: BlockType,
     has_flags: bool,
+    is_ground: bool,
+    skin: Option<Arc<BlockSkin>>,
     waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
+    variant_index: u8,
     pub(crate) elem_color: ElemColor,
     pub(crate) lightmap_quality: LightmapQuality,
 }
@@ -28,9 +31,24 @@ impl Block {
         &self.ty
     }
 
+    /// Is ground.
+    pub const fn is_ground(&self) -> bool {
+        self.is_ground
+    }
+
+    /// Skin.
+    pub const fn skin(&self) -> Option<&Arc<BlockSkin>> {
+        self.skin.as_ref()
+    }
+
     /// Waypoint property of the block.
     pub const fn waypoint_special_property(&self) -> Option<&Arc<WaypointSpecialProperty>> {
         self.waypoint_special_property.as_ref()
+    }
+
+    /// Variant index.
+    pub const fn variant_index(&self) -> u8 {
+        self.variant_index
     }
 
     /// Element color.
@@ -105,15 +123,19 @@ mod read {
             if flags != 0xffffffff {
                 self.has_flags = true;
 
+                self.is_ground = flags & 0x00001000 != 0;
+
                 if flags & 0x00008000 != 0 {
                     let _author = r.id()?;
-                    let _skin = r.internal_node_ref_or_null::<BlockSkin>()?;
+                    self.skin = r.internal_node_ref_or_null::<BlockSkin>()?;
                 }
 
                 if flags & 0x00080000 != 0 || flags & 0x00100000 != 0 {
                     self.waypoint_special_property =
                         Some(r.internal_node_ref::<WaypointSpecialProperty>()?);
                 }
+
+                self.variant_index = ((flags >> 21) & 0x0000003f) as u8;
 
                 if flags & 0x20000000 == 0 {
                     self.ty = BlockType::Normal { dir, coord };
