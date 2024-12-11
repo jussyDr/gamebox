@@ -15,7 +15,7 @@ use super::{
 #[derive(Default)]
 pub struct ItemModel {
     parent: Collector,
-    ty: ModelType,
+    ty: ItemModelType,
 }
 
 impl Class for ItemModel {
@@ -32,13 +32,13 @@ impl Deref for ItemModel {
 
 impl ItemModel {
     /// Type.
-    pub const fn ty(&self) -> &ModelType {
+    pub const fn ty(&self) -> &ItemModelType {
         &self.ty
     }
 }
 
 /// Item model type.
-pub enum ModelType {
+pub enum ItemModelType {
     /// Block item.
     BlockItem(Arc<BlockItem>),
     /// Common item entity model.
@@ -51,14 +51,17 @@ pub enum ModelType {
     Prefab(Arc<Prefab>),
 }
 
-impl Default for ModelType {
+impl Default for ItemModelType {
     fn default() -> Self {
         Self::CommonItemEntityModel(Default::default())
     }
 }
 
 mod read {
-    use std::io::{Read, Seek};
+    use std::{
+        io::{Read, Seek},
+        sync::Arc,
+    };
 
     use crate::{
         game::{
@@ -74,7 +77,7 @@ mod read {
         },
     };
 
-    use super::ItemModel;
+    use super::{ItemModel, ItemModelType};
 
     impl Readable for ItemModel {}
 
@@ -200,11 +203,16 @@ mod read {
                     let mut block_item = BlockItem::default();
                     block_item.read_body(r)?;
 
+                    self.ty = ItemModelType::BlockItem(Arc::new(block_item));
+
                     Ok(())
                 }
                 0x2e026000 => {
                     let mut entity_model_edition = CommonItemEntityModelEdition::default();
                     entity_model_edition.read_body(r)?;
+
+                    self.ty =
+                        ItemModelType::CommonItemEntityModelEdition(Arc::new(entity_model_edition));
 
                     Ok(())
                 }
@@ -219,14 +227,20 @@ mod read {
                             0x09145000 => {
                                 let mut model = Prefab::default();
                                 model.read_body(r)?;
+
+                                self.ty = ItemModelType::Prefab(Arc::new(model))
                             }
                             0x2e027000 => {
                                 let mut model = CommonItemEntityModel::default();
                                 model.read_body(r)?;
+
+                                self.ty = ItemModelType::CommonItemEntityModel(Arc::new(model))
                             }
                             0x2f0bc000 => {
                                 let mut model = ItemVariantList::default();
                                 model.read_body(r)?;
+
+                                self.ty = ItemModelType::ItemVariantList(Arc::new(model))
                             }
                             _ => panic!("{class_id:08X?}"),
                         }

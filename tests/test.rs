@@ -27,6 +27,11 @@ fn read_block_rally_road_ice_high_curve_2_snow() {
 }
 
 #[test]
+fn read_block_test() {
+    read_file::<ItemModel>("tests/files/block/Test.Block.Gbx").unwrap();
+}
+
+#[test]
 fn read_decoration_base_48x48_day() {
     read_file::<Decoration>("tests/files/decoration/Base48x48Day.Decoration.Gbx").unwrap();
 }

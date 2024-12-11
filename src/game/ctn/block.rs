@@ -46,7 +46,7 @@ impl Block {
         self.waypoint_special_property.as_ref()
     }
 
-    /// Variant index.
+    /// Block info variant index.
     pub const fn variant_index(&self) -> u8 {
         self.variant_index
     }
@@ -136,6 +136,8 @@ mod read {
                 }
 
                 self.variant_index = ((flags >> 21) & 0x0000003f) as u8;
+
+                println!("{}", self.variant_index);
 
                 if flags & 0x20000000 == 0 {
                     self.ty = BlockType::Normal { dir, coord };
