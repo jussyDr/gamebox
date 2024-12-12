@@ -12,7 +12,10 @@ pub struct Block {
     model_id: Arc<str>,
     pub(crate) ty: BlockType,
     has_flags: bool,
+    mobil_index: u8,
+    mobil_sub_index: u8,
     is_ground: bool,
+    is_pillar: bool,
     skin: Option<Arc<BlockSkin>>,
     waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
     variant_index: u8,
@@ -29,6 +32,16 @@ impl Block {
     /// Type.
     pub const fn ty(&self) -> &BlockType {
         &self.ty
+    }
+
+    /// Variant mobil index.
+    pub const fn mobil_index(&self) -> u8 {
+        self.mobil_index
+    }
+
+    /// Variant mobil sub index.
+    pub const fn mobil_sub_index(&self) -> u8 {
+        self.mobil_sub_index
     }
 
     /// Is ground.
@@ -74,6 +87,8 @@ pub enum BlockType {
         dir: Direction,
         /// Coordinate.
         coord: Vec3<u8>,
+        /// Is ghost.
+        is_ghost: bool,
     },
     /// Free block.
     Free {
@@ -87,8 +102,9 @@ pub enum BlockType {
 impl Default for BlockType {
     fn default() -> Self {
         BlockType::Normal {
-            dir: Direction::default(),
-            coord: Vec3::default(),
+            dir: Default::default(),
+            coord: Default::default(),
+            is_ghost: Default::default(),
         }
     }
 }
@@ -123,22 +139,39 @@ mod read {
             if flags != 0xffffffff {
                 self.has_flags = true;
 
-                self.is_ground = flags & 0x00001000 != 0;
+                if flags & 0b11001111100001000010111100110000 != 0 {
+                    todo!("unknown block flag bit set");
+                }
 
-                if flags & 0x00008000 != 0 {
+                self.mobil_index = (flags & 15) as u8;
+                self.mobil_sub_index = ((flags >> 6) & 3) as u8;
+
+                self.is_ground = (flags >> 12) & 1 != 0;
+                self.is_pillar = (flags >> 14) & 1 != 0;
+
+                if (flags >> 15) & 1 != 0 {
                     let _author = r.id()?;
                     self.skin = r.internal_node_ref_or_null::<BlockSkin>()?;
                 }
 
-                if flags & 0x00080000 != 0 || flags & 0x00100000 != 0 {
+                let _dunno = (flags >> 16) & 1 != 0;
+                let _dunno = (flags >> 17) & 1 != 0;
+
+                if (flags >> 19) & 1 != 0 || (flags >> 20) & 1 != 0 {
                     self.waypoint_special_property =
                         Some(r.internal_node_ref::<WaypointSpecialProperty>()?);
                 }
 
-                self.variant_index = ((flags >> 21) & 0x0000003f) as u8;
+                self.variant_index = ((flags >> 21) & 3) as u8;
+                let is_ghost = (flags >> 28) & 1 != 0;
+                let is_free = (flags >> 29) & 1 != 0;
 
-                if flags & 0x20000000 == 0 {
-                    self.ty = BlockType::Normal { dir, coord };
+                if !is_free {
+                    self.ty = BlockType::Normal {
+                        dir,
+                        coord,
+                        is_ghost,
+                    };
                 } else {
                     self.ty = BlockType::Free {
                         position: Vec3::default(),
