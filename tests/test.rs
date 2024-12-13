@@ -32,6 +32,11 @@ fn read_block_test() {
 }
 
 #[test]
+fn read_collection_stadium() {
+    read_file::<Collection>("tests/files/collection/Stadium.Collection.Gbx").unwrap();
+}
+
+#[test]
 fn read_decoration_base_48x48_day() {
     read_file::<Decoration>("tests/files/decoration/Base48x48Day.Decoration.Gbx").unwrap();
 }
@@ -306,4 +311,9 @@ fn read_prefab_straight_air() {
 #[test]
 fn read_texture_technics_trims_d() {
     read_file::<Bitmap>("tests/files/texture/TechnicsTrims_D.Texture.gbx").unwrap();
+}
+
+#[test]
+fn read_title_tm_stadium() {
+    read_file::<Title>("tests/files/title/TMStadium.Title.gbx").unwrap();
 }

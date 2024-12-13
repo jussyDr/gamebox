@@ -24,6 +24,12 @@ impl Deref for BlockInfoClassic {
     }
 }
 
+impl BlockInfoClassic {
+    pub fn into_parent(self) -> BlockInfo {
+        self.parent
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 
