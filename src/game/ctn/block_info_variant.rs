@@ -7,7 +7,7 @@ use crate::Class;
 use super::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo};
 
 /// A block info variant.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct BlockInfoVariant {
     mobils: Vec<Vec<Arc<BlockInfoMobil>>>,
     block_unit_models: Vec<Arc<BlockUnitInfo>>,

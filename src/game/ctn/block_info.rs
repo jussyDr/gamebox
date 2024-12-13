@@ -9,7 +9,7 @@ use super::{
 };
 
 /// Block info.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct BlockInfo {
     parent: Collector,
     variant_base_ground: BlockInfoVariantGround,

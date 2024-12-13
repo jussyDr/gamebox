@@ -3,7 +3,7 @@
 use crate::{read::reader::ExternalNodeRef, Class};
 
 /// A block info mobil.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct BlockInfoMobil {
     prefab: Option<ExternalNodeRef>,
 }

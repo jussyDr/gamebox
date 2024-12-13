@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// Collector.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Collector {
     icon: Option<Icon>,
     name: String,
@@ -26,6 +26,7 @@ impl Collector {
 }
 
 /// Collector icon.
+#[derive(Clone)]
 pub enum Icon {
     /// Normal icon.
     Normal,

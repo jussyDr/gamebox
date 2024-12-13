@@ -7,7 +7,7 @@ use crate::Class;
 use super::{block_info_variant::BlockInfoVariant, AutoTerrain};
 
 /// A block info variant ground.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct BlockInfoVariantGround {
     parent: BlockInfoVariant,
     auto_terrains: Vec<Arc<AutoTerrain>>,
