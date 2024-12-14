@@ -81,7 +81,7 @@ mod read {
             let num_entities = r.u32()?;
             let _u02 = r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let _model = r.test_or_ext(|r, class_id| {
+                let _model = r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
                         0x09144000 => {
                             let mut m = DynaObjectModel::default();
@@ -104,6 +104,25 @@ mod read {
                 let pos = r.vec3()?;
 
                 match r.u32()? {
+                    0x2f0a9000 => {
+                        let version = r.u32()?;
+
+                        if version != 1 {
+                            return Err(Error::version("instance params", version));
+                        }
+
+                        r.u32()?;
+                        r.list(|r| {
+                            r.list(|r| {
+                                r.string()?;
+                                r.string()?;
+
+                                Ok(())
+                            })?;
+
+                            Ok(())
+                        })?;
+                    }
                     0x2f0b6000 => {
                         let version = r.u32()?;
 

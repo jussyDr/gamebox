@@ -40,7 +40,7 @@ impl Error {
 
     pub fn io(io_error: io::Error) -> Self {
         let kind = match io_error.kind() {
-            io::ErrorKind::UnexpectedEof => ErrorKind::Format("unexpected EOF"),
+            io::ErrorKind::UnexpectedEof => ErrorKind::Format("unexpected EOF".into()),
             _ => ErrorKind::Io(io_error),
         };
 
@@ -73,7 +73,7 @@ impl Error {
 pub enum ErrorKind {
     Io(io::Error),
     Unsupported(String),
-    Format(&'static str),
+    Format(String),
 }
 
 impl Display for Error {
@@ -102,7 +102,9 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     let signature = r.byte_array()?;
 
     if signature != FILE_SIGNATURE {
-        return Err(Error::new(ErrorKind::Format("invalid file signature")));
+        return Err(Error::new(ErrorKind::Format(
+            "invalid file signature".into(),
+        )));
     }
 
     let version = r.u16()?;
@@ -136,7 +138,11 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     let class_id = r.u32()?;
 
     if class_id != T::CLASS_ID {
-        return Err(Error::new(ErrorKind::Format("class id does not match")));
+        return Err(Error::new(ErrorKind::Format(format!(
+            "expected class id {:08X}, got {:08X}",
+            T::CLASS_ID,
+            class_id
+        ))));
     }
 
     let mut node = T::default();
@@ -167,7 +173,7 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
     let num_nodes = r.u32()?;
     let num_node_refs = num_nodes
         .checked_sub(1)
-        .ok_or(Error::new(ErrorKind::Format("index")))?;
+        .ok_or(Error::new(ErrorKind::Format("index".into())))?;
     let mut node_state = NodeState::new(num_node_refs as usize);
 
     let num_external_node_refs = r.u32()?;
@@ -190,17 +196,19 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
             let node_index = r.u32()?;
             let node_ref_index = node_index
                 .checked_sub(1)
-                .ok_or(Error::new(ErrorKind::Format("index")))?;
+                .ok_or(Error::new(ErrorKind::Format("index".into())))?;
 
             let use_file = r.bool()?;
             let folder_index = r.u32()?;
 
             let mut path = folders
                 .get(folder_index as usize)
-                .ok_or(Error::new(ErrorKind::Format("index")))?
+                .ok_or(Error::new(ErrorKind::Format("index".into())))?
                 .clone();
 
             path.push(file_name);
+
+            // println!("{node_index}, {path:?}");
 
             node_state.set_external_node_ref(
                 node_ref_index as usize,
@@ -222,7 +230,7 @@ pub fn read<T: Readable>(reader: impl Read + Seek) -> Result<T, Error> {
 
             let mut body = vec![0; body_size as usize];
             lzo1x::decompress(&compressed_body, &mut body)
-                .map_err(|_| Error::new(ErrorKind::Format("decompress")))?;
+                .map_err(|_| Error::new(ErrorKind::Format("decompress".into())))?;
 
             let mut r = Reader::new(Cursor::new(body), id_state, node_state);
 

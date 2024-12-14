@@ -68,8 +68,12 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
             return Ok(Some(Arc::from("Unassigned")));
         }
 
+        if index == 0x00002713 {
+            return Ok(Some(Arc::from("Unassigned")));
+        }
+
         if index & ID_MARKER_BIT == 0 {
-            return Err(Error::new(ErrorKind::Format("index")));
+            return Err(Error::new(ErrorKind::Format("index".into())));
         }
 
         let index = index & 0x3fffffff;
@@ -81,7 +85,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
                     .get_mut()
                     .ids
                     .get(index as usize)
-                    .ok_or(Error::new(ErrorKind::Format("index")))?;
+                    .ok_or(Error::new(ErrorKind::Format("index".into())))?;
 
                 Arc::clone(id)
             }
@@ -100,7 +104,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     pub fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
             Some(id) => Ok(id),
-            None => Err(Error::new(ErrorKind::Format("null identifier"))),
+            None => Err(Error::new(ErrorKind::Format("null identifier".into()))),
         }
     }
 }

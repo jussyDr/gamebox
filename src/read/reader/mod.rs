@@ -159,13 +159,13 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn enum_u32<T: TryFrom<u32>>(&mut self) -> Result<T, Error> {
         self.u32()?
             .try_into()
-            .map_err(|_| Error::new(ErrorKind::Format("enum")))
+            .map_err(|_| Error::new(ErrorKind::Format("enum".into())))
     }
 
     pub fn enum_u8<T: TryFrom<u8>>(&mut self) -> Result<T, Error> {
         self.u8()?
             .try_into()
-            .map_err(|_| Error::new(ErrorKind::Format("enum")))
+            .map_err(|_| Error::new(ErrorKind::Format("enum".into())))
     }
 
     /// Read a 2-dimensional vector of type `T`.
@@ -231,7 +231,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn string_of_len(&mut self, len: usize) -> Result<String, Error> {
         let bytes = self.bytes(len)?;
 
-        String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8")))
+        String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8".into())))
     }
 
     pub fn pack_desc_or_null(&mut self) -> Result<Option<PackDesc>, Error> {
@@ -255,7 +255,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
         match self.pack_desc_or_null()? {
             Some(pack_desc) => Ok(pack_desc),
-            None => Err(Error::new(ErrorKind::Format("pack desc null"))),
+            None => Err(Error::new(ErrorKind::Format("pack desc null".into()))),
         }
     }
 
@@ -312,7 +312,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let n = self.inner.read(&mut buf).map_err(Error::io)?;
 
         if n != 0 {
-            return Err(Error::new(ErrorKind::Format("expected EOF")));
+            return Err(Error::new(ErrorKind::Format("expected EOF".into())));
         }
 
         Ok(())
@@ -323,7 +323,7 @@ fn bool_from_u32(value: u32) -> Result<bool, Error> {
     match value {
         0 => Ok(false),
         1 => Ok(true),
-        _ => Err(Error::new(ErrorKind::Format("expected a boolean"))),
+        _ => Err(Error::new(ErrorKind::Format("expected a boolean".into()))),
     }
 }
 

@@ -99,7 +99,9 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
             }
             BodyChunkReadFn::Skippable(read_fn) => {
                 if r.u32()? != SKIPPABLE_CHUNK_MARKER {
-                    return Err(Error::new(ErrorKind::Format("expected skippable chunk")));
+                    return Err(Error::new(ErrorKind::Format(
+                        "expected skippable chunk".into(),
+                    )));
                 }
 
                 let size = r.u32()?;

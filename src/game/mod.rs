@@ -8,7 +8,10 @@ pub mod common_item_entity_model_edition;
 pub mod ghost;
 pub mod item_model;
 pub mod item_placement_param;
+pub mod mania_title;
+pub mod nod;
 pub mod podium_info;
+pub mod skinned_nod;
 pub mod waypoint_special_property;
 
 #[doc(inline)]
@@ -23,5 +26,9 @@ pub use ghost::Ghost;
 pub use item_model::ItemModel;
 #[doc(inline)]
 pub use item_placement_param::ItemPlacementParam;
+#[doc(inline)]
+pub use mania_title::ManiaTitle;
+#[doc(inline)]
+pub use nod::Nod;
 #[doc(inline)]
 pub use waypoint_special_property::WaypointSpecialProperty;

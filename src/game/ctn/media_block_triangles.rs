@@ -72,7 +72,7 @@ mod read {
                 let key = self
                     .keys
                     .get_mut(key_index as usize)
-                    .ok_or_else(|| Error::new(ErrorKind::Format("index")))?;
+                    .ok_or_else(|| Error::new(ErrorKind::Format("index".into())))?;
 
                 key.positions = r.repeat(num_verts as usize, |r| r.vec3())?;
             }

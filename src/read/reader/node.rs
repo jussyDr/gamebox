@@ -31,7 +31,7 @@ impl NodeState {
     ) -> Result<&mut Option<NodeRef<dyn Any + Send + Sync>>, Error> {
         self.node_refs
             .get_mut(index)
-            .ok_or(Error::new(ErrorKind::Format("index zz")))
+            .ok_or(Error::new(ErrorKind::Format("index zz".into())))
     }
 
     fn set_node_ref(
@@ -40,7 +40,7 @@ impl NodeState {
         node_ref: NodeRef<dyn Any + Send + Sync>,
     ) -> Result<(), Error> {
         match self.get_entry(index)? {
-            Some(_) => Err(Error::new(ErrorKind::Format("index yy"))),
+            Some(_) => Err(Error::new(ErrorKind::Format("index yy".into()))),
             entry => {
                 *entry = Some(node_ref);
 
@@ -70,7 +70,7 @@ impl NodeRef<dyn Any + Send + Sync> {
             Self::Internal { node } => Ok(NodeRef::Internal {
                 node: node
                     .downcast()
-                    .map_err(|_| Error::new(ErrorKind::Format("node type")))?,
+                    .map_err(|_| Error::new(ErrorKind::Format("node type".into())))?,
             }),
             Self::External(external_node_ref) => Ok(NodeRef::External(external_node_ref)),
         }
@@ -151,11 +151,11 @@ impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
         let index = self.u32()?;
         let ref_index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index q")))?;
+            .ok_or(Error::new(ErrorKind::Format("index q".into())))?;
 
         match self.node_state.get_mut().get_entry(ref_index as usize)? {
             Some(NodeRef::External(external_node_ref)) => Ok(external_node_ref.clone()),
-            _ => Err(Error::new(ErrorKind::Format("wat"))),
+            _ => Err(Error::new(ErrorKind::Format("wat".into()))),
         }
     }
 
@@ -168,11 +168,11 @@ impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
 
         let ref_index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index v")))?;
+            .ok_or(Error::new(ErrorKind::Format("index v".into())))?;
 
         match self.node_state.get_mut().get_entry(ref_index as usize)? {
             Some(NodeRef::External(external_node_ref)) => Ok(Some(external_node_ref.clone())),
-            _ => Err(Error::new(ErrorKind::Format("wat"))),
+            _ => Err(Error::new(ErrorKind::Format("wat".into()))),
         }
     }
 }
@@ -186,7 +186,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         }
 
         if class_id != T::CLASS_ID {
-            return Err(Error::new(ErrorKind::Format("class id")));
+            return Err(Error::new(ErrorKind::Format("class id".into())));
         }
 
         let mut node = T::default();
@@ -209,7 +209,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     pub fn node<T: 'static + Class + ReadBody>(&mut self) -> Result<T, Error> {
         match self.node_or_null()? {
             Some(node) => Ok(node),
-            None => Err(Error::new(ErrorKind::Format(""))),
+            None => Err(Error::new(ErrorKind::Format("".into()))),
         }
     }
 
@@ -224,7 +224,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
         let ref_index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index e")))?;
+            .ok_or(Error::new(ErrorKind::Format("index e".into())))?;
 
         match self.node_state.get_mut().get_entry(ref_index as usize)? {
             Some(node_ref) => Ok(Some(node_ref.clone().downcast()?)),
@@ -232,7 +232,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
                 let class_id = self.u32()?;
 
                 if class_id != T::CLASS_ID {
-                    return Err(Error::new(ErrorKind::Format("class id")));
+                    return Err(Error::new(ErrorKind::Format("class id".into())));
                 }
 
                 let mut node = T::default();
@@ -267,7 +267,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
         let ref_index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index b")))?;
+            .ok_or(Error::new(ErrorKind::Format("index b".into())))?;
 
         match self.node_state.get_mut().get_entry(ref_index as usize)? {
             Some(node_ref) => Ok(node_ref.clone().downcast()?),
@@ -275,7 +275,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
                 let class_id = self.u32()?;
 
                 if class_id != T::CLASS_ID {
-                    return Err(Error::new(ErrorKind::Format("class id")));
+                    return Err(Error::new(ErrorKind::Format("class id".into())));
                 }
 
                 let mut node = T::default();
@@ -309,7 +309,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         match self.node_ref()? {
             NodeRef::Internal { node } => Ok(node),
             _ => Err(Error::new(ErrorKind::Format(
-                "expected an internal node reference",
+                "expected an internal node reference".into(),
             ))),
         }
     }
@@ -321,7 +321,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
             Some(NodeRef::Internal { node }) => Ok(Some(node)),
             None => Ok(None),
             _ => Err(Error::new(ErrorKind::Format(
-                "expected an internal node reference",
+                "expected an internal node reference".into(),
             ))),
         }
     }
@@ -331,6 +331,32 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
     ) -> Result<(), Error> {
         let index = self.u32()? - 1;
+
+        match self.node_state.get_mut().get_entry(index as usize)? {
+            None => {
+                let class_id = self.u32()?;
+                let node = Arc::new(read_fn(self, class_id)?);
+
+                Ok(())
+            }
+            Some(node_ref) => match node_ref {
+                NodeRef::Internal { .. } => todo!(),
+                NodeRef::External(_) => Ok(()),
+            },
+        }
+    }
+
+    pub fn test_or_ext_or_null<T>(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
+    ) -> Result<(), Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(());
+        }
+
+        let index = index - 1;
 
         match self.node_state.get_mut().get_entry(index as usize)? {
             None => {

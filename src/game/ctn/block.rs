@@ -13,7 +13,7 @@ pub struct Block {
     pub(crate) ty: BlockType,
     has_flags: bool,
     mobil_index: u8,
-    mobil_sub_index: u8,
+    sub_mobil_index: u8,
     is_ground: bool,
     is_pillar: bool,
     skin: Option<Arc<BlockSkin>>,
@@ -40,8 +40,8 @@ impl Block {
     }
 
     /// Variant mobil sub index.
-    pub const fn mobil_sub_index(&self) -> u8 {
-        self.mobil_sub_index
+    pub const fn sub_mobil_index(&self) -> u8 {
+        self.sub_mobil_index
     }
 
     /// Is ground.
@@ -144,7 +144,7 @@ mod read {
                 }
 
                 self.mobil_index = (flags & 15) as u8;
-                self.mobil_sub_index = ((flags >> 6) & 3) as u8;
+                self.sub_mobil_index = ((flags >> 6) & 3) as u8;
 
                 self.is_ground = (flags >> 12) & 1 != 0;
                 self.is_pillar = (flags >> 14) & 1 != 0;

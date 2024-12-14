@@ -3,9 +3,10 @@ use gamebox::{
         ctn::{
             block_info_classic::BlockInfoClassic, challenge::Challenge, decoration::Decoration,
             BlockInfoClip, BlockInfoClipHorizontal, BlockInfoClipVertical, BlockInfoFlat,
-            DecorationMood,
+            Collection, DecorationMood,
         },
         item_model::ItemModel,
+        ManiaTitle,
     },
     plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
     read_file,
@@ -294,6 +295,11 @@ fn read_prefab_branch_cross_air() {
 }
 
 #[test]
+fn read_prefab_corner_in_air() {
+    read_file::<Prefab>("tests/files/prefab/CornerIn_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_road_border_spot() {
     read_file::<Prefab>("tests/files/prefab/RoadBorderSpot.Prefab.Gbx").unwrap();
 }
@@ -315,5 +321,5 @@ fn read_texture_technics_trims_d() {
 
 #[test]
 fn read_title_tm_stadium() {
-    read_file::<Title>("tests/files/title/TMStadium.Title.gbx").unwrap();
+    read_file::<ManiaTitle>("tests/files/title/TMStadium.Title.gbx").unwrap();
 }

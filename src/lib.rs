@@ -1,6 +1,35 @@
-#![warn(missing_docs, clippy::unwrap_used, clippy::print_stdout)]
+#![warn(missing_docs, clippy::unwrap_used, clippy::print_stdout, clippy::todo)]
 
 //! GameBox file reading and writing.
+//!
+//! #### Common files
+//!
+//! | Extension | Class | Readable | Writable |
+//! | --- | --- | --- | --- |
+//! | `Block.Gbx` | [game::ItemModel] | [x] | [ ] |
+//! | `Item.Gbx` | [game::ItemModel] | [x] | [ ] |
+//! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
+//!
+//! # Complete file list
+//!
+//! | Extension | Class | Readable | Writable |
+//! | --- | --- | --- | --- |
+//! | `Block.Gbx` | [game::ItemModel] | [x] | [ ] |
+//! | `Challenge.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
+//! | `Collection.Gbx` | [game::ctn::Collection] | [x] | [ ] |
+//! | `Decoration.Gbx` | [game::ctn::Decoration] | [x] | [ ] |
+//! | `DecorationMood.Gbx` | [game::ctn::DecorationMood] | [x] | [ ] |
+//! | `EDClassic.Gbx` | [game::ctn::BlockInfoClassic] | [x] | [ ] |
+//! | `EDClip.Gbx` | [game::ctn::BlockInfoClip] | [x] | [ ] |
+//! | `EDFlat.Gbx` | [game::ctn::BlockInfoFlat] | [x] | [ ] |
+//! | `EDHorizontalClip.Gbx` | [game::ctn::BlockInfoClipHorizontal] | [x] | [ ] |
+//! | `EDVerticalClip.Gbx` | [game::ctn::BlockInfoClipVertical] | [x] | [ ] |
+//! | `Item.Gbx` | [game::ItemModel] | [x] | [ ] |
+//! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
+//! | `Material.Gbx` | [plug::Material] | [x] | [ ] |
+//! | `Prefab.Gbx` | [plug::Prefab] | [x] | [ ] |
+//! | `Texture.Gbx` | [plug::Bitmap] | [x] | [ ] |
+//! | `Title.Gbx` | [game::ManiaTitle] | [x] | [ ] |
 
 pub mod control;
 pub mod game;

@@ -17,6 +17,7 @@ pub mod block_skin;
 pub mod block_unit_info;
 pub mod challenge;
 pub mod challenge_parameters;
+pub mod collection;
 pub mod collector;
 pub mod collector_list;
 pub mod decoration;
@@ -76,6 +77,8 @@ pub use block_unit_info::BlockUnitInfo;
 pub use challenge::Challenge;
 #[doc(inline)]
 pub use challenge_parameters::ChallengeParameters;
+#[doc(inline)]
+pub use collection::Collection;
 #[doc(inline)]
 pub use collector::Collector;
 #[doc(inline)]
