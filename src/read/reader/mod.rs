@@ -9,6 +9,7 @@ pub use node::{ExternalNodeRef, NodeRef, NodeState, NodeStateMut};
 use std::{
     io::{Read, Seek, SeekFrom},
     path::PathBuf,
+    slice,
 };
 
 use node::NullNodeState;
@@ -332,6 +333,57 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
 
         Ok(())
+    }
+
+    pub fn repeat_u8x4(&mut self, n: usize) -> Result<Vec<[u8; 4]>, Error> {
+        let mut vec = Vec::with_capacity(n);
+
+        let buf = unsafe {
+            slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, n * size_of::<[u8; 4]>())
+        };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        unsafe { vec.set_len(n) };
+
+        #[cfg(target_endian = "big")]
+        todo!();
+
+        Ok(vec)
+    }
+
+    pub fn repeat_f32x2(&mut self, n: usize) -> Result<Vec<[f32; 2]>, Error> {
+        let mut vec = Vec::with_capacity(n);
+
+        let buf = unsafe {
+            slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, n * size_of::<[f32; 2]>())
+        };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        unsafe { vec.set_len(n) };
+
+        #[cfg(target_endian = "big")]
+        todo!();
+
+        Ok(vec)
+    }
+
+    pub fn repeat_f32x3(&mut self, n: usize) -> Result<Vec<[f32; 3]>, Error> {
+        let mut vec = Vec::with_capacity(n);
+
+        let buf = unsafe {
+            slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, n * size_of::<[f32; 3]>())
+        };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        unsafe { vec.set_len(n) };
+
+        #[cfg(target_endian = "big")]
+        todo!();
+
+        Ok(vec)
     }
 }
 

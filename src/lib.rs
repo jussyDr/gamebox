@@ -47,6 +47,7 @@ use std::path::PathBuf;
 
 /// 2-dimensional vector.
 #[derive(Clone, Copy, Default)]
+#[repr(C)]
 pub struct Vec2<T> {
     /// X component.
     pub x: T,
@@ -56,6 +57,7 @@ pub struct Vec2<T> {
 
 /// 3-dimensional vector.
 #[derive(Clone, Copy, Default)]
+#[repr(C)]
 pub struct Vec3<T> {
     /// X component.
     pub x: T,
@@ -131,6 +133,7 @@ pub struct Iso4 {
 
 /// Texture coordinate.
 #[derive(Clone, Copy, Default)]
+#[repr(C)]
 pub struct Texcoord {
     /// U component.
     pub u: f32,
@@ -187,6 +190,7 @@ impl Default for PackDesc {
 
 /// Color represented by red, green, and blue components.
 #[derive(Clone, Copy, Default)]
+#[repr(C)]
 pub struct Rgb<T> {
     /// Red component.
     pub r: T,
@@ -194,6 +198,32 @@ pub struct Rgb<T> {
     pub g: T,
     /// Blue component.
     pub b: T,
+}
+
+/// Color represented by red, green, and blue components.
+#[derive(Clone, Copy, Default)]
+#[repr(C)]
+pub struct Rgba<T> {
+    /// Red component.
+    pub r: T,
+    /// Green component.
+    pub g: T,
+    /// Blue component.
+    pub b: T,
+    /// Alpha component.
+    pub a: T,
+}
+
+impl<T: Copy> Rgba<T> {
+    /// From array.
+    pub const fn from_array(array: [T; 4]) -> Self {
+        Self {
+            r: array[0],
+            g: array[1],
+            b: array[2],
+            a: array[3],
+        }
+    }
 }
 
 const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];

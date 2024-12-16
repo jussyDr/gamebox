@@ -1,6 +1,6 @@
 //! Vertex stream.
 
-use crate::{Class, Texcoord, Vec3};
+use crate::{Class, Rgba, Texcoord, Vec3};
 
 /// A vertex stream.
 #[derive(Default)]
@@ -10,7 +10,7 @@ pub struct VertexStream {
     tangents_u: Vec<[f32; 3]>,
     tangents_v: Vec<[f32; 3]>,
     texcoords_0: Vec<Texcoord>,
-    colors_0: Option<Vec<[u8; 4]>>,
+    colors_0: Option<Vec<Rgba<u8>>>,
     texcoords_1: Option<Vec<Texcoord>>,
 }
 
@@ -43,7 +43,7 @@ impl VertexStream {
     }
 
     /// Color data.
-    pub const fn colors_0(&self) -> Option<&Vec<[u8; 4]>> {
+    pub const fn colors_0(&self) -> Option<&Vec<Rgba<u8>>> {
         self.colors_0.as_ref()
     }
 
@@ -57,7 +57,10 @@ struct DataDecl {
 }
 
 mod read {
-    use std::io::{Read, Seek};
+    use std::{
+        io::{Read, Seek},
+        mem::transmute,
+    };
 
     use crate::{
         read::{
@@ -65,7 +68,7 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
         },
-        Texcoord, Vec3,
+        Rgba, Texcoord, Vec3,
     };
 
     use super::{DataDecl, VertexStream};
@@ -119,52 +122,36 @@ mod read {
 
                 match ty {
                     1 => {
-                        let data = r.repeat(count as usize, |r| {
-                            let u = r.f32()?;
-                            let v = r.f32()?;
-
-                            Ok([u, v])
-                        })?;
+                        let data = r.repeat_f32x2(count as usize)?;
 
                         match weight_count {
                             10 => {
-                                self.texcoords_0 =
-                                    data.into_iter().map(Texcoord::from_array).collect()
+                                self.texcoords_0 = unsafe { transmute(data) };
                             }
                             11 => {
-                                self.texcoords_1 =
-                                    Some(data.into_iter().map(Texcoord::from_array).collect())
+                                self.texcoords_1 = Some(unsafe { transmute(data) });
                             }
                             _ => todo!("{weight_count}"),
                         }
                     }
                     2 => {
-                        let data = r.repeat(count as usize, |r| {
-                            let x = r.f32()?;
-                            let y = r.f32()?;
-                            let z = r.f32()?;
-
-                            Ok([x, y, z])
-                        })?;
+                        let data = r.repeat_f32x3(count as usize)?;
 
                         match weight_count {
-                            0 => self.positions = data.into_iter().map(Vec3::from_array).collect(),
+                            0 => self.positions = unsafe { transmute(data) },
                             _ => todo!("{weight_count}"),
                         }
                     }
-                    4 => match weight_count {
-                        8 => {
-                            self.colors_0 = Some(r.repeat(count as usize, |r| {
-                                let a = r.u8()?;
-                                let b = r.u8()?;
-                                let c = r.u8()?;
-                                let d = r.u8()?;
+                    4 => {
+                        let data = r.repeat_u8x4(count as usize)?;
 
-                                Ok([a, b, c, d])
-                            })?);
+                        match weight_count {
+                            8 => {
+                                self.colors_0 = Some(unsafe { transmute(data) });
+                            }
+                            _ => todo!("{weight_count}"),
                         }
-                        _ => todo!("{weight_count}"),
-                    },
+                    }
                     14 => {
                         let data = r.repeat(count as usize, |r| {
                             let val = r.u32()?;
