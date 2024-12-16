@@ -185,65 +185,65 @@ impl Settings {
             }
         }
 
-        let num_nodes = r.u32()?;
-        let num_node_refs = num_nodes
-            .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index".into())))?;
-        let mut node_state = NodeState::new(num_node_refs as usize);
+        if !self.skip_body {
+            let num_nodes = r.u32()?;
+            let num_node_refs = num_nodes
+                .checked_sub(1)
+                .ok_or(Error::new(ErrorKind::Format("index".into())))?;
+            let mut node_state = NodeState::new(num_node_refs as usize);
 
-        let num_external_node_refs = r.u32()?;
+            let num_external_node_refs = r.u32()?;
 
-        if num_external_node_refs > 0 {
-            let ancestor_level = r.u32()? as u8;
-            let folders = read_folders(&mut r)?;
+            if num_external_node_refs > 0 {
+                let ancestor_level = r.u32()? as u8;
+                let folders = read_folders(&mut r)?;
 
-            for _ in 0..num_external_node_refs {
-                let flags = r.u32()?;
+                for _ in 0..num_external_node_refs {
+                    let flags = r.u32()?;
 
-                if flags & 0x00000004 != 0 {
-                    return Err(Error::new(ErrorKind::Unsupported(
-                        "reference table".to_string(),
-                    )));
+                    if flags & 0x00000004 != 0 {
+                        return Err(Error::new(ErrorKind::Unsupported(
+                            "reference table".to_string(),
+                        )));
+                    }
+
+                    let file_name = r.string()?;
+
+                    let node_index = r.u32()?;
+                    let node_ref_index = node_index
+                        .checked_sub(1)
+                        .ok_or(Error::new(ErrorKind::Format("index".into())))?;
+
+                    let use_file = r.bool()?;
+                    let folder_index = r.u32()?;
+
+                    let mut path = folders
+                        .get(folder_index as usize)
+                        .ok_or(Error::new(ErrorKind::Format("index".into())))?
+                        .clone();
+
+                    path.push(file_name);
+
+                    // println!("{node_index}, {path:?}");
+
+                    node_state.set_external_node_ref(
+                        node_ref_index as usize,
+                        ExternalNodeRef {
+                            path: path.into(),
+                            ancestor_level,
+                        },
+                    )?;
                 }
-
-                let file_name = r.string()?;
-
-                let node_index = r.u32()?;
-                let node_ref_index = node_index
-                    .checked_sub(1)
-                    .ok_or(Error::new(ErrorKind::Format("index".into())))?;
-
-                let use_file = r.bool()?;
-                let folder_index = r.u32()?;
-
-                let mut path = folders
-                    .get(folder_index as usize)
-                    .ok_or(Error::new(ErrorKind::Format("index".into())))?
-                    .clone();
-
-                path.push(file_name);
-
-                // println!("{node_index}, {path:?}");
-
-                node_state.set_external_node_ref(
-                    node_ref_index as usize,
-                    ExternalNodeRef {
-                        path: path.into(),
-                        ancestor_level,
-                    },
-                )?;
             }
-        }
 
-        let id_state = IdState::new();
+            let id_state = IdState::new();
 
-        match body_compression {
-            Compression::Compressed => {
-                let body_size = r.u32()?;
-                let compressed_body = r.byte_buf()?;
-                r.expect_eof()?;
+            match body_compression {
+                Compression::Compressed => {
+                    let body_size = r.u32()?;
+                    let compressed_body = r.byte_buf()?;
+                    r.expect_eof()?;
 
-                if !self.skip_body {
                     let mut body = vec![0; body_size as usize];
                     lzo1x::decompress(&compressed_body, &mut body)
                         .map_err(|_| Error::new(ErrorKind::Format("decompress".into())))?;
@@ -264,9 +264,7 @@ impl Settings {
 
                     r.expect_eof()?;
                 }
-            }
-            Compression::Uncompressed => {
-                if !self.skip_body {
+                Compression::Uncompressed => {
                     let mut r = Reader::new(r.into_inner(), id_state, node_state);
 
                     match node.read_body(&mut r) {
@@ -282,8 +280,6 @@ impl Settings {
                     }
 
                     r.expect_eof()?;
-                } else {
-                    r.seek_to_end()?;
                 }
             }
         }

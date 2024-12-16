@@ -184,7 +184,6 @@ mod read {
             media_clip::MediaClip,
             media_clip_group::MediaClipGroup,
             zone_genealogy::ZoneGenealogy,
-            AnchoredObject,
         },
         read::{
             read_body_chunks,
@@ -568,7 +567,7 @@ mod read {
 
             r.u32()?;
             r.encapsulation(|r| {
-                self.items = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+                self.items = r.list_with_version(|r| r.node())?;
 
                 if version == 7 {
                     let _items_on_item = r.list(|r| r.vec2::<u32>())?;
