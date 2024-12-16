@@ -5,6 +5,7 @@ pub mod crystal;
 pub mod curve_simple_nod;
 pub mod dyna_kinematic_contraint;
 pub mod dyna_object_model;
+pub mod entity_spawner;
 pub mod fx_hdr_scales_tech_3;
 pub mod game_skin;
 pub mod game_skin_and_folder;

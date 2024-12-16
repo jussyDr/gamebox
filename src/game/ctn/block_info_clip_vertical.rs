@@ -24,12 +24,6 @@ impl Deref for BlockInfoClipVertical {
     }
 }
 
-impl BlockInfoClipVertical {
-    pub fn into_parent(self) -> BlockInfoClip {
-        self.parent
-    }
-}
-
 mod read {
     use std::io::{Read, Seek};
 

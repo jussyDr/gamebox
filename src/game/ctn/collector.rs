@@ -42,7 +42,7 @@ mod read {
 
     use crate::read::{
         readable::{HeaderChunk, HeaderChunks},
-        reader::{IdStateMut, Reader},
+        reader::{IdStateMut, NodeStateMut, Reader},
         BodyChunk, BodyChunks, Error,
     };
 
@@ -61,8 +61,8 @@ mod read {
     }
 
     impl BodyChunks for Collector {
-        fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>>
-        {
+        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::normal(9, Self::read_chunk_9),
                 BodyChunk::normal(11, Self::read_chunk_11),
@@ -127,14 +127,14 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_9<N>(
+        fn read_chunk_9(
             &mut self,
-            r: &mut Reader<impl Read, impl IdStateMut, N>,
+            r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _page_name = r.string()?;
 
             if r.bool()? {
-                todo!()
+                r.external_node_ref::<()>()?;
             }
 
             r.id_or_null()?;

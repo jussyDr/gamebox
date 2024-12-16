@@ -66,6 +66,7 @@ pub struct Vec3<T> {
 }
 
 impl<T: Copy> Vec3<T> {
+    /// From array.
     pub const fn from_array(array: [T; 3]) -> Self {
         Self {
             x: array[0],
@@ -74,6 +75,7 @@ impl<T: Copy> Vec3<T> {
         }
     }
 
+    /// To array `[x, y, z]`.
     pub const fn to_array(self) -> [T; 3] {
         [self.x, self.y, self.z]
     }
@@ -93,6 +95,7 @@ pub struct Vec4<T> {
 }
 
 impl<T: Copy> Vec4<T> {
+    /// From array.
     pub const fn from_array(array: [T; 4]) -> Self {
         Self {
             x: array[0],
@@ -116,9 +119,13 @@ pub struct Quat {
     pub w: f32,
 }
 
+/// Iso.
 pub struct Iso4 {
+    /// X.
     pub x: Vec4<f32>,
+    /// Y.
     pub y: Vec4<f32>,
+    /// Z.
     pub z: Vec4<f32>,
 }
 
@@ -132,6 +139,7 @@ pub struct Texcoord {
 }
 
 impl Texcoord {
+    /// From array.
     pub const fn from_array(array: [f32; 2]) -> Self {
         Self {
             u: array[0],

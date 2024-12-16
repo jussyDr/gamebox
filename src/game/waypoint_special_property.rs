@@ -28,10 +28,13 @@ impl WaypointSpecialProperty {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::read::{
-        read_body_chunks,
-        reader::{IdStateMut, NodeStateMut, Reader},
-        BodyChunk, BodyChunks, Error, ReadBody,
+    use crate::{
+        read::{
+            read_body_chunks,
+            reader::{IdStateMut, NodeStateMut, Reader},
+            BodyChunk, BodyChunks, Error, ReadBody,
+        },
+        script::TraitsMetadata,
     };
 
     use super::WaypointSpecialProperty;
@@ -46,7 +49,7 @@ mod read {
     }
 
     impl BodyChunks for WaypointSpecialProperty {
-        fn body_chunks<R: Read, I: IdStateMut, N: NodeStateMut>(
+        fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::normal(0, Self::read_chunk_0),
@@ -70,7 +73,10 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_1<I, N>(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, I, N>,
+        ) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 0 {
@@ -78,7 +84,12 @@ mod read {
             }
 
             if r.bool()? {
-                todo!()
+                r.u32()?;
+                r.encapsulation(|r| {
+                    r.node::<TraitsMetadata>()?;
+
+                    Ok(())
+                })?;
             }
 
             Ok(())

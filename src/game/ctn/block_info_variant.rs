@@ -36,7 +36,7 @@ mod read {
         game::ctn::{
             block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo, BlockInfoClassic,
         },
-        plug::Solid,
+        plug::{entity_spawner::EntitySpawner, Solid},
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error,
@@ -131,7 +131,7 @@ mod read {
             r.u32()?;
             r.u32()?;
             r.u32()?;
-            let _entity_spawners: Vec<()> = r.list(|_| todo!())?;
+            let _entity_spawners = r.list(|r| r.internal_node_ref::<EntitySpawner>())?;
 
             Ok(())
         }

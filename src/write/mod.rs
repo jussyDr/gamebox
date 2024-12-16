@@ -1,12 +1,10 @@
 //! Writing GameBox files.
 
-pub mod writer;
-
-pub use writer::Writer;
-
 pub(crate) mod writable;
+pub(crate) mod writer;
 
 pub(crate) use writable::{write_body, BodyChunk, BodyChunks};
+pub(crate) use writer::Writer;
 
 use std::{
     fs::File,

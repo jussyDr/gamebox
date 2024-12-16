@@ -4,10 +4,43 @@ use crate::Class;
 
 /// Collection.
 #[derive(Default)]
-pub struct Collection;
+pub struct Collection {
+    square_size: f32,
+    square_height: f32,
+    block_info_folder: String,
+    item_folder: Option<String>,
+    decoration_folder: String,
+}
 
 impl Class for Collection {
     const CLASS_ID: u32 = 0x03033000;
+}
+
+impl Collection {
+    /// Square size.
+    pub const fn square_size(&self) -> f32 {
+        self.square_size
+    }
+
+    /// Square height.
+    pub const fn square_height(&self) -> f32 {
+        self.square_height
+    }
+
+    /// Block info folder.
+    pub const fn block_info_folder(&self) -> &String {
+        &self.block_info_folder
+    }
+
+    /// Item folder.
+    pub const fn item_folder(&self) -> Option<&String> {
+        self.item_folder.as_ref()
+    }
+
+    /// Decoration folder.
+    pub const fn decoration_folder(&self) -> &String {
+        &self.decoration_folder
+    }
 }
 
 mod read {
@@ -96,8 +129,8 @@ mod read {
             let _complete_list_zone_list = r.list_with_version(|r| r.external_node_ref::<()>())?;
             let _default_zone = r.external_node_ref::<()>()?;
             let _need_unlock = r.bool()?;
-            let _square_size = r.f32()?;
-            let _square_height = r.f32()?;
+            self.square_size = r.f32()?;
+            self.square_height = r.f32()?;
             let _vehicle = r.id()?;
             r.id()?;
             r.id()?;
@@ -165,9 +198,12 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_29<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_29<I>(
+            &mut self,
+            r: &mut Reader<impl Read, I, impl NodeStateMut>,
+        ) -> Result<(), Error> {
             r.u32()?;
-            r.list_with_version::<()>(|_| todo!())?;
+            r.list_with_version(|r| r.external_node_ref::<()>())?;
 
             Ok(())
         }
@@ -179,9 +215,14 @@ mod read {
         }
 
         fn read_chunk_32<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _block_info_folder = r.string()?;
-            let _item_folder = r.string()?;
-            let _decoration_folder = r.string()?;
+            self.block_info_folder = r.string()?;
+            let item_folder = r.string()?;
+            if item_folder.is_empty() {
+                self.item_folder = None;
+            } else {
+                self.item_folder = Some(item_folder)
+            }
+            self.decoration_folder = r.string()?;
             let _folder_menus_items = r.string()?;
 
             Ok(())

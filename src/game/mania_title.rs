@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-use crate::Class;
+use crate::{read::reader::ExternalNodeRef, Class};
 
 use super::Nod;
 
@@ -10,6 +10,7 @@ use super::Nod;
 #[derive(Default)]
 pub struct ManiaTitle {
     parent: Nod,
+    collections: Vec<ExternalNodeRef>,
 }
 
 impl Class for ManiaTitle {
@@ -24,11 +25,21 @@ impl Deref for ManiaTitle {
     }
 }
 
+impl ManiaTitle {
+    /// Collections.
+    pub const fn collections(&self) -> &Vec<ExternalNodeRef> {
+        &self.collections
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::{ctn::Challenge, skinned_nod::SkinnedNod},
+        game::{
+            ctn::{Challenge, Collection},
+            skinned_nod::SkinnedNod,
+        },
         read::{
             readable,
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -138,9 +149,7 @@ mod read {
             r: &mut Reader<impl Read, I, impl NodeStateMut>,
         ) -> Result<(), Error> {
             r.u32()?;
-            r.u32()?;
-            let _stadium_collection = r.external_node_ref::<()>()?;
-            let _stadium_256_collection = r.external_node_ref::<()>()?;
+            self.collections = r.list(|r| r.external_node_ref::<Collection>())?;
             r.u32()?;
 
             Ok(())

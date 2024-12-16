@@ -1,10 +1,8 @@
 //! Reading GameBox files.
 
-pub mod reader;
-
 pub(crate) mod readable;
+pub(crate) mod reader;
 
-use readable::HeaderChunks;
 pub(crate) use readable::{read_body_chunks, BodyChunk, BodyChunks, ReadBody};
 
 use std::{
@@ -16,6 +14,7 @@ use std::{
     sync::Arc,
 };
 
+use readable::HeaderChunks;
 use reader::{ExternalNodeRef, IdState, IdStateMut, NodeState, Reader};
 
 use crate::FILE_SIGNATURE;
@@ -31,14 +30,14 @@ pub struct Error {
 }
 
 impl Error {
-    pub const fn new(kind: ErrorKind) -> Self {
+    pub(crate) const fn new(kind: ErrorKind) -> Self {
         Self {
             kind,
             trace: VecDeque::new(),
         }
     }
 
-    pub fn io(io_error: io::Error) -> Self {
+    pub(crate) fn io(io_error: io::Error) -> Self {
         let kind = match io_error.kind() {
             io::ErrorKind::UnexpectedEof => ErrorKind::Format("unexpected EOF".into()),
             _ => ErrorKind::Io(io_error),
@@ -50,18 +49,18 @@ impl Error {
         }
     }
 
-    pub fn version(name: &str, version: u32) -> Self {
+    pub(crate) fn version(name: &str, version: u32) -> Self {
         Self {
             kind: ErrorKind::Unsupported(format!("{name} version: {version}")),
             trace: VecDeque::new(),
         }
     }
 
-    pub fn chunk_version(version: u32) -> Self {
+    pub(crate) fn chunk_version(version: u32) -> Self {
         Self::version("chunk", version)
     }
 
-    pub fn enum_variant(name: &str, value: u32) -> Self {
+    pub(crate) fn enum_variant(name: &str, value: u32) -> Self {
         Self {
             kind: ErrorKind::Unsupported(format!("{name} variant: {value}")),
             trace: VecDeque::new(),
