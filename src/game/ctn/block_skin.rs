@@ -44,7 +44,7 @@ mod read {
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _text = r.string()?;
             let _pack_desc = r.pack_desc()?;
-            let _parent_pack_desc = r.pack_desc()?;
+            let _parent_pack_desc = r.pack_desc_or_null()?;
 
             Ok(())
         }
@@ -56,7 +56,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _foreground_pack_desc = r.pack_desc()?;
+            let _foreground_pack_desc = r.pack_desc_or_null()?;
 
             Ok(())
         }

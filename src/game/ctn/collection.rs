@@ -125,14 +125,14 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _collection = r.id()?;
+            let _collection = r.id_or_null()?;
             let _complete_list_zone_list = r.list_with_version(|r| r.external_node_ref::<()>())?;
             let _default_zone = r.external_node_ref::<()>()?;
             let _need_unlock = r.bool()?;
             self.square_size = r.f32()?;
             self.square_height = r.f32()?;
             let _vehicle = r.id()?;
-            r.id()?;
+            r.id_or_null()?;
             r.id()?;
 
             Ok(())
@@ -384,15 +384,15 @@ mod read {
             r.u32()?;
             r.u32()?;
             r.u32()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
-            r.id()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
+            r.id_or_null()?;
 
             Ok(())
         }

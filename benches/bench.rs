@@ -9,6 +9,15 @@ pub fn bench(c: &mut Criterion) {
         })
     });
 
+    c.bench_function("read_map_header_deep_dip_2r1", |b| {
+        b.iter(|| {
+            let _map: Challenge = gamebox::read::Settings::new()
+                .skip_body(true)
+                .read_file("tests/files/map/Deep_Dip_2r1.Map.Gbx")
+                .unwrap();
+        })
+    });
+
     c.bench_function("read_item_wrh_p_ql_r_3_2", |b| {
         b.iter(|| {
             let _item: ItemModel =

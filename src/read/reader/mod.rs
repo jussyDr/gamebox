@@ -7,8 +7,7 @@ pub use id::{IdState, IdStateMut};
 pub use node::{ExternalNodeRef, NodeRef, NodeState, NodeStateMut};
 
 use std::{
-    io::{Read, Seek},
-    iter,
+    io::{Read, Seek, SeekFrom},
     path::PathBuf,
 };
 
@@ -73,10 +72,13 @@ impl<R, I, N> Reader<R, I, N> {
 }
 
 impl<R: Read, I, N> Reader<R, I, N> {
+    pub fn read_to_end(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
+        self.inner.read_to_end(buf).map_err(Error::io)
+    }
+
     /// Read `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<Vec<u8>, Error> {
         let mut buf = vec![0; n];
-
         self.inner.read_exact(&mut buf).map_err(Error::io)?;
 
         Ok(buf)
@@ -242,14 +244,24 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
 
         let checksum = self.byte_array::<32>()?;
-        let path = PathBuf::from(self.string()?);
+        let path = self.string()?;
         let locator_url = self.string()?;
 
-        Ok(Some(PackDesc::External {
-            path,
-            locator_url,
-            checksum,
-        }))
+        if path.is_empty() {
+            return Ok(None);
+        }
+
+        if locator_url.is_empty() {
+            Ok(Some(PackDesc::Internal {
+                path: PathBuf::from(path),
+            }))
+        } else {
+            Ok(Some(PackDesc::External {
+                path: PathBuf::from(path),
+                locator_url,
+                checksum,
+            }))
+        }
     }
 
     pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
@@ -264,18 +276,22 @@ impl<R: Read, I, N> Reader<R, I, N> {
         n: usize,
         mut read_fn: impl FnMut(&mut Self) -> Result<T, Error>,
     ) -> Result<Vec<T>, Error> {
-        iter::repeat_with(|| read_fn(self)).take(n).collect()
+        let mut vec = Vec::with_capacity(n);
+
+        for _ in 0..n {
+            vec.push(read_fn(self)?);
+        }
+
+        Ok(vec)
     }
 
     pub fn list<T>(
         &mut self,
-        mut read_elem_fn: impl FnMut(&mut Self) -> Result<T, Error>,
+        read_elem_fn: impl FnMut(&mut Self) -> Result<T, Error>,
     ) -> Result<Vec<T>, Error> {
         let len = self.u32()?;
 
-        iter::repeat_with(|| read_elem_fn(self))
-            .take(len as usize)
-            .collect()
+        self.repeat(len as usize, read_elem_fn)
     }
 
     pub fn list_with_version<T>(
@@ -327,10 +343,24 @@ fn bool_from_u32(value: u32) -> Result<bool, Error> {
     }
 }
 
+impl<R: Seek, I, N> Reader<R, I, N> {
+    pub fn skip(&mut self, n: u64) -> Result<(), Error> {
+        self.inner.seek_relative(n as i64).map_err(Error::io)?;
+
+        Ok(())
+    }
+
+    pub fn seek_to_end(&mut self) -> Result<(), Error> {
+        self.inner.seek(SeekFrom::End(0)).map_err(Error::io)?;
+
+        Ok(())
+    }
+}
+
 impl<R: Read + Seek, I, N> Reader<R, I, N> {
     pub fn peek_u32(&mut self) -> Result<u32, Error> {
         let value = self.u32()?;
-        self.inner.seek_relative(-4).unwrap();
+        self.inner.seek_relative(-4).map_err(Error::io)?;
 
         Ok(value)
     }

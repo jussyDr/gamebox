@@ -83,7 +83,7 @@ mod read {
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             r.id_or_null()?;
-            r.id()?;
+            r.id_or_null()?;
             r.id_or_null()?;
             let version = r.u32()?;
 
@@ -147,7 +147,7 @@ mod read {
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             r.id_or_null()?;
-            r.id()?;
+            r.id_or_null()?;
             r.id()?;
 
             Ok(())

@@ -177,7 +177,7 @@ mod read {
             self.scale = r.f32()?;
 
             if flags & 4 != 0 {
-                let _pack_desc = r.pack_desc()?;
+                let _pack_desc = r.pack_desc_or_null()?;
             }
 
             r.vec3::<f32>()?;

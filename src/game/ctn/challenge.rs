@@ -322,14 +322,14 @@ mod read {
             }
 
             self.id = r.id()?;
-            r.id()?;
+            r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
             let _map_kind = r.u8()?;
             r.u32()?;
             let _password = r.string()?;
             self.deco_id = r.id()?;
-            let _deco_collection = r.id()?;
+            let _deco_collection = r.id_or_null()?;
             let _deco_author = r.id()?;
             let _map_coord_origin = r.vec2::<f32>()?;
             let _map_coord_target = r.vec2::<f32>()?;
@@ -434,11 +434,11 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.id = r.id()?;
-            let _collection = r.id()?;
+            let _collection = r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
             self.deco_id = r.id()?;
-            let _deco_collection = r.id()?;
+            let _deco_collection = r.id_or_null()?;
             let _deco_author = r.id()?;
             self.size = r.vec3()?;
             let _need_unlock = r.bool()?;
@@ -767,7 +767,7 @@ mod read {
             r.encapsulation(|r| {
                 let ids = r.list(|r| {
                     let id = r.id()?;
-                    r.id()?;
+                    r.id_or_null()?;
                     r.id()?;
 
                     Ok(id)
