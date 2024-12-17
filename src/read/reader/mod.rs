@@ -200,6 +200,16 @@ impl<R: Read, I, N> Reader<R, I, N> {
             .map_err(|_| Error::new(ErrorKind::Format("enum".into())))
     }
 
+    pub fn u32_or_null(&mut self) -> Result<Option<u32>, Error> {
+        let value = self.u32()?;
+
+        if value == 0xffffffff {
+            Ok(None)
+        } else {
+            Ok(Some(value))
+        }
+    }
+
     /// Read a 2-dimensional vector of type `T`.
     pub fn vec2<T: ReadNum>(&mut self) -> Result<Vec2<T>, Error> {
         let x = T::read(self)?;

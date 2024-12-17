@@ -241,6 +241,8 @@ const END_OF_NODE_MARKER: u32 = 0xfacade01;
 
 const ID_MARKER_BIT: u32 = 0x40000000;
 
+const HEAVY_CHUNK_MARKER_BIT: u32 = 0x80000000;
+
 trait Class: Sized {
     const CLASS_ID: u32;
 }

@@ -106,6 +106,8 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
 
                 let size = r.u32()?;
 
+                // println!("{size}");
+
                 read_fn(node, r)?;
             }
         }

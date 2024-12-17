@@ -17,7 +17,7 @@ use std::{
 use readable::HeaderChunks;
 use reader::{ExternalNodeRef, IdState, IdStateMut, NodeState, Reader};
 
-use crate::FILE_SIGNATURE;
+use crate::{FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
 
 /// A readable class.
 pub trait Readable: readable::Sealed {}
@@ -347,7 +347,7 @@ fn read_header_chunks<'a, T: HeaderChunks, N>(
     let mut h = T::header_chunks();
 
     while let Some((chunk_id, chunk_size)) = header_chunks.first() {
-        let is_heavy = chunk_size & 0x80000000 != 0;
+        let is_heavy = chunk_size & HEAVY_CHUNK_MARKER_BIT != 0;
         let chunk_size = chunk_size & 0x7fffffff;
 
         let class_id = chunk_id & 0xfffff000;

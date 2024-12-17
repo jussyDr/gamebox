@@ -240,6 +240,11 @@ fn read_item_wrh_p_ql_r_3_2() {
 }
 
 #[test]
+fn read_map_acp_17_radiant_winter() {
+    read_file::<Challenge>("tests/files/map/ACP#17 - Radiant Winter.Map.Gbx").unwrap();
+}
+
+#[test]
 fn read_map_deco_48x48() {
     read_file::<Challenge>("tests/files/map/Deco48x48.Map.Gbx").unwrap();
 }

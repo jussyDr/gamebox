@@ -5,7 +5,7 @@ use crate::{Class, FileRef};
 /// A block skin.
 #[derive(Default)]
 pub struct BlockSkin {
-    skin: FileRef,
+    skin: Option<FileRef>,
     skin_effect: Option<FileRef>,
 }
 
@@ -15,8 +15,8 @@ impl Class for BlockSkin {
 
 impl BlockSkin {
     /// Skin.
-    pub const fn skin(&self) -> &FileRef {
-        &self.skin
+    pub const fn skin(&self) -> Option<&FileRef> {
+        self.skin.as_ref()
     }
 
     /// Skin effect.
@@ -58,7 +58,7 @@ mod read {
     impl BlockSkin {
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _text = r.string()?;
-            self.skin = r.pack_desc()?;
+            self.skin = r.pack_desc_or_null()?;
             let _parent_skin = r.pack_desc_or_null()?;
 
             Ok(())

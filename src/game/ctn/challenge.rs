@@ -9,11 +9,13 @@ use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaC
 /// A challenge.
 #[derive(Default)]
 pub struct Challenge {
-    bronze_time: u32,
-    silver_time: u32,
-    gold_time: u32,
-    author_time: u32,
+    medal_times: Option<MedalTimes>,
     cost: u32,
+    play_mode: u32,
+    author_score: Option<u32>,
+    editor_mode: EditorMode,
+    num_checkpoints: u32,
+    num_laps: Option<u32>,
     id: Arc<str>,
     author_id: Arc<str>,
     name: String,
@@ -39,29 +41,29 @@ impl Class for Challenge {
 }
 
 impl Challenge {
-    /// Bronze time.
-    pub const fn bronze_time(&self) -> u32 {
-        self.bronze_time
-    }
-
-    /// Silver time.
-    pub const fn silver_time(&self) -> u32 {
-        self.silver_time
-    }
-
-    /// Gold time.
-    pub const fn gold_time(&self) -> u32 {
-        self.gold_time
-    }
-
-    /// Author time.
-    pub const fn author_time(&self) -> u32 {
-        self.author_time
+    /// Medal times.
+    pub const fn medal_times(&self) -> Option<&MedalTimes> {
+        self.medal_times.as_ref()
     }
 
     /// Cost.
     pub const fn cost(&self) -> u32 {
         self.cost
+    }
+
+    /// Author score.
+    pub const fn author_score(&self) -> Option<u32> {
+        self.author_score
+    }
+
+    /// Number of checkpoints.
+    pub const fn num_checkpoints(&self) -> u32 {
+        self.num_checkpoints
+    }
+
+    /// Number of laps.
+    pub const fn num_laps(&self) -> Option<u32> {
+        self.num_laps
     }
 
     /// Identifier.
@@ -155,6 +157,59 @@ impl Challenge {
     }
 }
 
+/// Challenge medal times.
+pub struct MedalTimes {
+    bronze_time: u32,
+    silver_time: u32,
+    gold_time: u32,
+    author_time: u32,
+}
+
+impl MedalTimes {
+    /// Bronze time.
+    pub const fn bronze_time(&self) -> u32 {
+        self.bronze_time
+    }
+
+    /// Silver time.
+    pub const fn silver_time(&self) -> u32 {
+        self.silver_time
+    }
+
+    /// Gold time.
+    pub const fn gold_time(&self) -> u32 {
+        self.gold_time
+    }
+
+    /// Author time.
+    pub const fn author_time(&self) -> u32 {
+        self.author_time
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+enum EditorMode {
+    #[default]
+    Advanced,
+    Simple,
+    HasGhostBlocks,
+    Gamepad,
+}
+
+impl TryFrom<u32> for EditorMode {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, ()> {
+        match value {
+            0 => Ok(Self::Advanced),
+            1 => Ok(Self::Simple),
+            2 => Ok(Self::HasGhostBlocks),
+            4 => Ok(Self::Gamepad),
+            _ => Err(()),
+        }
+    }
+}
+
 /// Embedded items.
 pub struct EmbeddedItems {
     ids: Vec<Arc<str>>,
@@ -195,7 +250,7 @@ mod read {
         ID_MARKER_BIT,
     };
 
-    use super::{Challenge, EmbeddedItems};
+    use super::{Challenge, EmbeddedItems, MedalTimes};
 
     impl Readable for Challenge {}
 
@@ -294,19 +349,38 @@ mod read {
             }
 
             r.bool()?;
-            self.bronze_time = r.u32()?;
-            self.silver_time = r.u32()?;
-            self.gold_time = r.u32()?;
-            self.author_time = r.u32()?;
+            let bronze_time = r.u32_or_null()?;
+            let silver_time = r.u32_or_null()?;
+            let gold_time = r.u32_or_null()?;
+            let author_time = r.u32_or_null()?;
             self.cost = r.u32()?;
-            let _is_lap_race = r.bool()?;
-            let _mode = r.u32()?;
+            let is_lap_race = r.bool()?;
+            self.play_mode = r.u32()?;
             r.u32()?;
-            let _author_score = r.u32()?;
-            let _editor = r.u32()?;
+            let author_score = r.u32()?;
+            self.editor_mode = r.enum_u32()?;
             r.u32()?;
-            let _num_checkpoints = r.u32()?;
-            let _num_laps = r.u32()?;
+            self.num_checkpoints = r.u32()?;
+            let num_laps = r.u32()?;
+
+            if let (Some(bronze_time), Some(silver_time), Some(gold_time), Some(author_time)) =
+                (bronze_time, silver_time, gold_time, author_time)
+            {
+                self.medal_times = Some(MedalTimes {
+                    bronze_time,
+                    silver_time,
+                    gold_time,
+                    author_time,
+                })
+            }
+
+            self.author_score = if author_score == 0 {
+                None
+            } else {
+                Some(author_score)
+            };
+
+            self.num_laps = if is_lap_race { Some(num_laps) } else { None };
 
             Ok(())
         }
@@ -867,17 +941,24 @@ mod read {
             r.u32()?;
 
             if r.bool()? {
-                r.u32()?; // 256
-                let x = r.u32()?;
+                let a = r.u32()?;
+                let b = r.u32()?;
+                let c = r.u32()?;
+                let d = r.u32()?;
+                let e = r.u32()?;
 
-                match x {
-                    221 => {
-                        r.bytes(83844)?;
+                match (a, b, c, d, e) {
+                    (256, 221, 55, 200, 4292) => {
+                        r.bytes(83832)?;
                     }
-                    87 => {
-                        r.bytes(51063)?;
+                    (256, 87, 255, 109, 3384) => {
+                        r.bytes(51051)?;
                     }
-                    _ => todo!("{x}"),
+                    (128, 98, 38, 66, 8) => {
+                        r.bytes(256)?;
+                        r.u8()?;
+                    }
+                    _ => todo!("{a}, {b}, {c}, {d}, {e}"),
                 }
             }
 
@@ -1110,7 +1191,9 @@ mod read {
 }
 
 mod write {
-    use crate::write::{writable, BodyChunk, BodyChunks, Writable};
+    use std::io::{Error, Write};
+
+    use crate::write::{writable, BodyChunk, BodyChunks, Writable, Writer};
 
     use self::writable::{HeaderChunk, HeaderChunks};
 
@@ -1121,14 +1204,56 @@ mod write {
     impl writable::Sealed for Challenge {}
 
     impl HeaderChunks for Challenge {
-        fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
-            [].into_iter()
+        fn header_chunks<W: Write, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
+            [HeaderChunk::normal(2, Self::write_chunk_2)].into_iter()
         }
     }
 
     impl BodyChunks for Challenge {
         fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
             [].into_iter()
+        }
+    }
+
+    impl Challenge {
+        fn write_chunk_2<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u8(13)?;
+            w.bool(false)?;
+
+            if let Some(ref medal_times) = self.medal_times {
+                w.u32(medal_times.bronze_time)?;
+                w.u32(medal_times.silver_time)?;
+                w.u32(medal_times.gold_time)?;
+                w.u32(medal_times.author_time)?;
+            } else {
+                w.u32(0xffffffff)?;
+                w.u32(0xffffffff)?;
+                w.u32(0xffffffff)?;
+                w.u32(0xffffffff)?;
+            }
+
+            w.u32(self.cost)?;
+            w.bool(self.num_laps.is_some())?;
+            w.u32(self.play_mode)?;
+            w.u32(0)?;
+
+            if let Some(author_score) = self.author_score {
+                w.u32(author_score)?;
+            } else {
+                w.u32(0)?;
+            }
+
+            w.u32(self.editor_mode as u32)?;
+            w.u32(0)?;
+            w.u32(self.num_checkpoints)?;
+
+            if let Some(num_laps) = self.num_laps {
+                w.u32(num_laps)?;
+            } else {
+                w.u32(3)?;
+            }
+
+            Ok(())
         }
     }
 }

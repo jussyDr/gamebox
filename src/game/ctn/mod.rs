@@ -25,7 +25,10 @@ pub mod decoration_mood;
 pub mod ghost;
 pub mod media_block;
 pub mod media_block_camera_custom;
+pub mod media_block_camera_game;
+pub mod media_block_camera_path;
 pub mod media_block_color_grading;
+pub mod media_block_entity;
 pub mod media_block_fog;
 pub mod media_block_fx_colors;
 pub mod media_block_image;
@@ -34,6 +37,7 @@ pub mod media_block_mania_link;
 pub mod media_block_sound;
 pub mod media_block_text;
 pub mod media_block_tone_mapping;
+pub mod media_block_trails;
 pub mod media_block_transition_fade;
 pub mod media_block_triangles;
 pub mod media_block_triangles_2d;
@@ -93,6 +97,8 @@ pub use ghost::Ghost;
 pub use media_block::MediaBlock;
 #[doc(inline)]
 pub use media_block_camera_custom::MediaBlockCameraCustom;
+#[doc(inline)]
+pub use media_block_camera_path::MediaBlockCameraPath;
 #[doc(inline)]
 pub use media_block_color_grading::MediaBlockColorGrading;
 #[doc(inline)]

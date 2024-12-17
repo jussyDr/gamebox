@@ -7,13 +7,31 @@ use super::writer::Writer;
 pub trait Sealed: Class + HeaderChunks + BodyChunks {}
 
 pub trait HeaderChunks: Sized {
-    fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>>;
+    fn header_chunks<W: Write, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>>;
 }
 
 pub struct HeaderChunk<T, W, I, N> {
     pub num: u16,
     pub write_fn: HeaderChunkWriteFn<T, W, I, N>,
     pub heavy: bool,
+}
+
+impl<T, W, I, N> HeaderChunk<T, W, I, N> {
+    pub const fn normal(num: u16, write_fn: HeaderChunkWriteFn<T, W, I, N>) -> Self {
+        Self {
+            num,
+            write_fn,
+            heavy: false,
+        }
+    }
+
+    pub const fn heavy(num: u16, write_fn: HeaderChunkWriteFn<T, W, I, N>) -> Self {
+        Self {
+            num,
+            write_fn,
+            heavy: true,
+        }
+    }
 }
 
 type HeaderChunkWriteFn<T, W, I, N> = fn(&T, &mut Writer<W, I, N>) -> Result<(), Error>;

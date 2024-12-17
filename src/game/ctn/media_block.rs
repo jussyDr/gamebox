@@ -1,10 +1,12 @@
 //! Media block.
 
 use super::{
+    media_block_camera_game::MediaBlockCameraGame, media_block_entity::MediaBlockEntity,
     media_block_image::MediaBlockImage, media_block_interface::MediaBlockInterface,
-    media_block_text::MediaBlockText, MediaBlockCameraCustom, MediaBlockColorGrading,
-    MediaBlockFog, MediaBlockFxColors, MediaBlockManialink, MediaBlockSound, MediaBlockToneMapping,
-    MediaBlockTransitionFade, MediaBlockTriangles2D, MediaBlockTriangles3D,
+    media_block_text::MediaBlockText, media_block_trails::MediaBlockTrails, MediaBlockCameraCustom,
+    MediaBlockCameraPath, MediaBlockColorGrading, MediaBlockFog, MediaBlockFxColors,
+    MediaBlockManialink, MediaBlockSound, MediaBlockToneMapping, MediaBlockTransitionFade,
+    MediaBlockTriangles2D, MediaBlockTriangles3D,
 };
 
 /// Media block.
@@ -15,6 +17,10 @@ pub enum MediaBlock {
     Triangles3D(MediaBlockTriangles3D),
     /// Fx colors.
     FxColors(MediaBlockFxColors),
+    /// Camera game.
+    CameraGame(MediaBlockCameraGame),
+    /// Camera path.
+    CameraPath(MediaBlockCameraPath),
     /// Custom camera.
     CameraCustom(MediaBlockCameraCustom),
     /// Image.
@@ -23,6 +29,8 @@ pub enum MediaBlock {
     Sound(MediaBlockSound),
     /// Text.
     Text(MediaBlockText),
+    /// Trails
+    Trails(MediaBlockTrails),
     /// Transition fade.
     TransitionFade(MediaBlockTransitionFade),
     /// Tone mapping.
@@ -35,6 +43,8 @@ pub enum MediaBlock {
     Interface(MediaBlockInterface),
     /// Fog.
     Fog(MediaBlockFog),
+    /// Entity.
+    Entity(MediaBlockEntity),
 }
 
 mod read {
@@ -42,12 +52,14 @@ mod read {
 
     use crate::{
         game::ctn::{
-            media_block_color_grading::MediaBlockColorGrading, media_block_image::MediaBlockImage,
+            media_block_camera_game::MediaBlockCameraGame,
+            media_block_color_grading::MediaBlockColorGrading,
+            media_block_entity::MediaBlockEntity, media_block_image::MediaBlockImage,
             media_block_interface::MediaBlockInterface,
             media_block_mania_link::MediaBlockManialink, media_block_text::MediaBlockText,
-            MediaBlockCameraCustom, MediaBlockFog, MediaBlockFxColors, MediaBlockSound,
-            MediaBlockToneMapping, MediaBlockTransitionFade, MediaBlockTriangles2D,
-            MediaBlockTriangles3D,
+            media_block_trails::MediaBlockTrails, MediaBlockCameraCustom, MediaBlockCameraPath,
+            MediaBlockFog, MediaBlockFxColors, MediaBlockSound, MediaBlockToneMapping,
+            MediaBlockTransitionFade, MediaBlockTriangles2D, MediaBlockTriangles3D,
         },
         read::{
             read_body_chunks,
@@ -82,6 +94,18 @@ mod read {
 
                     Ok(Self::FxColors(fx_colors))
                 }
+                0x03084000 => {
+                    let mut camera_game = MediaBlockCameraGame::default();
+                    read_body_chunks(&mut camera_game, r)?;
+
+                    Ok(Self::CameraGame(camera_game))
+                }
+                0x030a1000 => {
+                    let mut media_block_camera_path = MediaBlockCameraPath::default();
+                    read_body_chunks(&mut media_block_camera_path, r)?;
+
+                    Ok(Self::CameraPath(media_block_camera_path))
+                }
                 0x030a2000 => {
                     let mut media_block_camera_custom = MediaBlockCameraCustom::default();
                     read_body_chunks(&mut media_block_camera_custom, r)?;
@@ -105,6 +129,12 @@ mod read {
                     read_body_chunks(&mut media_block_text, r)?;
 
                     Ok(Self::Text(media_block_text))
+                }
+                0x030a9000 => {
+                    let mut trails = MediaBlockTrails::default();
+                    read_body_chunks(&mut trails, r)?;
+
+                    Ok(Self::Trails(trails))
                 }
                 0x030ab000 => {
                     let mut media_block_transition_fade = MediaBlockTransitionFade::default();
@@ -141,6 +171,12 @@ mod read {
                     read_body_chunks(&mut media_block_fog, r)?;
 
                     Ok(Self::Fog(media_block_fog))
+                }
+                0x0329f000 => {
+                    let mut entity = MediaBlockEntity::default();
+                    read_body_chunks(&mut entity, r)?;
+
+                    Ok(Self::Entity(entity))
                 }
                 _ => Err(Error::new(ErrorKind::Unsupported(format!(
                     "{class_id:08x?}"

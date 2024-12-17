@@ -125,6 +125,10 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.bytes(&value.to_le_bytes())
     }
 
+    pub fn bool(&mut self, value: bool) -> Result<(), Error> {
+        self.u32(if value { 1 } else { 0 })
+    }
+
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
         self.u32(bytes.len() as u32)?;
         self.bytes(bytes)
