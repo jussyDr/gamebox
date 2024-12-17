@@ -158,7 +158,7 @@ impl Challenge {
 /// Embedded items.
 pub struct EmbeddedItems {
     ids: Vec<Arc<str>>,
-    zip: Vec<u8>,
+    zip_archive: Vec<u8>,
 }
 
 impl EmbeddedItems {
@@ -167,9 +167,9 @@ impl EmbeddedItems {
         &self.ids
     }
 
-    /// Zip.
-    pub const fn zip(&self) -> &Vec<u8> {
-        &self.zip
+    /// Zip archive.
+    pub const fn zip_archive(&self) -> &Vec<u8> {
+        &self.zip_archive
     }
 }
 
@@ -364,10 +364,10 @@ mod read {
 
             let thumbnail_size = r.u32()?;
             r.byte_array::<15>()?;
-            r.bytes(thumbnail_size as usize)?;
+            let _thumbnail = r.bytes(thumbnail_size as usize)?;
             r.byte_array::<16>()?;
             r.byte_array::<10>()?;
-            r.string()?;
+            let _comments = r.string()?;
             r.byte_array::<11>()?;
 
             Ok(())
@@ -380,16 +380,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let author_version = r.u32()?;
-
-            if author_version != 0 {
-                return Err(Error::version("author", author_version));
-            }
-
-            let _author_login = r.string()?;
-            let _author_nickname = r.string()?;
-            let _author_zone = r.string()?;
-            let _author_extra_info = r.string()?;
+            self.read_author(r)?;
 
             Ok(())
         }
@@ -582,16 +573,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let author_version = r.u32()?;
-
-            if author_version != 0 {
-                return Err(Error::version("author", author_version));
-            }
-
-            let _author_login = r.string()?;
-            let _author_nickname = r.string()?;
-            let _author_zone = r.string()?;
-            let _author_extra_info = r.string()?;
+            self.read_author(r)?;
 
             Ok(())
         }
@@ -602,7 +584,7 @@ mod read {
         ) -> Result<(), Error> {
             r.u32()?;
             r.encapsulation(|r| {
-                r.list(|r| r.node::<ZoneGenealogy>())?;
+                let _zones = r.list(|r| r.node::<ZoneGenealogy>())?;
 
                 Ok(())
             })?;
@@ -751,11 +733,11 @@ mod read {
 
                     Ok(id)
                 })?;
-                let zip = r.byte_buf()?;
+                let zip_archive = r.byte_buf()?;
                 let _textures = r.list(|r| r.string())?;
 
-                if !zip.is_empty() {
-                    self.embedded_items = Some(EmbeddedItems { ids, zip })
+                if !zip_archive.is_empty() {
+                    self.embedded_items = Some(EmbeddedItems { ids, zip_archive })
                 }
 
                 Ok(())
@@ -1053,11 +1035,11 @@ mod read {
             }
 
             for _ in &self.blocks {
-                r.u32()?;
+                let _macroblock_index = r.u32()?;
             }
 
             for _ in &self.items {
-                r.u32()?;
+                let _macroblock_index = r.u32()?;
             }
 
             let _id_flags_pair = r.list(|r| {
@@ -1083,6 +1065,21 @@ mod read {
         fn read_chunk_108<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             r.u32()?;
             r.u8()?;
+
+            Ok(())
+        }
+
+        fn read_author<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(Error::version("author", version));
+            }
+
+            let _author_login = r.string()?;
+            let _author_nickname = r.string()?;
+            let _author_zone = r.string()?;
+            let _author_extra_info = r.string()?;
 
             Ok(())
         }

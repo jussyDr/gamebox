@@ -2,7 +2,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use crate::{Class, Vec3};
+use crate::{Class, PitchYawRoll, Vec3};
 
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
@@ -94,7 +94,22 @@ impl Face {
 }
 
 /// Spawn position.
-pub struct SpawnPosition;
+pub struct SpawnPosition {
+    position: Vec3<f32>,
+    rotation: PitchYawRoll,
+}
+
+impl SpawnPosition {
+    /// Position.
+    pub const fn position(&self) -> Vec3<f32> {
+        self.position
+    }
+
+    /// Rotation.
+    pub const fn rotation(&self) -> PitchYawRoll {
+        self.rotation
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -106,7 +121,7 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
         },
-        Texcoord,
+        PitchYawRoll, Texcoord,
     };
 
     use super::{Crystal, Face, Mesh, SpawnPosition};
@@ -264,12 +279,15 @@ mod read {
                             return Err(Error::version("spawn position", spawn_position_version));
                         }
 
-                        let _spawn_position = r.vec3::<f32>()?;
-                        let _horizontal_angle = r.f32()?;
-                        let _vertical_angle = r.f32()?;
-                        let _roll_angle = r.f32()?;
+                        let position = r.vec3()?;
+                        let yaw = r.f32()?;
+                        let pitch = r.f32()?;
+                        let roll = r.f32()?;
 
-                        self.spawn_position = Some(SpawnPosition);
+                        self.spawn_position = Some(SpawnPosition {
+                            position,
+                            rotation: PitchYawRoll { pitch, yaw, roll },
+                        });
                     }
                     18 => {
                         let version = r.u32()?;

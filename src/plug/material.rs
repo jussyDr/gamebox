@@ -9,7 +9,7 @@ use super::material_custom::MaterialCustom;
 /// Material.
 #[derive(Default)]
 pub struct Material {
-    custom_material: Arc<MaterialCustom>,
+    custom: Arc<MaterialCustom>,
 }
 
 impl Class for Material {
@@ -17,9 +17,9 @@ impl Class for Material {
 }
 
 impl Material {
-    /// Custom material.
-    pub const fn custom_material(&self) -> &Arc<MaterialCustom> {
-        &self.custom_material
+    /// Custom.
+    pub const fn custom(&self) -> &Arc<MaterialCustom> {
+        &self.custom
     }
 }
 
@@ -88,7 +88,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.custom_material = r.internal_node_ref::<MaterialCustom>()?;
+            self.custom = r.internal_node_ref()?;
 
             Ok(())
         }

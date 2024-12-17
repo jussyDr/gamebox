@@ -106,7 +106,7 @@ mod read {
                 r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
                         0x09144000 => {
-                            let mut m = DynaObjectModel;
+                            let mut m = DynaObjectModel::default();
                             m.read_body(r)?;
 
                             ty = EntityType::DynaObjectModel(m);

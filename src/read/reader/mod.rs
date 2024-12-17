@@ -225,16 +225,28 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(0)
     }
 
-    pub fn string(&mut self) -> Result<String, Error> {
-        let len = self.u32()? as usize;
-
-        self.string_of_len(len)
-    }
-
     pub fn string_of_len(&mut self, len: usize) -> Result<String, Error> {
         let bytes = self.bytes(len)?;
 
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8".into())))
+    }
+
+    pub fn string(&mut self) -> Result<String, Error> {
+        let len = self.u32()?;
+
+        self.string_of_len(len as usize)
+    }
+
+    pub fn string_or_empty(&mut self) -> Result<Option<String>, Error> {
+        let len = self.u32()?;
+
+        if len == 0 {
+            Ok(None)
+        } else {
+            let string = self.string_of_len(len as usize)?;
+
+            Ok(Some(string))
+        }
     }
 
     pub fn pack_desc_or_null(&mut self) -> Result<Option<FileRef>, Error> {

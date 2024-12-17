@@ -6,10 +6,10 @@ use crate::Class;
 
 use super::vertex_stream::VertexStream;
 
-/// A visual.
+/// Visual.
 #[derive(Default)]
 pub struct Visual {
-    vertex_streams: Vec<Arc<VertexStream>>,
+    vertex_stream: Arc<VertexStream>,
 }
 
 impl Class for Visual {
@@ -17,9 +17,9 @@ impl Class for Visual {
 }
 
 impl Visual {
-    /// Vertex streams of the visual.
-    pub const fn vertex_streams(&self) -> &Vec<Arc<VertexStream>> {
-        &self.vertex_streams
+    /// Vertex stream.
+    pub const fn vertex_stream(&self) -> &Arc<VertexStream> {
+        &self.vertex_stream
     }
 }
 
@@ -104,7 +104,8 @@ mod read {
             let _flags = r.u32()?;
             let _num_texcoord_sets = r.u32()?;
             let _count = r.u32()?;
-            self.vertex_streams = r.list(|r| r.internal_node_ref::<VertexStream>())?;
+            let _num_vertex_streams = r.u32()?;
+            self.vertex_stream = r.internal_node_ref::<VertexStream>()?;
             let _bounding_box = r.box3d()?;
             r.u32()?;
             r.list(|r| r.u16())?;

@@ -216,12 +216,7 @@ mod read {
 
         fn read_chunk_32<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.block_info_folder = r.string()?;
-            let item_folder = r.string()?;
-            if item_folder.is_empty() {
-                self.item_folder = None;
-            } else {
-                self.item_folder = Some(item_folder)
-            }
+            self.item_folder = r.string_or_empty()?;
             self.decoration_folder = r.string()?;
             let _folder_menus_items = r.string()?;
 

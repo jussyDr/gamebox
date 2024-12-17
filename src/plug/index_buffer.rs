@@ -13,7 +13,7 @@ impl Class for IndexBuffer {
 }
 
 impl IndexBuffer {
-    /// Index data.
+    /// Indices.
     pub const fn indices(&self) -> &Vec<u32> {
         &self.indices
     }

@@ -2,7 +2,12 @@
 
 /// Item variant list.
 #[derive(Default)]
-pub struct ItemVariantList;
+pub struct ItemVariantList {
+    variants: Vec<ItemVariant>,
+}
+
+/// Item variant.
+pub struct ItemVariant;
 
 mod read {
     use std::io::Read;
@@ -12,7 +17,7 @@ mod read {
         Error, ReadBody,
     };
 
-    use super::ItemVariantList;
+    use super::{ItemVariant, ItemVariantList};
 
     impl ReadBody for ItemVariantList {
         fn read_body<R: Read, I, N: NodeStateMut>(
@@ -25,7 +30,7 @@ mod read {
                 return Err(Error::version("item variant list", version));
             }
 
-            let _variants = r.list(|r| {
+            self.variants = r.list(|r| {
                 let _tags = r.list(|r| {
                     r.string()?;
                     r.string()?;
@@ -36,7 +41,7 @@ mod read {
                 let _entity_model = r.external_node_ref::<()>()?;
                 let _hidden_in_manual_cycle = r.bool()?;
 
-                Ok(())
+                Ok(ItemVariant)
             })?;
 
             Ok(())

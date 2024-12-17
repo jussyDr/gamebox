@@ -237,7 +237,7 @@ mod read {
                                 self.ty = ItemModelType::CommonItemEntityModel(Arc::new(model))
                             }
                             0x2f0bc000 => {
-                                let mut model = ItemVariantList;
+                                let mut model = ItemVariantList::default();
                                 model.read_body(r)?;
 
                                 self.ty = ItemModelType::ItemVariantList(Arc::new(model))

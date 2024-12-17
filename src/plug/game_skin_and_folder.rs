@@ -1,13 +1,30 @@
 //! Game skin and folder.
 
+use std::sync::Arc;
+
 use crate::Class;
+
+use super::GameSkin;
 
 /// Game skin and folder.
 #[derive(Default)]
-pub struct GameSkinAndFolder;
+pub struct GameSkinAndFolder {
+    skin: Arc<GameSkin>,
+    folder: String,
+}
 
 impl Class for GameSkinAndFolder {
     const CLASS_ID: u32 = 0x0915d000;
+}
+
+impl GameSkinAndFolder {
+    pub const fn skin(&self) -> &Arc<GameSkin> {
+        &self.skin
+    }
+
+    pub const fn folder(&self) -> &String {
+        &self.folder
+    }
 }
 
 mod read {
@@ -49,8 +66,8 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            r.internal_node_ref::<GameSkin>()?;
-            r.string()?;
+            self.skin = r.internal_node_ref::<GameSkin>()?;
+            self.folder = r.string()?;
 
             Ok(())
         }
