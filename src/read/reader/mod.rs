@@ -14,7 +14,7 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{PackDesc, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
+use crate::{FileRef, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
 
 use super::{Error, ErrorKind};
 
@@ -237,7 +237,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8".into())))
     }
 
-    pub fn pack_desc_or_null(&mut self) -> Result<Option<PackDesc>, Error> {
+    pub fn pack_desc_or_null(&mut self) -> Result<Option<FileRef>, Error> {
         let version = self.u8()?;
 
         if version != 3 {
@@ -253,11 +253,11 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
 
         if locator_url.is_empty() {
-            Ok(Some(PackDesc::Internal {
+            Ok(Some(FileRef::Internal {
                 path: PathBuf::from(path),
             }))
         } else {
-            Ok(Some(PackDesc::External {
+            Ok(Some(FileRef::External {
                 path: PathBuf::from(path),
                 locator_url,
                 checksum,
@@ -265,7 +265,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    pub fn pack_desc(&mut self) -> Result<PackDesc, Error> {
+    pub fn pack_desc(&mut self) -> Result<FileRef, Error> {
         match self.pack_desc_or_null()? {
             Some(pack_desc) => Ok(pack_desc),
             None => Err(Error::new(ErrorKind::Format("pack desc null".into()))),

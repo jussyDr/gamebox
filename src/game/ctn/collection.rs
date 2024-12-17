@@ -17,12 +17,12 @@ impl Class for Collection {
 }
 
 impl Collection {
-    /// Square size.
+    /// Challenge qquare size.
     pub const fn square_size(&self) -> f32 {
         self.square_size
     }
 
-    /// Square height.
+    /// Challenge square height.
     pub const fn square_height(&self) -> f32 {
         self.square_height
     }

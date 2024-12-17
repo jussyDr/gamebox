@@ -6,13 +6,15 @@ use crate::Class;
 
 use super::Ghost;
 
-/// A challenge parameters.
-#[derive(PartialEq, Default, Debug)]
+/// Challenge parameters.
+#[derive(Default)]
 pub struct ChallengeParameters {
     bronze_time: u32,
     silver_time: u32,
     gold_time: u32,
     author_time: u32,
+    time_limit: u32,
+    author_score: u32,
     validation_ghost: Option<Arc<Ghost>>,
 }
 
@@ -39,6 +41,16 @@ impl ChallengeParameters {
     /// Author time.
     pub const fn author_time(&self) -> u32 {
         self.author_time
+    }
+
+    /// Time limit.
+    pub const fn time_limit(&self) -> u32 {
+        self.time_limit
+    }
+
+    /// Author score.
+    pub const fn author_score(&self) -> u32 {
+        self.author_score
     }
 
     /// Validation ghost.
@@ -106,8 +118,8 @@ mod read {
         }
 
         fn read_chunk_8<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _time_limit = r.u32()?;
-            let _author_score = r.u32()?;
+            self.time_limit = r.u32()?;
+            self.author_score = r.u32()?;
 
             Ok(())
         }
@@ -118,8 +130,8 @@ mod read {
             self.silver_time = r.u32()?;
             self.gold_time = r.u32()?;
             self.author_time = r.u32()?;
-            let _time_limit = r.u32()?;
-            let _author_score = r.u32()?;
+            self.time_limit = r.u32()?;
+            self.author_score = r.u32()?;
 
             Ok(())
         }

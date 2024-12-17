@@ -1,10 +1,11 @@
 //! Color grading.
 
-use crate::Class;
+use crate::{Class, FileRef};
 
 /// Media block color grading.
 #[derive(Default)]
 pub struct MediaBlockColorGrading {
+    image: FileRef,
     keys: Vec<Key>,
 }
 
@@ -13,6 +14,11 @@ impl Class for MediaBlockColorGrading {
 }
 
 impl MediaBlockColorGrading {
+    /// Image.
+    pub const fn image(&self) -> &FileRef {
+        &self.image
+    }
+
     /// Keys.
     pub const fn keys(&self) -> &Vec<Key> {
         &self.keys
@@ -69,13 +75,13 @@ mod read {
 
     impl MediaBlockColorGrading {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _image = r.pack_desc()?;
+            self.image = r.pack_desc()?;
 
             Ok(())
         }
 
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _keys = r.list(|r| {
+            self.keys = r.list(|r| {
                 let time = r.f32()?;
                 let intensity = r.f32()?;
 

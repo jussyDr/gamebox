@@ -49,7 +49,7 @@ mod read {
 
     impl Tree {
         fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _children: Vec<()> = r.list_with_version(|_| todo!())?;
+            let _children = r.list_with_version(|_| Ok(()))?;
 
             Ok(())
         }

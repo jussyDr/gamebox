@@ -20,7 +20,16 @@ impl MediaBlockFxColors {
 }
 
 /// Fx colors media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -51,7 +60,7 @@ mod read {
     impl MediaBlockFxColors {
         fn read_chunk_3<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
+                let time = r.f32()?;
                 let _intensity = r.f32()?;
                 let _blend_z = r.f32()?;
                 let _distance = r.f32()?;
@@ -77,7 +86,7 @@ mod read {
                 r.f32()?;
                 r.f32()?;
 
-                Ok(Key)
+                Ok(Key { time })
             })?;
 
             Ok(())

@@ -19,29 +19,35 @@ impl Class for Solid2Model {
 }
 
 impl Solid2Model {
+    /// Shaded geometries.
     pub const fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
         &self.shaded_geoms
     }
 
+    /// Visuals.
     pub const fn visuals(&self) -> &Vec<Arc<VisualIndexedTriangles>> {
         &self.visuals
     }
 
+    /// Materials.
     pub const fn materials(&self) -> &Vec<NodeRef<MaterialUserInst>> {
         &self.materials
     }
 }
 
+/// Shaded geometry.
 pub struct ShadedGeom {
     visual_index: u32,
     material_index: u32,
 }
 
 impl ShadedGeom {
+    /// Visual index.
     pub const fn visual_index(&self) -> u32 {
         self.visual_index
     }
 
+    /// Material index.
     pub const fn material_index(&self) -> u32 {
         self.material_index
     }
@@ -210,8 +216,8 @@ mod read {
 
                 Ok(())
             })?;
-            let _light_user_models: Vec<()> = r.list(|_| todo!())?;
-            let _light_insts: Vec<()> = r.list(|_| todo!())?;
+            let _light_user_models: Vec<()> = r.list(|_| Ok(()))?;
+            let _light_insts: Vec<()> = r.list(|_| Ok(()))?;
             let _damage_zone = r.u32()?;
             let _flags = r.u32()?;
             r.u32()?;

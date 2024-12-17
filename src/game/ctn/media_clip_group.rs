@@ -35,7 +35,7 @@ impl ClipTrigger {
         &self.clip
     }
 
-    /// Coords.
+    /// Coordinates.
     pub const fn coords(&self) -> &Vec<Vec3<u32>> {
         &self.coords
     }
@@ -90,7 +90,7 @@ mod read {
                 r.u32()?;
                 let _condition = r.u32()?;
                 let _condition_value = r.f32()?;
-                let coords = r.list(|r| r.vec3::<u32>())?;
+                let coords = r.list(|r| r.vec3())?;
 
                 self.clips.push(ClipTrigger { clip, coords });
             }

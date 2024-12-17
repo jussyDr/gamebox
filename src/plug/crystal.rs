@@ -1,6 +1,6 @@
 //! Crystal.
 
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 use crate::{Class, Vec3};
 
@@ -18,6 +18,14 @@ pub struct Crystal {
 
 impl Class for Crystal {
     const CLASS_ID: u32 = 0x09003000;
+}
+
+impl Deref for Crystal {
+    type Target = TreeGenerator;
+
+    fn deref(&self) -> &TreeGenerator {
+        &self.parent
+    }
 }
 
 impl Crystal {
@@ -92,7 +100,7 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        plug::{material_user_inst::MaterialUserInst, LightUserModel},
+        plug::LightUserModel,
         read::{
             read_body_chunks,
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -144,11 +152,11 @@ mod read {
             self.materials = r.list(|r| {
                 let name = r.string()?;
 
-                let material = if name.is_empty() {
-                    r.internal_node_ref::<MaterialUserInst>()?
-                } else {
-                    todo!()
-                };
+                if !name.is_empty() {
+                    return Err(Error::new(ErrorKind::Unsupported("".into())));
+                }
+
+                let material = r.internal_node_ref()?;
 
                 Ok(material)
             })?;

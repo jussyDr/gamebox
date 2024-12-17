@@ -119,11 +119,11 @@ mod read {
 
             r.vec3::<f32>()?;
             self.materials = r.list(|r| {
-                let material = if r.bool()? {
-                    r.external_node_ref::<Material>()?
-                } else {
-                    todo!()
-                };
+                if !r.bool()? {
+                    return Err(Error::new(ErrorKind::Unsupported("".into())));
+                }
+
+                let material = r.external_node_ref::<Material>()?;
 
                 Ok(material)
             })?;

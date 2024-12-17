@@ -1,11 +1,11 @@
 //! Media block sound.
 
-use crate::{Class, PackDesc, Vec3};
+use crate::{Class, FileRef, Vec3};
 
 /// Sound media block.
 #[derive(Default)]
 pub struct MediaBlockSound {
-    sound: PackDesc,
+    sound: FileRef,
     keys: Vec<Key>,
 }
 
@@ -15,7 +15,7 @@ impl Class for MediaBlockSound {
 
 impl MediaBlockSound {
     /// Sound.
-    pub const fn sound(&self) -> &PackDesc {
+    pub const fn sound(&self) -> &FileRef {
         &self.sound
     }
 

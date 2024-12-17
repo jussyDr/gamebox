@@ -2,6 +2,10 @@
 
 use crate::{Class, Quat, Vec3};
 
+use super::{
+    dyna_kinematic_contraint::DynaKinematicConstraint, DynaObjectModel, StaticObjectModel,
+};
+
 /// Prefab.
 #[derive(Default)]
 pub struct Prefab {
@@ -13,28 +17,44 @@ impl Class for Prefab {
 }
 
 impl Prefab {
-    /// Entities of the prefab.
+    /// Entities.
     pub const fn entities(&self) -> &Vec<Entity> {
         &self.entities
     }
 }
 
-/// A prefab entity.
+/// Prefab entity.
 pub struct Entity {
+    ty: EntityType,
     rotation: Quat,
-    pos: Vec3<f32>,
+    position: Vec3<f32>,
 }
 
 impl Entity {
-    /// Rotation of the entity.
+    /// Type.
+    pub const fn ty(&self) -> &EntityType {
+        &self.ty
+    }
+
+    /// Rotation.
     pub const fn rotation(&self) -> Quat {
         self.rotation
     }
 
-    /// Position of the entity.
-    pub const fn pos(&self) -> Vec3<f32> {
-        self.pos
+    /// Position.
+    pub const fn position(&self) -> Vec3<f32> {
+        self.position
     }
+}
+
+/// Prefab entity type.
+pub enum EntityType {
+    /// Dynamic object model.
+    DynaObjectModel(DynaObjectModel),
+    /// Static object model.
+    StaticObjectModel(StaticObjectModel),
+    /// Dynamic kinematic constraint.
+    DynaKinematicConstraint(DynaKinematicConstraint),
 }
 
 mod read {
@@ -48,11 +68,11 @@ mod read {
         read::{
             readable::{HeaderChunk, HeaderChunks, Sealed},
             reader::{IdStateMut, NodeStateMut, Reader},
-            Error, ReadBody, Readable,
+            Error, ErrorKind, ReadBody, Readable,
         },
     };
 
-    use super::{Entity, Prefab};
+    use super::{Entity, EntityType, Prefab};
 
     impl Readable for Prefab {}
 
@@ -81,27 +101,39 @@ mod read {
             let num_entities = r.u32()?;
             let _u02 = r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let _model = r.test_or_ext_or_null(|r, class_id| {
+                let mut ty = EntityType::StaticObjectModel(StaticObjectModel::default());
+
+                r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
                         0x09144000 => {
-                            let mut m = DynaObjectModel::default();
+                            let mut m = DynaObjectModel;
                             m.read_body(r)?;
+
+                            ty = EntityType::DynaObjectModel(m);
                         }
                         0x09159000 => {
                             let mut m = StaticObjectModel::default();
                             m.read_body(r)?;
+
+                            ty = EntityType::StaticObjectModel(m);
                         }
                         0x2f0ca000 => {
-                            let mut m = DynaKinematicConstraint::default();
+                            let mut m = DynaKinematicConstraint;
                             m.read_body(r)?;
+
+                            ty = EntityType::DynaKinematicConstraint(m);
                         }
-                        _ => todo!("{:08X?}", class_id),
+                        _ => {
+                            return Err(Error::new(ErrorKind::Unsupported(
+                                "prefab entity type".into(),
+                            )))
+                        }
                     }
 
                     Ok(())
                 })?;
                 let rotation = r.quat()?;
-                let pos = r.vec3()?;
+                let position = r.vec3()?;
 
                 match r.u32()? {
                     0x2f0a9000 => {
@@ -151,12 +183,20 @@ mod read {
                         let _position_2 = r.vec3::<f32>()?;
                     }
                     0xffffffff => {}
-                    x => todo!("{x:08X?}"),
+                    _ => {
+                        return Err(Error::new(ErrorKind::Unsupported(
+                            "prefab entity parameters".into(),
+                        )))
+                    }
                 }
 
                 r.string()?;
 
-                Ok(Entity { rotation, pos })
+                Ok(Entity {
+                    ty,
+                    rotation,
+                    position,
+                })
             })?;
 
             Ok(())

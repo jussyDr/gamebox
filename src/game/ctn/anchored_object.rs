@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, Class, PackDesc, PitchYawRoll, Vec3};
+use crate::{game::WaypointSpecialProperty, Class, FileRef, PitchYawRoll, Vec3};
 
 use super::{ElemColor, LightmapQuality};
 
@@ -16,9 +16,10 @@ pub struct AnchoredObject {
     waypoint_property: Option<WaypointSpecialProperty>,
     pivot_position: Vec3<f32>,
     scale: f32,
+    skin: Option<FileRef>,
     pub(crate) elem_color: ElemColor,
     pub(crate) anim_offset: PhaseOffset,
-    pub(crate) foreground_pack_desc: Option<PackDesc>,
+    pub(crate) skin_effect: Option<FileRef>,
     pub(crate) lightmap_quality: LightmapQuality,
 }
 
@@ -62,6 +63,11 @@ impl AnchoredObject {
         self.scale
     }
 
+    /// Skin.
+    pub const fn skin(&self) -> Option<&FileRef> {
+        self.skin.as_ref()
+    }
+
     /// Element color.
     pub const fn elem_color(&self) -> ElemColor {
         self.elem_color
@@ -70,6 +76,11 @@ impl AnchoredObject {
     /// Animation offset.
     pub const fn anim_offset(&self) -> PhaseOffset {
         self.anim_offset
+    }
+
+    /// Skin effect.
+    pub const fn skin_effect(&self) -> Option<&FileRef> {
+        self.skin_effect.as_ref()
     }
 
     /// Lightmap quality.
@@ -177,7 +188,7 @@ mod read {
             self.scale = r.f32()?;
 
             if flags & 4 != 0 {
-                let _pack_desc = r.pack_desc_or_null()?;
+                self.skin = r.pack_desc_or_null()?;
             }
 
             r.vec3::<f32>()?;

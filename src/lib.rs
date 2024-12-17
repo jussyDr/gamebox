@@ -162,32 +162,6 @@ pub struct PitchYawRoll {
     pub roll: f32,
 }
 
-/// Pack descriptor.
-pub enum PackDesc {
-    /// Reference to an internal game file.
-    Internal {
-        /// Path.
-        path: PathBuf,
-    },
-    /// Reference to an external file.
-    External {
-        /// Checksum.
-        checksum: [u8; 32],
-        /// Path.
-        path: PathBuf,
-        /// Locator URL.
-        locator_url: String,
-    },
-}
-
-impl Default for PackDesc {
-    fn default() -> Self {
-        Self::Internal {
-            path: PathBuf::default(),
-        }
-    }
-}
-
 /// Color represented by red, green, and blue components.
 #[derive(Clone, Copy, Default)]
 #[repr(C)]
@@ -222,6 +196,33 @@ impl<T: Copy> Rgba<T> {
             g: array[1],
             b: array[2],
             a: array[3],
+        }
+    }
+}
+
+/// Reference to a file.
+#[derive(Debug)]
+pub enum FileRef {
+    /// Reference to an internal game file.
+    Internal {
+        /// Path.
+        path: PathBuf,
+    },
+    /// Reference to an external file.
+    External {
+        /// Checksum.
+        checksum: [u8; 32],
+        /// Path.
+        path: PathBuf,
+        /// Locator URL.
+        locator_url: String,
+    },
+}
+
+impl Default for FileRef {
+    fn default() -> Self {
+        Self::Internal {
+            path: PathBuf::default(),
         }
     }
 }

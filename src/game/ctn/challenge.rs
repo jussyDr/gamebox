@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{script::TraitsMetadata, Class, PackDesc, Vec3};
+use crate::{script::TraitsMetadata, Class, FileRef, Vec3};
 
 use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
@@ -19,10 +19,10 @@ pub struct Challenge {
     name: String,
     deco_id: Arc<str>,
     parameters: Arc<ChallengeParameters>,
-    texture_mod: Option<PackDesc>,
+    texture_mod: Option<FileRef>,
     size: Vec3<u32>,
     blocks: Vec<Block>,
-    music: Option<PackDesc>,
+    music: Option<FileRef>,
     items: Vec<AnchoredObject>,
     script_metadata: TraitsMetadata,
     baked_blocks: Vec<Block>,
@@ -90,7 +90,7 @@ impl Challenge {
     }
 
     /// Texture mod.
-    pub const fn texture_mod(&self) -> Option<&PackDesc> {
+    pub const fn texture_mod(&self) -> Option<&FileRef> {
         self.texture_mod.as_ref()
     }
 
@@ -105,7 +105,7 @@ impl Challenge {
     }
 
     /// Music.
-    pub const fn music(&self) -> Option<&PackDesc> {
+    pub const fn music(&self) -> Option<&FileRef> {
         self.music.as_ref()
     }
 
@@ -192,6 +192,7 @@ mod read {
             BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
         script::traits_metadata::TraitsMetadata,
+        ID_MARKER_BIT,
     };
 
     use super::{Challenge, EmbeddedItems};
@@ -441,22 +442,7 @@ mod read {
             let _deco_author = r.id()?;
             self.size = r.vec3()?;
             let _need_unlock = r.bool()?;
-            let blocks_version = r.u32()?;
-
-            if blocks_version != 6 {
-                return Err(Error::version("blocks", blocks_version));
-            }
-
-            let num_blocks = r.u32()? as usize;
-            self.blocks = Vec::with_capacity(num_blocks);
-
-            while r.peek_u32()? & 0x40000000 != 0 {
-                let block = Block::read_from_body(r)?;
-
-                if block.has_flags() {
-                    self.blocks.push(block);
-                }
-            }
+            self.blocks = read_blocks(r)?;
 
             Ok(())
         }
@@ -648,13 +634,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let blocks_version = r.u32()?;
-
-            if blocks_version != 6 {
-                return Err(Error::version("blocks", blocks_version));
-            }
-
-            self.baked_blocks = r.list(|r| Block::read_from_body(r))?;
+            self.baked_blocks = read_blocks(r)?;
             r.u32()?;
             r.u32()?;
 
@@ -1027,7 +1007,7 @@ mod read {
 
             for item in &mut self.items {
                 if r.bool8()? {
-                    item.foreground_pack_desc = Some(r.pack_desc()?);
+                    item.skin_effect = Some(r.pack_desc()?);
                 }
             }
 
@@ -1106,6 +1086,29 @@ mod read {
 
             Ok(())
         }
+    }
+
+    fn read_blocks(
+        r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+    ) -> Result<Vec<Block>, Error> {
+        let version = r.u32()?;
+
+        if version != 6 {
+            return Err(Error::version("blocks", version));
+        }
+
+        let num_blocks = r.u32()? as usize;
+        let mut blocks = Vec::with_capacity(num_blocks);
+
+        while r.peek_u32()? & ID_MARKER_BIT != 0 {
+            let block = Block::read_from_body(r)?;
+
+            if block.has_flags() {
+                blocks.push(block);
+            }
+        }
+
+        Ok(blocks)
     }
 }
 

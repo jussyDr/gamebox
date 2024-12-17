@@ -2,7 +2,7 @@
 
 use crate::Class;
 
-/// A media block camera custom.
+/// Custom camera media block.
 #[derive(Default)]
 pub struct MediaBlockCameraCustom {
     keys: Vec<Key>,
@@ -20,7 +20,16 @@ impl MediaBlockCameraCustom {
 }
 
 /// Custom camera media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -57,7 +66,7 @@ mod read {
             }
 
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
+                let time = r.f32()?;
                 let _interpolation = r.u32()?;
                 let _anchor_rot = r.bool()?;
                 let _anchor = r.u32()?;
@@ -79,7 +88,7 @@ mod read {
                 let _target_position = r.vec3::<f32>()?;
                 let _near_z = r.f32()?;
 
-                Ok(Key)
+                Ok(Key { time })
             })?;
 
             Ok(())

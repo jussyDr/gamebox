@@ -1,13 +1,28 @@
 //! Block skin.
 
-use crate::Class;
+use crate::{Class, FileRef};
 
 /// A block skin.
 #[derive(Default)]
-pub struct BlockSkin;
+pub struct BlockSkin {
+    skin: FileRef,
+    skin_effect: Option<FileRef>,
+}
 
 impl Class for BlockSkin {
     const CLASS_ID: u32 = 0x03059000;
+}
+
+impl BlockSkin {
+    /// Skin.
+    pub const fn skin(&self) -> &FileRef {
+        &self.skin
+    }
+
+    /// Skin effect.
+    pub const fn skin_effect(&self) -> Option<&FileRef> {
+        self.skin_effect.as_ref()
+    }
 }
 
 mod read {
@@ -43,8 +58,8 @@ mod read {
     impl BlockSkin {
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _text = r.string()?;
-            let _pack_desc = r.pack_desc()?;
-            let _parent_pack_desc = r.pack_desc_or_null()?;
+            self.skin = r.pack_desc()?;
+            let _parent_skin = r.pack_desc_or_null()?;
 
             Ok(())
         }
@@ -56,7 +71,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _foreground_pack_desc = r.pack_desc_or_null()?;
+            self.skin_effect = r.pack_desc_or_null()?;
 
             Ok(())
         }

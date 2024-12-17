@@ -127,8 +127,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _: Vec<()> = r.list_with_version(|r| todo!())?;
-            let _: Vec<()> = r.list_with_version(|r| todo!())?;
+            r.list_with_version(|_| Ok(()))?;
+            r.list_with_version(|_| Ok(()))?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

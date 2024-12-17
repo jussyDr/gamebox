@@ -32,13 +32,10 @@ impl MediaClip {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        game::ctn::MediaTrack,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::MediaClip;
@@ -74,7 +71,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
+            self.tracks = r.list_with_version(|r| r.internal_node_ref())?;
             self.name = r.string()?;
             let _stop_when_leave = r.bool()?;
             r.bool()?;

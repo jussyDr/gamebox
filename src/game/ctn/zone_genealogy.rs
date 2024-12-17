@@ -1,10 +1,19 @@
 //! Zone genealogy.
 
+use std::sync::Arc;
+
 use crate::Class;
+
+use super::Direction;
 
 /// A zone genealogy.
 #[derive(Default)]
-pub struct ZoneGenealogy;
+pub struct ZoneGenealogy {
+    zone_ids: Vec<Arc<str>>,
+    current_index: u32,
+    dir: Direction,
+    current_zone_id: Option<Arc<str>>,
+}
 
 impl Class for ZoneGenealogy {
     const CLASS_ID: u32 = 0x0311d000;
@@ -42,10 +51,10 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            let _zone_ids = r.list(|r| r.id())?;
-            let _current_index = r.u32()?;
-            let _dir = r.u32()?;
-            let _current_zone_id = r.id_or_null()?;
+            self.zone_ids = r.list(|r| r.id())?;
+            self.current_index = r.u32()?;
+            self.dir = r.enum_u32()?;
+            self.current_zone_id = r.id_or_null()?;
 
             Ok(())
         }

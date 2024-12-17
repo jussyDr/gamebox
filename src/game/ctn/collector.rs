@@ -102,10 +102,10 @@ mod read {
         }
 
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let width = r.u16()?;
-            let height = r.u16()?;
+            let icon_width = r.u16()?;
+            let icon_height = r.u16()?;
 
-            let is_webp = width & 0x8000 != 0 && height & 0x8000 != 0;
+            let is_webp = icon_width & 0x8000 != 0 && icon_height & 0x8000 != 0;
 
             self.icon = Some(if is_webp {
                 r.u16()?;
@@ -113,7 +113,8 @@ mod read {
 
                 Icon::WebP { data }
             } else {
-                let _icon_data = r.repeat((width as usize) + (height as usize), |r| r.u32())?;
+                let _icon_data =
+                    r.repeat((icon_width as usize) + (icon_height as usize), |r| r.u32())?;
 
                 Icon::Normal
             });

@@ -2,13 +2,13 @@
 
 use std::sync::Arc;
 
-use crate::{control::EffectSimi, Class, PackDesc};
+use crate::{control::EffectSimi, Class, FileRef};
 
 /// Image media block.
 #[derive(Default)]
 pub struct MediaBlockImage {
     effect: Arc<EffectSimi>,
-    image: PackDesc,
+    image: FileRef,
 }
 
 impl Class for MediaBlockImage {
@@ -22,7 +22,7 @@ impl MediaBlockImage {
     }
 
     /// Image.
-    pub const fn image(&self) -> &PackDesc {
+    pub const fn image(&self) -> &FileRef {
         &self.image
     }
 }
