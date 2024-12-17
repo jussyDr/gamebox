@@ -7,7 +7,8 @@ pub use id::{IdState, IdStateMut};
 pub use node::{ExternalNodeRef, NodeRef, NodeState, NodeStateMut};
 
 use std::{
-    io::{Read, Seek, SeekFrom},
+    cmp::min,
+    io::{self, Read, Seek, SeekFrom},
     path::PathBuf,
     slice,
 };
@@ -43,6 +44,34 @@ impl ReadNum for i32 {
 impl ReadNum for f32 {
     fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
         r.f32()
+    }
+}
+
+pub struct Take<R> {
+    inner: R,
+    limit: u64,
+}
+
+impl<R: Read> Read for Take<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if self.limit == 0 {
+            return Ok(0);
+        }
+
+        let max = min(buf.len() as u64, self.limit) as usize;
+        let n = self.inner.read(&mut buf[..max])?;
+
+        assert!(n as u64 <= self.limit, "number of read bytes exceeds limit");
+
+        self.limit -= n as u64;
+
+        Ok(n)
+    }
+}
+
+impl<R> Seek for Take<R> {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+        todo!()
     }
 }
 
@@ -322,15 +351,22 @@ impl<R: Read, I, N> Reader<R, I, N> {
 
     pub fn encapsulation(
         &mut self,
-        mut read_fn: impl FnMut(&mut Reader<&mut R, IdState, NullNodeState>) -> Result<(), Error>,
+        mut read_fn: impl FnMut(&mut Reader<Take<&mut R>, IdState, NullNodeState>) -> Result<(), Error>,
     ) -> Result<(), Error> {
         let size = self.u32()?;
 
-        let mut reader = Reader::new(&mut self.inner, IdState::new(), NullNodeState);
+        let mut reader = Reader::new(
+            Take {
+                inner: &mut self.inner,
+                limit: size as u64,
+            },
+            IdState::new(),
+            NullNodeState,
+        );
 
         read_fn(&mut reader)?;
 
-        // reader.expect_eof()?;
+        reader.expect_eof()?;
 
         Ok(())
     }

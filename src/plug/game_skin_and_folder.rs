@@ -18,10 +18,12 @@ impl Class for GameSkinAndFolder {
 }
 
 impl GameSkinAndFolder {
+    /// Skin.
     pub const fn skin(&self) -> &Arc<GameSkin> {
         &self.skin
     }
 
+    /// Folder.
     pub const fn folder(&self) -> &String {
         &self.folder
     }

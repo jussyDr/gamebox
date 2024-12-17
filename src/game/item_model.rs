@@ -242,7 +242,7 @@ mod read {
 
                                 self.ty = ItemModelType::ItemVariantList(Arc::new(model))
                             }
-                            _ => panic!("{class_id:08X?}"),
+                            _ => return Err(Error::new(ErrorKind::Unsupported("".into()))),
                         }
 
                         Ok(())

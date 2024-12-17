@@ -1,4 +1,10 @@
-#![warn(missing_docs, clippy::unwrap_used, clippy::print_stdout, clippy::todo)]
+#![warn(
+    missing_docs,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::print_stdout,
+    clippy::todo
+)]
 
 //! GameBox file reading and writing.
 //!
