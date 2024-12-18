@@ -1007,11 +1007,23 @@ mod read {
         }
 
         fn read_chunk_97<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let x = r.u32()?;
+
+            if x != 0 {
+                r.list(|r| r.u32())?;
+                r.byte_buf()?;
+                r.u32()?;
+            } else {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }

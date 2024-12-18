@@ -11,13 +11,35 @@ impl Class for Ghost {
 }
 
 mod read {
-    use crate::read::{BodyChunk, BodyChunks};
+    use std::io::Read;
+
+    use crate::read::{reader::Reader, BodyChunk, BodyChunks, Error};
 
     use super::Ghost;
 
     impl BodyChunks for Ghost {
-        fn body_chunks<R, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [].into_iter()
+        fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            [
+                BodyChunk::normal(6, Self::read_chunk_6),
+                BodyChunk::skippable(7, Self::read_chunk_7),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl Ghost {
+        fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let _is_replaying = r.bool()?;
+            let _size = r.u32()?;
+            let _data = r.byte_buf()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_7<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+
+            Ok(())
         }
     }
 }

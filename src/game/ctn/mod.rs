@@ -25,9 +25,12 @@ pub mod decoration_mood;
 pub mod ghost;
 pub mod media_block;
 pub mod media_block_camera_custom;
+pub mod media_block_camera_effect_shake;
 pub mod media_block_camera_game;
 pub mod media_block_camera_path;
 pub mod media_block_color_grading;
+pub mod media_block_dirty_lens;
+pub mod media_block_dof;
 pub mod media_block_entity;
 pub mod media_block_fog;
 pub mod media_block_fx_colors;
@@ -98,9 +101,13 @@ pub use media_block::MediaBlock;
 #[doc(inline)]
 pub use media_block_camera_custom::MediaBlockCameraCustom;
 #[doc(inline)]
+pub use media_block_camera_effect_shake::MediaBlockCameraEffectShake;
+#[doc(inline)]
 pub use media_block_camera_path::MediaBlockCameraPath;
 #[doc(inline)]
 pub use media_block_color_grading::MediaBlockColorGrading;
+#[doc(inline)]
+pub use media_block_dirty_lens::MediaBlockDirtyLens;
 #[doc(inline)]
 pub use media_block_fog::MediaBlockFog;
 #[doc(inline)]

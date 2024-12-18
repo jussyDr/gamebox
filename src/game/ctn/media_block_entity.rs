@@ -51,7 +51,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 11 {
+            if !matches!(version, 6 | 11) {
                 return Err(Error::chunk_version(version));
             }
 
@@ -62,14 +62,22 @@ mod read {
             r.bool()?;
             let _force_light = r.bool()?;
             let _force_hue = r.bool()?;
-            r.u32()?;
+
+            if version >= 11 {
+                r.u32()?;
+            }
+
             let _player_model_id = r.id_or_null()?;
             r.id_or_null()?;
             r.id_or_null()?;
             r.vec3::<f32>()?;
             let _skin_names = r.list(|r| r.pack_desc())?;
             let _has_badges = r.bool()?;
-            let _skin_options = r.string()?;
+
+            if version >= 11 {
+                let _skin_options = r.string()?;
+            }
+
             let _keys = r.list(|r| {
                 let _time = r.f32()?;
                 let _lights = r.u32()?;
@@ -77,14 +85,26 @@ mod read {
                 r.u32()?;
                 r.u32()?;
                 let _trail_intensity = r.f32()?;
-                let _self_illum_intensity = r.f32()?;
+
+                if version >= 9 {
+                    let _self_illum_intensity = r.f32()?;
+                }
 
                 Ok(())
             })?;
-            let _ghost_name = r.string()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
+
+            if version >= 7 {
+                let _ghost_name = r.string()?;
+            }
+
+            if version >= 8 {
+                r.u32()?;
+            }
+
+            if version >= 11 {
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }

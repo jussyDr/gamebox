@@ -1,12 +1,13 @@
 //! Media block.
 
 use super::{
-    media_block_camera_game::MediaBlockCameraGame, media_block_entity::MediaBlockEntity,
-    media_block_image::MediaBlockImage, media_block_interface::MediaBlockInterface,
-    media_block_text::MediaBlockText, media_block_trails::MediaBlockTrails, MediaBlockCameraCustom,
-    MediaBlockCameraPath, MediaBlockColorGrading, MediaBlockFog, MediaBlockFxColors,
-    MediaBlockManialink, MediaBlockSound, MediaBlockToneMapping, MediaBlockTransitionFade,
-    MediaBlockTriangles2D, MediaBlockTriangles3D,
+    media_block_camera_game::MediaBlockCameraGame, media_block_dof::MediaBlockDof,
+    media_block_entity::MediaBlockEntity, media_block_image::MediaBlockImage,
+    media_block_interface::MediaBlockInterface, media_block_text::MediaBlockText,
+    media_block_trails::MediaBlockTrails, MediaBlockCameraCustom, MediaBlockCameraEffectShake,
+    MediaBlockCameraPath, MediaBlockColorGrading, MediaBlockDirtyLens, MediaBlockFog,
+    MediaBlockFxColors, MediaBlockManialink, MediaBlockSound, MediaBlockToneMapping,
+    MediaBlockTransitionFade, MediaBlockTriangles2D, MediaBlockTriangles3D,
 };
 
 /// Media block.
@@ -23,6 +24,8 @@ pub enum MediaBlock {
     CameraPath(MediaBlockCameraPath),
     /// Custom camera.
     CameraCustom(MediaBlockCameraCustom),
+    /// Camera effect shake.
+    CameraEffectShake(MediaBlockCameraEffectShake),
     /// Image.
     Image(MediaBlockImage),
     /// Sound.
@@ -33,10 +36,14 @@ pub enum MediaBlock {
     Trails(MediaBlockTrails),
     /// Transition fade.
     TransitionFade(MediaBlockTransitionFade),
+    /// DOF.
+    Dof(MediaBlockDof),
     /// Tone mapping.
     ToneMapping(MediaBlockToneMapping),
     /// Manialink.
     Manialink(MediaBlockManialink),
+    /// Dirty lens.
+    DirtyLens(MediaBlockDirtyLens),
     /// Color grading.
     ColorGrading(MediaBlockColorGrading),
     /// Interface
@@ -53,13 +60,14 @@ mod read {
     use crate::{
         game::ctn::{
             media_block_camera_game::MediaBlockCameraGame,
-            media_block_color_grading::MediaBlockColorGrading,
+            media_block_color_grading::MediaBlockColorGrading, media_block_dof::MediaBlockDof,
             media_block_entity::MediaBlockEntity, media_block_image::MediaBlockImage,
             media_block_interface::MediaBlockInterface,
             media_block_mania_link::MediaBlockManialink, media_block_text::MediaBlockText,
-            media_block_trails::MediaBlockTrails, MediaBlockCameraCustom, MediaBlockCameraPath,
-            MediaBlockFog, MediaBlockFxColors, MediaBlockSound, MediaBlockToneMapping,
-            MediaBlockTransitionFade, MediaBlockTriangles2D, MediaBlockTriangles3D,
+            media_block_trails::MediaBlockTrails, MediaBlockCameraCustom,
+            MediaBlockCameraEffectShake, MediaBlockCameraPath, MediaBlockDirtyLens, MediaBlockFog,
+            MediaBlockFxColors, MediaBlockSound, MediaBlockToneMapping, MediaBlockTransitionFade,
+            MediaBlockTriangles2D, MediaBlockTriangles3D,
         },
         read::{
             read_body_chunks,
@@ -112,6 +120,12 @@ mod read {
 
                     Ok(Self::CameraCustom(media_block_camera_custom))
                 }
+                0x030a4000 => {
+                    let mut camera_effect_shake = MediaBlockCameraEffectShake::default();
+                    read_body_chunks(&mut camera_effect_shake, r)?;
+
+                    Ok(Self::CameraEffectShake(camera_effect_shake))
+                }
                 0x030a5000 => {
                     let mut image = MediaBlockImage::default();
                     read_body_chunks(&mut image, r)?;
@@ -142,6 +156,12 @@ mod read {
 
                     Ok(Self::TransitionFade(media_block_transition_fade))
                 }
+                0x03126000 => {
+                    let mut dof = MediaBlockDof::default();
+                    read_body_chunks(&mut dof, r)?;
+
+                    Ok(Self::Dof(dof))
+                }
                 0x03127000 => {
                     let mut tone_mapping = MediaBlockToneMapping::default();
                     read_body_chunks(&mut tone_mapping, r)?;
@@ -153,6 +173,12 @@ mod read {
                     read_body_chunks(&mut media_block_manialink, r)?;
 
                     Ok(Self::Manialink(media_block_manialink))
+                }
+                0x03165000 => {
+                    let mut dirty_lens = MediaBlockDirtyLens::default();
+                    read_body_chunks(&mut dirty_lens, r)?;
+
+                    Ok(Self::DirtyLens(dirty_lens))
                 }
                 0x03186000 => {
                     let mut color_grading = MediaBlockColorGrading::default();

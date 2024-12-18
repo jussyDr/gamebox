@@ -255,6 +255,11 @@ fn read_map_deep_dip_2r1() {
 }
 
 #[test]
+fn read_map_midnight_metropolis() {
+    read_file::<Challenge>("tests/files/map/MIDNIGHT METROPOLIS.Map.Gbx").unwrap();
+}
+
+#[test]
 fn read_map_mindor() {
     read_file::<Challenge>("tests/files/map/Mindor.Map.Gbx").unwrap();
 }
