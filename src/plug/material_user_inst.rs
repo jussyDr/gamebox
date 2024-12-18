@@ -1,13 +1,102 @@
 //! Material user inst.
 
+use std::sync::Arc;
+
 use crate::Class;
 
-/// A material user inst.
-#[derive(PartialEq, Default, Debug)]
-pub struct MaterialUserInst;
+/// User defined material instance.
+#[derive(Default)]
+pub struct MaterialUserInst {
+    name: Option<Arc<str>>,
+    physic_id: u8,
+    effect: Option<Effect>,
+    link: String,
+}
 
 impl Class for MaterialUserInst {
     const CLASS_ID: u32 = 0x090fd000;
+}
+
+impl MaterialUserInst {
+    /// Effect.
+    pub const fn effect(&self) -> Option<Effect> {
+        self.effect
+    }
+}
+
+/// Effect.
+#[derive(Clone, Copy)]
+pub enum Effect {
+    /// Turbo.
+    Turbo,
+    /// Super turbo.
+    Turbo2,
+    /// Turbo roulette.
+    TurboRoulette,
+    /// Free wheeling.
+    FreeWheeling,
+    /// No grip.
+    NoGrip,
+    /// No steering.
+    NoSteering,
+    /// Force acceleration.
+    ForceAcceleration,
+    /// Reset.
+    Reset,
+    /// Slow motion.
+    SlowMotion,
+    /// Bumper.
+    Bumper,
+    /// Super bumper.
+    Bumper2,
+    /// Fragile.
+    Fragile,
+    /// No brakes.
+    NoBrakes,
+    /// Cruise.
+    Cruise,
+    /// Reactor boost.
+    ReactorBoost,
+    /// Super reactor boost.
+    ReactorBoost2,
+    /// Stadium car.
+    VehicleReset,
+    /// Snow car.
+    VehicleCarSnow,
+    /// Rally car.
+    VehicleCarRally,
+    /// Desert car.
+    VehicleCarDesert,
+}
+
+impl TryFrom<u8> for Effect {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, ()> {
+        match value {
+            1 => Ok(Self::Turbo),
+            2 => Ok(Self::Turbo2),
+            3 => Ok(Self::TurboRoulette),
+            4 => Ok(Self::FreeWheeling),
+            5 => Ok(Self::NoGrip),
+            6 => Ok(Self::NoSteering),
+            7 => Ok(Self::ForceAcceleration),
+            8 => Ok(Self::Reset),
+            9 => Ok(Self::SlowMotion),
+            10 => Ok(Self::Bumper),
+            11 => Ok(Self::Bumper2),
+            12 => Ok(Self::Fragile),
+            13 => Ok(Self::NoBrakes),
+            14 => Ok(Self::Cruise),
+            15 => Ok(Self::ReactorBoost),
+            16 => Ok(Self::ReactorBoost2),
+            17 => Ok(Self::VehicleReset),
+            18 => Ok(Self::VehicleCarSnow),
+            19 => Ok(Self::VehicleCarRally),
+            20 => Ok(Self::VehicleCarDesert),
+            _ => Err(()),
+        }
+    }
 }
 
 mod read {
@@ -19,7 +108,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MaterialUserInst;
+    use super::{Effect, MaterialUserInst};
 
     impl ReadBody for MaterialUserInst {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -54,16 +143,22 @@ mod read {
             }
 
             let is_using_game_material = if version >= 11 { r.bool8()? } else { false };
-            let _material_name = r.id_or_null()?;
+            self.name = r.id_or_null()?;
             let _model = r.id_or_null()?;
             let _base_texture = r.string()?;
-            let _surface_physic_id = r.u8()?;
-            let _surface_gameplay_id = r.u8()?;
+            self.physic_id = r.u8()?; // surface physic id (material id).
+            let effect = r.u8()?;
+
+            if effect == 0 {
+                self.effect = None;
+            } else {
+                self.effect = Some(Effect::try_from(effect).unwrap());
+            }
 
             if version >= 11 && !is_using_game_material {
-                let _link = r.id()?;
+                self.link = r.id()?.to_string();
             } else {
-                let _link = r.string()?;
+                self.link = r.string()?;
             }
 
             let _csts = r.list(|r| {

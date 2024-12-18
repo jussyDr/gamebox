@@ -2,12 +2,16 @@
 
 use std::sync::Arc;
 
-use crate::{plug::StaticObjectModel, Class};
+use crate::{
+    plug::{StaticObjectModel, Surface},
+    Class, Iso4,
+};
 
 /// A common item entity model.
 #[derive(Default)]
 pub struct CommonItemEntityModel {
     model: Arc<StaticObjectModel>,
+    checkpoint: Option<Checkpoint>,
 }
 
 impl Class for CommonItemEntityModel {
@@ -19,13 +23,36 @@ impl CommonItemEntityModel {
     pub const fn model(&self) -> &Arc<StaticObjectModel> {
         &self.model
     }
+
+    /// Checkpoint.
+    pub const fn checkpoint(&self) -> Option<&Checkpoint> {
+        self.checkpoint.as_ref()
+    }
+}
+
+/// Checkpoint.
+pub struct Checkpoint {
+    trigger: Arc<Surface>,
+    spawn_position: Iso4,
+}
+
+impl Checkpoint {
+    /// Trigger.
+    pub const fn trigger(&self) -> &Arc<Surface> {
+        &self.trigger
+    }
+
+    /// Spawn position.
+    pub const fn spawn_position(&self) -> &Iso4 {
+        &self.spawn_position
+    }
 }
 
 mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        plug::StaticObjectModel,
+        plug::{StaticObjectModel, Surface},
         read::{
             read_body_chunks,
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -33,7 +60,7 @@ mod read {
         },
     };
 
-    use super::CommonItemEntityModel;
+    use super::{Checkpoint, CommonItemEntityModel};
 
     impl ReadBody for CommonItemEntityModel {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -63,11 +90,16 @@ mod read {
             }
 
             self.model = r.internal_node_ref::<StaticObjectModel>()?;
-            let _trigger_shape = r.u32()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
+            let trigger = r.internal_node_ref_or_null::<Surface>()?;
+            let spawn_position = r.iso4()?;
+
+            if let Some(trigger) = trigger {
+                self.checkpoint = Some(Checkpoint {
+                    trigger,
+                    spawn_position,
+                })
+            }
+
             r.u32()?;
             r.u32()?;
 
@@ -80,10 +112,7 @@ mod read {
             r.string()?;
             r.string()?;
             r.string()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
+            r.iso4()?;
             r.u32()?;
 
             if version >= 5 {

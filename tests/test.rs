@@ -179,6 +179,11 @@ fn read_ed_vertical_clip_gate_expandable_checkpoint_left_vfc() {
 }
 
 #[test]
+fn read_item_9_castle_tech_checkpoint() {
+    read_file::<ItemModel>("tests/files/item/9_CastleTechCheckpoint.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_item_blue() {
     read_file::<ItemModel>("tests/files/item/blue.Item.Gbx").unwrap();
 }

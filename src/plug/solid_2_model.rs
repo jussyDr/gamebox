@@ -59,7 +59,7 @@ mod read {
     use crate::{
         plug::{
             light::Light, material::Material, visual_indexed_triangles::VisualIndexedTriangles,
-            MaterialUserInst,
+            LightUserModel, MaterialUserInst, Skel,
         },
         read::{
             read_body_chunks,
@@ -140,8 +140,7 @@ mod read {
                     Ok(NodeRef::External(material))
                 })?;
             }
-
-            let _skel = r.u32()?;
+            let _skel = r.internal_node_ref_or_null::<Skel>()?;
             r.list(|r| r.f32())?;
             let _vis_cst_type = r.u32()?;
 
@@ -216,8 +215,13 @@ mod read {
 
                 Ok(())
             })?;
-            let _light_user_models: Vec<()> = r.list(|_| Ok(()))?;
-            let _light_insts: Vec<()> = r.list(|_| Ok(()))?;
+            let _light_user_models = r.list(|r| r.internal_node_ref::<LightUserModel>())?;
+            let _light_insts = r.list(|r| {
+                let _model_index = r.u32()?;
+                let _socket_index = r.u32()?; // skel
+
+                Ok(())
+            })?;
             let _damage_zone = r.u32()?;
             let _flags = r.u32()?;
             r.u32()?;

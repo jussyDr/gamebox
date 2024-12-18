@@ -128,6 +128,7 @@ pub struct Quat {
 }
 
 /// Iso.
+#[derive(Default)]
 pub struct Iso4 {
     /// X.
     pub x: Vec4<f32>,

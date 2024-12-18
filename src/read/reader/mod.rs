@@ -15,7 +15,7 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{FileRef, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
+use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
 
 use super::{Error, ErrorKind};
 
@@ -225,6 +225,15 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let z = T::read(self)?;
 
         Ok(Vec3 { x, y, z })
+    }
+
+    pub fn iso4(&mut self) -> Result<Iso4, Error> {
+        self.vec3::<f32>()?;
+        self.vec3::<f32>()?;
+        self.vec3::<f32>()?;
+        self.vec3::<f32>()?;
+
+        Ok(Iso4::default())
     }
 
     pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {

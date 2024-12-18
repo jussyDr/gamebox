@@ -59,6 +59,7 @@ impl NodeState {
 }
 
 /// Reference to a node.
+#[derive(Debug)]
 pub enum NodeRef<T: ?Sized> {
     Internal { node: Arc<T> },
     External(ExternalNodeRef),
@@ -97,7 +98,7 @@ impl<T: Default> Default for NodeRef<T> {
 }
 
 /// Reference to a node in an external file.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ExternalNodeRef {
     pub(crate) path: Arc<Path>,
     pub(crate) ancestor_level: u8,

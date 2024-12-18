@@ -22,6 +22,7 @@ pub mod media_clip_list;
 pub mod placement_patch;
 pub mod prefab;
 pub mod road_chunk;
+pub mod skel;
 pub mod solid;
 pub mod solid_2_model;
 pub mod static_object_model;
@@ -68,6 +69,8 @@ pub use placement_patch::PlacementPatch;
 pub use prefab::Prefab;
 #[doc(inline)]
 pub use road_chunk::RoadChunk;
+#[doc(inline)]
+pub use skel::Skel;
 #[doc(inline)]
 pub use solid::Solid;
 #[doc(inline)]

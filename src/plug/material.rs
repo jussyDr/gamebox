@@ -26,13 +26,10 @@ impl Material {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        plug::material_custom::MaterialCustom,
-        read::{
-            read_body_chunks, readable,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody, Readable,
-        },
+    use crate::read::{
+        read_body_chunks, readable,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody, Readable,
     };
 
     use self::readable::{HeaderChunk, HeaderChunks};
