@@ -3,13 +3,15 @@
 pub(crate) mod readable;
 pub(crate) mod reader;
 
+mod error;
+
+pub use error::{Error, ErrorKind, TraceEntry};
+
 pub(crate) use readable::{read_body_chunks, BodyChunk, BodyChunks, ReadBody};
 
 use std::{
-    collections::VecDeque,
-    fmt::{self, Debug, Display, Formatter},
     fs::File,
-    io::{self, BufReader, Cursor, Read, Seek},
+    io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -22,92 +24,26 @@ use crate::{FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
 /// A readable class.
 pub trait Readable: readable::Sealed {}
 
-/// Error while reading.
-#[derive(Debug)]
-pub struct Error {
-    kind: ErrorKind,
-    trace: VecDeque<TraceEntry>,
-}
-
-impl Error {
-    pub(crate) const fn new(kind: ErrorKind) -> Self {
-        Self {
-            kind,
-            trace: VecDeque::new(),
-        }
-    }
-
-    pub(crate) fn io(io_error: io::Error) -> Self {
-        let kind = match io_error.kind() {
-            io::ErrorKind::UnexpectedEof => ErrorKind::Format("unexpected EOF".into()),
-            _ => ErrorKind::Io(io_error),
-        };
-
-        Self {
-            kind,
-            trace: VecDeque::new(),
-        }
-    }
-
-    pub(crate) fn version(name: &str, version: u32) -> Self {
-        Self {
-            kind: ErrorKind::Unsupported(format!("{name} version: {version}")),
-            trace: VecDeque::new(),
-        }
-    }
-
-    pub(crate) fn chunk_version(version: u32) -> Self {
-        Self::version("chunk", version)
-    }
-
-    pub(crate) fn enum_variant(name: &str, value: u32) -> Self {
-        Self {
-            kind: ErrorKind::Unsupported(format!("{name} variant: {value}")),
-            trace: VecDeque::new(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum ErrorKind {
-    Io(io::Error),
-    Unsupported(String),
-    Format(String),
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str("Error")
-    }
-}
-
-impl std::error::Error for Error {}
-
-pub struct TraceEntry {
-    class_id: u32,
-    chunk_num: Option<u16>,
-}
-
-impl Debug for TraceEntry {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "TraceEntry {{ class_id: 0x{:08x} }}", self.class_id)
-    }
-}
-
 /// Read settings.
 pub struct Settings {
+    skip_heavy_header_chunks: bool,
     skip_body: bool,
 }
 
 impl Settings {
     /// New.
     pub const fn new() -> Self {
-        Self { skip_body: false }
+        Self {
+            skip_heavy_header_chunks: false,
+            skip_body: false,
+        }
     }
 
     /// Read body.
-    pub const fn skip_body(self, skip_body: bool) -> Self {
-        Self { skip_body }
+    pub const fn skip_body(mut self, skip_body: bool) -> Self {
+        self.skip_body = skip_body;
+
+        self
     }
 
     /// Read a node from the given `reader`.
@@ -176,7 +112,7 @@ impl Settings {
                 Ok((chunk_id, chunk_size))
             })?;
 
-            let rem = read_header_chunks(&mut node, &mut r, &header_chunks)?;
+            let rem = self.read_header_chunks(&mut node, &mut r, &header_chunks)?;
 
             if let Some((chunk_id, _)) = rem.first() {
                 return Err(Error::new(ErrorKind::Unsupported(format!(
@@ -294,6 +230,53 @@ impl Settings {
 
         self.read(reader)
     }
+
+    fn read_header_chunks<'a, T: HeaderChunks, N>(
+        &self,
+        node: &mut T,
+        r: &mut Reader<impl Read + Seek, impl IdStateMut, N>,
+        header_chunks: &'a [(u32, u32)],
+    ) -> Result<&'a [(u32, u32)], Error> {
+        let mut header_chunks = match node.parent() {
+            Some(parent) => self.read_header_chunks(parent, r, header_chunks)?,
+            None => header_chunks,
+        };
+
+        let mut h = T::header_chunks();
+
+        while let Some((chunk_id, chunk_size)) = header_chunks.first() {
+            let is_heavy = chunk_size & HEAVY_CHUNK_MARKER_BIT != 0;
+            let chunk_size = chunk_size & 0x7fffffff;
+
+            let class_id = chunk_id & 0xfffff000;
+
+            if class_id != T::CLASS_ID {
+                break;
+            }
+
+            let chunk_num = (chunk_id & 0x00000fff) as u16;
+
+            // println!("{:08X?}, {}", class_id, chunk_num);
+
+            let chunk = h
+                .find(|header_chunk| header_chunk.num == chunk_num)
+                .ok_or_else(|| {
+                    Error::new(ErrorKind::Unsupported(format!(
+                        "header chunk: {chunk_id:08X?}"
+                    )))
+                })?;
+
+            if self.skip_heavy_header_chunks && is_heavy {
+                r.skip(chunk_size as u64)?;
+            } else {
+                (chunk.read_fn)(node, r)?;
+            }
+
+            header_chunks = &header_chunks[1..];
+        }
+
+        Ok(header_chunks)
+    }
 }
 
 impl Default for Settings {
@@ -332,48 +315,6 @@ fn read_folders_inner<R: Read, I, N>(
     }
 
     Ok(())
-}
-
-fn read_header_chunks<'a, T: HeaderChunks, N>(
-    node: &mut T,
-    r: &mut Reader<impl Read + Seek, impl IdStateMut, N>,
-    header_chunks: &'a [(u32, u32)],
-) -> Result<&'a [(u32, u32)], Error> {
-    let mut header_chunks = match node.parent() {
-        Some(parent) => read_header_chunks(parent, r, header_chunks)?,
-        None => header_chunks,
-    };
-
-    let mut h = T::header_chunks();
-
-    while let Some((chunk_id, chunk_size)) = header_chunks.first() {
-        let is_heavy = chunk_size & HEAVY_CHUNK_MARKER_BIT != 0;
-        let chunk_size = chunk_size & 0x7fffffff;
-
-        let class_id = chunk_id & 0xfffff000;
-
-        if class_id != T::CLASS_ID {
-            break;
-        }
-
-        let chunk_num = (chunk_id & 0x00000fff) as u16;
-
-        // println!("{:08X?}, {}", class_id, chunk_num);
-
-        let chunk = h
-            .find(|header_chunk| header_chunk.num == chunk_num)
-            .ok_or_else(|| {
-                Error::new(ErrorKind::Unsupported(format!(
-                    "header chunk: {chunk_id:08X?}"
-                )))
-            })?;
-
-        (chunk.read_fn)(node, r)?;
-
-        header_chunks = &header_chunks[1..];
-    }
-
-    Ok(header_chunks)
 }
 
 /// Read a node from the given `reader`.

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{script::TraitsMetadata, Class, FileRef, Vec3};
+use crate::{script::TraitsMetadata, Class, FileRef, Vec2, Vec3};
 
 use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
@@ -19,7 +19,11 @@ pub struct Challenge {
     id: Arc<str>,
     author_id: Arc<str>,
     name: String,
+    ty: ChallengeType,
+    password: String,
     deco_id: Arc<str>,
+    coord_origin: Vec2<f32>,
+    coord_target: Vec2<f32>,
     parameters: Arc<ChallengeParameters>,
     texture_mod: Option<FileRef>,
     size: Vec3<u32>,
@@ -205,6 +209,47 @@ impl TryFrom<u32> for EditorMode {
             1 => Ok(Self::Simple),
             2 => Ok(Self::HasGhostBlocks),
             4 => Ok(Self::Gamepad),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+enum ChallengeType {
+    #[default]
+    EndMarker,
+    Campaign,
+    Puzzle,
+    Retro,
+    TimeAttack,
+    Rounds,
+    InProgress,
+    Campaign_7,
+    Multi,
+    Solo,
+    Site,
+    SoloNadeo,
+    MultiNadeo,
+}
+
+impl TryFrom<u8> for ChallengeType {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, ()> {
+        match value {
+            0 => Ok(Self::EndMarker),
+            1 => Ok(Self::Campaign),
+            2 => Ok(Self::Puzzle),
+            3 => Ok(Self::Retro),
+            4 => Ok(Self::TimeAttack),
+            5 => Ok(Self::Rounds),
+            6 => Ok(Self::InProgress),
+            7 => Ok(Self::Campaign_7),
+            8 => Ok(Self::Multi),
+            9 => Ok(Self::Solo),
+            10 => Ok(Self::Site),
+            11 => Ok(Self::SoloNadeo),
+            12 => Ok(Self::MultiNadeo),
             _ => Err(()),
         }
     }
@@ -399,14 +444,14 @@ mod read {
             r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
-            let _map_kind = r.u8()?;
+            self.ty = r.enum_u8()?;
             r.u32()?;
-            let _password = r.string()?;
+            self.password = r.string()?;
             self.deco_id = r.id()?;
             let _deco_collection = r.id_or_null()?;
             let _deco_author = r.id()?;
-            let _map_coord_origin = r.vec2::<f32>()?;
-            let _map_coord_target = r.vec2::<f32>()?;
+            self.coord_origin = r.vec2()?;
+            self.coord_target = r.vec2()?;
             let _pack_mask = r.byte_array::<16>()?;
             let _map_type = r.string()?;
             let _map_style = r.string()?;
@@ -525,8 +570,8 @@ mod read {
         }
 
         fn read_chunk_37<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _map_coord_origin = r.vec2::<f32>()?;
-            let _map_coord_target = r.vec2::<f32>()?;
+            self.coord_origin = r.vec2()?;
+            self.coord_target = r.vec2()?;
 
             Ok(())
         }
@@ -1203,9 +1248,12 @@ mod read {
 }
 
 mod write {
-    use std::io::{Error, Write};
+    use std::{
+        io::{Error, Write},
+        sync::Arc,
+    };
 
-    use crate::write::{writable, BodyChunk, BodyChunks, Writable, Writer};
+    use crate::write::{writable, writer::IdStateMut, BodyChunk, BodyChunks, Writable, Writer};
 
     use self::writable::{HeaderChunk, HeaderChunks};
 
@@ -1216,8 +1264,13 @@ mod write {
     impl writable::Sealed for Challenge {}
 
     impl HeaderChunks for Challenge {
-        fn header_chunks<W: Write, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
-            [HeaderChunk::normal(2, Self::write_chunk_2)].into_iter()
+        fn header_chunks<W: Write, I: IdStateMut, N>(
+        ) -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
+            [
+                HeaderChunk::normal(2, |s, w| Self::write_chunk_2(s, w)),
+                HeaderChunk::normal(3, |s, w| Self::write_chunk_3(s, w)),
+            ]
+            .into_iter()
         }
     }
 
@@ -1264,6 +1317,34 @@ mod write {
             } else {
                 w.u32(3)?;
             }
+
+            Ok(())
+        }
+
+        fn write_chunk_3<N>(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, N>,
+        ) -> Result<(), Error> {
+            w.u8(11)?;
+            w.id(&self.id)?;
+            w.u32(0x1a)?;
+            w.id(&self.author_id)?;
+            w.string(&self.name)?;
+            w.u8(self.ty as u8)?;
+            w.u32(0)?;
+            w.string(&self.password)?;
+            w.id(&self.deco_id)?;
+            w.u32(0x1a)?;
+            w.id(&Arc::from("Nadeo"))?;
+            w.vec2(self.coord_origin)?;
+            w.vec2(self.coord_target)?;
+
+            // let _pack_mask = r.byte_array::<16>()?;
+            // let _map_type = r.string()?;
+            // let _map_style = r.string()?;
+            // let _lightmap_cache_uid = r.u64()?;
+            // let _lightmap_version = r.u8()?;
+            // let _title_id = r.id()?;
 
             Ok(())
         }

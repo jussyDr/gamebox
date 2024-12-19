@@ -9,6 +9,7 @@ pub use node::{ExternalNodeRef, NodeRef, NodeState, NodeStateMut};
 use std::{
     cmp::min,
     io::{self, Read, Seek, SeekFrom},
+    mem::MaybeUninit,
     path::PathBuf,
     slice,
 };
@@ -19,31 +20,81 @@ use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
 
 use super::{Error, ErrorKind};
 
-pub trait ReadNum: Sized {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error>;
+trait FromLe {
+    fn from_le(value: Self) -> Self;
 }
 
-impl ReadNum for u8 {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        r.u8()
+impl FromLe for u8 {
+    fn from_le(value: Self) -> Self {
+        value
     }
 }
 
-impl ReadNum for u32 {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        r.u32()
+impl FromLe for u32 {
+    fn from_le(value: Self) -> Self {
+        Self::from_le(value)
     }
 }
 
-impl ReadNum for i32 {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        r.i32()
+impl FromLe for i32 {
+    fn from_le(value: Self) -> Self {
+        Self::from_le(value)
     }
 }
 
-impl ReadNum for f32 {
-    fn read<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Self, Error> {
-        r.f32()
+impl FromLe for f32 {
+    fn from_le(value: Self) -> Self {
+        Self::from_bits(u32::from_le(value.to_bits()))
+    }
+}
+
+impl<T: FromLe> FromLe for Vec2<T> {
+    fn from_le(mut value: Self) -> Self {
+        value.x = T::from_le(value.x);
+        value.y = T::from_le(value.y);
+
+        value
+    }
+}
+
+impl<T: FromLe> FromLe for Vec3<T> {
+    fn from_le(mut value: Self) -> Self {
+        value.x = T::from_le(value.x);
+        value.y = T::from_le(value.y);
+        value.z = T::from_le(value.z);
+
+        value
+    }
+}
+
+impl<T: FromLe> FromLe for Rgb<T> {
+    fn from_le(mut value: Self) -> Self {
+        value.r = T::from_le(value.r);
+        value.g = T::from_le(value.g);
+        value.b = T::from_le(value.b);
+
+        value
+    }
+}
+
+impl FromLe for PitchYawRoll {
+    fn from_le(mut value: Self) -> Self {
+        value.pitch = f32::from_le(value.pitch);
+        value.yaw = f32::from_le(value.yaw);
+        value.roll = f32::from_le(value.roll);
+
+        value
+    }
+}
+
+impl FromLe for Quat {
+    fn from_le(mut value: Self) -> Self {
+        value.x = f32::from_le(value.x);
+        value.y = f32::from_le(value.y);
+        value.z = f32::from_le(value.z);
+        value.w = f32::from_le(value.w);
+
+        value
     }
 }
 
@@ -70,7 +121,7 @@ impl<R: Read> Read for Take<R> {
 }
 
 impl<R> Seek for Take<R> {
-    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+    fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
         todo!()
     }
 }
@@ -210,21 +261,74 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    /// Read a 2-dimensional vector of type `T`.
-    pub fn vec2<T: ReadNum>(&mut self) -> Result<Vec2<T>, Error> {
-        let x = T::read(self)?;
-        let y = T::read(self)?;
+    pub fn vec2<T: FromLe>(&mut self) -> Result<Vec2<T>, Error> {
+        let mut vec = MaybeUninit::<Vec2<T>>::uninit();
 
-        Ok(Vec2 { x, y })
+        let buf =
+            unsafe { slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, size_of::<Vec2<T>>()) };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let vec = unsafe { vec.assume_init() };
+
+        Ok(Vec2::from_le(vec))
     }
 
-    /// Read a 3-dimensional vector of type `T`.
-    pub fn vec3<T: ReadNum>(&mut self) -> Result<Vec3<T>, Error> {
-        let x = T::read(self)?;
-        let y = T::read(self)?;
-        let z = T::read(self)?;
+    pub fn vec3<T: FromLe>(&mut self) -> Result<Vec3<T>, Error> {
+        let mut vec = MaybeUninit::<Vec3<T>>::uninit();
 
-        Ok(Vec3 { x, y, z })
+        let buf =
+            unsafe { slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, size_of::<Vec3<T>>()) };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let vec = unsafe { vec.assume_init() };
+
+        Ok(Vec3::from_le(vec))
+    }
+
+    pub fn rgb<T: FromLe>(&mut self) -> Result<Rgb<T>, Error> {
+        let mut rgb = MaybeUninit::<Rgb<T>>::uninit();
+
+        let buf =
+            unsafe { slice::from_raw_parts_mut(rgb.as_mut_ptr() as *mut u8, size_of::<Rgb<T>>()) };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let rgb = unsafe { rgb.assume_init() };
+
+        Ok(Rgb::from_le(rgb))
+    }
+
+    pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
+        let mut pitch_yaw_roll = MaybeUninit::<PitchYawRoll>::uninit();
+
+        let buf = unsafe {
+            slice::from_raw_parts_mut(
+                pitch_yaw_roll.as_mut_ptr() as *mut u8,
+                size_of::<PitchYawRoll>(),
+            )
+        };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let pitch_yaw_roll = unsafe { pitch_yaw_roll.assume_init() };
+
+        Ok(PitchYawRoll::from_le(pitch_yaw_roll))
+    }
+
+    /// Read a quaternion.
+    pub fn quat(&mut self) -> Result<Quat, Error> {
+        let mut quat = MaybeUninit::<Quat>::uninit();
+
+        let buf =
+            unsafe { slice::from_raw_parts_mut(quat.as_mut_ptr() as *mut u8, size_of::<Quat>()) };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let quat = unsafe { quat.assume_init() };
+
+        Ok(Quat::from_le(quat))
     }
 
     pub fn iso4(&mut self) -> Result<Iso4, Error> {
@@ -234,32 +338,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.vec3::<f32>()?;
 
         Ok(Iso4::default())
-    }
-
-    pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
-        let pitch = self.f32()?;
-        let yaw = self.f32()?;
-        let roll = self.f32()?;
-
-        Ok(PitchYawRoll { pitch, yaw, roll })
-    }
-
-    pub fn rgb<T: ReadNum>(&mut self) -> Result<Rgb<T>, Error> {
-        let r = T::read(self)?;
-        let g = T::read(self)?;
-        let b = T::read(self)?;
-
-        Ok(Rgb { r, g, b })
-    }
-
-    /// Read a quaternion.
-    pub fn quat(&mut self) -> Result<Quat, Error> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
-        let w = self.f32()?;
-
-        Ok(Quat { x, y, z, w })
     }
 
     pub fn box3d(&mut self) -> Result<u8, Error> {

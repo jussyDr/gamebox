@@ -3,7 +3,8 @@
     clippy::unwrap_used,
     clippy::panic,
     clippy::print_stdout,
-    clippy::todo
+    clippy::todo,
+    clippy::undocumented_unsafe_blocks
 )]
 
 //! GameBox file reading and writing.
@@ -114,30 +115,6 @@ impl<T: Copy> Vec4<T> {
     }
 }
 
-/// Quaternion.
-#[derive(Clone, Copy)]
-pub struct Quat {
-    /// X component.
-    pub x: f32,
-    /// Y component.
-    pub y: f32,
-    /// Z component.
-    pub z: f32,
-    /// W component.
-    pub w: f32,
-}
-
-/// Iso.
-#[derive(Default)]
-pub struct Iso4 {
-    /// X.
-    pub x: Vec4<f32>,
-    /// Y.
-    pub y: Vec4<f32>,
-    /// Z.
-    pub z: Vec4<f32>,
-}
-
 /// Texture coordinate.
 #[derive(Clone, Copy, Default)]
 #[repr(C)]
@@ -156,17 +133,6 @@ impl Texcoord {
             v: array[1],
         }
     }
-}
-
-/// Rotation represented as pitch, yaw, and roll angles.
-#[derive(Clone, Copy, Default)]
-pub struct PitchYawRoll {
-    /// Pitch angle.
-    pub pitch: f32,
-    /// Yaw angle.
-    pub yaw: f32,
-    /// Roll angle.
-    pub roll: f32,
 }
 
 /// Color represented by red, green, and blue components.
@@ -205,6 +171,43 @@ impl<T: Copy> Rgba<T> {
             a: array[3],
         }
     }
+}
+
+/// Rotation represented as pitch, yaw, and roll angles.
+#[derive(Clone, Copy, Default)]
+#[repr(C)]
+pub struct PitchYawRoll {
+    /// Pitch angle.
+    pub pitch: f32,
+    /// Yaw angle.
+    pub yaw: f32,
+    /// Roll angle.
+    pub roll: f32,
+}
+
+/// Quaternion.
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct Quat {
+    /// X component.
+    pub x: f32,
+    /// Y component.
+    pub y: f32,
+    /// Z component.
+    pub z: f32,
+    /// W component.
+    pub w: f32,
+}
+
+/// Iso.
+#[derive(Default)]
+pub struct Iso4 {
+    /// X.
+    pub x: Vec4<f32>,
+    /// Y.
+    pub y: Vec4<f32>,
+    /// Z.
+    pub z: Vec4<f32>,
 }
 
 /// Reference to a file.

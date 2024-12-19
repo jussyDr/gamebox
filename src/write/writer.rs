@@ -4,14 +4,31 @@ use std::{
     any::Any,
     hash::{Hash, Hasher},
     io::{Error, Seek, Write},
+    slice,
     sync::Arc,
 };
 
 use indexmap::{indexset, IndexSet};
 
-use crate::{Class, ID_MARKER_BIT};
+use crate::{Class, Vec2, ID_MARKER_BIT};
 
 use super::{write_body, BodyChunks};
+
+trait ToLe {
+    fn to_le(self) -> Self;
+}
+
+impl ToLe for u32 {
+    fn to_le(self) -> Self {
+        self.to_le()
+    }
+}
+
+impl ToLe for f32 {
+    fn to_le(self) -> Self {
+        Self::from_bits(self.to_bits().to_le())
+    }
+}
 
 /// Identifier state.
 pub struct IdState {
@@ -28,8 +45,26 @@ impl IdState {
     }
 }
 
+impl Default for IdState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub trait IdStateMut {
     fn get_mut(&mut self) -> &mut IdState;
+}
+
+impl IdStateMut for IdState {
+    fn get_mut(&mut self) -> &mut IdState {
+        self
+    }
+}
+
+impl<T: IdStateMut> IdStateMut for &mut T {
+    fn get_mut(&mut self) -> &mut IdState {
+        (**self).get_mut()
+    }
 }
 
 struct InternalNode {
@@ -129,6 +164,19 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.u32(if value { 1 } else { 0 })
     }
 
+    pub fn vec2<T: ToLe>(&mut self, mut vec: Vec2<T>) -> Result<(), Error> {
+        vec.x = vec.x.to_le();
+        vec.y = vec.y.to_le();
+
+        let bytes = unsafe {
+            slice::from_raw_parts(&vec as *const Vec2<T> as *const u8, size_of::<Vec2<T>>())
+        };
+
+        self.bytes(bytes)?;
+
+        Ok(())
+    }
+
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
         self.u32(bytes.len() as u32)?;
         self.bytes(bytes)
@@ -148,7 +196,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
 }
 
 impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
-    pub fn id_or_null(&mut self, id: Option<Arc<str>>) -> Result<(), Error> {
+    pub fn id_or_null(&mut self, id: Option<&Arc<str>>) -> Result<(), Error> {
         if !self.id_state.get_mut().seen_id {
             self.u32(3)?;
 
@@ -156,7 +204,7 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
         }
 
         match id {
-            Some(id) => match self.id_state.get_mut().ids.get_index_of(&id) {
+            Some(id) => match self.id_state.get_mut().ids.get_index_of(id) {
                 Some(index) => {
                     self.u32(((index as u32) + 1) | ID_MARKER_BIT)?;
                 }
@@ -164,7 +212,7 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
                     self.u32(ID_MARKER_BIT)?;
                     self.string(&id)?;
 
-                    self.id_state.get_mut().ids.insert(id);
+                    self.id_state.get_mut().ids.insert(Arc::clone(id));
                 }
             },
             None => {
@@ -175,7 +223,7 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
         Ok(())
     }
 
-    pub fn id(&mut self, id: Arc<str>) -> Result<(), Error> {
+    pub fn id(&mut self, id: &Arc<str>) -> Result<(), Error> {
         self.id_or_null(Some(id))
     }
 }

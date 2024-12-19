@@ -62,13 +62,10 @@ mod read {
         mem::transmute,
     };
 
-    use crate::{
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
-        },
-        Rgba, Texcoord, Vec3,
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
     };
 
     use super::{DataDecl, VertexStream};

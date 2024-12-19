@@ -4,6 +4,7 @@ pub(crate) mod writable;
 pub(crate) mod writer;
 
 pub(crate) use writable::{write_body, BodyChunk, BodyChunks};
+use writer::IdState;
 pub(crate) use writer::Writer;
 
 use std::{
@@ -71,8 +72,10 @@ impl Settings {
 
             let mut hh = vec![];
 
+            let mut id_state = IdState::new();
+
             for header_chunk in header_chunks {
-                let mut w2 = Writer::new(vec![], (), ());
+                let mut w2 = Writer::new(vec![], &mut id_state, ());
                 (header_chunk.write_fn)(node, &mut w2)?;
                 let buf = w2.into_inner();
 
