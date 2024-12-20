@@ -255,6 +255,11 @@ fn read_map_deco_48x48() {
 }
 
 #[test]
+fn read_map_deep_dip() {
+    read_file::<Challenge>("tests/files/map/Deep Dip.Map.Gbx").unwrap();
+}
+
+#[test]
 fn read_map_deep_dip_2r1() {
     read_file::<Challenge>("tests/files/map/Deep_Dip_2r1.Map.Gbx").unwrap();
 }

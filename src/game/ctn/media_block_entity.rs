@@ -72,7 +72,7 @@ mod read {
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if !matches!(version, 6 | 11) {
+            if !matches!(version, 6 | 9 | 11) {
                 return Err(Error::chunk_version(version));
             }
 
