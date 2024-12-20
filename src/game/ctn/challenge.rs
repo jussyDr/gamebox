@@ -847,8 +847,8 @@ mod read {
             r.encapsulation(|r| {
                 let ids = r.list(|r| {
                     let id = r.id()?;
-                    r.id_or_null()?;
-                    r.id()?;
+                    let _collection = r.id_or_null()?;
+                    let _author = r.id_or_null()?;
 
                     Ok(id)
                 })?;
@@ -955,16 +955,15 @@ mod read {
                     return Err(Error::version("lightmaps", lightmaps_version));
                 }
 
-                if r.u32()? != 0 {
+                let lightmap_frames = r.list(|r| {
                     let _webp = r.byte_buf()?;
                     let _webp = r.byte_buf()?;
                     let _webp = r.byte_buf()?;
-                    let _webp = r.byte_buf()?;
-                    r.u32()?;
-                    r.u32()?;
-                    let _webp = r.byte_buf()?;
-                    r.u32()?;
-                    r.u32()?;
+
+                    Ok(())
+                })?;
+
+                if !lightmap_frames.is_empty() {
                     let _lightmap_cache_data_size = r.u32()?;
                     let _compressed_lightmap_cache_data = r.byte_buf()?;
                 }

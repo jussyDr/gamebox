@@ -10,12 +10,21 @@ use std::{
 
 use indexmap::{indexset, IndexSet};
 
-use crate::{Class, Vec2, ID_MARKER_BIT};
+use crate::{Class, Vec2, Vec3, ID_MARKER_BIT};
 
 use super::{write_body, BodyChunks};
 
-trait ToLe {
+pub trait ToLe {
+    /// Convert `self` to little endian from the target's endianness.
+    ///
+    /// On little endian this is a no-op.
     fn to_le(self) -> Self;
+}
+
+impl ToLe for u8 {
+    fn to_le(self) -> Self {
+        self
+    }
 }
 
 impl ToLe for u32 {
@@ -27,6 +36,25 @@ impl ToLe for u32 {
 impl ToLe for f32 {
     fn to_le(self) -> Self {
         Self::from_bits(self.to_bits().to_le())
+    }
+}
+
+impl<T: ToLe> ToLe for Vec2<T> {
+    fn to_le(mut self) -> Self {
+        self.x = self.x.to_le();
+        self.y = self.y.to_le();
+
+        self
+    }
+}
+
+impl<T: ToLe> ToLe for Vec3<T> {
+    fn to_le(mut self) -> Self {
+        self.x = self.x.to_le();
+        self.y = self.y.to_le();
+        self.z = self.z.to_le();
+
+        self
     }
 }
 
@@ -72,7 +100,7 @@ struct InternalNode {
 }
 
 impl PartialEq for InternalNode {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         todo!()
     }
 }
@@ -80,7 +108,7 @@ impl PartialEq for InternalNode {
 impl Eq for InternalNode {}
 
 impl Hash for InternalNode {
-    fn hash<H: Hasher>(&self, state: &mut H) {
+    fn hash<H: Hasher>(&self, _state: &mut H) {
         todo!()
     }
 }
@@ -97,6 +125,12 @@ impl NodeState {
 
     pub fn num_nodes(&self) -> usize {
         self.nodes.len()
+    }
+}
+
+impl Default for NodeState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -164,17 +198,26 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.u32(if value { 1 } else { 0 })
     }
 
-    pub fn vec2<T: ToLe>(&mut self, mut vec: Vec2<T>) -> Result<(), Error> {
-        vec.x = vec.x.to_le();
-        vec.y = vec.y.to_le();
+    pub fn vec2<T: ToLe>(&mut self, vec: Vec2<T>) -> Result<(), Error> {
+        let vec = vec.to_le();
 
+        // To be safe: `vec` must not contain any padding bytes.
         let bytes = unsafe {
             slice::from_raw_parts(&vec as *const Vec2<T> as *const u8, size_of::<Vec2<T>>())
         };
 
-        self.bytes(bytes)?;
+        self.bytes(bytes)
+    }
 
-        Ok(())
+    pub fn vec3<T: ToLe>(&mut self, vec: Vec3<T>) -> Result<(), Error> {
+        let vec = vec.to_le();
+
+        // To be safe: `vec` must not contain any padding bytes.
+        let bytes = unsafe {
+            slice::from_raw_parts(&vec as *const Vec3<T> as *const u8, size_of::<Vec3<T>>())
+        };
+
+        self.bytes(bytes)
     }
 
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
