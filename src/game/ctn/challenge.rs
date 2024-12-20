@@ -24,6 +24,7 @@ pub struct Challenge {
     deco_id: Arc<str>,
     coord_origin: Vec2<f32>,
     coord_target: Vec2<f32>,
+    title_id: Arc<str>,
     parameters: Arc<ChallengeParameters>,
     texture_mod: Option<FileRef>,
     size: Vec3<u32>,
@@ -88,6 +89,11 @@ impl Challenge {
     /// Decoration identifier.
     pub const fn deco_id(&self) -> &Arc<str> {
         &self.deco_id
+    }
+
+    /// Title identifier.
+    pub const fn title_id(&self) -> &Arc<str> {
+        &self.title_id
     }
 
     /// Challenge parameters.
@@ -457,7 +463,7 @@ mod read {
             let _map_style = r.string()?;
             let _lightmap_cache_uid = r.u64()?;
             let _lightmap_version = r.u8()?;
-            let _title_id = r.id()?;
+            self.title_id = r.id()?;
 
             Ok(())
         }
