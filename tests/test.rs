@@ -275,6 +275,11 @@ fn read_map_new() {
 }
 
 #[test]
+fn read_maps_pocket_universe() {
+    read_file::<Challenge>("tests/files/map/Pocket Universe.Map.Gbx").unwrap();
+}
+
+#[test]
 fn read_map_thread_of_ariadne() {
     read_file::<Challenge>("tests/files/map/Thread of Ariadne.Map.Gbx").unwrap();
 }

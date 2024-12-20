@@ -4,10 +4,31 @@ use crate::Class;
 
 /// Entity media block.
 #[derive(Default)]
-pub struct MediaBlockEntity;
+pub struct MediaBlockEntity {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockEntity {
     const CLASS_ID: u32 = 0x0329f000;
+}
+
+impl MediaBlockEntity {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Entity media block key.
+pub struct Key {
+    time: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
 }
 
 mod read {
@@ -22,7 +43,7 @@ mod read {
         },
     };
 
-    use super::MediaBlockEntity;
+    use super::{Key, MediaBlockEntity};
 
     impl ReadBody for MediaBlockEntity {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -78,8 +99,8 @@ mod read {
                 let _skin_options = r.string()?;
             }
 
-            let _keys = r.list(|r| {
-                let _time = r.f32()?;
+            self.keys = r.list(|r| {
+                let time = r.f32()?;
                 let _lights = r.u32()?;
                 r.f32()?;
                 r.u32()?;
@@ -90,7 +111,7 @@ mod read {
                     let _self_illum_intensity = r.f32()?;
                 }
 
-                Ok(())
+                Ok(Key { time })
             })?;
 
             if version >= 7 {

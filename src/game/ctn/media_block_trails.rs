@@ -4,10 +4,25 @@ use crate::Class;
 
 /// Media block trails.
 #[derive(Default)]
-pub struct MediaBlockTrails;
+pub struct MediaBlockTrails {
+    start_time: f32,
+    end_time: f32,
+}
 
 impl Class for MediaBlockTrails {
     const CLASS_ID: u32 = 0x030a9000;
+}
+
+impl MediaBlockTrails {
+    /// Start time.
+    pub const fn start_time(&self) -> f32 {
+        self.start_time
+    }
+
+    /// End time.
+    pub const fn end_time(&self) -> f32 {
+        self.end_time
+    }
 }
 
 mod read {
@@ -38,8 +53,8 @@ mod read {
 
     impl MediaBlockTrails {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _start = r.f32()?;
-            let _end = r.f32()?;
+            self.start_time = r.f32()?;
+            self.end_time = r.f32()?;
 
             Ok(())
         }

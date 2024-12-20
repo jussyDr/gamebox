@@ -4,10 +4,37 @@ use crate::Class;
 
 /// Dirty lens media block.
 #[derive(Default)]
-pub struct MediaBlockDirtyLens;
+pub struct MediaBlockDirtyLens {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockDirtyLens {
     const CLASS_ID: u32 = 0x03165000;
+}
+
+impl MediaBlockDirtyLens {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// Dirty lens media block key.
+pub struct Key {
+    time: f32,
+    intensity: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Intensity.
+    pub const fn intensity(&self) -> f32 {
+        self.intensity
+    }
 }
 
 mod read {
@@ -19,7 +46,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockDirtyLens;
+    use super::{Key, MediaBlockDirtyLens};
 
     impl ReadBody for MediaBlockDirtyLens {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -45,11 +72,11 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _intensity = r.f32()?;
+            self.keys = r.list(|r| {
+                let time = r.f32()?;
+                let intensity = r.f32()?;
 
-                Ok(())
+                Ok(Key { time, intensity })
             })?;
 
             Ok(())

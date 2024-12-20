@@ -13,7 +13,16 @@ impl Class for MediaBlockCameraPath {
 }
 
 /// Camera path media block key.
-pub struct Key;
+pub struct Key {
+    time: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+}
 
 mod read {
     use std::io::{Read, Seek};
@@ -50,7 +59,7 @@ mod read {
             }
 
             self.keys = r.list(|r| {
-                let _time = r.f32()?;
+                let time = r.f32()?;
                 let _position = r.vec3::<f32>()?;
                 let _rotation = r.pitch_yaw_roll()?;
                 let _fov = r.f32()?;
@@ -65,7 +74,7 @@ mod read {
                 r.u32()?;
                 r.u32()?;
 
-                Ok(Key)
+                Ok(Key { time })
             })?;
 
             Ok(())

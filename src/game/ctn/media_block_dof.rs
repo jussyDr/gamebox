@@ -4,10 +4,31 @@ use crate::Class;
 
 /// DOF media block.
 #[derive(Default)]
-pub struct MediaBlockDof;
+pub struct MediaBlockDof {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockDof {
     const CLASS_ID: u32 = 0x03126000;
+}
+
+impl MediaBlockDof {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Key> {
+        &self.keys
+    }
+}
+
+/// DOF media block key.
+pub struct Key {
+    time: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
 }
 
 mod read {
@@ -19,7 +40,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockDof;
+    use super::{Key, MediaBlockDof};
 
     impl ReadBody for MediaBlockDof {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -38,14 +59,14 @@ mod read {
 
     impl MediaBlockDof {
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _keys = r.list(|r| {
-                let _time = r.f32()?;
+            self.keys = r.list(|r| {
+                let time = r.f32()?;
                 let _z_focus = r.f32()?;
                 let _lens_size = r.f32()?;
                 let _target = r.u32()?;
                 let _target_position = r.vec3::<f32>()?;
 
-                Ok(())
+                Ok(Key { time })
             })?;
 
             Ok(())

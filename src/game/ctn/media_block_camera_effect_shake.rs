@@ -4,10 +4,36 @@ use crate::Class;
 
 /// Camera effect shake media block.
 #[derive(Default)]
-pub struct MediaBlockCameraEffectShake;
+pub struct MediaBlockCameraEffectShake {
+    keys: Vec<Key>,
+}
 
 impl Class for MediaBlockCameraEffectShake {
     const CLASS_ID: u32 = 0x030a4000;
+}
+
+/// Camera effect shake media block key.
+pub struct Key {
+    time: f32,
+    intensity: f32,
+    speed: f32,
+}
+
+impl Key {
+    /// Time.
+    pub const fn time(&self) -> f32 {
+        self.time
+    }
+
+    /// Intensity.
+    pub const fn intensity(&self) -> f32 {
+        self.intensity
+    }
+
+    /// Speed.
+    pub const fn speed(&self) -> f32 {
+        self.speed
+    }
 }
 
 mod read {
@@ -19,7 +45,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::MediaBlockCameraEffectShake;
+    use super::{Key, MediaBlockCameraEffectShake};
 
     impl ReadBody for MediaBlockCameraEffectShake {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -38,12 +64,16 @@ mod read {
 
     impl MediaBlockCameraEffectShake {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _keys = r.list(|r| {
-                let _time = r.f32()?;
-                let _intensity = r.f32()?;
-                let _speed = r.f32()?;
+            self.keys = r.list(|r| {
+                let time = r.f32()?;
+                let intensity = r.f32()?;
+                let speed = r.f32()?;
 
-                Ok(())
+                Ok(Key {
+                    time,
+                    intensity,
+                    speed,
+                })
             })?;
 
             Ok(())

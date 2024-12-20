@@ -22,6 +22,7 @@ impl MediaBlockCameraCustom {
 /// Custom camera media block key.
 pub struct Key {
     time: f32,
+    interpolation: Option<Interpolation>,
 }
 
 impl Key {
@@ -29,6 +30,22 @@ impl Key {
     pub const fn time(&self) -> f32 {
         self.time
     }
+
+    /// Interpolation.
+    pub const fn interpolation(&self) -> Option<Interpolation> {
+        self.interpolation
+    }
+}
+
+/// Interpolation.
+#[derive(Clone, Copy)]
+pub enum Interpolation {
+    /// Hermite.
+    Hermite,
+    /// Linear.
+    Linear,
+    /// Fixed tangent.
+    FixedTangent,
 }
 
 mod read {
@@ -40,7 +57,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{Key, MediaBlockCameraCustom};
+    use super::{Interpolation, Key, MediaBlockCameraCustom};
 
     impl ReadBody for MediaBlockCameraCustom {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -61,13 +78,19 @@ mod read {
         fn read_chunk_6<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let version = r.u32()?;
 
-            if version != 3 {
+            if !matches!(version, 3 | 4) {
                 return Err(Error::chunk_version(version));
             }
 
             self.keys = r.list(|r| {
                 let time = r.f32()?;
-                let _interpolation = r.u32()?;
+                let interpolation = match r.u32()? {
+                    0 => None,
+                    1 => Some(Interpolation::Hermite),
+                    2 => Some(Interpolation::Linear),
+                    3 => Some(Interpolation::FixedTangent),
+                    _ => panic!(),
+                };
                 let _anchor_rot = r.bool()?;
                 let _anchor = r.u32()?;
                 let _anchor_vis = r.bool()?;
@@ -79,16 +102,33 @@ mod read {
                 let _near_z = r.f32()?;
                 let _position = r.vec3::<f32>()?;
                 let _pitch_yaw_roll = r.vec3::<f32>()?;
+
+                if version >= 4 {
+                    r.u32()?;
+                }
+
                 let _fov = r.f32()?;
                 let _target_position = r.vec3::<f32>()?;
                 let _near_z = r.f32()?;
                 let _position = r.vec3::<f32>()?;
                 let _pitch_yaw_roll = r.vec3::<f32>()?;
+
+                if version >= 4 {
+                    r.u32()?;
+                }
+
                 let _fov = r.f32()?;
                 let _target_position = r.vec3::<f32>()?;
                 let _near_z = r.f32()?;
 
-                Ok(Key { time })
+                if version >= 4 {
+                    r.u32()?;
+                }
+
+                Ok(Key {
+                    time,
+                    interpolation,
+                })
             })?;
 
             Ok(())

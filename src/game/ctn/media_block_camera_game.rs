@@ -4,10 +4,25 @@ use crate::Class;
 
 /// Media block camera game.
 #[derive(Default)]
-pub struct MediaBlockCameraGame;
+pub struct MediaBlockCameraGame {
+    start_time: f32,
+    end_time: f32,
+}
 
 impl Class for MediaBlockCameraGame {
     const CLASS_ID: u32 = 0x03084000;
+}
+
+impl MediaBlockCameraGame {
+    /// Start time.
+    pub const fn start_time(&self) -> f32 {
+        self.start_time
+    }
+
+    /// End time.
+    pub const fn end_time(&self) -> f32 {
+        self.end_time
+    }
 }
 
 mod read {
@@ -44,8 +59,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _start = r.f32()?;
-            let _end = r.f32()?;
+            self.start_time = r.f32()?;
+            self.end_time = r.f32()?;
             let _game_cam = r.u32()?;
             let _clip_ent_id = r.u32()?;
             let _cam_position = r.vec3::<f32>()?;
