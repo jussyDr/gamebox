@@ -7,7 +7,7 @@ use std::{
 /// Reference to a node.
 pub enum NodeRef<T: ?Sized> {
     /// Internal node referece.
-    Internal(InternalNodeRef<T>),
+    Internal(Arc<T>),
     /// External node referece.
     External(ExternalNodeRef<T>),
 }
@@ -18,11 +18,6 @@ impl<T: Default> Default for NodeRef<T> {
     fn default() -> Self {
         Self::Internal(Default::default())
     }
-}
-
-#[derive(Default)]
-pub struct InternalNodeRef<T: ?Sized> {
-    pub(crate) node: Arc<T>,
 }
 
 /// Reference to a node in an external file.

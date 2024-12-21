@@ -7,7 +7,6 @@ use std::{
 };
 
 use crate::{
-    node_ref::InternalNodeRef,
     read::{Error, ErrorKind, ReadBody, TraceEntry},
     Class, ExternalNodeRef, NodeRef,
 };
@@ -160,11 +159,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         match self.get_entry_or_null()? {
             None => Ok(None),
             Some((_, Some(node_ref))) => match node_ref {
-                NodeRef::Internal(internal_node_ref) => {
-                    Ok(Some(NodeRef::Internal(InternalNodeRef {
-                        node: Arc::clone(&internal_node_ref.node).downcast().unwrap(),
-                    })))
-                }
+                NodeRef::Internal(internal_node_ref) => Ok(Some(NodeRef::Internal(
+                    Arc::clone(&internal_node_ref).downcast().unwrap(),
+                ))),
                 NodeRef::External(external_node_ref) => {
                     Ok(Some(NodeRef::External(ExternalNodeRef {
                         path: Arc::clone(&external_node_ref.path),
@@ -176,16 +173,11 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
             Some((index, _)) => {
                 let node: Arc<dyn Any + Send + Sync> = Arc::new(self.node::<T>()?);
 
-                self.node_state.get_mut().set_node_ref(
-                    index,
-                    NodeRef::Internal(InternalNodeRef {
-                        node: Arc::clone(&node),
-                    }),
-                )?;
+                self.node_state
+                    .get_mut()
+                    .set_node_ref(index, NodeRef::Internal(Arc::clone(&node)))?;
 
-                Ok(Some(NodeRef::Internal(InternalNodeRef {
-                    node: node.downcast().unwrap(),
-                })))
+                Ok(Some(NodeRef::Internal(node.downcast().unwrap())))
             }
         }
     }
@@ -201,7 +193,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
 
     pub fn internal_node_ref<T: 'static + Class + ReadBody>(&mut self) -> Result<Arc<T>, Error> {
         match self.node_ref()? {
-            NodeRef::Internal(InternalNodeRef { node }) => Ok(node),
+            NodeRef::Internal(node) => Ok(node),
             _ => Err(Error::new(ErrorKind::Format(
                 "expected an internal node reference".into(),
             ))),
@@ -212,7 +204,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         &mut self,
     ) -> Result<Option<Arc<T>>, Error> {
         match self.node_ref_or_null()? {
-            Some(NodeRef::Internal(InternalNodeRef { node })) => Ok(Some(node)),
+            Some(NodeRef::Internal(node)) => Ok(Some(node)),
             None => Ok(None),
             _ => Err(Error::new(ErrorKind::Format(
                 "expected an internal node reference".into(),
