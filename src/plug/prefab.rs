@@ -9,7 +9,7 @@ use super::{
 /// Prefab.
 #[derive(Default, Debug)]
 pub struct Prefab {
-    entities: Vec<Entity>,
+    entities: Vec<PrefabEntity>,
 }
 
 impl Class for Prefab {
@@ -18,22 +18,22 @@ impl Class for Prefab {
 
 impl Prefab {
     /// Entities.
-    pub const fn entities(&self) -> &Vec<Entity> {
+    pub const fn entities(&self) -> &Vec<PrefabEntity> {
         &self.entities
     }
 }
 
 /// Prefab entity.
 #[derive(Debug)]
-pub struct Entity {
-    ty: EntityType,
+pub struct PrefabEntity {
+    ty: PrefabEntityType,
     rotation: Quat,
     position: Vec3<f32>,
 }
 
-impl Entity {
+impl PrefabEntity {
     /// Type.
-    pub const fn ty(&self) -> &EntityType {
+    pub const fn ty(&self) -> &PrefabEntityType {
         &self.ty
     }
 
@@ -50,7 +50,7 @@ impl Entity {
 
 /// Prefab entity type.
 #[derive(Debug)]
-pub enum EntityType {
+pub enum PrefabEntityType {
     /// Dynamic object model.
     DynaObjectModel(DynaObjectModel),
     /// Static object model.
@@ -74,7 +74,7 @@ mod read {
         },
     };
 
-    use super::{Entity, EntityType, Prefab};
+    use super::{Prefab, PrefabEntity, PrefabEntityType};
 
     impl Readable for Prefab {}
 
@@ -103,7 +103,7 @@ mod read {
             let num_entities = r.u32()?;
             let _u02 = r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let mut ty = EntityType::StaticObjectModel(StaticObjectModel::default());
+                let mut ty = PrefabEntityType::StaticObjectModel(StaticObjectModel::default());
 
                 r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
@@ -111,19 +111,19 @@ mod read {
                             let mut m = DynaObjectModel::default();
                             m.read_body(r)?;
 
-                            ty = EntityType::DynaObjectModel(m);
+                            ty = PrefabEntityType::DynaObjectModel(m);
                         }
                         0x09159000 => {
                             let mut m = StaticObjectModel::default();
                             m.read_body(r)?;
 
-                            ty = EntityType::StaticObjectModel(m);
+                            ty = PrefabEntityType::StaticObjectModel(m);
                         }
                         0x2f0ca000 => {
                             let mut m = DynaKinematicConstraint;
                             m.read_body(r)?;
 
-                            ty = EntityType::DynaKinematicConstraint(m);
+                            ty = PrefabEntityType::DynaKinematicConstraint(m);
                         }
                         _ => {
                             return Err(Error::new(ErrorKind::Unsupported(
@@ -194,7 +194,7 @@ mod read {
 
                 r.string()?;
 
-                Ok(Entity {
+                Ok(PrefabEntity {
                     ty,
                     rotation,
                     position,

@@ -7,7 +7,7 @@ use super::{solid_2_model::Solid2Model, surface::Surface};
 /// Static object model.
 #[derive(Default, Debug)]
 pub struct StaticObjectModel {
-    mesh: NodeRef<Solid2Model>,
+    model: NodeRef<Solid2Model>,
     is_collidable: bool,
     hit_shape: Option<NodeRef<Surface>>,
 }
@@ -17,9 +17,9 @@ impl Class for StaticObjectModel {
 }
 
 impl StaticObjectModel {
-    /// Mesh of the model.
-    pub const fn mesh(&self) -> &NodeRef<Solid2Model> {
-        &self.mesh
+    /// Model.
+    pub const fn model(&self) -> &NodeRef<Solid2Model> {
+        &self.model
     }
 }
 
@@ -58,7 +58,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.mesh = r.node_ref::<Solid2Model>()?;
+            self.model = r.node_ref::<Solid2Model>()?;
             self.is_collidable = r.bool8()?;
 
             if !self.is_collidable {

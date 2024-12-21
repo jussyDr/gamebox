@@ -203,6 +203,12 @@ pub struct Quat {
     pub w: f32,
 }
 
+impl Quat {
+    pub const fn to_array(self) -> [f32; 4] {
+        [self.x, self.y, self.z, self.w]
+    }
+}
+
 /// Iso.
 #[derive(Default, Debug)]
 pub struct Iso4 {
