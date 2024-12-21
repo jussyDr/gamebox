@@ -215,7 +215,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     pub fn test_or_ext<T>(
         &mut self,
         mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<ExternalNodeRef<()>>, Error> {
         let index = self.u32()? - 1;
 
         match self.node_state.get_mut().get_entry(index as usize)? {
@@ -223,11 +223,15 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
                 let class_id = self.u32()?;
                 let node = Arc::new(read_fn(self, class_id)?);
 
-                Ok(())
+                Ok(None)
             }
             Some(node_ref) => match node_ref {
                 NodeRef::Internal { .. } => todo!(),
-                NodeRef::External(_) => Ok(()),
+                NodeRef::External(external_node_ref) => Ok(Some(ExternalNodeRef {
+                    path: Arc::clone(&external_node_ref.path),
+                    ancestor_level: external_node_ref.ancestor_level,
+                    phantom: PhantomData,
+                })),
             },
         }
     }

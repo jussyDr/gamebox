@@ -7,7 +7,7 @@ use super::{
 };
 
 /// Prefab.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Prefab {
     entities: Vec<Entity>,
 }
@@ -24,6 +24,7 @@ impl Prefab {
 }
 
 /// Prefab entity.
+#[derive(Debug)]
 pub struct Entity {
     ty: EntityType,
     rotation: Quat,
@@ -48,6 +49,7 @@ impl Entity {
 }
 
 /// Prefab entity type.
+#[derive(Debug)]
 pub enum EntityType {
     /// Dynamic object model.
     DynaObjectModel(DynaObjectModel),

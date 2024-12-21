@@ -1,12 +1,13 @@
 //! Item variant list.
 
 /// Item variant list.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ItemVariantList {
     variants: Vec<ItemVariant>,
 }
 
 /// Item variant.
+#[derive(Debug)]
 pub struct ItemVariant;
 
 mod read {

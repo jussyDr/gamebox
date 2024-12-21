@@ -7,7 +7,7 @@ use crate::{Class, ExternalNodeRef};
 use super::{visual_indexed_triangles::VisualIndexedTriangles, Material, MaterialUserInst};
 
 /// Solid 2 model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
 }
@@ -24,6 +24,7 @@ impl Solid2Model {
 }
 
 /// Shaded geometry.
+#[derive(Debug)]
 pub struct ShadedGeom {
     visual: Arc<VisualIndexedTriangles>,
     material: MaterialType,
@@ -42,7 +43,7 @@ impl ShadedGeom {
 }
 
 /// Material type.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum MaterialType {
     /// Material.
     Material(ExternalNodeRef<Material>),

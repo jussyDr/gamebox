@@ -7,7 +7,7 @@ use crate::Class;
 use super::Solid2Model;
 
 /// Dyna object model
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DynaObjectModel {
     model: Arc<Solid2Model>,
 }

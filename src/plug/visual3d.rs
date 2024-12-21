@@ -7,7 +7,7 @@ use crate::Class;
 use super::visual::Visual;
 
 /// A visual 3D.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Visual3D {
     parent: Visual,
 }

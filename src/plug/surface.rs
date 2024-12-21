@@ -5,7 +5,7 @@ use crate::{Class, ExternalNodeRef, Vec3};
 use super::Material;
 
 /// A surface.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Surface {
     ty: SurfaceType,
     materials: Vec<ExternalNodeRef<Material>>,
@@ -16,6 +16,7 @@ impl Class for Surface {
 }
 
 /// Surface type.
+#[derive(Debug)]
 pub enum SurfaceType {
     /// Mesh surface.
     Mesh {

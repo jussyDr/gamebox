@@ -7,7 +7,7 @@ use crate::{Class, PitchYawRoll, Vec3};
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
 /// Crystal.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Crystal {
     parent: TreeGenerator,
     materials: Vec<Arc<MaterialUserInst>>,
@@ -51,7 +51,7 @@ impl Crystal {
 }
 
 /// Crystal mesh.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Mesh {
     positions: Vec<Vec3<f32>>,
     faces: Vec<Face>,
@@ -70,6 +70,7 @@ impl Mesh {
 }
 
 /// Face of a crystal mesh.
+#[derive(Debug)]
 pub struct Face {
     indices: Vec<u32>,
     material_index: u32,
@@ -94,6 +95,7 @@ impl Face {
 }
 
 /// Spawn position.
+#[derive(Debug)]
 pub struct SpawnPosition {
     position: Vec3<f32>,
     rotation: PitchYawRoll,

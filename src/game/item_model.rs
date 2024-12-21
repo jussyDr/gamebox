@@ -4,7 +4,7 @@ use std::{ops::Deref, sync::Arc};
 
 use crate::{
     plug::{item_variant_list::ItemVariantList, Prefab},
-    Class,
+    Class, NodeRef,
 };
 
 use super::{
@@ -38,6 +38,7 @@ impl ItemModel {
 }
 
 /// Item model type.
+#[derive(Debug)]
 pub enum ItemModelType {
     /// Block item.
     BlockItem(Arc<BlockItem>),
@@ -48,7 +49,7 @@ pub enum ItemModelType {
     /// Item variant list.
     ItemVariantList(Arc<ItemVariantList>),
     /// Prefab.
-    Prefab(Arc<Prefab>),
+    Prefab(NodeRef<Prefab>),
 }
 
 impl Default for ItemModelType {
@@ -60,6 +61,7 @@ impl Default for ItemModelType {
 mod read {
     use std::{
         io::{Read, Seek},
+        marker::PhantomData,
         sync::Arc,
     };
 
@@ -75,6 +77,7 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
+        ExternalNodeRef, NodeRef,
     };
 
     use super::{ItemModel, ItemModelType};
@@ -219,34 +222,39 @@ mod read {
                 _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
             })?;
 
-            match model_edition {
-                Some(_) => {}
-                None => {
-                    r.test_or_ext(|r, class_id| {
-                        match class_id {
-                            0x09145000 => {
-                                let mut model = Prefab::default();
-                                model.read_body(r)?;
+            if model_edition.is_none() {
+                let ext = r.test_or_ext(|r, class_id| {
+                    match class_id {
+                        0x09145000 => {
+                            let mut model = Prefab::default();
+                            model.read_body(r)?;
 
-                                self.ty = ItemModelType::Prefab(Arc::new(model))
-                            }
-                            0x2e027000 => {
-                                let mut model = CommonItemEntityModel::default();
-                                model.read_body(r)?;
-
-                                self.ty = ItemModelType::CommonItemEntityModel(Arc::new(model))
-                            }
-                            0x2f0bc000 => {
-                                let mut model = ItemVariantList::default();
-                                model.read_body(r)?;
-
-                                self.ty = ItemModelType::ItemVariantList(Arc::new(model))
-                            }
-                            _ => return Err(Error::new(ErrorKind::Unsupported("".into()))),
+                            self.ty = ItemModelType::Prefab(NodeRef::Internal(Arc::new(model)))
                         }
+                        0x2e027000 => {
+                            let mut model = CommonItemEntityModel::default();
+                            model.read_body(r)?;
 
-                        Ok(())
-                    })?;
+                            self.ty = ItemModelType::CommonItemEntityModel(Arc::new(model))
+                        }
+                        0x2f0bc000 => {
+                            let mut model = ItemVariantList::default();
+                            model.read_body(r)?;
+
+                            self.ty = ItemModelType::ItemVariantList(Arc::new(model))
+                        }
+                        _ => return Err(Error::new(ErrorKind::Unsupported("".into()))),
+                    }
+
+                    Ok(())
+                })?;
+
+                if let Some(ext) = ext {
+                    self.ty = ItemModelType::Prefab(NodeRef::External(ExternalNodeRef {
+                        path: ext.path,
+                        ancestor_level: ext.ancestor_level,
+                        phantom: PhantomData,
+                    }));
                 }
             }
 

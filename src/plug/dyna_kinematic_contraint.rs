@@ -1,7 +1,7 @@
 //! Dyna kinematic constraint.
 
 /// Dyna kinematic constraint.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DynaKinematicConstraint;
 
 mod read {

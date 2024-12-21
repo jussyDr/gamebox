@@ -57,7 +57,7 @@ pub use node_ref::{ExternalNodeRef, NodeRef};
 use std::path::PathBuf;
 
 /// 2-dimensional vector.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct Vec2<T> {
     /// X component.
@@ -67,7 +67,7 @@ pub struct Vec2<T> {
 }
 
 /// 3-dimensional vector.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct Vec3<T> {
     /// X component.
@@ -95,7 +95,7 @@ impl<T: Copy> Vec3<T> {
 }
 
 /// 4-dimensional vector.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct Vec4<T> {
     /// X component.
     pub x: T,
@@ -120,7 +120,7 @@ impl<T: Copy> Vec4<T> {
 }
 
 /// Texture coordinate.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct Texcoord {
     /// U component.
@@ -140,7 +140,7 @@ impl Texcoord {
 }
 
 /// Color represented by red, green, and blue components.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct Rgb<T> {
     /// Red component.
@@ -152,7 +152,7 @@ pub struct Rgb<T> {
 }
 
 /// Color represented by red, green, and blue components.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct Rgba<T> {
     /// Red component.
@@ -178,7 +178,7 @@ impl<T: Copy> Rgba<T> {
 }
 
 /// Rotation represented as pitch, yaw, and roll angles.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct PitchYawRoll {
     /// Pitch angle.
@@ -190,7 +190,7 @@ pub struct PitchYawRoll {
 }
 
 /// Quaternion.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]
 pub struct Quat {
     /// X component.
@@ -204,7 +204,7 @@ pub struct Quat {
 }
 
 /// Iso.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Iso4 {
     /// X.
     pub x: Vec4<f32>,

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::Class;
 
 /// User defined material instance.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MaterialUserInst {
     name: Option<Arc<str>>,
     physic_id: u8,
@@ -25,7 +25,7 @@ impl MaterialUserInst {
 }
 
 /// Effect.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Effect {
     /// Turbo.
     Turbo,

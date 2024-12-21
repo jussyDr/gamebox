@@ -7,7 +7,7 @@ use crate::Class;
 use super::vertex_stream::VertexStream;
 
 /// Visual.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Visual {
     vertex_stream: Arc<VertexStream>,
 }

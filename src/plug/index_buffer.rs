@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// An index buffer.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct IndexBuffer {
     indices: Vec<u32>,
 }

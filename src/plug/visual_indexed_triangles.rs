@@ -7,7 +7,7 @@ use crate::Class;
 use super::visual_indexed::VisualIndexed;
 
 /// A visual indexed triangles.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VisualIndexedTriangles {
     parent: VisualIndexed,
 }

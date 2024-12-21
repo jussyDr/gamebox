@@ -5,7 +5,7 @@ use crate::{Class, NodeRef};
 use super::{solid_2_model::Solid2Model, surface::Surface};
 
 /// Static object model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct StaticObjectModel {
     mesh: NodeRef<Solid2Model>,
     is_collidable: bool,

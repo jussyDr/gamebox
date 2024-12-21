@@ -1,10 +1,12 @@
 use std::{
+    fmt::Debug,
     marker::PhantomData,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 /// Reference to a node.
+#[derive(Debug)]
 pub enum NodeRef<T: ?Sized> {
     /// Internal node referece.
     Internal(Arc<T>),
@@ -51,6 +53,12 @@ impl<T> Clone for ExternalNodeRef<T> {
             ancestor_level: self.ancestor_level,
             phantom: PhantomData,
         }
+    }
+}
+
+impl<T: ?Sized> Debug for ExternalNodeRef<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self.path)
     }
 }
 

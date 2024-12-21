@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// A common item entity model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CommonItemEntityModel {
     model: Arc<StaticObjectModel>,
     checkpoint: Option<Checkpoint>,
@@ -31,6 +31,7 @@ impl CommonItemEntityModel {
 }
 
 /// Checkpoint.
+#[derive(Debug)]
 pub struct Checkpoint {
     trigger: Arc<Surface>,
     spawn_position: Iso4,

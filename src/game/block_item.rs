@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// A block item.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct BlockItem {
     archetype: Arc<str>,
     variants: Vec<BlockItemVariant>,
@@ -31,6 +31,7 @@ impl BlockItem {
 }
 
 /// Block item variant.
+#[derive(Debug)]
 pub struct BlockItemVariant {
     flags: u32,
     model: Option<BlockItemVariantModel>,
@@ -49,6 +50,7 @@ impl BlockItemVariant {
 }
 
 /// Block item variant model.
+#[derive(Debug)]
 pub enum BlockItemVariantModel {
     /// Crystal.
     Crystal(Arc<Crystal>),

@@ -3,7 +3,7 @@
 use crate::{Class, Rgba, Texcoord, Vec3};
 
 /// A vertex stream.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VertexStream {
     normals: Vec<[f32; 3]>,
     positions: Vec<Vec3<f32>>,
