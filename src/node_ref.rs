@@ -28,6 +28,7 @@ pub struct ExternalNodeRef<T: ?Sized> {
 }
 
 impl<T> ExternalNodeRef<T> {
+    /// Path.
     pub fn path(&self, source_path: &Path) -> PathBuf {
         let mut path = source_path.to_path_buf();
 
@@ -40,6 +41,16 @@ impl<T> ExternalNodeRef<T> {
         path.push(self.path.clone());
 
         path
+    }
+}
+
+impl<T> Clone for ExternalNodeRef<T> {
+    fn clone(&self) -> Self {
+        Self {
+            path: Arc::clone(&self.path),
+            ancestor_level: self.ancestor_level,
+            phantom: PhantomData,
+        }
     }
 }
 

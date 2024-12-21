@@ -10,16 +10,6 @@ use super::{visual_indexed_triangles::VisualIndexedTriangles, Material, Material
 #[derive(Default)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
-    visuals: Vec<Arc<VisualIndexedTriangles>>,
-    materials: Vec<MaterialType>,
-}
-
-/// Material type.
-pub enum MaterialType {
-    /// Material.
-    Material(ExternalNodeRef<Material>),
-    /// User instance.
-    UserInst(Arc<MaterialUserInst>),
 }
 
 impl Class for Solid2Model {
@@ -31,38 +21,40 @@ impl Solid2Model {
     pub const fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
         &self.shaded_geoms
     }
-
-    /// Visuals.
-    pub const fn visuals(&self) -> &Vec<Arc<VisualIndexedTriangles>> {
-        &self.visuals
-    }
-
-    /// Materials.
-    pub const fn materials(&self) -> &Vec<MaterialType> {
-        &self.materials
-    }
 }
 
 /// Shaded geometry.
 pub struct ShadedGeom {
-    visual_index: u32,
-    material_index: u32,
+    visual: Arc<VisualIndexedTriangles>,
+    material: MaterialType,
 }
 
 impl ShadedGeom {
-    /// Visual index.
-    pub const fn visual_index(&self) -> u32 {
-        self.visual_index
+    /// Visual.
+    pub const fn visual(&self) -> &Arc<VisualIndexedTriangles> {
+        &self.visual
     }
 
-    /// Material index.
-    pub const fn material_index(&self) -> u32 {
-        self.material_index
+    /// Material.
+    pub const fn material(&self) -> &MaterialType {
+        &self.material
     }
 }
 
+/// Material type.
+#[derive(Clone)]
+pub enum MaterialType {
+    /// Material.
+    Material(ExternalNodeRef<Material>),
+    /// User instance.
+    UserInst(Arc<MaterialUserInst>),
+}
+
 mod read {
-    use std::io::{Read, Seek};
+    use std::{
+        io::{Read, Seek},
+        sync::Arc,
+    };
 
     use crate::{
         plug::{
@@ -121,7 +113,7 @@ mod read {
             }
 
             r.id_or_null()?;
-            self.shaded_geoms = r.list(|r| {
+            let shaded_geoms = r.list(|r| {
                 let visual_index = r.u32()?;
                 let material_index = r.u32()?;
                 r.u32()?;
@@ -131,18 +123,16 @@ mod read {
                     r.u32()?;
                 }
 
-                Ok(ShadedGeom {
-                    visual_index,
-                    material_index,
-                })
+                Ok((visual_index, material_index))
             })?;
-            self.visuals =
+            let visuals =
                 r.list_with_version(|r| r.internal_node_ref::<VisualIndexedTriangles>())?;
             let _material_ids = r.list(|r| r.id())?;
             let material_count = r.u32()?;
+            let mut materials = vec![];
 
             if material_count == 0 {
-                self.materials = r.list_with_version(|r| {
+                materials = r.list_with_version(|r| {
                     let material = r.external_node_ref::<Material>()?;
 
                     Ok(MaterialType::Material(material))
@@ -235,12 +225,21 @@ mod read {
             r.u32()?;
             r.string()?;
             r.u32()?;
-            self.materials = r.repeat(material_count as usize, |r| {
+            materials = r.repeat(material_count as usize, |r| {
                 let _name = r.string()?;
                 let material = r.internal_node_ref::<MaterialUserInst>()?;
 
                 Ok(MaterialType::UserInst(material))
             })?;
+            self.shaded_geoms = shaded_geoms
+                .into_iter()
+                .map(|(visual_index, material_index)| {
+                    let visual = Arc::clone(visuals.get(visual_index as usize).unwrap());
+                    let material = materials.get(material_index as usize).unwrap().clone();
+
+                    ShadedGeom { visual, material }
+                })
+                .collect();
             r.u32()?;
             r.u32()?;
             r.u32()?;
