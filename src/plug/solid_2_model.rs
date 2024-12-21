@@ -225,12 +225,14 @@ mod read {
             r.u32()?;
             r.string()?;
             r.u32()?;
-            materials = r.repeat(material_count as usize, |r| {
-                let _name = r.string()?;
-                let material = r.internal_node_ref::<MaterialUserInst>()?;
+            if material_count != 0 {
+                materials = r.repeat(material_count as usize, |r| {
+                    let _name = r.string()?;
+                    let material = r.internal_node_ref::<MaterialUserInst>()?;
 
-                Ok(MaterialType::UserInst(material))
-            })?;
+                    Ok(MaterialType::UserInst(material))
+                })?;
+            }
             self.shaded_geoms = shaded_geoms
                 .into_iter()
                 .map(|(visual_index, material_index)| {
