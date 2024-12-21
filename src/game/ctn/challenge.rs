@@ -21,7 +21,7 @@ pub struct Challenge {
     name: String,
     ty: ChallengeType,
     password: String,
-    deco_id: Arc<str>,
+    decoration_id: Arc<str>,
     coord_origin: Vec2<f32>,
     coord_target: Vec2<f32>,
     title_id: Arc<str>,
@@ -87,8 +87,8 @@ impl Challenge {
     }
 
     /// Decoration identifier.
-    pub const fn deco_id(&self) -> &Arc<str> {
-        &self.deco_id
+    pub const fn decoration_id(&self) -> &Arc<str> {
+        &self.decoration_id
     }
 
     /// Title identifier.
@@ -453,7 +453,7 @@ mod read {
             self.ty = r.enum_u8()?;
             r.u32()?;
             self.password = r.string()?;
-            self.deco_id = r.id()?;
+            self.decoration_id = r.id()?;
             let _deco_collection = r.id_or_null()?;
             let _deco_author = r.id()?;
             self.coord_origin = r.vec2()?;
@@ -553,7 +553,7 @@ mod read {
             let _collection = r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
-            self.deco_id = r.id()?;
+            self.decoration_id = r.id()?;
             let _deco_collection = r.id_or_null()?;
             let _deco_author = r.id()?;
             self.size = r.vec3()?;
@@ -1344,7 +1344,7 @@ mod write {
             w.u8(self.ty as u8)?;
             w.u32(0)?;
             w.string(&self.password)?;
-            w.id(&self.deco_id)?;
+            w.id(&self.decoration_id)?;
             w.u32(0x1a)?;
             w.id(&Arc::from("Nadeo"))?;
             w.vec2(self.coord_origin)?;

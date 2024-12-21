@@ -1,12 +1,15 @@
 //! Collector.
 
+use std::sync::Arc;
+
 use crate::Class;
 
 /// Collector.
 #[derive(Clone, Default)]
 pub struct Collector {
     icon: Option<Icon>,
-    id: String,
+    id: Option<Arc<str>>,
+    name: String,
 }
 
 impl Class for Collector {
@@ -20,8 +23,8 @@ impl Collector {
     }
 
     /// Identifier.
-    pub const fn id(&self) -> &String {
-        &self.id
+    pub const fn id(&self) -> Option<&Arc<str>> {
+        self.id.as_ref()
     }
 }
 
@@ -82,7 +85,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            r.id_or_null()?;
+            self.id = r.id_or_null()?;
             r.id_or_null()?;
             r.id_or_null()?;
             let version = r.u32()?;
@@ -95,7 +98,7 @@ mod read {
             r.id_or_null()?;
             let _flags = r.u32()?;
             let _catalog_position = r.u16()?;
-            self.id = r.string()?;
+            self.name = r.string()?;
             let _prod_state = r.u8()?;
 
             Ok(())
@@ -147,7 +150,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            r.id_or_null()?;
+            self.id = r.id_or_null()?;
             r.id_or_null()?;
             r.id()?;
 
@@ -155,7 +158,7 @@ mod read {
         }
 
         fn read_chunk_12<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.id = r.string()?;
+            self.name = r.string()?;
 
             Ok(())
         }
