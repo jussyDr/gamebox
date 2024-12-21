@@ -125,6 +125,7 @@ mod read {
 
                 Ok((visual_index, material_index))
             })?;
+
             let visuals =
                 r.list_with_version(|r| r.internal_node_ref::<VisualIndexedTriangles>())?;
             let _material_ids = r.list(|r| r.id())?;
