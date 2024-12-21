@@ -1,13 +1,15 @@
 //! Material custom.
 
-use crate::{read::reader::ExternalNodeRef, Class};
+use crate::{Class, ExternalNodeRef};
+
+use super::Bitmap;
 
 /// A custom material.
 #[derive(Default)]
 pub struct MaterialCustom {
-    base_color_texture: ExternalNodeRef,
-    normal_texture: ExternalNodeRef,
-    metallic_roughness_texture: ExternalNodeRef,
+    base_color_texture: ExternalNodeRef<Bitmap>,
+    normal_texture: ExternalNodeRef<Bitmap>,
+    metallic_roughness_texture: ExternalNodeRef<Bitmap>,
 }
 
 impl Class for MaterialCustom {
@@ -16,17 +18,17 @@ impl Class for MaterialCustom {
 
 impl MaterialCustom {
     /// Base color texture.
-    pub const fn base_color_texture(&self) -> &ExternalNodeRef {
+    pub const fn base_color_texture(&self) -> &ExternalNodeRef<Bitmap> {
         &self.base_color_texture
     }
 
     /// Normal map texture.
-    pub const fn normal_texture(&self) -> &ExternalNodeRef {
+    pub const fn normal_texture(&self) -> &ExternalNodeRef<Bitmap> {
         &self.normal_texture
     }
 
     /// Metallic roughness texture.
-    pub const fn metallic_roughness_texture(&self) -> &ExternalNodeRef {
+    pub const fn metallic_roughness_texture(&self) -> &ExternalNodeRef<Bitmap> {
         &self.metallic_roughness_texture
     }
 }
@@ -157,7 +159,7 @@ mod read {
             r.list(|r| {
                 let texture_id = r.id()?;
                 r.u32()?;
-                let texture = r.external_node_ref::<()>()?;
+                let texture = r.external_node_ref()?;
                 r.u32()?;
                 r.u32()?;
 

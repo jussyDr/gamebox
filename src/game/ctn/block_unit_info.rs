@@ -1,17 +1,19 @@
 //! Block unit info.
 
-use crate::{read::reader::ExternalNodeRef, Class, Vec3};
+use crate::{Class, ExternalNodeRef, Vec3};
+
+use super::BlockInfoClip;
 
 /// A block unit info.
 #[derive(Default)]
 pub struct BlockUnitInfo {
     relative_offset: Vec3<u32>,
-    clips_north: Vec<ExternalNodeRef>,
-    clips_east: Vec<ExternalNodeRef>,
-    clips_south: Vec<ExternalNodeRef>,
-    clips_west: Vec<ExternalNodeRef>,
-    clips_top: Vec<ExternalNodeRef>,
-    clips_bottom: Vec<ExternalNodeRef>,
+    clips_north: Vec<ExternalNodeRef<BlockInfoClip>>,
+    clips_east: Vec<ExternalNodeRef<BlockInfoClip>>,
+    clips_south: Vec<ExternalNodeRef<BlockInfoClip>>,
+    clips_west: Vec<ExternalNodeRef<BlockInfoClip>>,
+    clips_top: Vec<ExternalNodeRef<BlockInfoClip>>,
+    clips_bottom: Vec<ExternalNodeRef<BlockInfoClip>>,
 }
 
 impl Class for BlockUnitInfo {

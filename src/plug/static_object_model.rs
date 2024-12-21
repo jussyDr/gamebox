@@ -1,6 +1,6 @@
 //! Static object model.
 
-use crate::{read::reader::NodeRef, Class};
+use crate::{Class, NodeRef};
 
 use super::{solid_2_model::Solid2Model, surface::Surface};
 

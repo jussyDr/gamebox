@@ -2,15 +2,15 @@
 
 use std::ops::Deref;
 
-use crate::{read::reader::ExternalNodeRef, Class};
+use crate::{Class, ExternalNodeRef};
 
-use super::Nod;
+use super::{ctn::Collection, Nod};
 
 /// Mania title.
 #[derive(Default)]
 pub struct ManiaTitle {
     parent: Nod,
-    collections: Vec<ExternalNodeRef>,
+    collections: Vec<ExternalNodeRef<Collection>>,
 }
 
 impl Class for ManiaTitle {
@@ -27,7 +27,7 @@ impl Deref for ManiaTitle {
 
 impl ManiaTitle {
     /// Collections.
-    pub const fn collections(&self) -> &Vec<ExternalNodeRef> {
+    pub const fn collections(&self) -> &Vec<ExternalNodeRef<Collection>> {
         &self.collections
     }
 }

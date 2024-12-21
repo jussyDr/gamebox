@@ -1,12 +1,14 @@
 //! Surface.
 
-use crate::{read::reader::ExternalNodeRef, Class, Vec3};
+use crate::{Class, ExternalNodeRef, Vec3};
+
+use super::Material;
 
 /// A surface.
 #[derive(Default)]
 pub struct Surface {
     ty: SurfaceType,
-    materials: Vec<ExternalNodeRef>,
+    materials: Vec<ExternalNodeRef<Material>>,
 }
 
 impl Class for Surface {

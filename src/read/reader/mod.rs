@@ -4,7 +4,7 @@ mod id;
 mod node;
 
 pub use id::{IdState, IdStateMut};
-pub use node::{ExternalNodeRef, NodeRef, NodeState, NodeStateMut};
+pub use node::{NodeState, NodeStateMut};
 
 use std::{
     cmp::min,

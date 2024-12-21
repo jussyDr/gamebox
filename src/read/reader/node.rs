@@ -2,13 +2,14 @@ use std::{
     any::Any,
     io::{Read, Seek},
     iter,
-    path::{Path, PathBuf},
+    marker::PhantomData,
     sync::Arc,
 };
 
 use crate::{
+    node_ref::InternalNodeRef,
     read::{Error, ErrorKind, ReadBody, TraceEntry},
-    Class,
+    Class, ExternalNodeRef, NodeRef,
 };
 
 use super::{IdStateMut, Reader};
@@ -52,80 +53,9 @@ impl NodeState {
     pub fn set_external_node_ref(
         &mut self,
         index: usize,
-        external_node_ref: ExternalNodeRef,
+        external_node_ref: ExternalNodeRef<dyn Any + Send + Sync>,
     ) -> Result<(), Error> {
         self.set_node_ref(index, NodeRef::External(external_node_ref))
-    }
-}
-
-/// Reference to a node.
-#[derive(Debug)]
-pub enum NodeRef<T: ?Sized> {
-    Internal { node: Arc<T> },
-    External(ExternalNodeRef),
-}
-
-impl NodeRef<dyn Any + Send + Sync> {
-    fn downcast<T: 'static + Any + Send + Sync>(self) -> Result<NodeRef<T>, Error> {
-        match self {
-            Self::Internal { node } => Ok(NodeRef::Internal {
-                node: node
-                    .downcast()
-                    .map_err(|_| Error::new(ErrorKind::Format("node type".into())))?,
-            }),
-            Self::External(external_node_ref) => Ok(NodeRef::External(external_node_ref)),
-        }
-    }
-}
-
-impl<T: ?Sized> Clone for NodeRef<T> {
-    fn clone(&self) -> Self {
-        match *self {
-            Self::Internal { ref node } => Self::Internal {
-                node: Arc::clone(node),
-            },
-            Self::External(ref external_node_ref) => Self::External(external_node_ref.clone()),
-        }
-    }
-}
-
-impl<T: Default> Default for NodeRef<T> {
-    fn default() -> Self {
-        Self::Internal {
-            node: Arc::default(),
-        }
-    }
-}
-
-/// Reference to a node in an external file.
-#[derive(Clone, Debug)]
-pub struct ExternalNodeRef {
-    pub(crate) path: Arc<Path>,
-    pub(crate) ancestor_level: u8,
-}
-
-impl ExternalNodeRef {
-    pub fn path(&self, source_path: &Path) -> PathBuf {
-        let mut path = source_path.to_path_buf();
-
-        path.pop();
-
-        for _ in 0..self.ancestor_level {
-            path.pop();
-        }
-
-        path.push(self.path.clone());
-
-        path
-    }
-}
-
-impl Default for ExternalNodeRef {
-    fn default() -> Self {
-        Self {
-            path: PathBuf::new().into(),
-            ancestor_level: 0,
-        }
     }
 }
 
@@ -148,32 +78,42 @@ impl NodeStateMut for NullNodeState {
 }
 
 impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
-    pub fn external_node_ref<T>(&mut self) -> Result<ExternalNodeRef, Error> {
-        let index = self.u32()?;
-        let ref_index = index
-            .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index q".into())))?;
-
-        match self.node_state.get_mut().get_entry(ref_index as usize)? {
-            Some(NodeRef::External(external_node_ref)) => Ok(external_node_ref.clone()),
-            _ => Err(Error::new(ErrorKind::Format("wat".into()))),
-        }
-    }
-
-    pub fn external_node_ref_or_null<T>(&mut self) -> Result<Option<ExternalNodeRef>, Error> {
+    fn get_entry_or_null(
+        &mut self,
+    ) -> Result<Option<(usize, &mut Option<NodeRef<dyn Any + Send + Sync>>)>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
             return Ok(None);
         }
 
-        let ref_index = index
+        let index = index
             .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index v".into())))?;
+            .ok_or(Error::new(ErrorKind::Format("node reference index".into())))?;
 
-        match self.node_state.get_mut().get_entry(ref_index as usize)? {
-            Some(NodeRef::External(external_node_ref)) => Ok(Some(external_node_ref.clone())),
-            _ => Err(Error::new(ErrorKind::Format("wat".into()))),
+        let entry = self.node_state.get_mut().get_entry(index as usize)?;
+
+        Ok(Some((index as usize, entry)))
+    }
+
+    pub fn external_node_ref_or_null<T>(&mut self) -> Result<Option<ExternalNodeRef<T>>, Error> {
+        match self.get_entry_or_null()? {
+            None => Ok(None),
+            Some((_, Some(NodeRef::External(external_node_ref)))) => Ok(Some(ExternalNodeRef {
+                path: Arc::clone(&external_node_ref.path),
+                ancestor_level: external_node_ref.ancestor_level,
+                phantom: PhantomData,
+            })),
+            _ => Err(Error::new(ErrorKind::Format(
+                "expected an external node reference".into(),
+            ))),
+        }
+    }
+
+    pub fn external_node_ref<T>(&mut self) -> Result<ExternalNodeRef<T>, Error> {
+        match self.external_node_ref_or_null()? {
+            Some(external_node_ref) => Ok(external_node_ref),
+            None => Err(Error::new(ErrorKind::Format("null".into()))),
         }
     }
 }
@@ -217,98 +157,51 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     pub fn node_ref_or_null<T: 'static + Class + ReadBody>(
         &mut self,
     ) -> Result<Option<NodeRef<T>>, Error> {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return Ok(None);
-        }
-
-        let ref_index = index
-            .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index e".into())))?;
-
-        match self.node_state.get_mut().get_entry(ref_index as usize)? {
-            Some(node_ref) => Ok(Some(node_ref.clone().downcast()?)),
-            entry => {
-                let class_id = self.u32()?;
-
-                if class_id != T::CLASS_ID {
-                    return Err(Error::new(ErrorKind::Format("class id".into())));
+        match self.get_entry_or_null()? {
+            None => Ok(None),
+            Some((_, Some(node_ref))) => match node_ref {
+                NodeRef::Internal(internal_node_ref) => {
+                    Ok(Some(NodeRef::Internal(InternalNodeRef {
+                        node: Arc::clone(&internal_node_ref.node).downcast().unwrap(),
+                    })))
                 }
-
-                let mut node = T::default();
-
-                match node.read_body(self) {
-                    Ok(()) => {}
-                    Err(mut error) => {
-                        error.trace.push_front(TraceEntry {
-                            class_id: T::CLASS_ID,
-                            chunk_num: None,
-                        });
-
-                        return Err(error);
-                    }
+                NodeRef::External(external_node_ref) => {
+                    Ok(Some(NodeRef::External(ExternalNodeRef {
+                        path: Arc::clone(&external_node_ref.path),
+                        ancestor_level: external_node_ref.ancestor_level,
+                        phantom: PhantomData,
+                    })))
                 }
+            },
+            Some((index, _)) => {
+                let node: Arc<dyn Any + Send + Sync> = Arc::new(self.node::<T>()?);
 
-                let node_ref: NodeRef<dyn Any + Send + Sync> = NodeRef::Internal {
-                    node: Arc::new(node),
-                };
+                self.node_state.get_mut().set_node_ref(
+                    index,
+                    NodeRef::Internal(InternalNodeRef {
+                        node: Arc::clone(&node),
+                    }),
+                )?;
 
-                self.node_state
-                    .get_mut()
-                    .set_node_ref(ref_index as usize, node_ref.clone())?;
-
-                Ok(Some(node_ref.downcast().unwrap()))
+                Ok(Some(NodeRef::Internal(InternalNodeRef {
+                    node: node.downcast().unwrap(),
+                })))
             }
         }
     }
 
     pub fn node_ref<T: 'static + Class + ReadBody>(&mut self) -> Result<NodeRef<T>, Error> {
-        let index = self.u32()?;
-
-        let ref_index = index
-            .checked_sub(1)
-            .ok_or(Error::new(ErrorKind::Format("index b".into())))?;
-
-        match self.node_state.get_mut().get_entry(ref_index as usize)? {
-            Some(node_ref) => Ok(node_ref.clone().downcast()?),
-            entry => {
-                let class_id = self.u32()?;
-
-                if class_id != T::CLASS_ID {
-                    return Err(Error::new(ErrorKind::Format("class id".into())));
-                }
-
-                let mut node = T::default();
-
-                match node.read_body(self) {
-                    Ok(()) => {}
-                    Err(mut error) => {
-                        error.trace.push_front(TraceEntry {
-                            class_id: T::CLASS_ID,
-                            chunk_num: None,
-                        });
-
-                        return Err(error);
-                    }
-                }
-
-                let node_ref: NodeRef<dyn Any + Send + Sync> = NodeRef::Internal {
-                    node: Arc::new(node),
-                };
-
-                self.node_state
-                    .get_mut()
-                    .set_node_ref(ref_index as usize, node_ref.clone())?;
-
-                Ok(node_ref.downcast().unwrap())
-            }
+        match self.node_ref_or_null()? {
+            Some(node_ref) => Ok(node_ref),
+            None => Err(Error::new(ErrorKind::Format(
+                "node reference is null".into(),
+            ))),
         }
     }
 
     pub fn internal_node_ref<T: 'static + Class + ReadBody>(&mut self) -> Result<Arc<T>, Error> {
         match self.node_ref()? {
-            NodeRef::Internal { node } => Ok(node),
+            NodeRef::Internal(InternalNodeRef { node }) => Ok(node),
             _ => Err(Error::new(ErrorKind::Format(
                 "expected an internal node reference".into(),
             ))),
@@ -319,7 +212,7 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         &mut self,
     ) -> Result<Option<Arc<T>>, Error> {
         match self.node_ref_or_null()? {
-            Some(NodeRef::Internal { node }) => Ok(Some(node)),
+            Some(NodeRef::Internal(InternalNodeRef { node })) => Ok(Some(node)),
             None => Ok(None),
             _ => Err(Error::new(ErrorKind::Format(
                 "expected an internal node reference".into(),

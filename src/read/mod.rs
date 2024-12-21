@@ -12,14 +12,15 @@ pub(crate) use readable::{read_body_chunks, BodyChunk, BodyChunks, ReadBody};
 use std::{
     fs::File,
     io::{BufReader, Cursor, Read, Seek},
+    marker::PhantomData,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 use readable::HeaderChunks;
-use reader::{ExternalNodeRef, IdState, IdStateMut, NodeState, Reader};
+use reader::{IdState, IdStateMut, NodeState, Reader};
 
-use crate::{FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
+use crate::{ExternalNodeRef, FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
 
 /// A readable class.
 pub trait Readable: readable::Sealed {}
@@ -167,6 +168,7 @@ impl Settings {
                         ExternalNodeRef {
                             path: path.into(),
                             ancestor_level,
+                            phantom: PhantomData,
                         },
                     )?;
                 }

@@ -6,7 +6,7 @@ use crate::Class;
 #[derive(Clone, Default)]
 pub struct Collector {
     icon: Option<Icon>,
-    name: String,
+    id: String,
 }
 
 impl Class for Collector {
@@ -19,9 +19,9 @@ impl Collector {
         self.icon.as_ref()
     }
 
-    /// Name.
-    pub const fn name(&self) -> &String {
-        &self.name
+    /// Identifier.
+    pub const fn id(&self) -> &String {
+        &self.id
     }
 }
 
@@ -95,7 +95,7 @@ mod read {
             r.id_or_null()?;
             let _flags = r.u32()?;
             let _catalog_position = r.u16()?;
-            self.name = r.string()?;
+            self.id = r.string()?;
             let _prod_state = r.u8()?;
 
             Ok(())
@@ -155,7 +155,7 @@ mod read {
         }
 
         fn read_chunk_12<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.name = r.string()?;
+            self.id = r.string()?;
 
             Ok(())
         }

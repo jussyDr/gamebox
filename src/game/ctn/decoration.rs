@@ -2,18 +2,18 @@
 
 use std::ops::Deref;
 
-use crate::{read::reader::ExternalNodeRef, Class};
+use crate::{Class, ExternalNodeRef};
 
-use super::collector::Collector;
+use super::{collector::Collector, Challenge, DecorationMood};
 
 /// Decoration of a challenge.
 #[derive(Default)]
 pub struct Decoration {
     parent: Collector,
-    size: ExternalNodeRef,
-    mood: ExternalNodeRef,
-    audio: ExternalNodeRef,
-    map: Option<ExternalNodeRef>,
+    size: ExternalNodeRef<()>,
+    mood: ExternalNodeRef<DecorationMood>,
+    audio: ExternalNodeRef<()>,
+    map: Option<ExternalNodeRef<Challenge>>,
 }
 
 impl Class for Decoration {
@@ -30,22 +30,22 @@ impl Deref for Decoration {
 
 impl Decoration {
     /// Decoration size.
-    pub const fn size(&self) -> &ExternalNodeRef {
+    pub const fn size(&self) -> &ExternalNodeRef<()> {
         &self.size
     }
 
     /// Decoration mood.
-    pub const fn mood(&self) -> &ExternalNodeRef {
+    pub const fn mood(&self) -> &ExternalNodeRef<DecorationMood> {
         &self.mood
     }
 
     /// Decoration audio.
-    pub const fn audio(&self) -> &ExternalNodeRef {
+    pub const fn audio(&self) -> &ExternalNodeRef<()> {
         &self.audio
     }
 
     /// Decoration map.
-    pub const fn map(&self) -> Option<&ExternalNodeRef> {
+    pub const fn map(&self) -> Option<&ExternalNodeRef<Challenge>> {
         self.map.as_ref()
     }
 }
@@ -121,7 +121,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.mood = r.external_node_ref::<()>()?;
+            self.mood = r.external_node_ref()?;
 
             Ok(())
         }

@@ -45,10 +45,14 @@ pub mod read;
 pub mod script;
 pub mod write;
 
+mod node_ref;
+
 #[doc(inline)]
 pub use read::{read, read_file};
 #[doc(inline)]
 pub use write::{write, write_file};
+
+pub use node_ref::{ExternalNodeRef, NodeRef};
 
 use std::path::PathBuf;
 

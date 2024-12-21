@@ -2,16 +2,24 @@
 
 use std::sync::Arc;
 
-use crate::{read::reader::NodeRef, Class};
+use crate::{Class, ExternalNodeRef};
 
-use super::{visual_indexed_triangles::VisualIndexedTriangles, MaterialUserInst};
+use super::{visual_indexed_triangles::VisualIndexedTriangles, Material, MaterialUserInst};
 
 /// Solid 2 model.
 #[derive(Default)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
     visuals: Vec<Arc<VisualIndexedTriangles>>,
-    materials: Vec<NodeRef<MaterialUserInst>>,
+    materials: Vec<MaterialType>,
+}
+
+/// Material type.
+pub enum MaterialType {
+    /// Material.
+    Material(ExternalNodeRef<Material>),
+    /// User instance.
+    UserInst(Arc<MaterialUserInst>),
 }
 
 impl Class for Solid2Model {
@@ -30,7 +38,7 @@ impl Solid2Model {
     }
 
     /// Materials.
-    pub const fn materials(&self) -> &Vec<NodeRef<MaterialUserInst>> {
+    pub const fn materials(&self) -> &Vec<MaterialType> {
         &self.materials
     }
 }
@@ -64,12 +72,12 @@ mod read {
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
-            reader::{IdStateMut, NodeRef, NodeStateMut, Reader},
+            reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody, Readable,
         },
     };
 
-    use super::{ShadedGeom, Solid2Model};
+    use super::{MaterialType, ShadedGeom, Solid2Model};
 
     impl Readable for Solid2Model {}
 
@@ -137,7 +145,7 @@ mod read {
                 self.materials = r.list_with_version(|r| {
                     let material = r.external_node_ref::<Material>()?;
 
-                    Ok(NodeRef::External(material))
+                    Ok(MaterialType::Material(material))
                 })?;
             }
             let _skel = r.internal_node_ref_or_null::<Skel>()?;
@@ -231,7 +239,7 @@ mod read {
                 let _name = r.string()?;
                 let material = r.internal_node_ref::<MaterialUserInst>()?;
 
-                Ok(NodeRef::Internal { node: material })
+                Ok(MaterialType::UserInst(material))
             })?;
             r.u32()?;
             r.u32()?;

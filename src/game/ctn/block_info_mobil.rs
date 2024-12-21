@@ -1,11 +1,11 @@
 //! Block info mobil.
 
-use crate::{read::reader::ExternalNodeRef, Class};
+use crate::{plug::Prefab, Class, ExternalNodeRef};
 
 /// A block info mobil.
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct BlockInfoMobil {
-    prefab: Option<ExternalNodeRef>,
+    prefab: Option<ExternalNodeRef<Prefab>>,
 }
 
 impl Class for BlockInfoMobil {
@@ -14,7 +14,7 @@ impl Class for BlockInfoMobil {
 
 impl BlockInfoMobil {
     /// Prefab of the mobil.
-    pub const fn prefab(&self) -> Option<&ExternalNodeRef> {
+    pub const fn prefab(&self) -> Option<&ExternalNodeRef<Prefab>> {
         self.prefab.as_ref()
     }
 }
@@ -81,7 +81,7 @@ mod read {
 
             r.u32()?;
             r.u32()?;
-            self.prefab = r.external_node_ref_or_null::<()>()?;
+            self.prefab = r.external_node_ref_or_null()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

@@ -1,11 +1,11 @@
 //! Bitmap.
 
-use crate::{read::reader::ExternalNodeRef, Class};
+use crate::{Class, ExternalNodeRef};
 
 /// Bitmap.
 #[derive(Default)]
 pub struct Bitmap {
-    image: ExternalNodeRef,
+    image: ExternalNodeRef<()>,
 }
 
 impl Class for Bitmap {
@@ -14,7 +14,7 @@ impl Class for Bitmap {
 
 impl Bitmap {
     /// Image of the bitmap.
-    pub const fn image(&self) -> &ExternalNodeRef {
+    pub const fn image(&self) -> &ExternalNodeRef<()> {
         &self.image
     }
 }
