@@ -49,15 +49,19 @@ mod read {
             }
 
             let _name = r.id_or_null()?;
-            let _joints_length = r.u16()?;
+            let joints_length = r.u16()?;
+            let _joints = r.repeat(joints_length as usize, |r| {
+                let _name = r.id()?;
+                let _parent_index = r.u16()?;
+                r.iso4()?;
+
+                Ok(())
+            })?;
             r.bool()?;
             let _sockets = r.list(|r| {
                 let _name = r.id()?;
                 r.u16()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
+                r.iso4()?;
 
                 Ok(())
             })?;

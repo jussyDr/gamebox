@@ -101,11 +101,21 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _flags = r.u32()?;
+            let flags = r.u32()?;
             let _num_texcoord_sets = r.u32()?;
             let _count = r.u32()?;
             let _num_vertex_streams = r.u32()?;
             self.vertex_stream = r.internal_node_ref::<VertexStream>()?;
+
+            if flags & 7 != 0 {
+                r.bool()?;
+                r.u32()?;
+                r.bool()?;
+                r.bool()?;
+                let _bones = r.list(|r| r.id())?;
+                r.list(|r| r.u32())?;
+            }
+
             let _bounding_box = r.box3d()?;
             r.u32()?;
             r.list(|r| r.u16())?;

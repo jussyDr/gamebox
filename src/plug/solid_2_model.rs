@@ -244,8 +244,8 @@ mod read {
                     ShadedGeom { visual, material }
                 })
                 .collect();
-            r.u32()?;
-            r.u32()?;
+            r.list(|r| r.id())?;
+            r.list(|r| r.u32())?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

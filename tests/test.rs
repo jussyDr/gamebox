@@ -335,6 +335,11 @@ fn read_prefab_road_border_spot() {
 }
 
 #[test]
+fn read_prefab_special_ground() {
+    read_file::<Prefab>("tests/files/prefab/Special_Ground.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_stade_4096() {
     read_file::<Prefab>("tests/files/prefab/Stade4096.Prefab.Gbx").unwrap();
 }

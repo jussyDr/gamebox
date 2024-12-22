@@ -40,7 +40,7 @@ impl<T> ExternalNodeRef<T> {
             path.pop();
         }
 
-        path.push(self.path.clone());
+        path.push(&self.path);
 
         path
     }

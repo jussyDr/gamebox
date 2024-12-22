@@ -52,7 +52,7 @@ impl VertexStream {
     }
 }
 
-struct DataDecl {
+struct VertexAttribute {
     flags: u32,
 }
 
@@ -68,7 +68,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
     };
 
-    use super::{DataDecl, VertexStream};
+    use super::{VertexAttribute, VertexStream};
 
     impl ReadBody for VertexStream {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -109,7 +109,7 @@ mod read {
                     let _offset = r.u16()?;
                 }
 
-                Ok(DataDecl { flags })
+                Ok(VertexAttribute { flags })
             })?;
             r.bool()?;
 
@@ -149,6 +149,9 @@ mod read {
                             _ => todo!("{weight_count}"),
                         }
                     }
+                    5 => {
+                        let data = r.repeat(count as usize, |r| r.i32())?;
+                    }
                     14 => {
                         let data = r.repeat(count as usize, |r| {
                             let val = r.u32()?;
@@ -169,8 +172,8 @@ mod read {
                     }
                     _ => {
                         return Err(Error::new(ErrorKind::Unsupported(
-                            "data decl type".to_string(),
-                        )))
+                            "vertex attribute type".to_string(),
+                        )));
                     }
                 }
             }

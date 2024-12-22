@@ -204,6 +204,7 @@ pub struct Quat {
 }
 
 impl Quat {
+    /// To array.
     pub const fn to_array(self) -> [f32; 4] {
         [self.x, self.y, self.z, self.w]
     }
