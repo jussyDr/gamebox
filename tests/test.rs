@@ -335,6 +335,11 @@ fn read_prefab_corner_in_air() {
 }
 
 #[test]
+fn read_prefab_expandable_gameplay_ground() {
+    read_file::<Prefab>("tests/files/prefab/ExpandableGameplay_Ground.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_road_border_spot() {
     read_file::<Prefab>("tests/files/prefab/RoadBorderSpot.Prefab.Gbx").unwrap();
 }

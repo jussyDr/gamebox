@@ -119,6 +119,13 @@ mod read {
 
                             ty = PrefabEntityType::StaticObjectModel(m);
                         }
+                        0x09179000 => {
+                            // NPlugTrigger_SSpecial
+
+                            r.u32()?;
+                            r.u32()?;
+                            r.u32()?;
+                        }
                         0x2f0ca000 => {
                             let mut m = DynaKinematicConstraint;
                             m.read_body(r)?;
