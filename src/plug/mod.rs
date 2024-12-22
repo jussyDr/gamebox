@@ -19,7 +19,9 @@ pub mod material;
 pub mod material_custom;
 pub mod material_user_inst;
 pub mod media_clip_list;
+pub mod path;
 pub mod placement_patch;
+pub mod poly_line_3;
 pub mod prefab;
 pub mod road_chunk;
 pub mod skel;
@@ -63,6 +65,8 @@ pub use material_custom::MaterialCustom;
 pub use material_user_inst::MaterialUserInst;
 #[doc(inline)]
 pub use media_clip_list::MediaClipList;
+#[doc(inline)]
+pub use path::Path;
 #[doc(inline)]
 pub use placement_patch::PlacementPatch;
 #[doc(inline)]

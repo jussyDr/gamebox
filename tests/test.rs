@@ -360,6 +360,11 @@ fn read_prefab_straight_air() {
 }
 
 #[test]
+fn read_prefab_zone_end_large_left_air_v2() {
+    read_file::<Prefab>("tests/files/prefab/ZoneEndLargeLeft_AirV2.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_texture_technics_trims_d() {
     read_file::<Bitmap>("tests/files/texture/TechnicsTrims_D.Texture.gbx").unwrap();
 }

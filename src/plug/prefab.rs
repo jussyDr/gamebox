@@ -65,7 +65,7 @@ mod read {
     use crate::{
         plug::{
             dyna_kinematic_contraint::DynaKinematicConstraint,
-            static_object_model::StaticObjectModel, DynaObjectModel,
+            static_object_model::StaticObjectModel, DynaObjectModel, Path,
         },
         read::{
             readable::{HeaderChunk, HeaderChunks, Sealed},
@@ -107,6 +107,10 @@ mod read {
 
                 r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
+                        0x09119000 => {
+                            let mut m = Path::default();
+                            m.read_body(r)?;
+                        }
                         0x09144000 => {
                             let mut m = DynaObjectModel::default();
                             m.read_body(r)?;
