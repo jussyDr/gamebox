@@ -184,11 +184,20 @@ mod read {
                         let _position_1 = r.vec3::<f32>()?;
                         let _position_2 = r.vec3::<f32>()?;
                     }
+                    0x2f0d9000 => {
+                        let version = r.u32()?;
+
+                        if version != 0 {
+                            return Err(Error::version("instance params", version));
+                        }
+
+                        let _phase_01 = r.f32()?;
+                    }
                     0xffffffff => {}
                     _ => {
                         return Err(Error::new(ErrorKind::Unsupported(
                             "prefab entity parameters".into(),
-                        )))
+                        )));
                     }
                 }
 

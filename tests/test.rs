@@ -325,6 +325,11 @@ fn read_prefab_branch_cross_air() {
 }
 
 #[test]
+fn read_prefab_checkpoint_air_npb() {
+    read_file::<Prefab>("tests/files/prefab/Checkpoint_AirNPB.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_corner_in_air() {
     read_file::<Prefab>("tests/files/prefab/CornerIn_Air.Prefab.Gbx").unwrap();
 }
