@@ -153,7 +153,6 @@ impl Settings {
 
                     let use_file = r.bool()?;
                     let folder_index = r.u32()?;
-
                     let mut path = folders
                         .get(folder_index as usize)
                         .ok_or(Error::new(ErrorKind::Format("index".into())))?
@@ -166,8 +165,9 @@ impl Settings {
                     node_state.set_external_node_ref(
                         node_ref_index as usize,
                         ExternalNodeRef {
-                            path: path.into(),
                             ancestor_level,
+                            use_file,
+                            path: path.into(),
                             phantom: PhantomData,
                         },
                     )?;

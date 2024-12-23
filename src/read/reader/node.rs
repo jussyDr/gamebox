@@ -99,8 +99,9 @@ impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
         match self.get_entry_or_null()? {
             None => Ok(None),
             Some((_, Some(NodeRef::External(external_node_ref)))) => Ok(Some(ExternalNodeRef {
-                path: Arc::clone(&external_node_ref.path),
                 ancestor_level: external_node_ref.ancestor_level,
+                use_file: external_node_ref.use_file,
+                path: Arc::clone(&external_node_ref.path),
                 phantom: PhantomData,
             })),
             _ => Err(Error::new(ErrorKind::Format(
@@ -164,8 +165,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
                 ))),
                 NodeRef::External(external_node_ref) => {
                     Ok(Some(NodeRef::External(ExternalNodeRef {
-                        path: Arc::clone(&external_node_ref.path),
                         ancestor_level: external_node_ref.ancestor_level,
+                        use_file: external_node_ref.use_file,
+                        path: Arc::clone(&external_node_ref.path),
                         phantom: PhantomData,
                     })))
                 }
@@ -228,8 +230,9 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
             Some(node_ref) => match node_ref {
                 NodeRef::Internal { .. } => todo!(),
                 NodeRef::External(external_node_ref) => Ok(Some(ExternalNodeRef {
-                    path: Arc::clone(&external_node_ref.path),
+                    use_file: external_node_ref.use_file,
                     ancestor_level: external_node_ref.ancestor_level,
+                    path: Arc::clone(&external_node_ref.path),
                     phantom: PhantomData,
                 })),
             },

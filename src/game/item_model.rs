@@ -251,8 +251,9 @@ mod read {
 
                 if let Some(ext) = ext {
                     self.ty = ItemModelType::Prefab(NodeRef::External(ExternalNodeRef {
-                        path: ext.path,
                         ancestor_level: ext.ancestor_level,
+                        use_file: ext.use_file,
+                        path: ext.path,
                         phantom: PhantomData,
                     }));
                 }
