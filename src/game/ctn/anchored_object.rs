@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, Class, FileRef, PitchYawRoll, Vec3};
+use crate::{game::WaypointSpecialProperty, Class, FileRef, Vec3, YawPitchRoll};
 
 use super::{ElemColor, LightmapQuality};
 
@@ -10,7 +10,7 @@ use super::{ElemColor, LightmapQuality};
 #[derive(Default)]
 pub struct AnchoredObject {
     model_id: Arc<str>,
-    rotation: PitchYawRoll,
+    rotation: YawPitchRoll,
     unit_coord: Vec3<u8>,
     position: Vec3<f32>,
     waypoint_property: Option<WaypointSpecialProperty>,
@@ -34,7 +34,7 @@ impl AnchoredObject {
     }
 
     /// Rotation.
-    pub const fn rotation(&self) -> PitchYawRoll {
+    pub const fn rotation(&self) -> YawPitchRoll {
         self.rotation
     }
 
@@ -178,7 +178,7 @@ mod read {
             self.model_id = r.id()?;
             let _model_collection = r.id_or_null()?;
             let _model_author = r.id_or_null()?;
-            self.rotation = r.pitch_yaw_roll()?;
+            self.rotation = r.yaw_pitch_roll()?;
             self.unit_coord = r.vec3()?;
             let _anchor_tree_id = r.id_or_null()?;
             self.position = r.vec3()?;

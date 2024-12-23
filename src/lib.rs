@@ -165,6 +165,18 @@ impl<T: Copy> Rgba<T> {
     }
 }
 
+/// Rotation represented as yaw, pitch, and roll angles.
+#[derive(Clone, Copy, Default, Debug)]
+#[repr(C)]
+pub struct YawPitchRoll {
+    /// Yaw angle.
+    pub yaw: f32,
+    /// Yaw angle.
+    pub pitch: f32,
+    /// Roll angle.
+    pub roll: f32,
+}
+
 /// Rotation represented as pitch, yaw, and roll angles.
 #[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]

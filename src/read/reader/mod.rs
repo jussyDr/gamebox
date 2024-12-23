@@ -16,7 +16,7 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Vec2, Vec3};
+use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Vec2, Vec3, YawPitchRoll};
 
 use super::{Error, ErrorKind};
 
@@ -72,6 +72,16 @@ impl<T: FromLe> FromLe for Rgb<T> {
         value.r = T::from_le(value.r);
         value.g = T::from_le(value.g);
         value.b = T::from_le(value.b);
+
+        value
+    }
+}
+
+impl FromLe for YawPitchRoll {
+    fn from_le(mut value: Self) -> Self {
+        value.yaw = f32::from_le(value.yaw);
+        value.pitch = f32::from_le(value.pitch);
+        value.roll = f32::from_le(value.roll);
 
         value
     }
@@ -298,6 +308,23 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let rgb = unsafe { rgb.assume_init() };
 
         Ok(Rgb::from_le(rgb))
+    }
+
+    pub fn yaw_pitch_roll(&mut self) -> Result<YawPitchRoll, Error> {
+        let mut yaw_pitch_roll = MaybeUninit::<YawPitchRoll>::uninit();
+
+        let buf = unsafe {
+            slice::from_raw_parts_mut(
+                yaw_pitch_roll.as_mut_ptr() as *mut u8,
+                size_of::<YawPitchRoll>(),
+            )
+        };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let yaw_pitch_roll = unsafe { yaw_pitch_roll.assume_init() };
+
+        Ok(YawPitchRoll::from_le(yaw_pitch_roll))
     }
 
     pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
