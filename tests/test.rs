@@ -338,6 +338,11 @@ fn read_material_technics_trims() {
 }
 
 #[test]
+fn read_material_water() {
+    read_file::<Material>("tests/files/material/Water.Material.Gbx").unwrap();
+}
+
+#[test]
 fn read_material_waterground() {
     read_file::<Material>("tests/files/material/Waterground.Material.Gbx").unwrap();
 }

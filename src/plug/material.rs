@@ -124,7 +124,9 @@ mod read {
         }
 
         fn read_chunk_19<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.u32()?;
+            if r.bool()? {
+                r.u32()?;
+            }
 
             Ok(())
         }
