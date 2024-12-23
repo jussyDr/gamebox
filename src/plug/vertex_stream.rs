@@ -12,6 +12,7 @@ pub struct VertexStream {
     tangents_v: Vec<[f32; 3]>,
     texcoords_0: Vec<Texcoord>,
     colors_0: Option<Vec<Rgba<u8>>>,
+    colors_1: Option<Vec<Rgba<u8>>>,
     normals: Option<Vec<[f32; 3]>>,
     texcoords_1: Option<Vec<Texcoord>>,
     texcoords_2: Option<Vec<Texcoord>>,
@@ -159,6 +160,9 @@ mod read {
                         match weight_count {
                             8 => {
                                 self.colors_0 = Some(unsafe { transmute(data) });
+                            }
+                            9 => {
+                                self.colors_1 = Some(unsafe { transmute(data) });
                             }
                             _ => todo!("{weight_count}"),
                         }

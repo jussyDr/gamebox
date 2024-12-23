@@ -34,9 +34,12 @@
 //! | `Item.Gbx` | [game::ItemModel] | [x] | [ ] |
 //! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
 //! | `Material.Gbx` | [plug::Material] | [x] | [ ] |
+//! | `Mesh.Gbx` | [plug::Solid2Model] | [x] | [ ] |
 //! | `Prefab.Gbx` | [plug::Prefab] | [x] | [ ] |
+//! | `StaticObject.Gbx` | [plug::StaticObjectModel] | [x] | [ ] |
 //! | `Texture.Gbx` | [plug::Bitmap] | [x] | [ ] |
 //! | `Title.Gbx` | [game::ManiaTitle] | [x] | [ ] |
+//! | `VegetTreeModel.Gbx` | [plug::VegetTreeModel] | [x] | [ ] |
 
 pub mod control;
 pub mod game;

@@ -34,6 +34,8 @@ pub enum ItemVariantModel {
     StaticObject,
     /// Prefab.
     Prefab,
+    /// Veget tree model.
+    VegetTreeModel,
 }
 
 mod read {

@@ -33,6 +33,7 @@ pub mod static_object_model;
 pub mod surface;
 pub mod tree;
 pub mod tree_generator;
+pub mod veget_tree_model;
 pub mod vertex_stream;
 pub mod visual;
 pub mod visual3d;
@@ -93,6 +94,8 @@ pub use surface::Surface;
 pub use tree::Tree;
 #[doc(inline)]
 pub use tree_generator::TreeGenerator;
+#[doc(inline)]
+pub use veget_tree_model::VegetTreeModel;
 #[doc(inline)]
 pub use vertex_stream::VertexStream;
 #[doc(inline)]

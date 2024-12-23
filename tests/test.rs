@@ -8,7 +8,10 @@ use gamebox::{
         item_model::ItemModel,
         ManiaTitle,
     },
-    plug::{bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model},
+    plug::{
+        bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model,
+        VegetTreeModel,
+    },
     read_file,
 };
 
@@ -397,4 +400,10 @@ fn read_texture_technics_trims_d() {
 #[test]
 fn read_title_tm_stadium() {
     read_file::<ManiaTitle>("tests/files/title/TMStadium.Title.Gbx").unwrap();
+}
+
+#[test]
+fn read_veget_tree_model_cherry_tree_medium() {
+    read_file::<VegetTreeModel>("tests/files/veget_tree_model/CherryTreeMedium.VegetTreeModel.Gbx")
+        .unwrap();
 }
