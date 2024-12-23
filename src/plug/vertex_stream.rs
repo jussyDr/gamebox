@@ -12,6 +12,7 @@ pub struct VertexStream {
     texcoords_0: Vec<Texcoord>,
     colors_0: Option<Vec<Rgba<u8>>>,
     texcoords_1: Option<Vec<Texcoord>>,
+    texcoords_2: Option<Vec<Texcoord>>,
 }
 
 impl Class for VertexStream {
@@ -29,10 +30,12 @@ impl VertexStream {
         &self.positions
     }
 
+    /// Tangents U.
     pub const fn tangents_u(&self) -> &Vec<[f32; 3]> {
         &self.tangents_u
     }
 
+    /// Tangents V.
     pub const fn tangents_v(&self) -> &Vec<[f32; 3]> {
         &self.tangents_v
     }
@@ -47,12 +50,18 @@ impl VertexStream {
         self.colors_0.as_ref()
     }
 
+    /// Texcoords 1.
     pub const fn texcoords_1(&self) -> Option<&Vec<Texcoord>> {
         self.texcoords_1.as_ref()
     }
+
+    /// Texcoords 2.
+    pub const fn texcoords_2(&self) -> Option<&Vec<Texcoord>> {
+        self.texcoords_2.as_ref()
+    }
 }
 
-struct VertexAttribute {
+struct VertexAttrDesc {
     flags: u32,
 }
 
@@ -68,7 +77,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
     };
 
-    use super::{VertexAttribute, VertexStream};
+    use super::{VertexAttrDesc, VertexStream};
 
     impl ReadBody for VertexStream {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -96,7 +105,7 @@ mod read {
             let count = r.u32()?;
             let _flags = r.u32()?;
             r.u32()?;
-            let data_decls = r.list(|r| {
+            let vertex_attr_descs = r.list(|r| {
                 let flags = r.u32()?;
                 let flags_2 = r.u32()?;
 
@@ -109,13 +118,13 @@ mod read {
                     let _offset = r.u16()?;
                 }
 
-                Ok(VertexAttribute { flags })
+                Ok(VertexAttrDesc { flags })
             })?;
             r.bool()?;
 
-            for data_decl in data_decls {
-                let ty = (data_decl.flags >> 9) & 0x000001ff;
-                let weight_count = data_decl.flags & 0x000001ff;
+            for vertex_attr_desc in vertex_attr_descs {
+                let ty = (vertex_attr_desc.flags >> 9) & 0x000001ff;
+                let weight_count = vertex_attr_desc.flags & 0x000001ff;
 
                 match ty {
                     1 => {
@@ -127,6 +136,9 @@ mod read {
                             }
                             11 => {
                                 self.texcoords_1 = Some(unsafe { transmute(data) });
+                            }
+                            12 => {
+                                self.texcoords_2 = Some(unsafe { transmute(data) });
                             }
                             _ => todo!("{weight_count}"),
                         }
