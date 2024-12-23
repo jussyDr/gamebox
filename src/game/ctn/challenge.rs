@@ -7,7 +7,6 @@ use crate::{script::TraitsMetadata, Class, FileRef, Vec2, Vec3};
 use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
 /// A challenge.
-#[derive(Default)]
 pub struct Challenge {
     medal_times: Option<MedalTimes>,
     cost: u32,
@@ -38,6 +37,7 @@ pub struct Challenge {
     in_game_clips: Option<Arc<MediaClipGroup>>,
     end_race_clips: Option<Arc<MediaClipGroup>>,
     ambiance_clip: Option<Arc<MediaClip>>,
+    decoration_base_height_offset: u32,
     embedded_items: Option<EmbeddedItems>,
 }
 
@@ -161,9 +161,52 @@ impl Challenge {
         self.ambiance_clip.as_ref()
     }
 
+    /// Decoration base height offset.
+    pub const fn decoration_base_height_offset(&self) -> u32 {
+        self.decoration_base_height_offset
+    }
+
     /// Embedded items.
     pub const fn embedded_items(&self) -> Option<&EmbeddedItems> {
         self.embedded_items.as_ref()
+    }
+}
+
+impl Default for Challenge {
+    fn default() -> Self {
+        Self {
+            medal_times: None,
+            cost: 0,
+            play_mode: 0,
+            author_score: None,
+            editor_mode: EditorMode::default(),
+            num_checkpoints: 0,
+            num_laps: None,
+            id: Arc::default(),
+            author_id: Arc::default(),
+            name: String::default(),
+            ty: ChallengeType::default(),
+            password: String::default(),
+            decoration_id: Arc::default(),
+            coord_origin: Vec2::default(),
+            coord_target: Vec2::default(),
+            title_id: Arc::from("TMStadium"),
+            parameters: Arc::default(),
+            texture_mod: None,
+            size: Vec3::new(48, 40, 48),
+            blocks: vec![],
+            music: None,
+            items: vec![],
+            script_metadata: TraitsMetadata::default(),
+            baked_blocks: vec![],
+            intro_clip: None,
+            podium_clip: None,
+            in_game_clips: None,
+            end_race_clips: None,
+            ambiance_clip: None,
+            decoration_base_height_offset: 8,
+            embedded_items: None,
+        }
     }
 }
 
@@ -825,7 +868,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _deco_base_height_offset = r.u32()?;
+            self.decoration_base_height_offset = r.u32()?;
 
             Ok(())
         }

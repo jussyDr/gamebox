@@ -24,6 +24,11 @@ impl MaterialUserInst {
     }
 }
 
+pub enum MaterialLink {
+    Id(Arc<str>),
+    Path(String),
+}
+
 /// Effect.
 #[derive(Clone, Copy, Debug)]
 pub enum Effect {

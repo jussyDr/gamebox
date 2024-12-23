@@ -82,6 +82,11 @@ pub struct Vec3<T> {
 }
 
 impl<T: Copy> Vec3<T> {
+    /// New.
+    pub const fn new(x: T, y: T, z: T) -> Self {
+        Self { x, y, z }
+    }
+
     /// From array.
     pub const fn from_array(array: [T; 3]) -> Self {
         Self {
