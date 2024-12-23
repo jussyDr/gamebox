@@ -1,5 +1,7 @@
 //! Item variant list.
 
+use crate::ExternalNodeRef;
+
 /// Item variant list.
 #[derive(Default, Debug)]
 pub struct ItemVariantList {
@@ -8,7 +10,24 @@ pub struct ItemVariantList {
 
 /// Item variant.
 #[derive(Debug)]
-pub struct ItemVariant;
+pub struct ItemVariant {
+    model: ExternalNodeRef<ItemVariantModel>,
+}
+
+impl ItemVariant {
+    /// Model.
+    pub const fn model(&self) -> &ExternalNodeRef<ItemVariantModel> {
+        &self.model
+    }
+}
+
+/// Item variant model.
+pub enum ItemVariantModel {
+    /// Static object.
+    StaticObject,
+    /// Prefab.
+    Prefab,
+}
 
 mod read {
     use std::io::Read;
@@ -39,10 +58,10 @@ mod read {
                     Ok(())
                 })?;
 
-                let _entity_model = r.external_node_ref::<()>()?;
+                let model = r.external_node_ref()?;
                 let _hidden_in_manual_cycle = r.bool()?;
 
-                Ok(ItemVariant)
+                Ok(ItemVariant { model })
             })?;
 
             Ok(())
