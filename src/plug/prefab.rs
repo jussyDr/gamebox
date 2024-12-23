@@ -139,7 +139,7 @@ mod read {
                         _ => {
                             return Err(Error::new(ErrorKind::Unsupported(
                                 "prefab entity type".into(),
-                            )))
+                            )));
                         }
                     }
 
@@ -194,6 +194,17 @@ mod read {
                         let _ent_2 = r.u32()?;
                         let _position_1 = r.vec3::<f32>()?;
                         let _position_2 = r.vec3::<f32>()?;
+                    }
+                    0x2f0d8000 => {
+                        let version = r.u32()?;
+
+                        if version != 1 {
+                            return Err(Error::version("instance params", version));
+                        }
+
+                        r.u32()?;
+                        r.u32()?;
+                        r.u32()?;
                     }
                     0x2f0d9000 => {
                         let version = r.u32()?;
