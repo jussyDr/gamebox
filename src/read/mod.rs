@@ -160,7 +160,7 @@ impl Settings {
 
                     path.push(file_name);
 
-                    println!("{node_index}, {path:?}");
+                    // println!("{node_index}, {path:?}");
 
                     node_state.set_external_node_ref(
                         node_ref_index as usize,
