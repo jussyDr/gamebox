@@ -13,7 +13,7 @@ impl Class for Bitmap {
 }
 
 impl Bitmap {
-    /// Image of the bitmap.
+    /// Bitmap image.
     pub const fn image(&self) -> &ExternalNodeRef<()> {
         &self.image
     }

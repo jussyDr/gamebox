@@ -7,7 +7,7 @@ use super::Bitmap;
 /// A custom material.
 #[derive(Default)]
 pub struct MaterialCustom {
-    base_color_texture: ExternalNodeRef<Bitmap>,
+    base_color_texture: Option<ExternalNodeRef<Bitmap>>,
     normal_texture: ExternalNodeRef<Bitmap>,
     metallic_roughness_texture: ExternalNodeRef<Bitmap>,
 }
@@ -18,8 +18,8 @@ impl Class for MaterialCustom {
 
 impl MaterialCustom {
     /// Base color texture.
-    pub const fn base_color_texture(&self) -> &ExternalNodeRef<Bitmap> {
-        &self.base_color_texture
+    pub const fn base_color_texture(&self) -> Option<&ExternalNodeRef<Bitmap>> {
+        self.base_color_texture.as_ref()
     }
 
     /// Normal map texture.
@@ -174,7 +174,7 @@ mod read {
                 if let Some(texture) = texture {
                     match texture_id.as_ref() {
                         "BaseColor" | "BaseColorOp" | "PyBaseColor" | "PxzBaseColor" => {
-                            self.base_color_texture = texture
+                            self.base_color_texture = Some(texture)
                         }
                         "BaseColorHueMask" => {}
                         "Normal" | "PyNormal" | "PxzNormal" => self.normal_texture = texture,
