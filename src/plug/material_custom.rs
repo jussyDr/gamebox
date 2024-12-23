@@ -129,12 +129,19 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_15<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_15<N>(
+            &mut self,
+            r: &mut Reader<impl Read, impl IdStateMut, N>,
+        ) -> Result<(), Error> {
             r.u32()?;
             r.f32()?;
             r.f32()?;
             r.u32()?;
-            r.u32()?;
+
+            if r.bool()? {
+                r.id()?;
+                r.u32()?;
+            }
 
             Ok(())
         }
