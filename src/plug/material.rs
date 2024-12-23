@@ -26,10 +26,13 @@ impl Material {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::read::{
-        read_body_chunks, readable,
-        reader::{IdStateMut, NodeStateMut, Reader},
-        BodyChunk, BodyChunks, Error, ReadBody, Readable,
+    use crate::{
+        plug::MaterialColorTargetTable,
+        read::{
+            read_body_chunks, readable,
+            reader::{IdStateMut, NodeStateMut, Reader},
+            BodyChunk, BodyChunks, Error, ReadBody, Readable,
+        },
     };
 
     use self::readable::{HeaderChunk, HeaderChunks};
@@ -131,10 +134,13 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_21<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_21(
+            &mut self,
+            r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
-            r.list(|r| r.u32())?;
+            r.list(|r| r.node_ref::<MaterialColorTargetTable>())?;
             r.u32()?;
 
             Ok(())

@@ -308,6 +308,12 @@ fn read_material_decal_paint_2_logo_4x1() {
 }
 
 #[test]
+fn read_material_decal_sponsor_1x1_big_a_on_road_ice() {
+    read_file::<Material>("tests/files/material/DecalSponsor1x1BigAOnRoadIce.Material.Gbx")
+        .unwrap();
+}
+
+#[test]
 fn read_material_deco_hill() {
     read_file::<Material>("tests/files/material/DecoHill.Material.gbx").unwrap();
 }

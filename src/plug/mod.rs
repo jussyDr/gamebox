@@ -17,6 +17,7 @@ pub mod item_variant_list;
 pub mod light;
 pub mod light_user_model;
 pub mod material;
+pub mod material_color_target_table;
 pub mod material_custom;
 pub mod material_user_inst;
 pub mod media_clip_list;
@@ -64,6 +65,8 @@ pub use light::Light;
 pub use light_user_model::LightUserModel;
 #[doc(inline)]
 pub use material::Material;
+#[doc(inline)]
+pub use material_color_target_table::MaterialColorTargetTable;
 #[doc(inline)]
 pub use material_custom::MaterialCustom;
 #[doc(inline)]
