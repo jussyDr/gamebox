@@ -5,12 +5,12 @@ use crate::{Class, Rgba, Texcoord, Vec3};
 /// A vertex stream.
 #[derive(Default, Debug)]
 pub struct VertexStream {
-    normals: Vec<[f32; 3]>,
     positions: Vec<Vec3<f32>>,
     tangents_u: Vec<[f32; 3]>,
     tangents_v: Vec<[f32; 3]>,
     texcoords_0: Vec<Texcoord>,
     colors_0: Option<Vec<Rgba<u8>>>,
+    normals: Option<Vec<[f32; 3]>>,
     texcoords_1: Option<Vec<Texcoord>>,
     texcoords_2: Option<Vec<Texcoord>>,
 }
@@ -20,11 +20,6 @@ impl Class for VertexStream {
 }
 
 impl VertexStream {
-    /// Normal data.
-    pub const fn normals(&self) -> &Vec<[f32; 3]> {
-        &self.normals
-    }
-
     /// Position data.
     pub const fn positions(&self) -> &Vec<Vec3<f32>> {
         &self.positions
@@ -48,6 +43,11 @@ impl VertexStream {
     /// Color data.
     pub const fn colors_0(&self) -> Option<&Vec<Rgba<u8>>> {
         self.colors_0.as_ref()
+    }
+
+    /// Normal data.
+    pub const fn normals(&self) -> Option<&Vec<[f32; 3]>> {
+        self.normals.as_ref()
     }
 
     /// Texcoords 1.
@@ -176,7 +176,7 @@ mod read {
                         })?;
 
                         match weight_count {
-                            5 => self.normals = data,
+                            5 => self.normals = Some(data),
                             18 => self.tangents_u = data,
                             20 => self.tangents_v = data,
                             _ => todo!("{weight_count}"),
