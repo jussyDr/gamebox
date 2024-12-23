@@ -434,7 +434,7 @@ mod read {
 
         fn read_chunk_60<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             r.u32()?;
-            r.string()?;
+            let _spectators_folder = r.string()?;
             r.u32()?;
 
             Ok(())
@@ -485,7 +485,7 @@ mod read {
         }
 
         fn read_chunk_67<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.string()?;
+            let _modifier_folder = r.string()?;
 
             Ok(())
         }

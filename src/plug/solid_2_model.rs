@@ -10,6 +10,7 @@ use super::{visual_indexed_triangles::VisualIndexedTriangles, Material, Material
 #[derive(Default, Debug)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
+    material_folder: Option<String>,
     lights: Vec<()>,
     light_instances: Vec<()>,
 }
@@ -22,6 +23,11 @@ impl Solid2Model {
     /// Shaded geometries.
     pub const fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
         &self.shaded_geoms
+    }
+
+    /// Material folder.
+    pub const fn material_folder(&self) -> Option<&String> {
+        self.material_folder.as_ref()
     }
 
     /// Light instances.
@@ -184,7 +190,12 @@ mod read {
 
             let _file_write_time = r.u64()?;
             r.string()?;
-            let _materials_folder_name = r.string()?;
+            let materials_folder_name = r.string()?;
+            if materials_folder_name.is_empty() {
+                self.material_folder = None;
+            } else {
+                self.material_folder = Some(materials_folder_name)
+            }
             r.string()?;
             self.lights = r.list(|r| {
                 r.id()?;
