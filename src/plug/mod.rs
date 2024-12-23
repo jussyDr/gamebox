@@ -97,3 +97,28 @@ pub use visual3d::Visual3D;
 pub use visual_indexed::VisualIndexed;
 #[doc(inline)]
 pub use visual_indexed_triangles::VisualIndexedTriangles;
+
+/// Texture coordinate.
+#[derive(Clone, Copy, Default, Debug)]
+#[repr(C)]
+pub struct Texcoord {
+    /// U component.
+    pub u: f32,
+    /// V component.
+    pub v: f32,
+}
+
+impl Texcoord {
+    /// From array `[u, v]`.
+    pub const fn from_array(array: [f32; 2]) -> Self {
+        Self {
+            u: array[0],
+            v: array[1],
+        }
+    }
+
+    /// To array `[u, v]`.
+    pub const fn to_array(self) -> [f32; 2] {
+        [self.u, self.v]
+    }
+}

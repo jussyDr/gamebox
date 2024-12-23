@@ -1,6 +1,8 @@
 //! Vertex stream.
 
-use crate::{Class, Rgba, Texcoord, Vec3};
+use crate::{Class, Rgba, Vec3};
+
+use super::Texcoord;
 
 /// A vertex stream.
 #[derive(Default, Debug)]

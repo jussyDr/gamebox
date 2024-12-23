@@ -119,26 +119,6 @@ impl<T: Copy> Vec4<T> {
     }
 }
 
-/// Texture coordinate.
-#[derive(Clone, Copy, Default, Debug)]
-#[repr(C)]
-pub struct Texcoord {
-    /// U component.
-    pub u: f32,
-    /// V component.
-    pub v: f32,
-}
-
-impl Texcoord {
-    /// From array.
-    pub const fn from_array(array: [f32; 2]) -> Self {
-        Self {
-            u: array[0],
-            v: array[1],
-        }
-    }
-}
-
 /// Color represented by red, green, and blue components.
 #[derive(Clone, Copy, Default, Debug)]
 #[repr(C)]

@@ -117,13 +117,13 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        plug::LightUserModel,
+        plug::{LightUserModel, Texcoord},
         read::{
             read_body_chunks,
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
         },
-        PitchYawRoll, Texcoord,
+        PitchYawRoll,
     };
 
     use super::{Crystal, Face, Mesh, SpawnPosition};
