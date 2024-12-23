@@ -84,7 +84,7 @@ pub enum BlockType {
     /// Normal block.
     Normal {
         /// Cardinal direction.
-        dir: Direction,
+        direction: Direction,
         /// Coordinate.
         coord: Vec3<u8>,
         /// Is ghost.
@@ -102,7 +102,7 @@ pub enum BlockType {
 impl Default for BlockType {
     fn default() -> Self {
         BlockType::Normal {
-            dir: Default::default(),
+            direction: Default::default(),
             coord: Default::default(),
             is_ghost: Default::default(),
         }
@@ -132,7 +132,7 @@ mod read {
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
             self.model_id = r.id()?;
-            let dir = r.enum_u8::<Direction>()?;
+            let direction = r.enum_u8::<Direction>()?;
             let coord = r.vec3()?;
             let flags = r.u32()?;
 
@@ -165,7 +165,7 @@ mod read {
 
                 if !is_free {
                     self.ty = BlockType::Normal {
-                        dir,
+                        direction,
                         coord,
                         is_ghost,
                     };

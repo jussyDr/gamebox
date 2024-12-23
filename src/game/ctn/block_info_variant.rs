@@ -4,11 +4,12 @@ use std::sync::Arc;
 
 use crate::Class;
 
-use super::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo};
+use super::{block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo, Direction};
 
 /// A block info variant.
 #[derive(Clone, Default)]
 pub struct BlockInfoVariant {
+    direction: Direction,
     mobils: Vec<Vec<Arc<BlockInfoMobil>>>,
     block_unit_models: Vec<Arc<BlockUnitInfo>>,
 }
@@ -18,13 +19,18 @@ impl Class for BlockInfoVariant {
 }
 
 impl BlockInfoVariant {
+    /// Direction.
+    pub const fn direction(&self) -> Direction {
+        self.direction
+    }
+
     /// Mobils.
-    pub fn mobils(&self) -> &[Vec<Arc<BlockInfoMobil>>] {
+    pub const fn mobils(&self) -> &Vec<Vec<Arc<BlockInfoMobil>>> {
         &self.mobils
     }
 
     /// Block unit models.
-    pub fn block_unit_models(&self) -> &[Arc<BlockUnitInfo>] {
+    pub const fn block_unit_models(&self) -> &Vec<Arc<BlockUnitInfo>> {
         &self.block_unit_models
     }
 }
@@ -80,7 +86,7 @@ mod read {
             }
 
             let _symmetrical_variant_index = r.u32()?;
-            let _cardinal_dir = r.u8()?;
+            self.direction = r.enum_u8()?;
             let _variant_base_type = r.u8()?;
             let _no_pillar_below_index = r.u8()?;
 
