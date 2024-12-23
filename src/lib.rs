@@ -57,7 +57,7 @@ pub use write::{write, write_file};
 
 pub use node_ref::{ExternalNodeRef, NodeRef};
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// 2-dimensional vector.
 #[derive(Clone, Copy, Default, Debug)]
@@ -243,4 +243,27 @@ const HEAVY_CHUNK_MARKER_BIT: u32 = 0x80000000;
 
 trait Class: Sized {
     const CLASS_ID: u32;
+}
+
+/// Extract the sub-extension of `path.file_name`, if possible.
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+///
+/// assert_eq!("Map", gamebox::sub_extension(Path::new("MyMap.Map.Gbx")).unwrap());
+/// ```
+pub fn sub_extension(path: &Path) -> Option<&str> {
+    let mut parts = path.file_name()?.to_str()?.split('.');
+
+    parts.next()?;
+    let sub_extension = parts.next()?;
+    parts.next()?;
+
+    if parts.next().is_some() {
+        return None;
+    }
+
+    Some(sub_extension)
 }
