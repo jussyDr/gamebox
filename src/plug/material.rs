@@ -9,7 +9,7 @@ use super::{material_custom::MaterialCustom, MaterialColorTargetTable};
 /// Material.
 #[derive(Default)]
 pub struct Material {
-    custom: Arc<MaterialCustom>,
+    custom: Option<Arc<MaterialCustom>>,
     color_tables: Vec<NodeRef<MaterialColorTargetTable>>,
 }
 
@@ -19,8 +19,8 @@ impl Class for Material {
 
 impl Material {
     /// Custom.
-    pub const fn custom(&self) -> &Arc<MaterialCustom> {
-        &self.custom
+    pub const fn custom(&self) -> Option<&Arc<MaterialCustom>> {
+        self.custom.as_ref()
     }
 }
 
@@ -89,7 +89,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.custom = r.internal_node_ref()?;
+            self.custom = r.internal_node_ref_or_null()?;
 
             Ok(())
         }
@@ -110,19 +110,20 @@ mod read {
         }
 
         fn read_chunk_18<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.u32()?;
-            r.string()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.f32()?;
-            r.u32()?;
-            r.u32()?;
+            if r.u32()? != 0 {
+                r.string()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.f32()?;
+                r.u32()?;
+                r.u32()?;
+            }
 
             Ok(())
         }
@@ -139,10 +140,19 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            r.u32()?;
-            r.u32()?;
+            let version = r.u32()?;
+
+            if version != 7 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let x = r.u32()?;
             self.color_tables = r.list(|r| r.node_ref::<MaterialColorTargetTable>())?;
             r.u32()?;
+
+            if x == 0xffffffff {
+                r.u32()?;
+            }
 
             Ok(())
         }

@@ -303,6 +303,11 @@ fn read_material_canopy() {
 }
 
 #[test]
+fn read_material_collision_canopy() {
+    read_file::<Material>("tests/files/material/CollisionCanopy.Material.gbx").unwrap();
+}
+
+#[test]
 fn read_material_decal_paint_2_logo_4x1() {
     read_file::<Material>("tests/files/material/DecalPaint2Logo4x1.Material.gbx").unwrap();
 }
