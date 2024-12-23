@@ -126,35 +126,21 @@ mod read {
             let _color_texture = r.external_node_ref_or_null::<Bitmap>()?;
             let _normal_texture = r.external_node_ref_or_null::<Bitmap>()?;
 
-            if r.u32()? == 2 {
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-            } else {
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-            }
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.f32()?;
+            r.u32()?;
+            r.list(|r| {
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
 
+                Ok(())
+            })?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
