@@ -340,6 +340,11 @@ fn read_prefab_corner_in_air() {
 }
 
 #[test]
+fn read_prefab_corner_in() {
+    read_file::<Prefab>("tests/files/prefab/CornerIn.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_diag_in() {
     read_file::<Prefab>("tests/files/prefab/DiagIn.Prefab.Gbx").unwrap();
 }

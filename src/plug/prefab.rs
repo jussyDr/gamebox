@@ -147,26 +147,11 @@ mod read {
                 })?;
                 let rotation = r.quat()?;
                 let position = r.vec3()?;
+                let class_id = r.u32()?;
 
-                match r.u32()? {
+                match class_id {
                     0x2f0a9000 => {
-                        let version = r.u32()?;
-
-                        if version != 1 {
-                            return Err(Error::version("instance params", version));
-                        }
-
-                        r.u32()?;
-                        r.list(|r| {
-                            r.list(|r| {
-                                r.string()?;
-                                r.string()?;
-
-                                Ok(())
-                            })?;
-
-                            Ok(())
-                        })?;
+                        read_item_placement_placement(r)?;
                     }
                     0x2f0b6000 => {
                         let version = r.u32()?;
@@ -202,9 +187,14 @@ mod read {
                             return Err(Error::version("instance params", version));
                         }
 
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
+                        let _placements = r.list(|r| read_item_placement_placement(r))?;
+                        r.list(|r| r.u16())?;
+                        r.list(|r| {
+                            r.vec3::<f32>()?;
+                            r.quat()?;
+
+                            Ok(())
+                        })?;
                     }
                     0x2f0d9000 => {
                         let version = r.u32()?;
@@ -234,5 +224,27 @@ mod read {
 
             Ok(())
         }
+    }
+
+    fn read_item_placement_placement<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error::version("instance params", version));
+        }
+
+        r.u32()?;
+        r.list(|r| {
+            r.list(|r| {
+                r.string()?;
+                r.string()?;
+
+                Ok(())
+            })?;
+
+            Ok(())
+        })?;
+
+        Ok(())
     }
 }
