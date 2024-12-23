@@ -113,7 +113,9 @@ impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
     pub fn external_node_ref<T>(&mut self) -> Result<ExternalNodeRef<T>, Error> {
         match self.external_node_ref_or_null()? {
             Some(external_node_ref) => Ok(external_node_ref),
-            None => Err(Error::new(ErrorKind::Format("null".into()))),
+            None => Err(Error::new(ErrorKind::Format(
+                "node reference is null".into(),
+            ))),
         }
     }
 }

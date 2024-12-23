@@ -60,9 +60,9 @@ mod read {
             r.id_or_null()?;
             r.id_or_null()?;
             r.u8()?;
-            let _color_texture = r.external_node_ref::<Bitmap>()?;
-            let _normal_teture = r.external_node_ref::<Bitmap>()?;
-            let _roughness_texture = r.external_node_ref::<Bitmap>()?;
+            let _color_texture = r.external_node_ref_or_null::<Bitmap>()?;
+            let _normal_teture = r.external_node_ref_or_null::<Bitmap>()?;
+            let _roughness_texture = r.external_node_ref_or_null::<Bitmap>()?;
             let _color_image = r.external_node_ref::<()>()?;
             let _normal_image = r.external_node_ref::<()>()?;
             let _roughness_image = r.external_node_ref::<()>()?;
@@ -70,9 +70,9 @@ mod read {
             r.id_or_null()?;
             r.id_or_null()?;
             r.u8()?;
-            r.id_or_null()?;
-            r.id_or_null()?;
-            r.id_or_null()?;
+            let _color_texture = r.external_node_ref_or_null::<Bitmap>()?;
+            let _normal_teture = r.external_node_ref_or_null::<Bitmap>()?;
+            let _roughness_texture = r.external_node_ref_or_null::<Bitmap>()?;
             let _color_image = r.external_node_ref::<()>()?;
             let _normal_image = r.external_node_ref::<()>()?;
             let _roughness_image = r.external_node_ref::<()>()?;
@@ -85,32 +85,21 @@ mod read {
             r.id()?;
             r.id()?;
             r.id()?;
-            r.u32()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.u32()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
-            r.u16()?;
-            r.internal_node_ref::<VisualIndexedTriangles>()?;
-            r.u8()?;
+            r.list(|r| {
+                r.u16()?;
+                r.internal_node_ref::<VisualIndexedTriangles>()?;
+                r.u8()?;
+
+                Ok(())
+            })?;
+            r.list(|r| {
+                r.u16()?;
+                r.internal_node_ref::<VisualIndexedTriangles>()?;
+                r.u8()?;
+
+                Ok(())
+            })?;
+
             r.u16()?;
             r.f32()?;
             r.f32()?;
@@ -132,27 +121,40 @@ mod read {
 
                 Ok(())
             })?;
+
             r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.f32()?;
-            r.u32()?;
-            r.u32()?;
-            r.f32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.f32()?;
-            r.u32()?;
-            r.u32()?;
-            r.f32()?;
-            r.f32()?;
-            r.u32()?;
-            r.u32()?;
-            r.f32()?;
+            let _color_texture = r.external_node_ref_or_null::<Bitmap>()?;
+            let _normal_texture = r.external_node_ref_or_null::<Bitmap>()?;
+
+            if r.u32()? == 2 {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+            } else {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+            }
+
             r.u32()?;
             r.u32()?;
             r.u32()?;

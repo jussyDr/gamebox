@@ -407,3 +407,9 @@ fn read_veget_tree_model_cherry_tree_medium() {
     read_file::<VegetTreeModel>("tests/files/veget_tree_model/CherryTreeMedium.VegetTreeModel.Gbx")
         .unwrap();
 }
+
+#[test]
+fn read_veget_tree_model_cypress_dirt_tall() {
+    read_file::<VegetTreeModel>("tests/files/veget_tree_model/CypressDirtTall.VegetTreeModel.Gbx")
+        .unwrap();
+}
