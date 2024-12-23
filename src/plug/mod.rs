@@ -5,6 +5,7 @@ pub mod crystal;
 pub mod curve_simple_nod;
 pub mod dyna_kinematic_contraint;
 pub mod dyna_object_model;
+pub mod editor_helper;
 pub mod ent_record_data;
 pub mod entity_spawner;
 pub mod fx_hdr_scales_tech_3;
@@ -27,6 +28,7 @@ pub mod road_chunk;
 pub mod skel;
 pub mod solid;
 pub mod solid_2_model;
+pub mod spawn_model;
 pub mod static_object_model;
 pub mod surface;
 pub mod tree;
@@ -45,6 +47,8 @@ pub use crystal::Crystal;
 pub use curve_simple_nod::CurveSimpleNod;
 #[doc(inline)]
 pub use dyna_object_model::DynaObjectModel;
+#[doc(inline)]
+pub use editor_helper::EditorHelper;
 #[doc(inline)]
 pub use fx_hdr_scales_tech_3::FxHdrScalesTech3;
 #[doc(inline)]
@@ -79,6 +83,8 @@ pub use skel::Skel;
 pub use solid::Solid;
 #[doc(inline)]
 pub use solid_2_model::Solid2Model;
+#[doc(inline)]
+pub use spawn_model::SpawnModel;
 #[doc(inline)]
 pub use static_object_model::StaticObjectModel;
 #[doc(inline)]

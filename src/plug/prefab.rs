@@ -65,7 +65,8 @@ mod read {
     use crate::{
         plug::{
             dyna_kinematic_contraint::DynaKinematicConstraint,
-            static_object_model::StaticObjectModel, DynaObjectModel, Path,
+            static_object_model::StaticObjectModel, DynaObjectModel, EditorHelper, Path,
+            SpawnModel, Surface,
         },
         read::{
             readable::{HeaderChunk, HeaderChunks, Sealed},
@@ -123,12 +124,33 @@ mod read {
 
                             ty = PrefabEntityType::StaticObjectModel(m);
                         }
+                        0x09178000 => {
+                            // NPlugTrigger_SWaypoint
+
+                            let version = r.u32()?;
+
+                            if version != 1 {
+                                return Err(Error::version("", version));
+                            }
+
+                            let _ty = r.u32()?;
+                            let _trigger_shape = r.external_node_ref::<Surface>()?;
+                            let _no_respawn = r.bool()?;
+                        }
                         0x09179000 => {
                             // NPlugTrigger_SSpecial
 
                             r.u32()?;
                             r.u32()?;
                             r.u32()?;
+                        }
+                        0x0917a000 => {
+                            let mut m = SpawnModel::default();
+                            m.read_body(r)?;
+                        }
+                        0x0917b000 => {
+                            let mut m = EditorHelper::default();
+                            m.read_body(r)?;
                         }
                         0x2f0ca000 => {
                             let mut m = DynaKinematicConstraint;
