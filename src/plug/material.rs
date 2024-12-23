@@ -2,14 +2,15 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, NodeRef};
 
-use super::material_custom::MaterialCustom;
+use super::{material_custom::MaterialCustom, MaterialColorTargetTable};
 
 /// Material.
 #[derive(Default)]
 pub struct Material {
     custom: Arc<MaterialCustom>,
+    color_tables: Vec<NodeRef<MaterialColorTargetTable>>,
 }
 
 impl Class for Material {
@@ -140,7 +141,7 @@ mod read {
         ) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
-            r.list(|r| r.node_ref::<MaterialColorTargetTable>())?;
+            self.color_tables = r.list(|r| r.node_ref::<MaterialColorTargetTable>())?;
             r.u32()?;
 
             Ok(())
@@ -158,7 +159,7 @@ mod read {
             r.u32()?;
             r.f32()?;
             r.u32()?;
-            r.u32()?;
+            r.string()?;
 
             Ok(())
         }

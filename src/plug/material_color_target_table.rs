@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// Material color target table.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MaterialColorTargetTable;
 
 impl Class for MaterialColorTargetTable {

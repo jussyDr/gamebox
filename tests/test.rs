@@ -334,6 +334,11 @@ fn read_material_light_spot() {
 }
 
 #[test]
+fn read_material_podium_screen_155() {
+    read_file::<Material>("tests/files/material/PodiumScreen155.Material.Gbx").unwrap();
+}
+
+#[test]
 fn read_material_road_tech() {
     read_file::<Material>("tests/files/material/RoadTech.Material.Gbx").unwrap();
 }
