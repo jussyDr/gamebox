@@ -6,6 +6,7 @@ use crate::{game::ctn::collector::Collector, Class};
 
 use super::{
     block_info_variant_air::BlockInfoVariantAir, block_info_variant_ground::BlockInfoVariantGround,
+    Direction,
 };
 
 /// Block info.
@@ -15,6 +16,7 @@ pub struct BlockInfo {
     variant_base_ground: BlockInfoVariantGround,
     variant_base_air: BlockInfoVariantAir,
     additional_variants_ground: Vec<Arc<BlockInfoVariantGround>>,
+    direction: Direction,
     additional_variants_air: Vec<Arc<BlockInfoVariantAir>>,
 }
 
@@ -42,12 +44,17 @@ impl BlockInfo {
     }
 
     /// Additional ground variants.
-    pub fn additional_variants_ground(&self) -> &[Arc<BlockInfoVariantGround>] {
+    pub const fn additional_variants_ground(&self) -> &Vec<Arc<BlockInfoVariantGround>> {
         &self.additional_variants_ground
     }
 
+    /// Direction.
+    pub const fn direction(&self) -> Direction {
+        self.direction
+    }
+
     /// Additional air variants.
-    pub fn additional_variants_air(&self) -> &[Arc<BlockInfoVariantAir>] {
+    pub const fn additional_variants_air(&self) -> &Vec<Arc<BlockInfoVariantAir>> {
         &self.additional_variants_air
     }
 }
@@ -58,7 +65,7 @@ mod read {
     use crate::{
         game::ctn::{
             block_info_variant_air::BlockInfoVariantAir,
-            block_info_variant_ground::BlockInfoVariantGround, Direction,
+            block_info_variant_ground::BlockInfoVariantGround,
         },
         plug::MediaClipList,
         read::{
@@ -181,7 +188,7 @@ mod read {
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             let _symmetrical_block_info_id = r.id_or_null()?;
-            let _dir = r.enum_u32::<Direction>()?;
+            self.direction = r.enum_u32()?;
 
             Ok(())
         }
