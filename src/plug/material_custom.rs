@@ -208,12 +208,21 @@ mod read {
         }
 
         fn read_chunk_22<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 2 {
+                return Err(Error::chunk_version(version));
+            }
+
+            let a = r.u32()?; // ?
             r.u32()?;
             r.u32()?;
+            let b = r.u32()?; // ?
             r.u32()?;
-            r.u32()?;
-            r.u32()?;
-            r.u32()?;
+
+            if a == 0x01FC0001 {
+                r.u32()?;
+            }
 
             Ok(())
         }

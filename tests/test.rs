@@ -328,6 +328,11 @@ fn read_material_technics_trims() {
 }
 
 #[test]
+fn read_material_waterground() {
+    read_file::<Material>("tests/files/material/Waterground.Material.Gbx").unwrap();
+}
+
+#[test]
 fn read_mesh_stade_4096() {
     read_file::<Solid2Model>("tests/files/mesh/Stade4096.Mesh.Gbx").unwrap();
 }
