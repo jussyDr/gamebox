@@ -318,6 +318,11 @@ fn read_material_grass() {
 }
 
 #[test]
+fn read_material_grass_fence() {
+    read_file::<Material>("tests/files/material/GrassFence.Material.gbx").unwrap();
+}
+
+#[test]
 fn read_material_light_spot() {
     read_file::<Material>("tests/files/material/LightSpot.Material.Gbx").unwrap();
 }
