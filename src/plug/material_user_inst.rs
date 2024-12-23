@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, Rgb};
 
 /// User defined material instance.
 #[derive(Default, Debug)]
@@ -10,7 +10,8 @@ pub struct MaterialUserInst {
     name: Option<Arc<str>>,
     physic_id: u8,
     effect: Option<Effect>,
-    link: String,
+    link: MaterialLink,
+    color: Option<Rgb<u32>>,
 }
 
 impl Class for MaterialUserInst {
@@ -22,11 +23,31 @@ impl MaterialUserInst {
     pub const fn effect(&self) -> Option<Effect> {
         self.effect
     }
+
+    /// Link.
+    pub const fn link(&self) -> &MaterialLink {
+        &self.link
+    }
+
+    /// Color.
+    pub const fn color(&self) -> Option<Rgb<u32>> {
+        self.color
+    }
 }
 
+/// Material link.
+#[derive(Debug)]
 pub enum MaterialLink {
+    /// Id.
     Id(Arc<str>),
+    /// Path.
     Path(String),
+}
+
+impl Default for MaterialLink {
+    fn default() -> Self {
+        Self::Id(Default::default())
+    }
 }
 
 /// Effect.
@@ -113,7 +134,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{Effect, MaterialUserInst};
+    use super::{Effect, MaterialLink, MaterialUserInst};
 
     impl ReadBody for MaterialUserInst {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -161,9 +182,9 @@ mod read {
             }
 
             if version >= 11 && !is_using_game_material {
-                self.link = r.id()?.to_string();
+                self.link = MaterialLink::Id(r.id()?);
             } else {
-                self.link = r.string()?;
+                self.link = MaterialLink::Path(r.string()?);
             }
 
             let _csts = r.list(|r| {
@@ -173,7 +194,9 @@ mod read {
 
                 Ok(())
             })?;
-            let _color = r.list(|r| r.u32())?;
+            if r.u32()? == 3 {
+                self.color = Some(r.rgb()?);
+            }
             let _uv_anims = r.list(|r| {
                 r.id()?;
                 r.id()?;
