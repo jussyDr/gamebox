@@ -4,12 +4,14 @@ use std::sync::Arc;
 
 use crate::Class;
 
-use super::Solid2Model;
+use super::{Solid2Model, Surface};
 
 /// Dyna object model
 #[derive(Default, Debug)]
 pub struct DynaObjectModel {
     model: Arc<Solid2Model>,
+    dyna_shape: Arc<Surface>,
+    static_shape: Arc<Surface>,
 }
 
 impl Class for DynaObjectModel {
@@ -26,12 +28,9 @@ impl DynaObjectModel {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        plug::Surface,
-        read::{
-            reader::{IdStateMut, NodeStateMut, Reader},
-            Error, ReadBody,
-        },
+    use crate::read::{
+        reader::{IdStateMut, NodeStateMut, Reader},
+        Error, ReadBody,
     };
 
     use super::DynaObjectModel;
@@ -50,8 +49,8 @@ mod read {
             let _is_static = r.bool()?;
             let _dynamize_on_spawn = r.bool()?;
             self.model = r.internal_node_ref()?;
-            let _dyna_shape = r.internal_node_ref::<Surface>()?;
-            let _static_shape = r.internal_node_ref::<Surface>()?;
+            self.dyna_shape = r.internal_node_ref()?;
+            self.static_shape = r.internal_node_ref()?;
             let _break_speed_kmh = r.f32()?;
             let _mass = r.f32()?;
             let _light_alive_duration_sc_min = r.f32()?;

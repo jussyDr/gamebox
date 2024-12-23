@@ -3,7 +3,7 @@
 use crate::{Class, Rgb};
 
 /// Light user model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct LightUserModel {
     color: Rgb<f32>,
     intensity: f32,

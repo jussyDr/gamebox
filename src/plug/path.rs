@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// Path.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Path;
 
 impl Class for Path {

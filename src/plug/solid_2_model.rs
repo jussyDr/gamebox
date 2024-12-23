@@ -10,6 +10,8 @@ use super::{visual_indexed_triangles::VisualIndexedTriangles, Material, Material
 #[derive(Default, Debug)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
+    lights: Vec<()>,
+    light_instances: Vec<()>,
 }
 
 impl Class for Solid2Model {
@@ -20,6 +22,11 @@ impl Solid2Model {
     /// Shaded geometries.
     pub const fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
         &self.shaded_geoms
+    }
+
+    /// Light instances.
+    pub const fn light_instances(&self) -> &Vec<()> {
+        &self.light_instances
     }
 }
 
@@ -140,7 +147,7 @@ mod read {
                     Ok(MaterialType::Material(material))
                 })?;
             }
-            let _skel = r.internal_node_ref_or_null::<Skel>()?;
+            let skel = r.internal_node_ref_or_null::<Skel>()?;
             r.list(|r| r.f32())?;
             let _vis_cst_type = r.u32()?;
 
@@ -179,7 +186,7 @@ mod read {
             r.string()?;
             let _materials_folder_name = r.string()?;
             r.string()?;
-            let _lights = r.list(|r| {
+            self.lights = r.list(|r| {
                 r.id()?;
 
                 if r.bool()? {
@@ -215,10 +222,19 @@ mod read {
 
                 Ok(())
             })?;
-            let _light_user_models = r.list(|r| r.internal_node_ref::<LightUserModel>())?;
-            let _light_insts = r.list(|r| {
-                let _model_index = r.u32()?;
-                let _socket_index = r.u32()?; // skel
+            let light_user_models = r.list(|r| r.internal_node_ref::<LightUserModel>())?;
+            self.light_instances = r.list(|r| {
+                let model_index = r.u32()?;
+                let socket_index = r.u32()?; // skel
+
+                let _model = light_user_models.get(model_index as usize).unwrap();
+
+                let _socket = skel
+                    .as_ref()
+                    .unwrap()
+                    .sockets()
+                    .get(socket_index as usize)
+                    .unwrap();
 
                 Ok(())
             })?;

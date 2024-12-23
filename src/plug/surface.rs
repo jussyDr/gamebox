@@ -15,13 +15,27 @@ impl Class for Surface {
     const CLASS_ID: u32 = 0x0900c000;
 }
 
+impl Surface {
+    /// Type.
+    pub const fn ty(&self) -> &SurfaceType {
+        &self.ty
+    }
+
+    /// Materials.
+    pub const fn materials(&self) -> &Vec<Option<ExternalNodeRef<Material>>> {
+        &self.materials
+    }
+}
+
 /// Surface type.
 #[derive(Debug)]
 pub enum SurfaceType {
-    /// Mesh surface.
+    /// Mesh.
     Mesh {
         /// Vertices.
         vertices: Vec<Vec3<f32>>,
+        /// Triangles.
+        triangles: Vec<Vec3<u32>>,
     },
 }
 
@@ -29,6 +43,7 @@ impl Default for SurfaceType {
     fn default() -> Self {
         Self::Mesh {
             vertices: Default::default(),
+            triangles: Default::default(),
         }
     }
 }
@@ -102,16 +117,17 @@ mod read {
                     }
 
                     let vertices = r.list(|r| r.vec3::<f32>())?;
-                    let _triangles = r.list(|r| {
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
+                    let triangles = r.list(|r| {
+                        let triangle = r.vec3()?;
                         r.u32()?;
 
-                        Ok(())
+                        Ok(triangle)
                     })?;
 
-                    SurfaceType::Mesh { vertices }
+                    SurfaceType::Mesh {
+                        vertices,
+                        triangles,
+                    }
                 }
                 _ => {
                     return Err(Error::new(ErrorKind::Unsupported(

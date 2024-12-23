@@ -3,7 +3,7 @@
 use crate::{Class, Quat, Vec3};
 
 use super::{
-    dyna_kinematic_contraint::DynaKinematicConstraint, DynaObjectModel, StaticObjectModel,
+    dyna_kinematic_contraint::DynaKinematicConstraint, DynaObjectModel, Path, StaticObjectModel,
 };
 
 /// Prefab.
@@ -51,12 +51,14 @@ impl PrefabEntity {
 /// Prefab entity type.
 #[derive(Debug)]
 pub enum PrefabEntityType {
-    /// Dynamic object model.
-    DynaObjectModel(DynaObjectModel),
-    /// Static object model.
-    StaticObjectModel(StaticObjectModel),
     /// Dynamic kinematic constraint.
     DynaKinematicConstraint(DynaKinematicConstraint),
+    /// Dynamic object model.
+    DynaObjectModel(DynaObjectModel),
+    /// Path.
+    Path(Path),
+    /// Static object model.
+    StaticObjectModel(StaticObjectModel),
 }
 
 mod read {
@@ -109,8 +111,10 @@ mod read {
                 r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
                         0x09119000 => {
-                            let mut m = Path::default();
+                            let mut m = Path;
                             m.read_body(r)?;
+
+                            ty = PrefabEntityType::Path(m);
                         }
                         0x09144000 => {
                             let mut m = DynaObjectModel::default();
@@ -145,7 +149,7 @@ mod read {
                             r.u32()?;
                         }
                         0x0917a000 => {
-                            let mut m = SpawnModel::default();
+                            let mut m = SpawnModel;
                             m.read_body(r)?;
                         }
                         0x0917b000 => {

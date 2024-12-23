@@ -396,5 +396,5 @@ fn read_texture_technics_trims_d() {
 
 #[test]
 fn read_title_tm_stadium() {
-    read_file::<ManiaTitle>("tests/files/title/TMStadium.Title.gbx").unwrap();
+    read_file::<ManiaTitle>("tests/files/title/TMStadium.Title.Gbx").unwrap();
 }

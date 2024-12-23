@@ -8,6 +8,13 @@ pub struct ItemVariantList {
     variants: Vec<ItemVariant>,
 }
 
+impl ItemVariantList {
+    /// Variants.
+    pub const fn variants(&self) -> &Vec<ItemVariant> {
+        &self.variants
+    }
+}
+
 /// Item variant.
 #[derive(Debug)]
 pub struct ItemVariant {

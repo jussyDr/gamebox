@@ -4,11 +4,24 @@ use crate::Class;
 
 /// Skeleton.
 #[derive(Default)]
-pub struct Skel;
+pub struct Skel {
+    joints: Vec<()>,
+    sockets: Vec<Socket>,
+}
 
 impl Class for Skel {
     const CLASS_ID: u32 = 0x090ba000;
 }
+
+impl Skel {
+    /// Sockets.
+    pub const fn sockets(&self) -> &Vec<Socket> {
+        &self.sockets
+    }
+}
+
+/// Socket.
+pub struct Socket;
 
 mod read {
     use std::io::{Read, Seek};
@@ -19,7 +32,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::Skel;
+    use super::{Skel, Socket};
 
     impl ReadBody for Skel {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -50,7 +63,7 @@ mod read {
 
             let _name = r.id_or_null()?;
             let joints_length = r.u16()?;
-            let _joints = r.repeat(joints_length as usize, |r| {
+            self.joints = r.repeat(joints_length as usize, |r| {
                 let _name = r.id()?;
                 let _parent_index = r.u16()?;
                 r.iso4()?;
@@ -58,12 +71,12 @@ mod read {
                 Ok(())
             })?;
             r.bool()?;
-            let _sockets = r.list(|r| {
+            self.sockets = r.list(|r| {
                 let _name = r.id()?;
                 r.u16()?;
                 r.iso4()?;
 
-                Ok(())
+                Ok(Socket)
             })?;
             r.bool()?;
             r.byte_buf()?;
