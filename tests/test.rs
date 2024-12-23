@@ -313,6 +313,11 @@ fn read_material_deco_hill() {
 }
 
 #[test]
+fn read_material_grass() {
+    read_file::<Material>("tests/files/material/Grass.Material.gbx").unwrap();
+}
+
+#[test]
 fn read_material_light_spot() {
     read_file::<Material>("tests/files/material/LightSpot.Material.Gbx").unwrap();
 }

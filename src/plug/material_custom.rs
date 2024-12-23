@@ -167,20 +167,22 @@ mod read {
             r.list(|r| {
                 let texture_id = r.id()?;
                 r.u32()?;
-                let texture = r.external_node_ref()?;
+                let texture = r.external_node_ref_or_null()?;
                 r.u32()?;
                 r.u32()?;
 
-                match texture_id.as_ref() {
-                    "BaseColor" | "BaseColorOp" | "PyBaseColor" | "PxzBaseColor" => {
-                        self.base_color_texture = texture
+                if let Some(texture) = texture {
+                    match texture_id.as_ref() {
+                        "BaseColor" | "BaseColorOp" | "PyBaseColor" | "PxzBaseColor" => {
+                            self.base_color_texture = texture
+                        }
+                        "BaseColorHueMask" => {}
+                        "Normal" | "PyNormal" | "PxzNormal" => self.normal_texture = texture,
+                        "RoughMetal" | "PyRoughMetal" | "PxzRoughMetal" => {
+                            self.metallic_roughness_texture = texture
+                        }
+                        _ => {}
                     }
-                    "BaseColorHueMask" => {}
-                    "Normal" | "PyNormal" | "PxzNormal" => self.normal_texture = texture,
-                    "RoughMetal" | "PyRoughMetal" | "PxzRoughMetal" => {
-                        self.metallic_roughness_texture = texture
-                    }
-                    _ => {}
                 }
 
                 Ok(())
@@ -214,13 +216,13 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let a = r.u32()?; // ?
+            let x = r.u32()?;
             r.u32()?;
             r.u32()?;
-            let b = r.u32()?; // ?
+            r.u32()?;
             r.u32()?;
 
-            if a == 0x01FC0001 {
+            if x & 3 != 0 {
                 r.u32()?;
             }
 
