@@ -8,7 +8,7 @@ use super::Material;
 #[derive(Default, Debug)]
 pub struct Surface {
     ty: SurfaceType,
-    materials: Vec<ExternalNodeRef<Material>>,
+    materials: Vec<Option<ExternalNodeRef<Material>>>,
 }
 
 impl Class for Surface {
@@ -126,16 +126,23 @@ mod read {
                     return Err(Error::new(ErrorKind::Unsupported("".into())));
                 }
 
-                let material = r.external_node_ref::<Material>()?;
+                let material = r.external_node_ref_or_null::<Material>()?;
 
                 Ok(material)
             })?;
 
-            if !self.materials.is_empty() {
-                r.u32()?;
+            let x = if !self.materials.is_empty() {
+                let x = r.list(|r| r.u16())?;
+
+                x.is_empty()
+            } else {
+                true
+            };
+
+            if x {
+                r.list(|r| r.u16())?;
             }
 
-            r.list(|r| r.u16())?;
             r.u32()?;
 
             Ok(())
