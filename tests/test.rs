@@ -308,6 +308,11 @@ fn read_material_decal_paint_2_logo_4x1() {
 }
 
 #[test]
+fn read_material_deco_hill() {
+    read_file::<Material>("tests/files/material/DecoHill.Material.gbx").unwrap();
+}
+
+#[test]
 fn read_material_light_spot() {
     read_file::<Material>("tests/files/material/LightSpot.Material.Gbx").unwrap();
 }
