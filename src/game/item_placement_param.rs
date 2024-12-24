@@ -83,10 +83,10 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let v = r.u32()?;
+            let placement_version = r.u32()?;
 
-            if !matches!(v, 6 | 8 | 10) {
-                return Err(Error::version("", v));
+            if !matches!(placement_version, 6 | 8 | 10) {
+                return Err(Error::version("", placement_version));
             }
 
             r.u32()?;
@@ -96,7 +96,7 @@ mod read {
             r.u32()?;
             r.u32()?;
 
-            if v >= 8 {
+            if placement_version >= 8 {
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;

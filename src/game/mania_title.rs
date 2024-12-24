@@ -4,13 +4,17 @@ use std::ops::Deref;
 
 use crate::{Class, ExternalNodeRef};
 
-use super::{ctn::Collection, Nod};
+use super::{
+    ctn::{Challenge, Collection},
+    Nod,
+};
 
 /// Mania title.
 #[derive(Default)]
 pub struct ManiaTitle {
     parent: Nod,
     collections: Vec<ExternalNodeRef<Collection>>,
+    base_map: ExternalNodeRef<Challenge>,
 }
 
 impl Class for ManiaTitle {
@@ -149,7 +153,7 @@ mod read {
             r: &mut Reader<impl Read, I, impl NodeStateMut>,
         ) -> Result<(), Error> {
             r.u32()?;
-            self.collections = r.list(|r| r.external_node_ref::<Collection>())?;
+            self.collections = r.list(|r| r.external_node_ref())?;
             r.u32()?;
 
             Ok(())
@@ -182,7 +186,7 @@ mod read {
         ) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
-            let _base_map = r.external_node_ref::<Challenge>()?;
+            self.base_map = r.external_node_ref()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

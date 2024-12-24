@@ -20,6 +20,13 @@ impl Class for BlockUnitInfo {
     const CLASS_ID: u32 = 0x03036000;
 }
 
+impl BlockUnitInfo {
+    /// Relative offset.
+    pub const fn relative_offset(&self) -> Vec3<u32> {
+        self.relative_offset
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 

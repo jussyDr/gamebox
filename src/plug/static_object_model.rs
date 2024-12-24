@@ -8,8 +8,7 @@ use super::{solid_2_model::Solid2Model, surface::Surface};
 #[derive(Default, Debug)]
 pub struct StaticObjectModel {
     model: NodeRef<Solid2Model>,
-    is_collidable: bool,
-    hit_shape: Option<NodeRef<Surface>>,
+    hit_shape: Option<HitShape>,
 }
 
 impl Class for StaticObjectModel {
@@ -21,6 +20,20 @@ impl StaticObjectModel {
     pub const fn model(&self) -> &NodeRef<Solid2Model> {
         &self.model
     }
+
+    /// Hit shape.
+    pub const fn hit_shape(&self) -> Option<&HitShape> {
+        self.hit_shape.as_ref()
+    }
+}
+
+/// Hit shape.
+#[derive(Debug)]
+pub enum HitShape {
+    /// Model.
+    Model,
+    /// Surface.
+    Surface(NodeRef<Surface>),
 }
 
 mod read {
@@ -35,7 +48,7 @@ mod read {
         },
     };
 
-    use super::StaticObjectModel;
+    use super::{HitShape, StaticObjectModel};
 
     impl Readable for StaticObjectModel {}
 
@@ -59,10 +72,12 @@ mod read {
             }
 
             self.model = r.node_ref::<Solid2Model>()?;
-            self.is_collidable = r.bool8()?;
 
-            if !self.is_collidable {
-                self.hit_shape = r.node_ref_or_null::<Surface>()?;
+            if !r.bool8()? {
+                match r.node_ref_or_null::<Surface>()? {
+                    Some(surface) => self.hit_shape = Some(HitShape::Surface(surface)),
+                    None => self.hit_shape = Some(HitShape::Model),
+                }
             }
 
             Ok(())

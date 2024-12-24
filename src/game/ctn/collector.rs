@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::Class;
+use crate::{Class, Rgba};
 
 /// Collector.
 #[derive(Clone, Default)]
@@ -32,7 +32,7 @@ impl Collector {
 #[derive(Clone)]
 pub enum Icon {
     /// Normal icon.
-    Normal,
+    Normal { data: Vec<Rgba<u8>> },
     /// WebP icon.
     WebP {
         /// WebP file data.
@@ -116,10 +116,10 @@ mod read {
 
                 Icon::WebP { data }
             } else {
-                let _icon_data =
-                    r.repeat((icon_width as usize) + (icon_height as usize), |r| r.u32())?;
+                let data =
+                    r.repeat((icon_width as usize) + (icon_height as usize), |r| r.rgba())?;
 
-                Icon::Normal
+                Icon::Normal { data }
             });
 
             Ok(())

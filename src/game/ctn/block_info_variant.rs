@@ -12,6 +12,7 @@ pub struct BlockInfoVariant {
     direction: Direction,
     mobils: Vec<Vec<Arc<BlockInfoMobil>>>,
     block_unit_models: Vec<Arc<BlockUnitInfo>>,
+    name: String,
 }
 
 impl Class for BlockInfoVariant {
@@ -39,9 +40,7 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::ctn::{
-            block_info_mobil::BlockInfoMobil, block_unit_info::BlockUnitInfo, BlockInfoClassic,
-        },
+        game::ctn::BlockInfoClassic,
         plug::{entity_spawner::EntitySpawner, Solid},
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
@@ -109,7 +108,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.mobils = r.list(|r| r.list(|r| r.internal_node_ref::<BlockInfoMobil>()))?;
+            self.mobils = r.list(|r| r.list(|r| r.internal_node_ref()))?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
@@ -164,14 +163,14 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.block_unit_models = r.list(|r| r.internal_node_ref::<BlockUnitInfo>())?;
+            self.block_unit_models = r.list(|r| r.internal_node_ref())?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.box3d()?;
-            let _name = r.string()?;
+            self.name = r.string()?;
 
             Ok(())
         }
@@ -186,7 +185,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            r.list(|r| {
+            let _placed_pillars = r.list(|r| {
                 r.node_ref::<BlockInfoClassic>()?;
                 r.u32()?;
                 r.u32()?;
@@ -195,7 +194,7 @@ mod read {
 
                 Ok(())
             })?;
-            r.list(|r| {
+            let _replaced_pillars = r.list(|r| {
                 r.node_ref::<BlockInfoClassic>()?;
                 r.u32()?;
                 r.u32()?;

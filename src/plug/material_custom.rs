@@ -8,7 +8,7 @@ use super::Bitmap;
 #[derive(Default)]
 pub struct MaterialCustom {
     base_color_texture: Option<ExternalNodeRef<Bitmap>>,
-    normal_texture: Option<ExternalNodeRef<Bitmap>>,
+    normal_map_texture: Option<ExternalNodeRef<Bitmap>>,
     metallic_roughness_texture: ExternalNodeRef<Bitmap>,
 }
 
@@ -23,8 +23,8 @@ impl MaterialCustom {
     }
 
     /// Normal map texture.
-    pub const fn normal_texture(&self) -> Option<&ExternalNodeRef<Bitmap>> {
-        self.normal_texture.as_ref()
+    pub const fn normal_map_texture(&self) -> Option<&ExternalNodeRef<Bitmap>> {
+        self.normal_map_texture.as_ref()
     }
 
     /// Metallic roughness texture.
@@ -177,7 +177,9 @@ mod read {
                             self.base_color_texture = Some(texture)
                         }
                         "BaseColorHueMask" => {}
-                        "Normal" | "PyNormal" | "PxzNormal" => self.normal_texture = Some(texture),
+                        "Normal" | "PyNormal" | "PxzNormal" => {
+                            self.normal_map_texture = Some(texture)
+                        }
                         "RoughMetal" | "PyRoughMetal" | "PxzRoughMetal" => {
                             self.metallic_roughness_texture = texture
                         }

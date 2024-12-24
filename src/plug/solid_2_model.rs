@@ -153,6 +153,7 @@ mod read {
                     Ok(MaterialType::Material(material))
                 })?;
             }
+
             let skel = r.internal_node_ref_or_null::<Skel>()?;
             r.list(|r| r.f32())?;
             let _vis_cst_type = r.u32()?;
@@ -190,12 +191,7 @@ mod read {
 
             let _file_write_time = r.u64()?;
             r.string()?;
-            let materials_folder_name = r.string()?;
-            if materials_folder_name.is_empty() {
-                self.materials_folder = None;
-            } else {
-                self.materials_folder = Some(materials_folder_name)
-            }
+            self.materials_folder = r.string_non_empty()?;
             r.string()?;
             self.lights = r.list(|r| {
                 r.id()?;

@@ -16,7 +16,7 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Vec2, Vec3, YawPitchRoll};
+use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Rgba, Vec2, Vec3, YawPitchRoll};
 
 use super::{Error, ErrorKind};
 
@@ -72,6 +72,17 @@ impl<T: FromLe> FromLe for Rgb<T> {
         value.r = T::from_le(value.r);
         value.g = T::from_le(value.g);
         value.b = T::from_le(value.b);
+
+        value
+    }
+}
+
+impl<T: FromLe> FromLe for Rgba<T> {
+    fn from_le(mut value: Self) -> Self {
+        value.r = T::from_le(value.r);
+        value.g = T::from_le(value.g);
+        value.b = T::from_le(value.b);
+        value.a = T::from_le(value.a);
 
         value
     }
@@ -310,6 +321,20 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(Rgb::from_le(rgb))
     }
 
+    pub fn rgba<T: FromLe>(&mut self) -> Result<Rgba<T>, Error> {
+        let mut rgba = MaybeUninit::<Rgba<T>>::uninit();
+
+        let buf = unsafe {
+            slice::from_raw_parts_mut(rgba.as_mut_ptr() as *mut u8, size_of::<Rgba<T>>())
+        };
+
+        self.inner.read_exact(buf).map_err(Error::io)?;
+
+        let rgba = unsafe { rgba.assume_init() };
+
+        Ok(Rgba::from_le(rgba))
+    }
+
     pub fn yaw_pitch_roll(&mut self) -> Result<YawPitchRoll, Error> {
         let mut yaw_pitch_roll = MaybeUninit::<YawPitchRoll>::uninit();
 
@@ -390,7 +415,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.string_of_len(len as usize)
     }
 
-    pub fn string_or_empty(&mut self) -> Result<Option<String>, Error> {
+    pub fn string_non_empty(&mut self) -> Result<Option<String>, Error> {
         let len = self.u32()?;
 
         if len == 0 {

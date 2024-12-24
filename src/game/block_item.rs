@@ -19,7 +19,7 @@ impl Class for BlockItem {
 }
 
 impl BlockItem {
-    /// Archetype block info identifier.
+    /// Archetype.
     pub const fn archetype(&self) -> &Arc<str> {
         &self.archetype
     }
