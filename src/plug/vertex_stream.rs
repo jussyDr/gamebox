@@ -74,6 +74,8 @@ mod read {
         mem::transmute,
     };
 
+    use bytemuck::cast_vec;
+
     use crate::read::{
         read_body_chunks,
         reader::{IdStateMut, NodeStateMut, Reader},
@@ -131,38 +133,38 @@ mod read {
 
                 match ty {
                     1 => {
-                        let data = r.repeat_f32x2(count as usize)?;
+                        let data = r.repeat_pod::<[f32; 2]>(count as usize)?;
 
                         match weight_count {
                             10 => {
-                                self.texcoords_0 = unsafe { transmute(data) };
+                                self.texcoords_0 = cast_vec(data);
                             }
                             11 => {
-                                self.texcoords_1 = Some(unsafe { transmute(data) });
+                                self.texcoords_1 = Some(cast_vec(data));
                             }
                             12 => {
-                                self.texcoords_2 = Some(unsafe { transmute(data) });
+                                self.texcoords_2 = Some(cast_vec(data));
                             }
                             _ => todo!("{weight_count}"),
                         }
                     }
                     2 => {
-                        let data = r.repeat_f32x3(count as usize)?;
+                        let data = r.repeat_pod::<[f32; 3]>(count as usize)?;
 
                         match weight_count {
-                            0 => self.positions = unsafe { transmute(data) },
+                            0 => self.positions = cast_vec(data),
                             _ => todo!("{weight_count}"),
                         }
                     }
                     4 => {
-                        let data = r.repeat_u8x4(count as usize)?;
+                        let data = r.repeat_pod::<[u8; 4]>(count as usize)?;
 
                         match weight_count {
                             8 => {
-                                self.colors_0 = Some(unsafe { transmute(data) });
+                                self.colors_0 = Some(cast_vec(data));
                             }
                             9 => {
-                                self.colors_1 = Some(unsafe { transmute(data) });
+                                self.colors_1 = Some(cast_vec(data));
                             }
                             _ => todo!("{weight_count}"),
                         }

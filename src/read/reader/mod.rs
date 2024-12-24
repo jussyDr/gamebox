@@ -3,15 +3,14 @@
 mod id;
 mod node;
 
+use bytemuck::{bytes_of_mut, cast_slice_mut, Pod};
 pub use id::{IdState, IdStateMut};
 pub use node::{NodeState, NodeStateMut};
 
 use std::{
     cmp::min,
     io::{self, Read, Seek, SeekFrom},
-    mem::MaybeUninit,
     path::PathBuf,
-    slice,
 };
 
 use node::NullNodeState;
@@ -20,7 +19,9 @@ use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Rgba, Vec2, Vec3, YawPitchRo
 
 use super::{Error, ErrorKind};
 
+/// Convert from little endian to native endian.
 pub trait FromLe {
+    /// Convert the `value` from little endian to native endian.
     fn from_le(value: Self) -> Self;
 }
 
@@ -48,6 +49,16 @@ impl FromLe for f32 {
     }
 }
 
+impl<T: Copy + FromLe, const N: usize> FromLe for [T; N] {
+    fn from_le(mut value: Self) -> Self {
+        for value in &mut value {
+            *value = T::from_le(*value);
+        }
+
+        value
+    }
+}
+
 pub struct Take<R> {
     inner: R,
     limit: u64,
@@ -72,7 +83,7 @@ impl<R: Read> Read for Take<R> {
 
 impl<R> Seek for Take<R> {
     fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        todo!()
+        unimplemented!()
     }
 }
 
@@ -211,103 +222,70 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    pub fn vec2<T: FromLe>(&mut self) -> Result<Vec2<T>, Error> {
-        let mut vec = MaybeUninit::<Vec2<T>>::uninit();
+    fn pod<T: Pod>(&mut self) -> Result<T, Error> {
+        let mut value = T::zeroed();
 
-        let buf =
-            unsafe { slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, size_of::<Vec2<T>>()) };
+        self.inner
+            .read_exact(bytes_of_mut(&mut value))
+            .map_err(Error::io)?;
 
-        self.inner.read_exact(buf).map_err(Error::io)?;
+        Ok(value)
+    }
 
-        let vec = unsafe { vec.assume_init() };
+    fn read_pod_list<T: Pod>(&mut self, len: usize) -> Result<Vec<T>, Error> {
+        let mut vec = vec![T::zeroed(); len];
+
+        self.inner
+            .read_exact(cast_slice_mut(&mut vec))
+            .map_err(Error::io)?;
+
+        #[cfg(target_endian = "big")]
+        todo!();
+
+        Ok(vec)
+    }
+
+    /// Read a 2-dimensional vector.
+    pub fn vec2<T: Pod + FromLe>(&mut self) -> Result<Vec2<T>, Error> {
+        let vec = self.pod()?;
 
         Ok(Vec2::from_le(vec))
     }
 
-    pub fn vec3<T: FromLe>(&mut self) -> Result<Vec3<T>, Error> {
-        let mut vec = MaybeUninit::<Vec3<T>>::uninit();
-
-        let buf =
-            unsafe { slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, size_of::<Vec3<T>>()) };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        let vec = unsafe { vec.assume_init() };
+    /// Read a 3-dimensional vector.
+    pub fn vec3<T: Pod + FromLe>(&mut self) -> Result<Vec3<T>, Error> {
+        let vec = self.pod()?;
 
         Ok(Vec3::from_le(vec))
     }
 
-    pub fn rgb<T: FromLe>(&mut self) -> Result<Rgb<T>, Error> {
-        let mut rgb = MaybeUninit::<Rgb<T>>::uninit();
-
-        let buf =
-            unsafe { slice::from_raw_parts_mut(rgb.as_mut_ptr() as *mut u8, size_of::<Rgb<T>>()) };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        let rgb = unsafe { rgb.assume_init() };
+    pub fn rgb<T: Pod + FromLe>(&mut self) -> Result<Rgb<T>, Error> {
+        let rgb = self.pod()?;
 
         Ok(Rgb::from_le(rgb))
     }
 
-    pub fn rgba<T: FromLe>(&mut self) -> Result<Rgba<T>, Error> {
-        let mut rgba = MaybeUninit::<Rgba<T>>::uninit();
-
-        let buf = unsafe {
-            slice::from_raw_parts_mut(rgba.as_mut_ptr() as *mut u8, size_of::<Rgba<T>>())
-        };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        let rgba = unsafe { rgba.assume_init() };
+    pub fn rgba<T: Pod + FromLe>(&mut self) -> Result<Rgba<T>, Error> {
+        let rgba = self.pod()?;
 
         Ok(Rgba::from_le(rgba))
     }
 
     pub fn yaw_pitch_roll(&mut self) -> Result<YawPitchRoll, Error> {
-        let mut yaw_pitch_roll = MaybeUninit::<YawPitchRoll>::uninit();
-
-        let buf = unsafe {
-            slice::from_raw_parts_mut(
-                yaw_pitch_roll.as_mut_ptr() as *mut u8,
-                size_of::<YawPitchRoll>(),
-            )
-        };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        let yaw_pitch_roll = unsafe { yaw_pitch_roll.assume_init() };
+        let yaw_pitch_roll = self.pod()?;
 
         Ok(YawPitchRoll::from_le(yaw_pitch_roll))
     }
 
     pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
-        let mut pitch_yaw_roll = MaybeUninit::<PitchYawRoll>::uninit();
-
-        let buf = unsafe {
-            slice::from_raw_parts_mut(
-                pitch_yaw_roll.as_mut_ptr() as *mut u8,
-                size_of::<PitchYawRoll>(),
-            )
-        };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        let pitch_yaw_roll = unsafe { pitch_yaw_roll.assume_init() };
+        let pitch_yaw_roll = self.pod()?;
 
         Ok(PitchYawRoll::from_le(pitch_yaw_roll))
     }
 
     /// Read a quaternion.
     pub fn quat(&mut self) -> Result<Quat, Error> {
-        let mut quat = MaybeUninit::<Quat>::uninit();
-
-        let buf =
-            unsafe { slice::from_raw_parts_mut(quat.as_mut_ptr() as *mut u8, size_of::<Quat>()) };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        let quat = unsafe { quat.assume_init() };
+        let quat = self.pod()?;
 
         Ok(Quat::from_le(quat))
     }
@@ -405,6 +383,20 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(vec)
     }
 
+    pub fn repeat_pod<T: Pod + FromLe>(&mut self, len: usize) -> Result<Vec<T>, Error> {
+        let mut vec = vec![T::zeroed(); len];
+
+        self.inner
+            .read_exact(cast_slice_mut(&mut vec))
+            .map_err(Error::io)?;
+
+        for value in &mut vec {
+            *value = T::from_le(*value);
+        }
+
+        Ok(vec)
+    }
+
     pub fn list<T>(
         &mut self,
         read_elem_fn: impl FnMut(&mut Self) -> Result<T, Error>,
@@ -459,57 +451,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
 
         Ok(())
-    }
-
-    pub fn repeat_u8x4(&mut self, n: usize) -> Result<Vec<[u8; 4]>, Error> {
-        let mut vec = Vec::with_capacity(n);
-
-        let buf = unsafe {
-            slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, n * size_of::<[u8; 4]>())
-        };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        unsafe { vec.set_len(n) };
-
-        #[cfg(target_endian = "big")]
-        todo!();
-
-        Ok(vec)
-    }
-
-    pub fn repeat_f32x2(&mut self, n: usize) -> Result<Vec<[f32; 2]>, Error> {
-        let mut vec = Vec::with_capacity(n);
-
-        let buf = unsafe {
-            slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, n * size_of::<[f32; 2]>())
-        };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        unsafe { vec.set_len(n) };
-
-        #[cfg(target_endian = "big")]
-        todo!();
-
-        Ok(vec)
-    }
-
-    pub fn repeat_f32x3(&mut self, n: usize) -> Result<Vec<[f32; 3]>, Error> {
-        let mut vec = Vec::with_capacity(n);
-
-        let buf = unsafe {
-            slice::from_raw_parts_mut(vec.as_mut_ptr() as *mut u8, n * size_of::<[f32; 3]>())
-        };
-
-        self.inner.read_exact(buf).map_err(Error::io)?;
-
-        unsafe { vec.set_len(n) };
-
-        #[cfg(target_endian = "big")]
-        todo!();
-
-        Ok(vec)
     }
 }
 

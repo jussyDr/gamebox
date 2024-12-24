@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Fields, GenericParam, TypeParamBound};
 
+/// Derive macro generating an impl of the trait `FromLe`.
 #[proc_macro_derive(FromLe)]
 pub fn derive_from_le(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

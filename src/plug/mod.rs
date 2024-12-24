@@ -43,6 +43,7 @@ pub mod visual_indexed_triangles;
 
 #[doc(inline)]
 pub use bitmap::Bitmap;
+use bytemuck::{Pod, Zeroable};
 #[doc(inline)]
 pub use crystal::Crystal;
 #[doc(inline)]
@@ -111,7 +112,7 @@ pub use visual_indexed::VisualIndexed;
 pub use visual_indexed_triangles::VisualIndexedTriangles;
 
 /// Texture coordinate.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Zeroable, Pod, Debug)]
 #[repr(C)]
 pub struct Texcoord {
     /// U component.

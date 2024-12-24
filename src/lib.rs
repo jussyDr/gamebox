@@ -50,6 +50,7 @@ pub mod write;
 
 mod node_ref;
 
+use bytemuck::{Pod, Zeroable};
 #[doc(inline)]
 pub use read::{read, read_file};
 #[doc(inline)]
@@ -61,7 +62,7 @@ use gamebox_macros::FromLe;
 use std::path::{Path, PathBuf};
 
 /// 2-dimensional vector.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
 #[repr(C)]
 pub struct Vec2<T> {
     /// X component.
@@ -70,8 +71,10 @@ pub struct Vec2<T> {
     pub y: T,
 }
 
+unsafe impl<T: 'static + Copy + Zeroable> Pod for Vec2<T> {}
+
 /// 3-dimensional vector.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
 #[repr(C)]
 pub struct Vec3<T> {
     /// X component.
@@ -81,6 +84,8 @@ pub struct Vec3<T> {
     /// Z component.
     pub z: T,
 }
+
+unsafe impl<T: 'static + Copy + Zeroable> Pod for Vec3<T> {}
 
 impl<T: Copy> Vec3<T> {
     /// New.
@@ -104,7 +109,7 @@ impl<T: Copy> Vec3<T> {
 }
 
 /// 4-dimensional vector.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct Vec4<T> {
     /// X component.
     pub x: T,
@@ -129,7 +134,7 @@ impl<T: Copy> Vec4<T> {
 }
 
 /// Color represented by red, green, and blue components.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
 #[repr(C)]
 pub struct Rgb<T> {
     /// Red component.
@@ -140,8 +145,10 @@ pub struct Rgb<T> {
     pub b: T,
 }
 
+unsafe impl<T: 'static + Copy + Zeroable> Pod for Rgb<T> {}
+
 /// Color represented by red, green, blue, and alpha components.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
 #[repr(C)]
 pub struct Rgba<T> {
     /// Red component.
@@ -166,8 +173,10 @@ impl<T: Copy> Rgba<T> {
     }
 }
 
+unsafe impl<T: 'static + Copy + Zeroable> Pod for Rgba<T> {}
+
 /// Rotation represented as yaw, pitch, and roll angles.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]
 #[repr(C)]
 pub struct YawPitchRoll {
     /// Yaw angle.
@@ -179,7 +188,7 @@ pub struct YawPitchRoll {
 }
 
 /// Rotation represented as pitch, yaw, and roll angles.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]
 #[repr(C)]
 pub struct PitchYawRoll {
     /// Pitch angle.
@@ -191,7 +200,7 @@ pub struct PitchYawRoll {
 }
 
 /// Quaternion.
-#[derive(Clone, Copy, Default, Debug, FromLe)]
+#[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]
 #[repr(C)]
 pub struct Quat {
     /// X component.
