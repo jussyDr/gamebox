@@ -1,3 +1,6 @@
+[workspace]
+members = ["macros"]
+
 [package]
 name = "gamebox"
 version = "0.1.0"
@@ -16,6 +19,7 @@ name = "bench"
 harness = false
 
 [dependencies]
+gamebox-macros = { path = "macros" }
 indexmap = "2.7.0"
 lzo1x = "0.2.0"
 
