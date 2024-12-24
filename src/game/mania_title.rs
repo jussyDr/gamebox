@@ -34,16 +34,18 @@ impl ManiaTitle {
     pub const fn collections(&self) -> &Vec<ExternalNodeRef<Collection>> {
         &self.collections
     }
+
+    /// Base map.
+    pub const fn base_map(&self) -> &ExternalNodeRef<Challenge> {
+        &self.base_map
+    }
 }
 
 mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::{
-            ctn::{Challenge, Collection},
-            skinned_nod::SkinnedNod,
-        },
+        game::skinned_nod::SkinnedNod,
         read::{
             readable,
             reader::{IdStateMut, NodeStateMut, Reader},

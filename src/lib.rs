@@ -57,10 +57,11 @@ pub use write::{write, write_file};
 
 pub use node_ref::{ExternalNodeRef, NodeRef};
 
+use gamebox_macros::FromLe;
 use std::path::{Path, PathBuf};
 
 /// 2-dimensional vector.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct Vec2<T> {
     /// X component.
@@ -70,7 +71,7 @@ pub struct Vec2<T> {
 }
 
 /// 3-dimensional vector.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct Vec3<T> {
     /// X component.
@@ -103,7 +104,7 @@ impl<T: Copy> Vec3<T> {
 }
 
 /// 4-dimensional vector.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 pub struct Vec4<T> {
     /// X component.
     pub x: T,
@@ -128,7 +129,7 @@ impl<T: Copy> Vec4<T> {
 }
 
 /// Color represented by red, green, and blue components.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct Rgb<T> {
     /// Red component.
@@ -139,8 +140,8 @@ pub struct Rgb<T> {
     pub b: T,
 }
 
-/// Color represented by red, green, and blue components.
-#[derive(Clone, Copy, Default, Debug)]
+/// Color represented by red, green, blue, and alpha components.
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct Rgba<T> {
     /// Red component.
@@ -166,7 +167,7 @@ impl<T: Copy> Rgba<T> {
 }
 
 /// Rotation represented as yaw, pitch, and roll angles.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct YawPitchRoll {
     /// Yaw angle.
@@ -178,7 +179,7 @@ pub struct YawPitchRoll {
 }
 
 /// Rotation represented as pitch, yaw, and roll angles.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct PitchYawRoll {
     /// Pitch angle.
@@ -190,7 +191,7 @@ pub struct PitchYawRoll {
 }
 
 /// Quaternion.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, FromLe)]
 #[repr(C)]
 pub struct Quat {
     /// X component.

@@ -82,10 +82,7 @@ mod read {
             r.f32()?;
             r.f32()?;
             r.f32()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
+            r.iso4()?;
             r.bool()?;
             r.bool()?;
             r.u32()?;

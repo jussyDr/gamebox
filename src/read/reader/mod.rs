@@ -20,7 +20,7 @@ use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Rgba, Vec2, Vec3, YawPitchRo
 
 use super::{Error, ErrorKind};
 
-trait FromLe {
+pub trait FromLe {
     fn from_le(value: Self) -> Self;
 }
 
@@ -45,77 +45,6 @@ impl FromLe for i32 {
 impl FromLe for f32 {
     fn from_le(value: Self) -> Self {
         Self::from_bits(u32::from_le(value.to_bits()))
-    }
-}
-
-impl<T: FromLe> FromLe for Vec2<T> {
-    fn from_le(mut value: Self) -> Self {
-        value.x = T::from_le(value.x);
-        value.y = T::from_le(value.y);
-
-        value
-    }
-}
-
-impl<T: FromLe> FromLe for Vec3<T> {
-    fn from_le(mut value: Self) -> Self {
-        value.x = T::from_le(value.x);
-        value.y = T::from_le(value.y);
-        value.z = T::from_le(value.z);
-
-        value
-    }
-}
-
-impl<T: FromLe> FromLe for Rgb<T> {
-    fn from_le(mut value: Self) -> Self {
-        value.r = T::from_le(value.r);
-        value.g = T::from_le(value.g);
-        value.b = T::from_le(value.b);
-
-        value
-    }
-}
-
-impl<T: FromLe> FromLe for Rgba<T> {
-    fn from_le(mut value: Self) -> Self {
-        value.r = T::from_le(value.r);
-        value.g = T::from_le(value.g);
-        value.b = T::from_le(value.b);
-        value.a = T::from_le(value.a);
-
-        value
-    }
-}
-
-impl FromLe for YawPitchRoll {
-    fn from_le(mut value: Self) -> Self {
-        value.yaw = f32::from_le(value.yaw);
-        value.pitch = f32::from_le(value.pitch);
-        value.roll = f32::from_le(value.roll);
-
-        value
-    }
-}
-
-impl FromLe for PitchYawRoll {
-    fn from_le(mut value: Self) -> Self {
-        value.pitch = f32::from_le(value.pitch);
-        value.yaw = f32::from_le(value.yaw);
-        value.roll = f32::from_le(value.roll);
-
-        value
-    }
-}
-
-impl FromLe for Quat {
-    fn from_le(mut value: Self) -> Self {
-        value.x = f32::from_le(value.x);
-        value.y = f32::from_le(value.y);
-        value.z = f32::from_le(value.z);
-        value.w = f32::from_le(value.w);
-
-        value
     }
 }
 

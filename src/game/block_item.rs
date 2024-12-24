@@ -106,7 +106,7 @@ mod read {
             }
 
             self.archetype = r.id()?;
-            let _archetype_block_info_collection_id = r.id_or_null()?;
+            let _archetype_collection = r.id_or_null()?;
             self.variants = r.list(|r| {
                 let flags = r.u32()?;
                 let crystal = r.internal_node_ref_or_null::<Crystal>()?;

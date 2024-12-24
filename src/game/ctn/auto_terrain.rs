@@ -32,13 +32,10 @@ impl AutoTerrain {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        game::ctn::zone_genealogy::ZoneGenealogy,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::AutoTerrain;
@@ -64,8 +61,8 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.offset = r.vec3::<u32>()?;
-            self.genealogy = r.internal_node_ref::<ZoneGenealogy>()?;
+            self.offset = r.vec3()?;
+            self.genealogy = r.internal_node_ref()?;
 
             Ok(())
         }
