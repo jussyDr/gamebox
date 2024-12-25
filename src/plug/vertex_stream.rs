@@ -69,10 +69,7 @@ struct VertexAttrDesc {
 }
 
 mod read {
-    use std::{
-        io::{Read, Seek},
-        mem::transmute,
-    };
+    use std::io::{Read, Seek};
 
     use bytemuck::cast_vec;
 
@@ -170,7 +167,7 @@ mod read {
                         }
                     }
                     5 => {
-                        let data = r.repeat(count as usize, |r| r.i32())?;
+                        let data = r.repeat_pod::<i32>(count as usize)?;
                     }
                     14 => {
                         let data = r.repeat(count as usize, |r| {

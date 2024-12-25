@@ -31,7 +31,25 @@ impl FromLe for u8 {
     }
 }
 
+impl FromLe for u16 {
+    fn from_le(value: Self) -> Self {
+        Self::from_le(value)
+    }
+}
+
 impl FromLe for u32 {
+    fn from_le(value: Self) -> Self {
+        Self::from_le(value)
+    }
+}
+
+impl FromLe for u64 {
+    fn from_le(value: Self) -> Self {
+        Self::from_le(value)
+    }
+}
+
+impl FromLe for i16 {
     fn from_le(value: Self) -> Self {
         Self::from_le(value)
     }
@@ -141,53 +159,49 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.bytes(size as usize)
     }
 
+    pub fn pod<T: Pod + FromLe>(&mut self) -> Result<T, Error> {
+        let mut value = T::zeroed();
+
+        self.inner
+            .read_exact(bytes_of_mut(&mut value))
+            .map_err(Error::io)?;
+
+        Ok(T::from_le(value))
+    }
+
     /// Read a signed 16-bit integer.
     pub fn i16(&mut self) -> Result<i16, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(i16::from_le_bytes(bytes))
+        self.pod()
     }
 
     /// Read a signed 32-bit integer.
     pub fn i32(&mut self) -> Result<i32, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(i32::from_le_bytes(bytes))
+        self.pod()
     }
 
     /// Read an unsigned 8-bit integer.
     pub fn u8(&mut self) -> Result<u8, Error> {
-        let [byte] = self.byte_array()?;
-
-        Ok(byte)
+        self.pod()
     }
 
     /// Read an unsigned 16-bit integer.
     pub fn u16(&mut self) -> Result<u16, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u16::from_le_bytes(bytes))
+        self.pod()
     }
 
     /// Read an unsigned 32-bit integer.
     pub fn u32(&mut self) -> Result<u32, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u32::from_le_bytes(bytes))
+        self.pod()
     }
 
     /// Read an unsigned 64-bit integer.
     pub fn u64(&mut self) -> Result<u64, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u64::from_le_bytes(bytes))
+        self.pod()
     }
 
     /// Read a 32-bit floating point number.
     pub fn f32(&mut self) -> Result<f32, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(f32::from_le_bytes(bytes))
+        self.pod()
     }
 
     /// Read a 32-bit boolean value.
@@ -222,72 +236,35 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    fn pod<T: Pod>(&mut self) -> Result<T, Error> {
-        let mut value = T::zeroed();
-
-        self.inner
-            .read_exact(bytes_of_mut(&mut value))
-            .map_err(Error::io)?;
-
-        Ok(value)
-    }
-
-    fn read_pod_list<T: Pod>(&mut self, len: usize) -> Result<Vec<T>, Error> {
-        let mut vec = vec![T::zeroed(); len];
-
-        self.inner
-            .read_exact(cast_slice_mut(&mut vec))
-            .map_err(Error::io)?;
-
-        #[cfg(target_endian = "big")]
-        todo!();
-
-        Ok(vec)
-    }
-
     /// Read a 2-dimensional vector.
     pub fn vec2<T: Pod + FromLe>(&mut self) -> Result<Vec2<T>, Error> {
-        let vec = self.pod()?;
-
-        Ok(Vec2::from_le(vec))
+        self.pod()
     }
 
     /// Read a 3-dimensional vector.
     pub fn vec3<T: Pod + FromLe>(&mut self) -> Result<Vec3<T>, Error> {
-        let vec = self.pod()?;
-
-        Ok(Vec3::from_le(vec))
+        self.pod()
     }
 
     pub fn rgb<T: Pod + FromLe>(&mut self) -> Result<Rgb<T>, Error> {
-        let rgb = self.pod()?;
-
-        Ok(Rgb::from_le(rgb))
+        self.pod()
     }
 
     pub fn rgba<T: Pod + FromLe>(&mut self) -> Result<Rgba<T>, Error> {
-        let rgba = self.pod()?;
-
-        Ok(Rgba::from_le(rgba))
+        self.pod()
     }
 
     pub fn yaw_pitch_roll(&mut self) -> Result<YawPitchRoll, Error> {
-        let yaw_pitch_roll = self.pod()?;
-
-        Ok(YawPitchRoll::from_le(yaw_pitch_roll))
+        self.pod()
     }
 
     pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
-        let pitch_yaw_roll = self.pod()?;
-
-        Ok(PitchYawRoll::from_le(pitch_yaw_roll))
+        self.pod()
     }
 
     /// Read a quaternion.
     pub fn quat(&mut self) -> Result<Quat, Error> {
-        let quat = self.pod()?;
-
-        Ok(Quat::from_le(quat))
+        self.pod()
     }
 
     pub fn iso4(&mut self) -> Result<Iso4, Error> {
