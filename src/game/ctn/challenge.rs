@@ -1286,13 +1286,13 @@ mod read {
             return Err(Error::version("blocks", version));
         }
 
-        let num_blocks = r.u32()? as usize;
-        let mut blocks = Vec::with_capacity(num_blocks);
+        let num_blocks = r.u32()?;
+        let mut blocks = Vec::with_capacity(num_blocks as usize);
 
         while r.peek_u32()? & ID_MARKER_BIT != 0 {
             let block = Block::read_from_body(r)?;
 
-            if block.has_flags() {
+            if block.has_flags {
                 blocks.push(block);
             }
         }

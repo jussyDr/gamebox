@@ -170,7 +170,7 @@ impl TryFrom<u8> for Direction {
 }
 
 /// Element color.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub enum ElemColor {
     /// Default color.
     #[default]
@@ -204,7 +204,7 @@ impl TryFrom<u8> for ElemColor {
 }
 
 /// Lightmap quality
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub enum LightmapQuality {
     /// Normal quality.
     #[default]

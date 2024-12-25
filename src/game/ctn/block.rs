@@ -7,11 +7,11 @@ use crate::{game::WaypointSpecialProperty, PitchYawRoll, Vec3};
 use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 
 /// Block placed in a Challenge.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Block {
     model_id: Arc<str>,
     pub(crate) ty: BlockType,
-    has_flags: bool,
+    pub(crate) has_flags: bool,
     mobil_index: u8,
     mobil_sub_index: u8,
     is_ground: bool,
@@ -73,13 +73,10 @@ impl Block {
     pub const fn lightmap_quality(&self) -> LightmapQuality {
         self.lightmap_quality
     }
-
-    pub(crate) const fn has_flags(&self) -> bool {
-        self.has_flags
-    }
 }
 
 /// Type of block.
+#[derive(Debug)]
 pub enum BlockType {
     /// Normal block.
     Normal {
