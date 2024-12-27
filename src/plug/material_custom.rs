@@ -7,9 +7,7 @@ use super::Bitmap;
 /// A custom material.
 #[derive(Default)]
 pub struct MaterialCustom {
-    base_color_texture: Option<ExternalNodeRef<Bitmap>>,
-    normal_map_texture: Option<ExternalNodeRef<Bitmap>>,
-    metallic_roughness_texture: ExternalNodeRef<Bitmap>,
+    textures: Vec<ExternalNodeRef<Bitmap>>,
 }
 
 impl Class for MaterialCustom {
@@ -17,19 +15,9 @@ impl Class for MaterialCustom {
 }
 
 impl MaterialCustom {
-    /// Base color texture.
-    pub const fn base_color_texture(&self) -> Option<&ExternalNodeRef<Bitmap>> {
-        self.base_color_texture.as_ref()
-    }
-
-    /// Normal map texture.
-    pub const fn normal_map_texture(&self) -> Option<&ExternalNodeRef<Bitmap>> {
-        self.normal_map_texture.as_ref()
-    }
-
-    /// Metallic roughness texture.
-    pub const fn metallic_roughness_texture(&self) -> &ExternalNodeRef<Bitmap> {
-        &self.metallic_roughness_texture
+    /// Textures.
+    pub const fn textures(&self) -> &Vec<ExternalNodeRef<Bitmap>> {
+        &self.textures
     }
 }
 
@@ -164,27 +152,16 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             r.u32()?;
+            self.textures = vec![];
             r.list(|r| {
-                let texture_id = r.id()?;
+                let _texture_id = r.id()?;
                 r.u32()?;
                 let texture = r.external_node_ref_or_null()?;
                 r.u32()?;
                 r.u32()?;
 
                 if let Some(texture) = texture {
-                    match texture_id.as_ref() {
-                        "BaseColor" | "BaseColorOp" | "PyBaseColor" | "PxzBaseColor" => {
-                            self.base_color_texture = Some(texture)
-                        }
-                        "BaseColorHueMask" => {}
-                        "Normal" | "PyNormal" | "PxzNormal" => {
-                            self.normal_map_texture = Some(texture)
-                        }
-                        "RoughMetal" | "PyRoughMetal" | "PxzRoughMetal" => {
-                            self.metallic_roughness_texture = texture
-                        }
-                        _ => {}
-                    }
+                    self.textures.push(texture);
                 }
 
                 Ok(())

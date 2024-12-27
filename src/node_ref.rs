@@ -32,8 +32,8 @@ pub struct ExternalNodeRef<T: ?Sized> {
 
 impl<T> ExternalNodeRef<T> {
     /// Path.
-    pub fn path(&self, source_path: &Path) -> PathBuf {
-        let mut path = source_path.to_path_buf();
+    pub fn path(&self, source_path: impl AsRef<Path>) -> PathBuf {
+        let mut path = source_path.as_ref().to_path_buf();
 
         path.pop();
 

@@ -9,7 +9,7 @@ use super::{visual_indexed_triangles::VisualIndexedTriangles, Material, Material
 /// Solid 2 model.
 #[derive(Default, Debug)]
 pub struct Solid2Model {
-    shaded_geoms: Vec<ShadedGeom>,
+    shaded_geometries: Vec<ShadedGeometry>,
     materials_folder: Option<String>,
     lights: Vec<()>,
     light_instances: Vec<()>,
@@ -21,8 +21,8 @@ impl Class for Solid2Model {
 
 impl Solid2Model {
     /// Shaded geometries.
-    pub const fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
-        &self.shaded_geoms
+    pub const fn shaded_geometries(&self) -> &Vec<ShadedGeometry> {
+        &self.shaded_geometries
     }
 
     /// Materials folder.
@@ -38,12 +38,12 @@ impl Solid2Model {
 
 /// Shaded geometry.
 #[derive(Debug)]
-pub struct ShadedGeom {
+pub struct ShadedGeometry {
     visual: Arc<VisualIndexedTriangles>,
     material: MaterialType,
 }
 
-impl ShadedGeom {
+impl ShadedGeometry {
     /// Visual.
     pub const fn visual(&self) -> &Arc<VisualIndexedTriangles> {
         &self.visual
@@ -83,7 +83,7 @@ mod read {
         },
     };
 
-    use super::{MaterialType, ShadedGeom, Solid2Model};
+    use super::{MaterialType, ShadedGeometry, Solid2Model};
 
     impl Readable for Solid2Model {}
 
@@ -127,7 +127,7 @@ mod read {
             }
 
             r.id_or_null()?;
-            let shaded_geoms = r.list(|r| {
+            let shaded_geometries = r.list(|r| {
                 let visual_index = r.u32()?;
                 let material_index = r.u32()?;
                 r.u32()?;
@@ -258,13 +258,13 @@ mod read {
                     Ok(MaterialType::UserInst(material))
                 })?;
             }
-            self.shaded_geoms = shaded_geoms
+            self.shaded_geometries = shaded_geometries
                 .into_iter()
                 .map(|(visual_index, material_index)| {
                     let visual = Arc::clone(visuals.get(visual_index as usize).unwrap());
                     let material = materials.get(material_index as usize).unwrap().clone();
 
-                    ShadedGeom { visual, material }
+                    ShadedGeometry { visual, material }
                 })
                 .collect();
             r.list(|r| r.id())?;

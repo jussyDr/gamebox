@@ -32,7 +32,10 @@ impl Collector {
 #[derive(Clone)]
 pub enum Icon {
     /// Normal icon.
-    Normal { data: Vec<Rgba<u8>> },
+    Normal {
+        /// Data.
+        data: Vec<Rgba<u8>>,
+    },
     /// WebP icon.
     WebP {
         /// WebP file data.
