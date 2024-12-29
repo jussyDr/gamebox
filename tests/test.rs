@@ -299,12 +299,12 @@ fn read_map_training_01() {
 
 #[test]
 fn read_material_canopy() {
-    read_file::<Material>("tests/files/material/Canopy.Material.gbx").unwrap();
+    read_file::<Material>("tests/files/material/Canopy.Material.Gbx").unwrap();
 }
 
 #[test]
 fn read_material_collision_canopy() {
-    read_file::<Material>("tests/files/material/CollisionCanopy.Material.gbx").unwrap();
+    read_file::<Material>("tests/files/material/CollisionCanopy.Material.Gbx").unwrap();
 }
 
 #[test]
@@ -320,17 +320,17 @@ fn read_material_decal_sponsor_1x1_big_a_on_road_ice() {
 
 #[test]
 fn read_material_deco_hill() {
-    read_file::<Material>("tests/files/material/DecoHill.Material.gbx").unwrap();
+    read_file::<Material>("tests/files/material/DecoHill.Material.Gbx").unwrap();
 }
 
 #[test]
 fn read_material_grass() {
-    read_file::<Material>("tests/files/material/Grass.Material.gbx").unwrap();
+    read_file::<Material>("tests/files/material/Grass.Material.Gbx").unwrap();
 }
 
 #[test]
 fn read_material_grass_fence() {
-    read_file::<Material>("tests/files/material/GrassFence.Material.gbx").unwrap();
+    read_file::<Material>("tests/files/material/GrassFence.Material.Gbx").unwrap();
 }
 
 #[test]
@@ -355,7 +355,7 @@ fn read_material_technics_trims() {
 
 #[test]
 fn read_material_water() {
-    read_file::<Material>("tests/files/material/Water.Material.Gbx").unwrap();
+    read_file::<Material>("tests/files/material/Water.Material.gbx").unwrap();
 }
 
 #[test]

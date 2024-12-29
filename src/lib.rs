@@ -77,6 +77,11 @@ impl Byte3 {
     pub const fn new(x: u8, y: u8, z: u8) -> Self {
         Self { x, y, z }
     }
+
+    /// To array.
+    pub const fn to_array(self) -> [u8; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
@@ -95,6 +100,11 @@ impl Nat3 {
     pub const fn new(x: u32, y: u32, z: u32) -> Self {
         Self { x, y, z }
     }
+
+    /// To array.
+    pub const fn to_array(self) -> [u32; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
@@ -110,6 +120,11 @@ impl Int2 {
     /// New.
     pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    /// To array.
+    pub const fn to_array(self) -> [i32; 2] {
+        [self.x, self.y]
     }
 }
 
@@ -129,6 +144,11 @@ impl Int3 {
     pub const fn new(x: i32, y: i32, z: i32) -> Self {
         Self { x, y, z }
     }
+
+    /// To array.
+    pub const fn to_array(self) -> [i32; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 /// 2-dimensional vector.
@@ -143,8 +163,13 @@ pub struct Vec2 {
 
 impl Vec2 {
     /// New.
-    pub const fn new(x: f32, y: f32, z: f32) -> Self {
+    pub const fn new(x: f32, y: f32) -> Self {
         Self { x, y }
+    }
+
+    /// To array.
+    pub const fn to_array(self) -> [f32; 2] {
+        [self.x, self.y]
     }
 }
 
@@ -164,6 +189,11 @@ impl Vec3 {
     /// New.
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
+    }
+
+    /// To array.
+    pub const fn to_array(self) -> [f32; 3] {
+        [self.x, self.y, self.z]
     }
 }
 
@@ -206,6 +236,11 @@ impl Rgba {
     pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
+
+    /// To array.
+    pub const fn to_array(self) -> [u8; 4] {
+        [self.r, self.g, self.b, self.a]
+    }
 }
 
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
@@ -220,6 +255,11 @@ impl RgbNat {
     /// New.
     pub const fn new(r: u32, g: u32, b: u32) -> Self {
         Self { r, g, b }
+    }
+
+    /// To array.
+    pub const fn to_array(self) -> [u32; 3] {
+        [self.r, self.g, self.b]
     }
 }
 
@@ -236,10 +276,15 @@ impl RgbFloat {
     pub const fn new(r: f32, g: f32, b: f32) -> Self {
         Self { r, g, b }
     }
+
+    /// To array.
+    pub const fn to_array(self) -> [f32; 3] {
+        [self.r, self.g, self.b]
+    }
 }
 
 /// Rotation represented as yaw, pitch, and roll angles.
-#[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct YawPitchRoll {
     /// Yaw angle.
@@ -250,8 +295,20 @@ pub struct YawPitchRoll {
     pub roll: f32,
 }
 
+impl YawPitchRoll {
+    /// New.
+    pub const fn new(yaw: f32, pitch: f32, roll: f32) -> Self {
+        Self { yaw, pitch, roll }
+    }
+
+    /// To array.
+    pub const fn to_array(self) -> [f32; 3] {
+        [self.yaw, self.pitch, self.roll]
+    }
+}
+
 /// Rotation represented as pitch, yaw, and roll angles.
-#[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct PitchYawRoll {
     /// Pitch angle.
@@ -263,7 +320,7 @@ pub struct PitchYawRoll {
 }
 
 /// Quaternion.
-#[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Quat {
     /// X component.
@@ -277,6 +334,11 @@ pub struct Quat {
 }
 
 impl Quat {
+    /// New.
+    pub const fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self { x, y, z, w }
+    }
+
     /// To array.
     pub const fn to_array(self) -> [f32; 4] {
         [self.x, self.y, self.z, self.w]
