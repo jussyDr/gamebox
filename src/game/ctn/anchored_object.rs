@@ -14,6 +14,7 @@ pub struct AnchoredObject {
     unit_coord: Vec3<u8>,
     position: Vec3<f32>,
     waypoint_property: Option<WaypointSpecialProperty>,
+    variant_index: u8,
     pivot_position: Vec3<f32>,
     scale: f32,
     skin: Option<FileRef>,
@@ -51,6 +52,11 @@ impl AnchoredObject {
     /// Waypoint property.
     pub const fn waypoint_property(&self) -> Option<&WaypointSpecialProperty> {
         self.waypoint_property.as_ref()
+    }
+
+    /// Variant index.
+    pub const fn variant_index(&self) -> u8 {
+        self.variant_index
     }
 
     /// Pivot position.
@@ -184,10 +190,11 @@ mod read {
             self.position = r.vec3()?;
             self.waypoint_property = r.node_or_null::<WaypointSpecialProperty>()?;
             let flags = r.u16()?;
+            self.variant_index = ((flags >> 8) & 255) as u8;
             self.pivot_position = r.vec3()?;
             self.scale = r.f32()?;
 
-            if flags & 4 != 0 {
+            if (flags >> 2) & 1 != 0 {
                 self.skin = r.pack_desc_or_null()?;
             }
 
