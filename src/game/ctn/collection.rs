@@ -255,7 +255,7 @@ mod read {
         }
 
         fn read_chunk_47<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _tunnel_specular = r.vec3::<f32>()?;
+            let _tunnel_specular = r.vec3()?;
 
             Ok(())
         }

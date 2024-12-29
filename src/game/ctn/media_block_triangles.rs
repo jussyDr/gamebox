@@ -22,7 +22,7 @@ impl MediaBlockTriangles {
 /// Triangles media block key.
 pub struct Key {
     time: f32,
-    positions: Vec<Vec3<f32>>,
+    positions: Vec<Vec3>,
 }
 
 impl Key {
@@ -32,7 +32,7 @@ impl Key {
     }
 
     /// Positions.
-    pub const fn positions(&self) -> &Vec<Vec3<f32>> {
+    pub const fn positions(&self) -> &Vec<Vec3> {
         &self.positions
     }
 }

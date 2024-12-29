@@ -1,10 +1,10 @@
+#![deny(unsafe_code)]
 #![warn(
     missing_docs,
     clippy::unwrap_used,
     clippy::panic,
     clippy::print_stdout,
-    clippy::todo,
-    clippy::undocumented_unsafe_blocks
+    clippy::todo
 )]
 
 //! GameBox file reading and writing.
@@ -61,50 +61,109 @@ pub use node_ref::{ExternalNodeRef, NodeRef};
 use gamebox_macros::FromLe;
 use std::path::{Path, PathBuf};
 
-/// 2-dimensional vector.
-#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
-pub struct Vec2<T> {
+pub struct Byte3 {
     /// X component.
-    pub x: T,
+    pub x: u8,
     /// Y component.
-    pub y: T,
-}
-
-unsafe impl<T: 'static + Copy + Zeroable> Pod for Vec2<T> {}
-
-/// 3-dimensional vector.
-#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
-#[repr(C)]
-pub struct Vec3<T> {
-    /// X component.
-    pub x: T,
-    /// Y component.
-    pub y: T,
+    pub y: u8,
     /// Z component.
-    pub z: T,
+    pub z: u8,
 }
 
-unsafe impl<T: 'static + Copy + Zeroable> Pod for Vec3<T> {}
-
-impl<T: Copy> Vec3<T> {
+impl Byte3 {
     /// New.
-    pub const fn new(x: T, y: T, z: T) -> Self {
+    pub const fn new(x: u8, y: u8, z: u8) -> Self {
         Self { x, y, z }
     }
+}
 
-    /// From array.
-    pub const fn from_array(array: [T; 3]) -> Self {
-        Self {
-            x: array[0],
-            y: array[1],
-            z: array[2],
-        }
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct Nat3 {
+    /// X component.
+    pub x: u32,
+    /// Y component.
+    pub y: u32,
+    /// Z component.
+    pub z: u32,
+}
+
+impl Nat3 {
+    /// New.
+    pub const fn new(x: u32, y: u32, z: u32) -> Self {
+        Self { x, y, z }
     }
+}
 
-    /// To array `[x, y, z]`.
-    pub const fn to_array(self) -> [T; 3] {
-        [self.x, self.y, self.z]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct Int2 {
+    /// X component.
+    pub x: i32,
+    /// Y component.
+    pub y: i32,
+}
+
+impl Int2 {
+    /// New.
+    pub const fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
+}
+
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct Int3 {
+    /// X component.
+    pub x: i32,
+    /// Y component.
+    pub y: i32,
+    /// Z component.
+    pub z: i32,
+}
+
+impl Int3 {
+    /// New.
+    pub const fn new(x: i32, y: i32, z: i32) -> Self {
+        Self { x, y, z }
+    }
+}
+
+/// 2-dimensional vector.
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct Vec2 {
+    /// X component.
+    pub x: f32,
+    /// Y component.
+    pub y: f32,
+}
+
+impl Vec2 {
+    /// New.
+    pub const fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y }
+    }
+}
+
+/// 3-dimensional vector.
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct Vec3 {
+    /// X component.
+    pub x: f32,
+    /// Y component.
+    pub y: f32,
+    /// Z component.
+    pub z: f32,
+}
+
+impl Vec3 {
+    /// New.
+    pub const fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
     }
 }
 
@@ -133,47 +192,51 @@ impl<T: Copy> Vec4<T> {
     }
 }
 
-/// Color represented by red, green, and blue components.
-#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
-pub struct Rgb<T> {
-    /// Red component.
-    pub r: T,
-    /// Green component.
-    pub g: T,
-    /// Blue component.
-    pub b: T,
+pub struct Rgba {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
 }
 
-unsafe impl<T: 'static + Copy + Zeroable> Pod for Rgb<T> {}
-
-/// Color represented by red, green, blue, and alpha components.
-#[derive(Clone, Copy, Default, Zeroable, FromLe, Debug)]
-#[repr(C)]
-pub struct Rgba<T> {
-    /// Red component.
-    pub r: T,
-    /// Green component.
-    pub g: T,
-    /// Blue component.
-    pub b: T,
-    /// Alpha component.
-    pub a: T,
-}
-
-impl<T: Copy> Rgba<T> {
-    /// From array.
-    pub const fn from_array(array: [T; 4]) -> Self {
-        Self {
-            r: array[0],
-            g: array[1],
-            b: array[2],
-            a: array[3],
-        }
+impl Rgba {
+    /// New.
+    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Self { r, g, b, a }
     }
 }
 
-unsafe impl<T: 'static + Copy + Zeroable> Pod for Rgba<T> {}
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct RgbNat {
+    pub r: u32,
+    pub g: u32,
+    pub b: u32,
+}
+
+impl RgbNat {
+    /// New.
+    pub const fn new(r: u32, g: u32, b: u32) -> Self {
+        Self { r, g, b }
+    }
+}
+
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct RgbFloat {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+}
+
+impl RgbFloat {
+    /// New.
+    pub const fn new(r: f32, g: f32, b: f32) -> Self {
+        Self { r, g, b }
+    }
+}
 
 /// Rotation represented as yaw, pitch, and roll angles.
 #[derive(Clone, Copy, Default, Zeroable, Pod, FromLe, Debug)]

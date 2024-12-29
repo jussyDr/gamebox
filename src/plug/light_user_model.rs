@@ -1,11 +1,11 @@
 //! Light user model.
 
-use crate::{Class, Rgb};
+use crate::{Class, RgbFloat};
 
 /// Light user model.
 #[derive(Default, Debug)]
 pub struct LightUserModel {
-    color: Rgb<f32>,
+    color: RgbFloat,
     intensity: f32,
     distance: f32,
     night_only: bool,
@@ -17,7 +17,7 @@ impl Class for LightUserModel {
 
 impl LightUserModel {
     /// Color.
-    pub const fn color(&self) -> Rgb<f32> {
+    pub const fn color(&self) -> RgbFloat {
         self.color
     }
 
@@ -72,7 +72,7 @@ mod read {
             }
 
             r.u32()?;
-            self.color = r.rgb()?;
+            self.color = r.rgb_float()?;
             self.intensity = r.f32()?;
             self.distance = r.f32()?;
             let _point_emission_radius = r.f32()?;

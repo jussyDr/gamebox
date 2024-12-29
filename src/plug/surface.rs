@@ -1,6 +1,6 @@
 //! Surface.
 
-use crate::{Class, ExternalNodeRef, Vec3};
+use crate::{Class, ExternalNodeRef, Nat3, Vec3};
 
 use super::Material;
 
@@ -33,9 +33,9 @@ pub enum SurfaceType {
     /// Mesh.
     Mesh {
         /// Vertices.
-        vertices: Vec<Vec3<f32>>,
+        vertices: Vec<Vec3>,
         /// Triangles.
-        triangles: Vec<Vec3<u32>>,
+        triangles: Vec<Nat3>,
     },
 }
 
@@ -116,9 +116,9 @@ mod read {
                         return Err(Error::version("surface mesh", version));
                     }
 
-                    let vertices = r.list(|r| r.vec3::<f32>())?;
+                    let vertices = r.list(|r| r.vec3())?;
                     let triangles = r.list(|r| {
-                        let triangle = r.vec3()?;
+                        let triangle = r.nat3()?;
                         r.u32()?;
 
                         Ok(triangle)
@@ -136,7 +136,7 @@ mod read {
                 }
             };
 
-            r.vec3::<f32>()?;
+            r.vec3()?;
             self.materials = r.list(|r| {
                 if !r.bool()? {
                     return Err(Error::new(ErrorKind::Unsupported("".into())));

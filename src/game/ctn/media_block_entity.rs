@@ -91,7 +91,7 @@ mod read {
             let _player_model_id = r.id_or_null()?;
             r.id_or_null()?;
             r.id_or_null()?;
-            r.vec3::<f32>()?;
+            r.vec3()?;
             let _skin_names = r.list(|r| r.pack_desc())?;
             let _has_badges = r.bool()?;
 

@@ -2,14 +2,14 @@
 
 use std::sync::Arc;
 
-use crate::{Class, Vec3};
+use crate::{Class, Nat3};
 
 use super::ZoneGenealogy;
 
 /// An auto terrain.
 #[derive(Default)]
 pub struct AutoTerrain {
-    offset: Vec3<u32>,
+    offset: Nat3,
     genealogy: Arc<ZoneGenealogy>,
 }
 
@@ -19,8 +19,8 @@ impl Class for AutoTerrain {
 
 impl AutoTerrain {
     /// Offset.
-    pub const fn offset(&self) -> &Vec3<u32> {
-        &self.offset
+    pub const fn offset(&self) -> Nat3 {
+        self.offset
     }
 
     /// Genealogy.
@@ -61,7 +61,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.offset = r.vec3()?;
+            self.offset = r.nat3()?;
             self.genealogy = r.internal_node_ref()?;
 
             Ok(())

@@ -60,7 +60,7 @@ mod read {
 
             self.keys = r.list(|r| {
                 let time = r.f32()?;
-                let _position = r.vec3::<f32>()?;
+                let _position = r.vec3()?;
                 let _rotation = r.pitch_yaw_roll()?;
                 let _fov = r.f32()?;
                 let _near_z = r.f32()?;
@@ -68,7 +68,7 @@ mod read {
                 let _anchor = r.u32()?;
                 let _anchor_vis = r.bool()?;
                 let _target = r.u32()?;
-                let _target_position = r.vec3::<f32>()?;
+                let _target_position = r.vec3()?;
                 let _weight = r.f32()?;
                 r.quat()?;
                 r.u32()?;

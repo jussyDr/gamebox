@@ -36,7 +36,7 @@ mod read {
             let _always_up = r.bool()?;
             let _align_to_interior = r.bool()?;
             let _align_to_world_dir = r.bool()?;
-            let _world_dir = r.vec3::<f32>()?;
+            let _world_dir = r.vec3()?;
             let _patch_layouts = r.list(|r| {
                 let _item_count = r.u32()?;
                 let _item_spacing = r.f32()?;

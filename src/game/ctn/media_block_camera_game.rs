@@ -63,7 +63,7 @@ mod read {
             self.end_time = r.f32()?;
             let _game_cam = r.u32()?;
             let _clip_ent_id = r.u32()?;
-            let _cam_position = r.vec3::<f32>()?;
+            let _cam_position = r.vec3()?;
             let _cam_rotation = r.pitch_yaw_roll()?;
             let _cam_fov = r.f32()?;
             r.f32()?;

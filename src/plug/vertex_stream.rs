@@ -7,12 +7,12 @@ use super::Texcoord;
 /// A vertex stream.
 #[derive(Default, Debug)]
 pub struct VertexStream {
-    positions: Vec<Vec3<f32>>,
+    positions: Vec<Vec3>,
     tangents_u: Vec<[f32; 3]>,
     tangents_v: Vec<[f32; 3]>,
     texcoords_0: Vec<Texcoord>,
-    colors_0: Option<Vec<Rgba<u8>>>,
-    colors_1: Option<Vec<Rgba<u8>>>,
+    colors_0: Option<Vec<Rgba>>,
+    colors_1: Option<Vec<Rgba>>,
     normals: Option<Vec<[f32; 3]>>,
     texcoords_1: Option<Vec<Texcoord>>,
     texcoords_2: Option<Vec<Texcoord>>,
@@ -24,7 +24,7 @@ impl Class for VertexStream {
 
 impl VertexStream {
     /// Position data.
-    pub const fn positions(&self) -> &Vec<Vec3<f32>> {
+    pub const fn positions(&self) -> &Vec<Vec3> {
         &self.positions
     }
 
@@ -44,7 +44,7 @@ impl VertexStream {
     }
 
     /// Color data.
-    pub const fn colors_0(&self) -> Option<&Vec<Rgba<u8>>> {
+    pub const fn colors_0(&self) -> Option<&Vec<Rgba>> {
         self.colors_0.as_ref()
     }
 

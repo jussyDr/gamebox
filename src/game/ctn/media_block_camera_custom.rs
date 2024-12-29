@@ -95,30 +95,30 @@ mod read {
                 let _anchor = r.u32()?;
                 let _anchor_vis = r.bool()?;
                 let _target = r.u32()?;
-                let _position = r.vec3::<f32>()?;
-                let _pitch_yaw_roll = r.vec3::<f32>()?;
+                let _position = r.vec3()?;
+                let _pitch_yaw_roll = r.vec3()?;
                 let _fov = r.f32()?;
-                let _target_position = r.vec3::<f32>()?;
+                let _target_position = r.vec3()?;
                 let _near_z = r.f32()?;
-                let _position = r.vec3::<f32>()?;
-                let _pitch_yaw_roll = r.vec3::<f32>()?;
+                let _position = r.vec3()?;
+                let _pitch_yaw_roll = r.vec3()?;
 
                 if version >= 4 {
                     r.u32()?;
                 }
 
                 let _fov = r.f32()?;
-                let _target_position = r.vec3::<f32>()?;
+                let _target_position = r.vec3()?;
                 let _near_z = r.f32()?;
-                let _position = r.vec3::<f32>()?;
-                let _pitch_yaw_roll = r.vec3::<f32>()?;
+                let _position = r.vec3()?;
+                let _pitch_yaw_roll = r.vec3()?;
 
                 if version >= 4 {
                     r.u32()?;
                 }
 
                 let _fov = r.f32()?;
-                let _target_position = r.vec3::<f32>()?;
+                let _target_position = r.vec3()?;
                 let _near_z = r.f32()?;
 
                 if version >= 4 {

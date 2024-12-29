@@ -1,12 +1,12 @@
 //! Media block transition fade.
 
-use crate::{Class, Rgb};
+use crate::{Class, RgbFloat};
 
 /// A media block transition fade.
 #[derive(Default)]
 pub struct MediaBlockTransitionFade {
     keys: Vec<Key>,
-    color: Rgb<f32>,
+    color: RgbFloat,
 }
 
 impl Class for MediaBlockTransitionFade {
@@ -20,7 +20,7 @@ impl MediaBlockTransitionFade {
     }
 
     /// Color.
-    pub const fn color(&self) -> Rgb<f32> {
+    pub const fn color(&self) -> RgbFloat {
         self.color
     }
 }
@@ -77,7 +77,7 @@ mod read {
 
                 Ok(Key { time, opacity })
             })?;
-            self.color = r.rgb()?;
+            self.color = r.rgb_float()?;
             r.f32()?;
 
             Ok(())

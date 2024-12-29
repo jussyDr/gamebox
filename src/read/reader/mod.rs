@@ -15,7 +15,10 @@ use std::{
 
 use node::NullNodeState;
 
-use crate::{FileRef, Iso4, PitchYawRoll, Quat, Rgb, Rgba, Vec2, Vec3, YawPitchRoll};
+use crate::{
+    Byte3, FileRef, Int2, Int3, Iso4, Nat3, PitchYawRoll, Quat, RgbFloat, RgbNat, Rgba, Vec2, Vec3,
+    YawPitchRoll,
+};
 
 use super::{Error, ErrorKind};
 
@@ -236,21 +239,39 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    /// Read a 2-dimensional vector.
-    pub fn vec2<T: Pod + FromLe>(&mut self) -> Result<Vec2<T>, Error> {
+    pub fn byte3(&mut self) -> Result<Byte3, Error> {
         self.pod()
     }
 
-    /// Read a 3-dimensional vector.
-    pub fn vec3<T: Pod + FromLe>(&mut self) -> Result<Vec3<T>, Error> {
+    pub fn nat3(&mut self) -> Result<Nat3, Error> {
         self.pod()
     }
 
-    pub fn rgb<T: Pod + FromLe>(&mut self) -> Result<Rgb<T>, Error> {
+    pub fn int2(&mut self) -> Result<Int2, Error> {
         self.pod()
     }
 
-    pub fn rgba<T: Pod + FromLe>(&mut self) -> Result<Rgba<T>, Error> {
+    pub fn int3(&mut self) -> Result<Int3, Error> {
+        self.pod()
+    }
+
+    pub fn vec2(&mut self) -> Result<Vec2, Error> {
+        self.pod()
+    }
+
+    pub fn vec3(&mut self) -> Result<Vec3, Error> {
+        self.pod()
+    }
+
+    pub fn rgba(&mut self) -> Result<Rgba, Error> {
+        self.pod()
+    }
+
+    pub fn rgb_nat(&mut self) -> Result<RgbNat, Error> {
+        self.pod()
+    }
+
+    pub fn rgb_float(&mut self) -> Result<RgbFloat, Error> {
         self.pod()
     }
 
@@ -268,10 +289,10 @@ impl<R: Read, I, N> Reader<R, I, N> {
     }
 
     pub fn iso4(&mut self) -> Result<Iso4, Error> {
-        self.vec3::<f32>()?;
-        self.vec3::<f32>()?;
-        self.vec3::<f32>()?;
-        self.vec3::<f32>()?;
+        self.vec3()?;
+        self.vec3()?;
+        self.vec3()?;
+        self.vec3()?;
 
         Ok(Iso4::default())
     }
@@ -381,6 +402,12 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let len = self.u32()?;
 
         self.repeat(len as usize, read_elem_fn)
+    }
+
+    pub fn list_pod<T: Pod + FromLe>(&mut self) -> Result<Vec<T>, Error> {
+        let len = self.u32()?;
+
+        self.repeat_pod(len as usize)
     }
 
     pub fn list_with_version<T>(

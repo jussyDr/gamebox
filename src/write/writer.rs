@@ -39,7 +39,7 @@ impl ToLe for f32 {
     }
 }
 
-impl<T: ToLe> ToLe for Vec2<T> {
+impl ToLe for Vec2 {
     fn to_le(mut self) -> Self {
         self.x = self.x.to_le();
         self.y = self.y.to_le();
@@ -48,7 +48,7 @@ impl<T: ToLe> ToLe for Vec2<T> {
     }
 }
 
-impl<T: ToLe> ToLe for Vec3<T> {
+impl ToLe for Vec3 {
     fn to_le(mut self) -> Self {
         self.x = self.x.to_le();
         self.y = self.y.to_le();
@@ -198,26 +198,12 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.u32(if value { 1 } else { 0 })
     }
 
-    pub fn vec2<T: ToLe>(&mut self, vec: Vec2<T>) -> Result<(), Error> {
-        let vec = vec.to_le();
-
-        // To be safe: `vec` must not contain any padding bytes.
-        let bytes = unsafe {
-            slice::from_raw_parts(&vec as *const Vec2<T> as *const u8, size_of::<Vec2<T>>())
-        };
-
-        self.bytes(bytes)
+    pub fn vec2(&mut self, vec: Vec2) -> Result<(), Error> {
+        todo!()
     }
 
-    pub fn vec3<T: ToLe>(&mut self, vec: Vec3<T>) -> Result<(), Error> {
-        let vec = vec.to_le();
-
-        // To be safe: `vec` must not contain any padding bytes.
-        let bytes = unsafe {
-            slice::from_raw_parts(&vec as *const Vec3<T> as *const u8, size_of::<Vec3<T>>())
-        };
-
-        self.bytes(bytes)
+    pub fn vec3(&mut self, vec: Vec3) -> Result<(), Error> {
+        todo!()
     }
 
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {

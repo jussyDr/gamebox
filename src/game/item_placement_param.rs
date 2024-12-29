@@ -56,7 +56,7 @@ mod read {
             }
 
             let _flags = r.u16()?;
-            let _cube_center = r.vec3::<f32>()?;
+            let _cube_center = r.vec3()?;
             let _cube_size = r.f32()?;
             let _grid_snap_h_step = r.f32()?;
             let _grid_snap_v_step = r.f32()?;
@@ -70,7 +70,7 @@ mod read {
         }
 
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _pivot_positions = r.list(|r| r.vec3::<f32>())?;
+            let _pivot_positions = r.list(|r| r.vec3())?;
             let _pivot_rotations = r.list(|r| r.quat())?;
 
             Ok(())

@@ -1,13 +1,13 @@
 //! Block unit info.
 
-use crate::{Class, ExternalNodeRef, Vec3};
+use crate::{Class, ExternalNodeRef, Nat3};
 
 use super::BlockInfoClip;
 
 /// A block unit info.
 #[derive(Default)]
 pub struct BlockUnitInfo {
-    relative_offset: Vec3<u32>,
+    relative_offset: Nat3,
     clips_north: Vec<ExternalNodeRef<BlockInfoClip>>,
     clips_east: Vec<ExternalNodeRef<BlockInfoClip>>,
     clips_south: Vec<ExternalNodeRef<BlockInfoClip>>,
@@ -22,7 +22,7 @@ impl Class for BlockUnitInfo {
 
 impl BlockUnitInfo {
     /// Relative offset.
-    pub const fn relative_offset(&self) -> Vec3<u32> {
+    pub const fn relative_offset(&self) -> Nat3 {
         self.relative_offset
     }
 }
@@ -75,7 +75,7 @@ mod read {
             let _place_pylons = r.u32()?;
             r.bool()?;
             r.bool()?;
-            self.relative_offset = r.vec3()?;
+            self.relative_offset = r.nat3()?;
             let _clips = r.list(|r| r.external_node_ref::<()>())?;
 
             Ok(())

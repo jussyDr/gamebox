@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, PitchYawRoll, Vec3};
+use crate::{game::WaypointSpecialProperty, Byte3, PitchYawRoll, Vec3};
 
 use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 
@@ -83,14 +83,14 @@ pub enum BlockType {
         /// Cardinal direction.
         direction: Direction,
         /// Coordinate.
-        coord: Vec3<u8>,
+        coord: Byte3,
         /// Is ghost.
         is_ghost: bool,
     },
     /// Free block.
     Free {
         /// Position.
-        position: Vec3<f32>,
+        position: Vec3,
         /// Rotation.
         rotation: PitchYawRoll,
     },
@@ -130,7 +130,7 @@ mod read {
         ) -> Result<(), Error> {
             self.model_id = r.id()?;
             let direction = r.enum_u8::<Direction>()?;
-            let coord = r.vec3()?;
+            let coord = r.byte3()?;
             let flags = r.u32()?;
 
             if flags != 0xffffffff {

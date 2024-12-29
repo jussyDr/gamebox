@@ -70,7 +70,7 @@ mod read {
                 let _saturation = r.f32()?;
                 let _brightness = r.f32()?;
                 let _contrast = r.f32()?;
-                let _rgb = r.vec3::<f32>()?;
+                let _rgb = r.vec3()?;
                 r.f32()?;
                 r.f32()?;
                 r.f32()?;
@@ -80,7 +80,7 @@ mod read {
                 let _far_saturation = r.f32()?;
                 let _far_brightness = r.f32()?;
                 let _far_contrast = r.f32()?;
-                let _far_rgb = r.vec3::<f32>()?;
+                let _far_rgb = r.vec3()?;
                 r.f32()?;
                 r.f32()?;
                 r.f32()?;

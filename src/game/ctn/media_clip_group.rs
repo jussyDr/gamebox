@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{Class, Vec3};
+use crate::{Class, Nat3};
 
 use super::MediaClip;
 
@@ -26,7 +26,7 @@ impl MediaClipGroup {
 /// Clip trigger.
 pub struct ClipTrigger {
     clip: Arc<MediaClip>,
-    coords: Vec<Vec3<u32>>,
+    coords: Vec<Nat3>,
 }
 
 impl ClipTrigger {
@@ -36,7 +36,7 @@ impl ClipTrigger {
     }
 
     /// Coordinates.
-    pub const fn coords(&self) -> &Vec<Vec3<u32>> {
+    pub const fn coords(&self) -> &Vec<Nat3> {
         &self.coords
     }
 }
@@ -90,7 +90,7 @@ mod read {
                 r.u32()?;
                 let _condition = r.u32()?;
                 let _condition_value = r.f32()?;
-                let coords = r.list(|r| r.vec3())?;
+                let coords = r.list_pod()?;
 
                 self.clips.push(ClipTrigger { clip, coords });
             }

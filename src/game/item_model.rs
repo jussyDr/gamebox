@@ -171,7 +171,7 @@ mod read {
         }
 
         fn read_chunk_18<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _ground_point = r.vec3::<f32>()?;
+            let _ground_point = r.vec3()?;
             let _painter_ground_margin = r.f32()?;
             let _orbital_center_height_from_ground = r.f32()?;
             let _orbital_radius_base = r.f32()?;
@@ -411,7 +411,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            r.list(|r| r.vec3::<f32>())?;
+            r.list(|r| r.vec3())?;
 
             Ok(())
         }

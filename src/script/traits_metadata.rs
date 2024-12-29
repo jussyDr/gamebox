@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use crate::{Class, Vec2, Vec3};
+use crate::{Class, Int2, Int3, Iso4, Vec2, Vec3};
 
 /// Traits metadata.
 #[derive(Default)]
@@ -47,17 +47,17 @@ pub enum Trait {
     /// Parameter array.
     ParamArray,
     /// 2-dimensional vector.
-    Vec2(Vec2<f32>),
+    Vec2(Vec2),
     /// 3-dimensional vector.
-    Vec3(Vec3<f32>),
+    Vec3(Vec3),
     /// 3-dimensional vector.
-    Int3(Vec3<i32>),
+    Int3(Int3),
     /// Iso4.
-    Iso4,
+    Iso4(Iso4),
     /// Identifier.
     Ident,
     /// 2-dimensional vector.
-    Int2(Vec2<i32>),
+    Int2(Int2),
     /// A struct.
     Struct {
         /// Name.
@@ -237,12 +237,12 @@ mod read {
                 Ok(Trait::Array { keys, values })
             }
             Type::ParamArray => Ok(Trait::ParamArray),
-            Type::Vec2 => Ok(Trait::Vec2(r.vec2::<f32>()?)),
-            Type::Vec3 => Ok(Trait::Vec3(r.vec3::<f32>()?)),
-            Type::Int3 => Ok(Trait::Int3(r.vec3::<i32>()?)),
-            Type::Iso4 => Ok(Trait::Iso4),
+            Type::Vec2 => Ok(Trait::Vec2(r.vec2()?)),
+            Type::Vec3 => Ok(Trait::Vec3(r.vec3()?)),
+            Type::Int3 => Ok(Trait::Int3(r.int3()?)),
+            Type::Iso4 => Ok(Trait::Iso4(r.iso4()?)),
             Type::Ident => Ok(Trait::Ident),
-            Type::Int2 => Ok(Trait::Int2(r.vec2::<i32>()?)),
+            Type::Int2 => Ok(Trait::Int2(r.int2()?)),
             Type::Struct { name, member_types } => {
                 let mut members = HashMap::new();
 

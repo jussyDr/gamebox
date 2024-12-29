@@ -216,17 +216,11 @@ mod read {
             let sound_2 = r.external_node_ref_or_null::<()>()?;
 
             if sound_1.is_some() {
-                let _sound_1_location = r.vec3::<f32>()?;
-                let _sound_1_location = r.vec3::<f32>()?;
-                let _sound_1_location = r.vec3::<f32>()?;
-                let _sound_1_location = r.vec3::<f32>()?;
+                let _sound_1_location = r.iso4()?;
             }
 
             if sound_2.is_some() {
-                let _sound_2_location = r.vec3::<f32>()?;
-                let _sound_2_location = r.vec3::<f32>()?;
-                let _sound_2_location = r.vec3::<f32>()?;
-                let _sound_2_location = r.vec3::<f32>()?;
+                let _sound_2_location = r.iso4()?;
             }
 
             Ok(())

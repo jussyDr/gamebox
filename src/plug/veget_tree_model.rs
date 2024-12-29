@@ -112,7 +112,7 @@ mod read {
             r.u32()?;
             r.u32()?;
             r.u32()?;
-            r.list(|r| r.vec3::<f32>())?;
+            r.list(|r| r.vec3())?;
             r.list(|r| {
                 r.u32()?;
                 r.u32()?;

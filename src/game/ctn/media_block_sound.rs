@@ -30,7 +30,7 @@ pub struct Key {
     time: f32,
     volume: f32,
     pan: f32,
-    position: Vec3<f32>,
+    position: Vec3,
 }
 
 impl Key {
@@ -50,7 +50,7 @@ impl Key {
     }
 
     /// Position.
-    pub const fn position(&self) -> Vec3<f32> {
+    pub const fn position(&self) -> Vec3 {
         self.position
     }
 }

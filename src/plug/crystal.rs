@@ -53,13 +53,13 @@ impl Crystal {
 /// Crystal mesh.
 #[derive(Default, Debug)]
 pub struct Mesh {
-    positions: Vec<Vec3<f32>>,
+    positions: Vec<Vec3>,
     faces: Vec<Face>,
 }
 
 impl Mesh {
     /// Positions.
-    pub const fn positions(&self) -> &Vec<Vec3<f32>> {
+    pub const fn positions(&self) -> &Vec<Vec3> {
         &self.positions
     }
 
@@ -97,13 +97,13 @@ impl Face {
 /// Spawn position.
 #[derive(Debug)]
 pub struct SpawnPosition {
-    position: Vec3<f32>,
+    position: Vec3,
     rotation: PitchYawRoll,
 }
 
 impl SpawnPosition {
     /// Position.
-    pub const fn position(&self) -> Vec3<f32> {
+    pub const fn position(&self) -> Vec3 {
         self.position
     }
 
@@ -324,10 +324,7 @@ mod read {
                         let _lights = r.list(|r| r.internal_node_ref::<LightUserModel>())?;
                         let _light_positions = r.list(|r| {
                             r.u32()?;
-                            r.vec3::<f32>()?;
-                            r.vec3::<f32>()?;
-                            r.vec3::<f32>()?;
-                            r.vec3::<f32>()?;
+                            r.iso4()?;
 
                             Ok(())
                         })?;
@@ -351,7 +348,7 @@ mod read {
             }
 
             if version == 0 {
-                r.list(|r| r.vec2::<f32>())?;
+                r.list(|r| r.vec2())?;
             } else {
                 r.list(|r| r.u32())?;
 
@@ -395,10 +392,7 @@ mod read {
         let _anchor_infos = r.list(|r| {
             r.bool()?;
             r.bool()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
+            r.iso4()?;
             r.string()?;
             r.u32()?;
 
@@ -453,7 +447,7 @@ mod read {
         let num_faces = r.u32()?;
 
         if mesh_version >= 37 {
-            let _texcoords = r.list(|r| r.vec2::<f32>())?;
+            let _texcoords = r.list(|r| r.vec2())?;
             let num_texcoord_indices = r.u32()?;
             let _texcoord_indices = r.repeat(num_texcoord_indices as usize, |r| {
                 read_index(r, num_texcoord_indices)

@@ -22,9 +22,9 @@ impl EffectSimi {
 /// Effect simi key.
 pub struct Key {
     time: f32,
-    position: Vec2<f32>,
+    position: Vec2,
     rotation: f32,
-    scale: Vec2<f32>,
+    scale: Vec2,
     opacity: f32,
     depth: f32,
 }
@@ -36,7 +36,7 @@ impl Key {
     }
 
     /// Position.
-    pub const fn position(&self) -> Vec2<f32> {
+    pub const fn position(&self) -> Vec2 {
         self.position
     }
 
@@ -46,7 +46,7 @@ impl Key {
     }
 
     /// Scale.
-    pub const fn scale(&self) -> Vec2<f32> {
+    pub const fn scale(&self) -> Vec2 {
         self.scale
     }
 

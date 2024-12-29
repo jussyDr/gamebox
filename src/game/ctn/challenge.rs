@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{script::TraitsMetadata, Class, FileRef, Vec2, Vec3};
+use crate::{script::TraitsMetadata, Class, FileRef, Nat3, Vec2};
 
 use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
@@ -21,12 +21,12 @@ pub struct Challenge {
     ty: ChallengeType,
     password: String,
     decoration_id: Arc<str>,
-    coord_origin: Vec2<f32>,
-    coord_target: Vec2<f32>,
+    coord_origin: Vec2,
+    coord_target: Vec2,
     title_id: Arc<str>,
     parameters: Arc<ChallengeParameters>,
     texture_mod: Option<FileRef>,
-    size: Vec3<u32>,
+    size: Nat3,
     blocks: Vec<Block>,
     music: Option<FileRef>,
     items: Vec<AnchoredObject>,
@@ -107,8 +107,8 @@ impl Challenge {
     }
 
     /// Size.
-    pub const fn size(&self) -> &Vec3<u32> {
-        &self.size
+    pub const fn size(&self) -> Nat3 {
+        self.size
     }
 
     /// Blocks placed in this challenge.
@@ -193,7 +193,7 @@ impl Default for Challenge {
             title_id: Arc::from("TMStadium"),
             parameters: Arc::default(),
             texture_mod: None,
-            size: Vec3::new(48, 40, 48),
+            size: Nat3::new(48, 40, 48),
             blocks: vec![],
             music: None,
             items: vec![],
@@ -599,7 +599,7 @@ mod read {
             self.decoration_id = r.id()?;
             let _deco_collection = r.id_or_null()?;
             let _deco_author = r.id()?;
-            self.size = r.vec3()?;
+            self.size = r.nat3()?;
             let _need_unlock = r.bool()?;
             self.blocks = read_blocks(r)?;
 
@@ -636,10 +636,10 @@ mod read {
 
             if has_custom_cam_thumbnail {
                 r.u8()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
-                let _thumbnail_position = r.vec3::<f32>()?;
+                r.vec3()?;
+                r.vec3()?;
+                r.vec3()?;
+                let _thumbnail_position = r.vec3()?;
                 let _thumbnail_fov = r.f32()?;
                 let _thumbnail_near_clip_plame = r.f32()?;
                 let _thumbnail_far_clip_plane = r.f32()?;
@@ -670,8 +670,8 @@ mod read {
         }
 
         fn read_chunk_54<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _thumbnail_position = r.vec3::<f32>()?;
-            let _thumbnail_pitch_yaw_roll = r.vec3::<f32>()?;
+            let _thumbnail_position = r.vec3()?;
+            let _thumbnail_pitch_yaw_roll = r.vec3()?;
             let _thumbnail_fov = r.f32()?;
             r.f32()?;
             r.f32()?;
@@ -715,7 +715,12 @@ mod read {
                 self.items = r.list_with_version(|r| r.node())?;
 
                 if version == 7 {
-                    let _items_on_item = r.list(|r| r.vec2::<u32>())?;
+                    let _items_on_item = r.list(|r| {
+                        r.u32()?;
+                        r.u32()?;
+
+                        Ok(())
+                    })?;
                 }
 
                 let _block_indices = r.list(|r| r.u32())?;
@@ -806,7 +811,7 @@ mod read {
             self.in_game_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             self.end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             self.ambiance_clip = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _clip_trigger_size = r.vec3::<u32>()?;
+            let _clip_trigger_size = r.nat3()?;
 
             Ok(())
         }
@@ -839,7 +844,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _offzone_trigger_size = r.vec3::<u32>()?;
+            let _offzone_trigger_size = r.nat3()?;
             let _offzones = r.list(|r| r.box3d())?;
 
             Ok(())
@@ -960,7 +965,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _world_distortion = r.vec3::<u32>()?;
+            let _world_distortion = r.nat3()?;
             r.bool()?;
             r.u32()?;
             r.u32()?;

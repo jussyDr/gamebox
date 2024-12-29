@@ -97,7 +97,7 @@ mod read {
             let _player_model_id = r.id_or_null()?;
             r.id_or_null()?;
             r.id_or_null()?;
-            let _light_trail_color = r.vec3::<f32>()?;
+            let _light_trail_color = r.vec3()?;
             let _skin_pack_descs = r.list(|r| r.pack_desc())?;
             let has_badges = r.bool()?;
 

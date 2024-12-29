@@ -86,10 +86,7 @@ mod read {
             let flags = r.u32()?;
 
             if flags & 4 != 0 {
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
-                r.vec3::<f32>()?;
+                r.iso4()?;
             }
 
             Ok(())

@@ -75,7 +75,7 @@ mod read {
             r.u32()?;
 
             if r.bool8()? {
-                let _geom_translation = r.vec3::<f32>()?;
+                let _geom_translation = r.vec3()?;
                 let _geom_rotation = r.pitch_yaw_roll()?;
             }
 

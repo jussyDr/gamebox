@@ -64,7 +64,7 @@ mod read {
                 let _z_focus = r.f32()?;
                 let _lens_size = r.f32()?;
                 let _target = r.u32()?;
-                let _target_position = r.vec3::<f32>()?;
+                let _target_position = r.vec3()?;
 
                 Ok(Key { time })
             })?;

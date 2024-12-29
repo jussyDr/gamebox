@@ -34,7 +34,7 @@ pub enum Icon {
     /// Normal icon.
     Normal {
         /// Data.
-        data: Vec<Rgba<u8>>,
+        data: Vec<Rgba>,
     },
     /// WebP icon.
     WebP {

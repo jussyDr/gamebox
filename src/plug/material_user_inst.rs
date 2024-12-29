@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{Class, Rgb};
+use crate::{Class, RgbNat};
 
 /// User defined material instance.
 #[derive(Default, Debug)]
@@ -11,7 +11,7 @@ pub struct MaterialUserInst {
     physic_id: u8,
     effect: Option<Effect>,
     link: MaterialLink,
-    color: Option<Rgb<u32>>,
+    color: Option<RgbNat>,
 }
 
 impl Class for MaterialUserInst {
@@ -30,7 +30,7 @@ impl MaterialUserInst {
     }
 
     /// Color.
-    pub const fn color(&self) -> Option<Rgb<u32>> {
+    pub const fn color(&self) -> Option<RgbNat> {
         self.color
     }
 }
@@ -195,7 +195,7 @@ mod read {
                 Ok(())
             })?;
             if r.u32()? == 3 {
-                self.color = Some(r.rgb()?);
+                self.color = Some(r.rgb_nat()?);
             }
             let _uv_anims = r.list(|r| {
                 r.id()?;

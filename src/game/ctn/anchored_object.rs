@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, Class, FileRef, Vec3, YawPitchRoll};
+use crate::{game::WaypointSpecialProperty, Byte3, Class, FileRef, Vec3, YawPitchRoll};
 
 use super::{ElemColor, LightmapQuality};
 
@@ -11,11 +11,11 @@ use super::{ElemColor, LightmapQuality};
 pub struct AnchoredObject {
     model_id: Arc<str>,
     rotation: YawPitchRoll,
-    unit_coord: Vec3<u8>,
-    position: Vec3<f32>,
+    unit_coord: Byte3,
+    position: Vec3,
     waypoint_property: Option<WaypointSpecialProperty>,
     variant_index: u8,
-    pivot_position: Vec3<f32>,
+    pivot_position: Vec3,
     scale: f32,
     skin: Option<FileRef>,
     pub(crate) elem_color: ElemColor,
@@ -40,12 +40,12 @@ impl AnchoredObject {
     }
 
     /// Block unit coordinate.
-    pub const fn unit_coord(&self) -> Vec3<u8> {
+    pub const fn unit_coord(&self) -> Byte3 {
         self.unit_coord
     }
 
     /// Position.
-    pub const fn position(&self) -> Vec3<f32> {
+    pub const fn position(&self) -> Vec3 {
         self.position
     }
 
@@ -60,7 +60,7 @@ impl AnchoredObject {
     }
 
     /// Pivot position.
-    pub const fn pivot_position(&self) -> Vec3<f32> {
+    pub const fn pivot_position(&self) -> Vec3 {
         self.pivot_position
     }
 
@@ -185,12 +185,13 @@ mod read {
             let _model_collection = r.id_or_null()?;
             let _model_author = r.id_or_null()?;
             self.rotation = r.yaw_pitch_roll()?;
-            self.unit_coord = r.vec3()?;
+            self.unit_coord = r.byte3()?;
             let _anchor_tree_id = r.id_or_null()?;
             self.position = r.vec3()?;
             self.waypoint_property = r.node_or_null::<WaypointSpecialProperty>()?;
             let flags = r.u16()?;
             self.variant_index = ((flags >> 8) & 255) as u8;
+            let _show = ((flags >> 12) & 1) != 0;
             self.pivot_position = r.vec3()?;
             self.scale = r.f32()?;
 
@@ -198,8 +199,8 @@ mod read {
                 self.skin = r.pack_desc_or_null()?;
             }
 
-            r.vec3::<f32>()?;
-            r.vec3::<f32>()?;
+            r.vec3()?;
+            r.vec3()?;
 
             Ok(())
         }

@@ -28,7 +28,7 @@ impl Prefab {
 pub struct Entity {
     ty: EntityType,
     rotation: Quat,
-    position: Vec3<f32>,
+    position: Vec3,
 }
 
 impl Entity {
@@ -43,7 +43,7 @@ impl Entity {
     }
 
     /// Position.
-    pub const fn position(&self) -> Vec3<f32> {
+    pub const fn position(&self) -> Vec3 {
         self.position
     }
 }
@@ -203,8 +203,8 @@ mod read {
 
                         let _ent_1 = r.u32()?;
                         let _ent_2 = r.u32()?;
-                        let _position_1 = r.vec3::<f32>()?;
-                        let _position_2 = r.vec3::<f32>()?;
+                        let _position_1 = r.vec3()?;
+                        let _position_2 = r.vec3()?;
                     }
                     0x2f0d8000 => {
                         let version = r.u32()?;
@@ -216,7 +216,7 @@ mod read {
                         let _placements = r.list(|r| read_item_placement_placement(r))?;
                         r.list(|r| r.u16())?;
                         r.list(|r| {
-                            r.vec3::<f32>()?;
+                            r.vec3()?;
                             r.quat()?;
 
                             Ok(())

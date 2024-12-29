@@ -48,8 +48,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _poss = r.list(|r| r.vec3::<f32>())?;
-            let _lefts = r.list(|r| r.vec3::<f32>())?;
+            let _poss = r.list(|r| r.vec3())?;
+            let _lefts = r.list(|r| r.vec3())?;
             r.bool()?;
             r.bool()?;
             r.bool()?;

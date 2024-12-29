@@ -47,7 +47,7 @@ mod read {
             let _loc = r.iso4()?;
             let _torque_x = r.f32()?;
             let _torque_duration = r.u32()?;
-            let _default_gravity_spawn = r.vec3::<f32>()?;
+            let _default_gravity_spawn = r.vec3()?;
             r.u32()?;
 
             Ok(())

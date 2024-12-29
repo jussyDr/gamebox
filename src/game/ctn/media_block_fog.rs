@@ -1,6 +1,6 @@
 //! Media block fog.
 
-use crate::{Class, Rgb};
+use crate::{Class, RgbFloat};
 
 /// A media block fog.
 #[derive(Default)]
@@ -26,7 +26,7 @@ pub struct Key {
     sky_intensity: f32,
     distance: f32,
     coefficient: f32,
-    color: Rgb<f32>,
+    color: RgbFloat,
     clouds_opacity: f32,
     clouds_speed: f32,
 }
@@ -58,7 +58,7 @@ impl Key {
     }
 
     /// Color
-    pub const fn color(&self) -> Rgb<f32> {
+    pub const fn color(&self) -> RgbFloat {
         self.color
     }
 
@@ -113,7 +113,7 @@ mod read {
                 let sky_intensity = r.f32()?;
                 let distance = r.f32()?;
                 let coefficient = r.f32()?;
-                let color = r.rgb()?;
+                let color = r.rgb_float()?;
                 let clouds_opacity = r.f32()?;
                 let clouds_speed = r.f32()?;
 
