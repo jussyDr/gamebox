@@ -15,7 +15,7 @@ pub struct Challenge {
     editor_mode: EditorMode,
     num_checkpoints: u32,
     num_laps: Option<u32>,
-    id: Arc<str>,
+    uid: Arc<str>,
     author_id: Arc<str>,
     name: String,
     ty: ChallengeType,
@@ -26,7 +26,7 @@ pub struct Challenge {
     pack_mask: [u8; 16],
     map_type: String,
     map_style: Option<String>,
-    lightmap_cache_id: u64,
+    lightmap_cache_uid: u64,
     has_lightmap: bool,
     title_id: Arc<str>,
     parameters: Arc<ChallengeParameters>,
@@ -76,9 +76,9 @@ impl Challenge {
         self.num_laps
     }
 
-    /// Identifier.
-    pub const fn id(&self) -> &Arc<str> {
-        &self.id
+    /// Unique identifier.
+    pub const fn uid(&self) -> &Arc<str> {
+        &self.uid
     }
 
     /// Author identifier.
@@ -187,7 +187,7 @@ impl Default for Challenge {
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
             num_laps: None,
-            id: Default::default(),
+            uid: Default::default(), // should be random
             author_id: Default::default(),
             name: Default::default(),
             ty: Default::default(),
@@ -198,7 +198,7 @@ impl Default for Challenge {
             pack_mask: [0; 16],
             map_type: "TrackMania\\TM_Race".to_string(),
             map_style: None,
-            lightmap_cache_id: 0, // should be random
+            lightmap_cache_uid: 0, // should be random
             has_lightmap: false,
             title_id: Arc::from("TMStadium"),
             parameters: Default::default(),
@@ -329,7 +329,9 @@ impl EmbeddedItems {
 }
 
 mod read {
-    use std::io::{Read, Seek};
+    use std::io::{BufRead, Read, Seek};
+
+    use quick_xml::events::{attributes::Attributes, Event};
 
     use crate::{
         game::ctn::{
@@ -495,7 +497,7 @@ mod read {
                 return Err(Error::chunk_version(version as u32));
             }
 
-            self.id = r.id()?;
+            self.uid = r.id()?;
             r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
@@ -510,7 +512,7 @@ mod read {
             self.pack_mask = r.byte_array::<16>()?;
             self.map_type = r.string()?;
             self.map_style = r.string_non_empty()?;
-            self.lightmap_cache_id = r.u64()?;
+            self.lightmap_cache_uid = r.u64()?;
             let lightmap_version = r.u8()?;
             self.has_lightmap = lightmap_version != 0;
 
@@ -534,7 +536,67 @@ mod read {
         }
 
         fn read_chunk_5<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _xml = r.string()?;
+            let xml = r.byte_buf()?;
+            let mut r = XmlReader::new(xml.as_slice());
+
+            r.tag(
+                b"header",
+                |r| {
+                    r.attribute(b"type")?;
+                    r.attribute(b"exever")?;
+                    r.attribute(b"exebuild")?;
+                    r.attribute(b"title")?;
+                    r.attribute(b"lightmap")?;
+
+                    Ok(())
+                },
+                |r| {
+                    r.tag_empty(b"ident", |r| {
+                        r.attribute(b"uid")?;
+                        r.attribute(b"name")?;
+                        r.attribute(b"author")?;
+                        r.attribute(b"authorzone")?;
+
+                        Ok(())
+                    })?;
+                    r.tag_empty(b"desc", |r| {
+                        r.attribute(b"envir")?;
+                        r.attribute(b"mood")?;
+                        r.attribute(b"type")?;
+                        r.attribute(b"maptype")?;
+                        r.attribute(b"mapstyle")?;
+                        r.attribute(b"validated")?;
+                        r.attribute(b"nblaps")?;
+                        r.attribute(b"displaycost")?;
+                        r.attribute(b"mod")?;
+                        r.attribute(b"hasghostblocks")?;
+
+                        Ok(())
+                    })?;
+                    r.tag_empty(b"playermodel", |r| {
+                        r.attribute(b"id")?;
+
+                        Ok(())
+                    })?;
+                    r.tag_empty(b"times", |r| {
+                        r.attribute(b"bronze")?;
+                        r.attribute(b"silver")?;
+                        r.attribute(b"gold")?;
+                        r.attribute(b"authortime")?;
+                        r.attribute(b"authorscore")?;
+
+                        Ok(())
+                    })?;
+                    r.tag_list(b"deps", b"dep", |r| {
+                        r.attribute(b"file")?;
+                        r.optional_attribute(b"url")?;
+
+                        Ok(())
+                    })?;
+
+                    Ok(())
+                },
+            )?;
 
             Ok(())
         }
@@ -608,7 +670,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.id = r.id()?;
+            self.uid = r.id()?;
             let _collection = r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
@@ -1320,6 +1382,155 @@ mod read {
 
         Ok(blocks)
     }
+
+    struct XmlReader<R> {
+        inner: quick_xml::Reader<R>,
+        buf: Vec<u8>,
+    }
+
+    impl<R> XmlReader<R> {
+        fn new(inner: R) -> Self {
+            Self {
+                inner: quick_xml::Reader::from_reader(inner),
+                buf: vec![],
+            }
+        }
+    }
+
+    impl<R: BufRead> XmlReader<R> {
+        fn tag(
+            &mut self,
+            name: &[u8],
+            mut attribute_read_fn: impl FnMut(&mut XmlAttributes) -> Result<(), Error>,
+            mut read_fn: impl FnMut(&mut Self) -> Result<(), Error>,
+        ) -> Result<(), Error> {
+            let event = self.inner.read_event_into(&mut self.buf).unwrap();
+
+            match event {
+                Event::Start(event) if event.name().as_ref() == name => {
+                    let mut attributes = XmlAttributes::new(event.attributes());
+
+                    println!("{:?}", event.name());
+
+                    attribute_read_fn(&mut attributes)?;
+
+                    if let Some(a) = attributes.inner.next() {
+                        panic!("{:?}", a.unwrap().key);
+                    }
+                }
+                _ => panic!(),
+            }
+
+            read_fn(self)?;
+
+            let event = self.inner.read_event_into(&mut self.buf).unwrap();
+
+            println!("{event:?}");
+
+            match event {
+                Event::End(event) if event.name().as_ref() == name => {}
+                _ => panic!(),
+            }
+
+            Ok(())
+        }
+
+        fn tag_list(
+            &mut self,
+            name: &[u8],
+            elem_name: &[u8],
+            mut attribute_read_fn: impl FnMut(&mut XmlAttributes) -> Result<(), Error>,
+        ) -> Result<(), Error> {
+            let event = self.inner.read_event_into(&mut self.buf).unwrap();
+
+            match event {
+                Event::Start(event) if event.name().as_ref() == name => {
+                    let mut attributes = XmlAttributes::new(event.attributes());
+
+                    if let Some(a) = attributes.inner.next() {
+                        panic!("{:?}", a.unwrap().key);
+                    }
+                }
+                _ => panic!(),
+            }
+
+            loop {
+                let event = self.inner.read_event_into(&mut self.buf).unwrap();
+
+                match event {
+                    Event::End(event) if event.name().as_ref() == name => break,
+                    Event::Empty(event) if event.name().as_ref() == elem_name => {
+                        let mut attributes = XmlAttributes::new(event.attributes());
+
+                        println!("{:?}", event.name());
+
+                        attribute_read_fn(&mut attributes)?;
+
+                        if let Some(a) = attributes.inner.next() {
+                            panic!("{:?}", a.unwrap().key);
+                        }
+                    }
+                    _ => panic!(),
+                }
+            }
+
+            Ok(())
+        }
+
+        fn tag_empty(
+            &mut self,
+            name: &[u8],
+            mut attribute_read_fn: impl FnMut(&mut XmlAttributes) -> Result<(), Error>,
+        ) -> Result<(), Error> {
+            let event = self.inner.read_event_into(&mut self.buf).unwrap();
+
+            match event {
+                Event::Empty(event) if event.name().as_ref() == name => {
+                    let mut attributes = XmlAttributes::new(event.attributes());
+
+                    println!("{:?}", event.name());
+
+                    attribute_read_fn(&mut attributes)?;
+
+                    if let Some(a) = attributes.inner.next() {
+                        panic!("{:?}", a.unwrap().key);
+                    }
+                }
+                _ => panic!(),
+            }
+
+            Ok(())
+        }
+    }
+
+    struct XmlAttributes<'a> {
+        inner: Attributes<'a>,
+    }
+
+    impl<'a> XmlAttributes<'a> {
+        fn new(inner: Attributes<'a>) -> Self {
+            Self { inner }
+        }
+
+        fn attribute(&mut self, name: &[u8]) -> Result<(), Error> {
+            match self.inner.next() {
+                Some(Ok(attribute)) if attribute.key.as_ref() == name => {}
+                _ => todo!(),
+            }
+
+            Ok(())
+        }
+
+        fn optional_attribute(&mut self, name: &[u8]) -> Result<(), Error> {
+            match self.inner.next() {
+                Some(Ok(attribute)) if attribute.key.as_ref() == name => {}
+                None => {}
+                _ => todo!(),
+            }
+
+            Ok(())
+        }
+    }
 }
 
 mod write {
@@ -1402,7 +1613,7 @@ mod write {
             w: &mut Writer<impl Write, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             w.u8(11)?;
-            w.id(&self.id)?;
+            w.id(&self.uid)?;
             w.u32(0x1a)?;
             w.id(&self.author_id)?;
             w.string(&self.name)?;
@@ -1417,7 +1628,7 @@ mod write {
             w.bytes(&self.pack_mask)?;
             w.string(&self.map_type)?;
             w.string_or_empty(self.map_style.as_ref())?;
-            w.u64(self.lightmap_cache_id)?;
+            w.u64(self.lightmap_cache_uid)?;
 
             if self.has_lightmap {
                 w.u8(8)?;
