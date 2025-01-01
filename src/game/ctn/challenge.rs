@@ -2,11 +2,11 @@
 
 use std::sync::Arc;
 
-use crate::{script::TraitsMetadata, Class, FileRef, Nat3, Vec2};
+use crate::{read::reader::FromVariant, script::TraitsMetadata, Class, FileRef, Nat3, Vec2};
 
 use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
 
-/// A challenge.
+/// Challenge.
 pub struct Challenge {
     medal_times: Option<MedalTimes>,
     cost: u32,
@@ -249,16 +249,14 @@ enum EditorMode {
     Gamepad,
 }
 
-impl TryFrom<u32> for EditorMode {
-    type Error = ();
-
-    fn try_from(value: u32) -> Result<Self, ()> {
+impl FromVariant<u32> for EditorMode {
+    fn from_variant(value: u32) -> Option<Self> {
         match value {
-            0 => Ok(Self::Advanced),
-            1 => Ok(Self::Simple),
-            2 => Ok(Self::HasGhostBlocks),
-            4 => Ok(Self::Gamepad),
-            _ => Err(()),
+            0 => Some(Self::Advanced),
+            1 => Some(Self::Simple),
+            2 => Some(Self::HasGhostBlocks),
+            4 => Some(Self::Gamepad),
+            _ => None,
         }
     }
 }
@@ -281,25 +279,23 @@ enum ChallengeType {
     MultiNadeo,
 }
 
-impl TryFrom<u8> for ChallengeType {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, ()> {
+impl FromVariant<u8> for ChallengeType {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            0 => Ok(Self::EndMarker),
-            1 => Ok(Self::Campaign),
-            2 => Ok(Self::Puzzle),
-            3 => Ok(Self::Retro),
-            4 => Ok(Self::TimeAttack),
-            5 => Ok(Self::Rounds),
-            6 => Ok(Self::InProgress),
-            7 => Ok(Self::Campaign7),
-            8 => Ok(Self::Multi),
-            9 => Ok(Self::Solo),
-            10 => Ok(Self::Site),
-            11 => Ok(Self::SoloNadeo),
-            12 => Ok(Self::MultiNadeo),
-            _ => Err(()),
+            0 => Some(Self::EndMarker),
+            1 => Some(Self::Campaign),
+            2 => Some(Self::Puzzle),
+            3 => Some(Self::Retro),
+            4 => Some(Self::TimeAttack),
+            5 => Some(Self::Rounds),
+            6 => Some(Self::InProgress),
+            7 => Some(Self::Campaign7),
+            8 => Some(Self::Multi),
+            9 => Some(Self::Solo),
+            10 => Some(Self::Site),
+            11 => Some(Self::SoloNadeo),
+            12 => Some(Self::MultiNadeo),
+            _ => None,
         }
     }
 }

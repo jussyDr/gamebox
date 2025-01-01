@@ -80,6 +80,10 @@ impl<T: Copy + FromLe, const N: usize> FromLe for [T; N] {
     }
 }
 
+pub trait FromVariant<T>: Sized {
+    fn from_variant(value: T) -> Option<Self>;
+}
+
 pub struct Take<R> {
     inner: R,
     limit: u64,
@@ -217,16 +221,12 @@ impl<R: Read, I, N> Reader<R, I, N> {
         bool_from_u32(self.u8()? as u32)
     }
 
-    pub fn enum_u32<T: TryFrom<u32>>(&mut self) -> Result<T, Error> {
-        self.u32()?
-            .try_into()
-            .map_err(|_| Error::new(ErrorKind::Format("enum".into())))
+    pub fn enum_u8<T: FromVariant<u8>>(&mut self) -> Result<T, Error> {
+        T::from_variant(self.u8()?).ok_or_else(|| Error::new(ErrorKind::Format("enum".into())))
     }
 
-    pub fn enum_u8<T: TryFrom<u8>>(&mut self) -> Result<T, Error> {
-        self.u8()?
-            .try_into()
-            .map_err(|_| Error::new(ErrorKind::Format("enum".into())))
+    pub fn enum_u32<T: FromVariant<u32>>(&mut self) -> Result<T, Error> {
+        T::from_variant(self.u32()?).ok_or_else(|| Error::new(ErrorKind::Format("enum".into())))
     }
 
     pub fn u32_or_null(&mut self) -> Result<Option<u32>, Error> {

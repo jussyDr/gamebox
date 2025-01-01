@@ -61,6 +61,7 @@ pub use node_ref::{ExternalNodeRef, NodeRef};
 use gamebox_macros::FromLe;
 use std::path::{Path, PathBuf};
 
+/// Byte3.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Byte3 {
@@ -84,6 +85,7 @@ impl Byte3 {
     }
 }
 
+/// Nat3.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Nat3 {
@@ -107,6 +109,7 @@ impl Nat3 {
     }
 }
 
+/// Int2.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Int2 {
@@ -128,6 +131,7 @@ impl Int2 {
     }
 }
 
+/// Int3.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Int3 {
@@ -222,12 +226,17 @@ impl<T: Copy> Vec4<T> {
     }
 }
 
+/// Rgba.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Rgba {
+    /// Red.
     pub r: u8,
+    /// Green.
     pub g: u8,
+    /// Blue.
     pub b: u8,
+    /// Alpha.
     pub a: u8,
 }
 
@@ -243,11 +252,15 @@ impl Rgba {
     }
 }
 
+/// Rgb.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct RgbNat {
+    /// Red.
     pub r: u32,
+    /// Green.
     pub g: u32,
+    /// Blue.
     pub b: u32,
 }
 
@@ -263,11 +276,15 @@ impl RgbNat {
     }
 }
 
+/// Rgb.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct RgbFloat {
+    /// Red.
     pub r: f32,
+    /// Green.
     pub g: f32,
+    /// Blue.
     pub b: f32,
 }
 

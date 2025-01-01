@@ -2,7 +2,7 @@
 
 use crate::{plug::Prefab, Class, ExternalNodeRef};
 
-/// A block info mobil.
+/// Block info mobil.
 #[derive(Default)]
 pub struct BlockInfoMobil {
     prefab: Option<ExternalNodeRef<Prefab>>,
@@ -13,7 +13,7 @@ impl Class for BlockInfoMobil {
 }
 
 impl BlockInfoMobil {
-    /// Prefab of the mobil.
+    /// Prefab.
     pub const fn prefab(&self) -> Option<&ExternalNodeRef<Prefab>> {
         self.prefab.as_ref()
     }

@@ -6,7 +6,7 @@ use crate::Class;
 
 use super::block_info::BlockInfo;
 
-/// A block info clip.
+/// Block info clip.
 #[derive(Default)]
 pub struct BlockInfoClip {
     parent: BlockInfo,

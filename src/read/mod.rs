@@ -18,7 +18,7 @@ use std::{
 };
 
 use readable::HeaderChunks;
-use reader::{IdState, IdStateMut, NodeState, Reader};
+use reader::{FromVariant, IdState, IdStateMut, NodeState, Reader};
 
 use crate::{ExternalNodeRef, FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
 
@@ -334,14 +334,12 @@ enum Format {
     Text,
 }
 
-impl TryFrom<u8> for Format {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+impl FromVariant<u8> for Format {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            b'B' => Ok(Self::Binary),
-            b'T' => Ok(Self::Text),
-            _ => Err(()),
+            b'B' => Some(Self::Binary),
+            b'T' => Some(Self::Text),
+            _ => None,
         }
     }
 }
@@ -351,14 +349,12 @@ enum Compression {
     Uncompressed,
 }
 
-impl TryFrom<u8> for Compression {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+impl FromVariant<u8> for Compression {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            b'C' => Ok(Self::Compressed),
-            b'U' => Ok(Self::Uncompressed),
-            _ => Err(()),
+            b'C' => Some(Self::Compressed),
+            b'U' => Some(Self::Uncompressed),
+            _ => None,
         }
     }
 }

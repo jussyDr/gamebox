@@ -6,7 +6,7 @@ use crate::Class;
 
 use super::block_info::BlockInfo;
 
-/// A block info classic
+/// Block info classic.
 #[derive(Default)]
 pub struct BlockInfoClassic {
     parent: BlockInfo,

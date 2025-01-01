@@ -2,7 +2,7 @@
 
 use crate::{Class, FileRef};
 
-/// A block skin.
+/// Block skin.
 #[derive(Default, Debug)]
 pub struct BlockSkin {
     skin: Option<FileRef>,

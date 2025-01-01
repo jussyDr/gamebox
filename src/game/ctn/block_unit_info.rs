@@ -4,7 +4,7 @@ use crate::{Class, ExternalNodeRef, Nat3};
 
 use super::BlockInfoClip;
 
-/// A block unit info.
+/// Block unit info.
 #[derive(Default)]
 pub struct BlockUnitInfo {
     relative_offset: Nat3,

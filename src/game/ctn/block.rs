@@ -6,7 +6,7 @@ use crate::{game::WaypointSpecialProperty, Byte3, PitchYawRoll, Vec3};
 
 use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 
-/// Block placed in a Challenge.
+/// Block.
 #[derive(Default, Debug)]
 pub struct Block {
     model_id: Arc<str>,

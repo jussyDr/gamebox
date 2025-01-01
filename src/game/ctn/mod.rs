@@ -133,6 +133,8 @@ pub use media_track::MediaTrack;
 #[doc(inline)]
 pub use zone_genealogy::ZoneGenealogy;
 
+use crate::read::reader::FromVariant;
+
 /// Cardinal direction.
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum Direction {
@@ -147,25 +149,21 @@ pub enum Direction {
     West,
 }
 
-impl TryFrom<u32> for Direction {
-    type Error = ();
-
-    fn try_from(value: u32) -> Result<Self, ()> {
-        match value {
-            0 => Ok(Self::North),
-            1 => Ok(Self::East),
-            2 => Ok(Self::South),
-            3 => Ok(Self::West),
-            _ => Err(()),
-        }
+impl FromVariant<u8> for Direction {
+    fn from_variant(value: u8) -> Option<Self> {
+        Self::from_variant(value as u32)
     }
 }
 
-impl TryFrom<u8> for Direction {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, ()> {
-        (value as u32).try_into()
+impl FromVariant<u32> for Direction {
+    fn from_variant(value: u32) -> Option<Self> {
+        match value {
+            0 => Some(Self::North),
+            1 => Some(Self::East),
+            2 => Some(Self::South),
+            3 => Some(Self::West),
+            _ => None,
+        }
     }
 }
 
@@ -187,18 +185,16 @@ pub enum ElemColor {
     Black,
 }
 
-impl TryFrom<u8> for ElemColor {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, ()> {
+impl FromVariant<u8> for ElemColor {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            0 => Ok(Self::Default),
-            1 => Ok(Self::White),
-            2 => Ok(Self::Green),
-            3 => Ok(Self::Blue),
-            4 => Ok(Self::Red),
-            5 => Ok(Self::Black),
-            _ => Err(()),
+            0 => Some(Self::Default),
+            1 => Some(Self::White),
+            2 => Some(Self::Green),
+            3 => Some(Self::Blue),
+            4 => Some(Self::Red),
+            5 => Some(Self::Black),
+            _ => None,
         }
     }
 }
@@ -223,19 +219,17 @@ pub enum LightmapQuality {
     Lowest,
 }
 
-impl TryFrom<u8> for LightmapQuality {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, ()> {
+impl FromVariant<u8> for LightmapQuality {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            0 => Ok(Self::Normal),
-            1 => Ok(Self::High),
-            2 => Ok(Self::VeryHigh),
-            3 => Ok(Self::Highest),
-            4 => Ok(Self::Low),
-            5 => Ok(Self::VeryLow),
-            6 => Ok(Self::Lowest),
-            _ => Err(()),
+            0 => Some(Self::Normal),
+            1 => Some(Self::High),
+            2 => Some(Self::VeryHigh),
+            3 => Some(Self::Highest),
+            4 => Some(Self::Low),
+            5 => Some(Self::VeryLow),
+            6 => Some(Self::Lowest),
+            _ => None,
         }
     }
 }

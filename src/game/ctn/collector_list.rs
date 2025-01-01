@@ -2,7 +2,7 @@
 
 use crate::Class;
 
-/// A collector list.
+/// Collector list.
 #[derive(Default)]
 pub struct CollectorList;
 

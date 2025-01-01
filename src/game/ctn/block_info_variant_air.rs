@@ -6,7 +6,7 @@ use crate::Class;
 
 use super::block_info_variant::BlockInfoVariant;
 
-/// A block info variant air.
+/// Block info variant air.
 #[derive(Clone, Default)]
 pub struct BlockInfoVariantAir {
     parent: BlockInfoVariant,

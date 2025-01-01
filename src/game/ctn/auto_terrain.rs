@@ -6,7 +6,7 @@ use crate::{Class, Nat3};
 
 use super::ZoneGenealogy;
 
-/// An auto terrain.
+/// Auto terrain.
 #[derive(Default)]
 pub struct AutoTerrain {
     offset: Nat3,

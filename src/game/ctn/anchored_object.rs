@@ -2,11 +2,14 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, Byte3, Class, FileRef, Vec3, YawPitchRoll};
+use crate::{
+    game::WaypointSpecialProperty, read::reader::FromVariant, Byte3, Class, FileRef, Vec3,
+    YawPitchRoll,
+};
 
 use super::{ElemColor, LightmapQuality};
 
-/// An anchored object.
+/// Anchored object.
 #[derive(Default)]
 pub struct AnchoredObject {
     model_id: Arc<str>,
@@ -39,7 +42,7 @@ impl AnchoredObject {
         self.rotation
     }
 
-    /// Block unit coordinate.
+    /// Unit coordinate.
     pub const fn unit_coord(&self) -> Byte3 {
         self.unit_coord
     }
@@ -117,20 +120,18 @@ pub enum PhaseOffset {
     Seven8th,
 }
 
-impl TryFrom<u8> for PhaseOffset {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, ()> {
+impl FromVariant<u8> for PhaseOffset {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            0 => Ok(Self::None),
-            1 => Ok(Self::One8th),
-            2 => Ok(Self::Two8th),
-            3 => Ok(Self::Three8th),
-            4 => Ok(Self::Four8th),
-            5 => Ok(Self::Five8th),
-            6 => Ok(Self::Six8th),
-            7 => Ok(Self::Seven8th),
-            _ => Err(()),
+            0 => Some(Self::None),
+            1 => Some(Self::One8th),
+            2 => Some(Self::Two8th),
+            3 => Some(Self::Three8th),
+            4 => Some(Self::Four8th),
+            5 => Some(Self::Five8th),
+            6 => Some(Self::Six8th),
+            7 => Some(Self::Seven8th),
+            _ => None,
         }
     }
 }

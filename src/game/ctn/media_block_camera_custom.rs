@@ -1,6 +1,6 @@
 //! Media block camera custom.
 
-use crate::Class;
+use crate::{read::reader::FromVariant, Class};
 
 /// Custom camera media block.
 #[derive(Default)]
@@ -48,6 +48,18 @@ pub enum Interpolation {
     FixedTangent,
 }
 
+impl FromVariant<u32> for Option<Interpolation> {
+    fn from_variant(value: u32) -> Option<Self> {
+        match value {
+            0 => Some(None),
+            1 => Some(Some(Interpolation::Hermite)),
+            2 => Some(Some(Interpolation::Linear)),
+            3 => Some(Some(Interpolation::FixedTangent)),
+            _ => None,
+        }
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 
@@ -57,7 +69,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{Interpolation, Key, MediaBlockCameraCustom};
+    use super::{Key, MediaBlockCameraCustom};
 
     impl ReadBody for MediaBlockCameraCustom {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -84,13 +96,7 @@ mod read {
 
             self.keys = r.list(|r| {
                 let time = r.f32()?;
-                let interpolation = match r.u32()? {
-                    0 => None,
-                    1 => Some(Interpolation::Hermite),
-                    2 => Some(Interpolation::Linear),
-                    3 => Some(Interpolation::FixedTangent),
-                    _ => panic!(),
-                };
+                let interpolation = r.enum_u32()?;
                 let _anchor_rot = r.bool()?;
                 let _anchor = r.u32()?;
                 let _anchor_vis = r.bool()?;

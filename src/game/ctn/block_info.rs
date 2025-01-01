@@ -13,8 +13,8 @@ use super::{
 #[derive(Clone, Default)]
 pub struct BlockInfo {
     parent: Collector,
-    variant_base_ground: BlockInfoVariantGround,
-    variant_base_air: BlockInfoVariantAir,
+    base_variant_ground: BlockInfoVariantGround,
+    base_variant_air: BlockInfoVariantAir,
     additional_variants_ground: Vec<Arc<BlockInfoVariantGround>>,
     direction: Direction,
     additional_variants_air: Vec<Arc<BlockInfoVariantAir>>,
@@ -34,13 +34,13 @@ impl Deref for BlockInfo {
 
 impl BlockInfo {
     /// Base ground variant.
-    pub const fn variant_base_ground(&self) -> &BlockInfoVariantGround {
-        &self.variant_base_ground
+    pub const fn base_variant_ground(&self) -> &BlockInfoVariantGround {
+        &self.base_variant_ground
     }
 
     /// Base air variant.
-    pub const fn variant_base_air(&self) -> &BlockInfoVariantAir {
-        &self.variant_base_air
+    pub const fn base_variant_air(&self) -> &BlockInfoVariantAir {
+        &self.base_variant_air
     }
 
     /// Additional ground variants.
@@ -161,8 +161,8 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.variant_base_ground = BlockInfoVariantGround::read_from_body(r)?;
-            self.variant_base_air = BlockInfoVariantAir::read_from_body(r)?;
+            self.base_variant_ground = BlockInfoVariantGround::read_from_body(r)?;
+            self.base_variant_air = BlockInfoVariantAir::read_from_body(r)?;
 
             Ok(())
         }

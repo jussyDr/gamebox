@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use crate::{game::ghost, Class};
 
-/// A Ghost.
+/// Ghost.
 #[derive(PartialEq, Default, Debug)]
 pub struct Ghost {
     parent: ghost::Ghost,
