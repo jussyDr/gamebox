@@ -23,6 +23,11 @@ pub struct Challenge {
     decoration_id: Arc<str>,
     coord_origin: Vec2,
     coord_target: Vec2,
+    pack_mask: [u8; 16],
+    map_type: String,
+    map_style: Option<String>,
+    lightmap_cache_id: u64,
+    has_lightmap: bool,
     title_id: Arc<str>,
     parameters: Arc<ChallengeParameters>,
     texture_mod: Option<FileRef>,
@@ -182,16 +187,21 @@ impl Default for Challenge {
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
             num_laps: None,
-            id: Arc::default(),
-            author_id: Arc::default(),
-            name: String::default(),
-            ty: ChallengeType::default(),
-            password: String::default(),
-            decoration_id: Arc::default(),
-            coord_origin: Vec2::default(),
-            coord_target: Vec2::default(),
+            id: Default::default(),
+            author_id: Default::default(),
+            name: Default::default(),
+            ty: Default::default(),
+            password: String::new(),
+            decoration_id: Arc::from("48x48Screen155Day"),
+            coord_origin: Vec2::new(0.0, 0.0),
+            coord_target: Vec2::new(0.0, 0.0),
+            pack_mask: [0; 16],
+            map_type: "TrackMania\\TM_Race".to_string(),
+            map_style: None,
+            lightmap_cache_id: 0, // should be random
+            has_lightmap: false,
             title_id: Arc::from("TMStadium"),
-            parameters: Arc::default(),
+            parameters: Default::default(),
             texture_mod: None,
             size: Nat3::new(48, 40, 48),
             blocks: vec![],
@@ -497,18 +507,28 @@ mod read {
             let _deco_author = r.id()?;
             self.coord_origin = r.vec2()?;
             self.coord_target = r.vec2()?;
-            let _pack_mask = r.byte_array::<16>()?;
-            let _map_type = r.string()?;
-            let _map_style = r.string()?;
-            let _lightmap_cache_uid = r.u64()?;
-            let _lightmap_version = r.u8()?;
+            self.pack_mask = r.byte_array::<16>()?;
+            self.map_type = r.string()?;
+            self.map_style = r.string_non_empty()?;
+            self.lightmap_cache_id = r.u64()?;
+            let lightmap_version = r.u8()?;
+            self.has_lightmap = lightmap_version != 0;
+
+            if lightmap_version != 0 && lightmap_version != 8 {
+                return Err(Error::version("lightmap", lightmap_version as u32));
+            }
+
             self.title_id = r.id()?;
 
             Ok(())
         }
 
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _version = r.u32()?;
+            let version = r.u32()?;
+
+            if version != 6 {
+                return Err(Error::version("challenge", version));
+            }
 
             Ok(())
         }
@@ -1324,6 +1344,7 @@ mod write {
             [
                 HeaderChunk::normal(2, |s, w| Self::write_chunk_2(s, w)),
                 HeaderChunk::normal(3, |s, w| Self::write_chunk_3(s, w)),
+                HeaderChunk::normal(4, |s, w| Self::write_chunk_4(s, w)),
             ]
             .into_iter()
         }
@@ -1393,13 +1414,24 @@ mod write {
             w.id(&Arc::from("Nadeo"))?;
             w.vec2(self.coord_origin)?;
             w.vec2(self.coord_target)?;
+            w.bytes(&self.pack_mask)?;
+            w.string(&self.map_type)?;
+            w.string_or_empty(self.map_style.as_ref())?;
+            w.u64(self.lightmap_cache_id)?;
 
-            // let _pack_mask = r.byte_array::<16>()?;
-            // let _map_type = r.string()?;
-            // let _map_style = r.string()?;
-            // let _lightmap_cache_uid = r.u64()?;
-            // let _lightmap_version = r.u8()?;
-            // let _title_id = r.id()?;
+            if self.has_lightmap {
+                w.u8(8)?;
+            } else {
+                w.u8(0)?;
+            }
+
+            w.id(&self.title_id)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_4<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(6)?;
 
             Ok(())
         }

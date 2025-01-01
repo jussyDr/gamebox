@@ -4,7 +4,6 @@ use std::{
     any::Any,
     hash::{Hash, Hasher},
     io::{Error, Seek, Write},
-    slice,
     sync::Arc,
 };
 
@@ -194,6 +193,11 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.bytes(&value.to_le_bytes())
     }
 
+    /// Write an unsigned 64-bit integer.
+    pub fn u64(&mut self, value: u64) -> Result<(), Error> {
+        self.bytes(&value.to_le_bytes())
+    }
+
     pub fn bool(&mut self, value: bool) -> Result<(), Error> {
         self.u32(if value { 1 } else { 0 })
     }
@@ -221,6 +225,13 @@ impl<W: Write, I, N> Writer<W, I, N> {
 
     pub fn string(&mut self, value: &str) -> Result<(), Error> {
         self.byte_buf(value.as_bytes())
+    }
+
+    pub fn string_or_empty(&mut self, value: Option<&String>) -> Result<(), Error> {
+        match value {
+            Some(value) => self.string(value),
+            None => self.u32(0),
+        }
     }
 }
 

@@ -102,7 +102,15 @@ mod read {
             let has_badges = r.bool()?;
 
             if has_badges {
-                todo!()
+                let _badge_version = r.u32()?;
+                let _color = r.rgb_float()?;
+                let _stickers = r.list(|r| {
+                    r.string()?;
+                    r.string()?;
+
+                    Ok(())
+                })?;
+                let _layers = r.list(|r| r.string())?;
             }
 
             let _ghost_nickname = r.string()?;

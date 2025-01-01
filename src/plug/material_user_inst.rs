@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{Class, RgbNat};
+use crate::{read::reader::FromVariant, Class, RgbNat};
 
 /// User defined material instance.
 #[derive(Default, Debug)]
@@ -95,32 +95,31 @@ pub enum Effect {
     VehicleCarDesert,
 }
 
-impl TryFrom<u8> for Effect {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, ()> {
+impl FromVariant<u8> for Option<Effect> {
+    fn from_variant(value: u8) -> Option<Self> {
         match value {
-            1 => Ok(Self::Turbo),
-            2 => Ok(Self::Turbo2),
-            3 => Ok(Self::TurboRoulette),
-            4 => Ok(Self::FreeWheeling),
-            5 => Ok(Self::NoGrip),
-            6 => Ok(Self::NoSteering),
-            7 => Ok(Self::ForceAcceleration),
-            8 => Ok(Self::Reset),
-            9 => Ok(Self::SlowMotion),
-            10 => Ok(Self::Bumper),
-            11 => Ok(Self::Bumper2),
-            12 => Ok(Self::Fragile),
-            13 => Ok(Self::NoBrakes),
-            14 => Ok(Self::Cruise),
-            15 => Ok(Self::ReactorBoost),
-            16 => Ok(Self::ReactorBoost2),
-            17 => Ok(Self::VehicleReset),
-            18 => Ok(Self::VehicleCarSnow),
-            19 => Ok(Self::VehicleCarRally),
-            20 => Ok(Self::VehicleCarDesert),
-            _ => Err(()),
+            0 => Some(None),
+            1 => Some(Some(Effect::Turbo)),
+            2 => Some(Some(Effect::Turbo2)),
+            3 => Some(Some(Effect::TurboRoulette)),
+            4 => Some(Some(Effect::FreeWheeling)),
+            5 => Some(Some(Effect::NoGrip)),
+            6 => Some(Some(Effect::NoSteering)),
+            7 => Some(Some(Effect::ForceAcceleration)),
+            8 => Some(Some(Effect::Reset)),
+            9 => Some(Some(Effect::SlowMotion)),
+            10 => Some(Some(Effect::Bumper)),
+            11 => Some(Some(Effect::Bumper2)),
+            12 => Some(Some(Effect::Fragile)),
+            13 => Some(Some(Effect::NoBrakes)),
+            14 => Some(Some(Effect::Cruise)),
+            15 => Some(Some(Effect::ReactorBoost)),
+            16 => Some(Some(Effect::ReactorBoost2)),
+            17 => Some(Some(Effect::VehicleReset)),
+            18 => Some(Some(Effect::VehicleCarSnow)),
+            19 => Some(Some(Effect::VehicleCarRally)),
+            20 => Some(Some(Effect::VehicleCarDesert)),
+            _ => None,
         }
     }
 }
@@ -134,7 +133,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{Effect, MaterialLink, MaterialUserInst};
+    use super::{MaterialLink, MaterialUserInst};
 
     impl ReadBody for MaterialUserInst {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -173,13 +172,7 @@ mod read {
             let _model = r.id_or_null()?;
             let _base_texture = r.string()?;
             self.physic_id = r.u8()?; // surface physic id (material id).
-            let effect = r.u8()?;
-
-            if effect == 0 {
-                self.effect = None;
-            } else {
-                self.effect = Some(Effect::try_from(effect).unwrap());
-            }
+            self.effect = r.enum_u8()?;
 
             if version >= 11 && !is_using_game_material {
                 self.link = MaterialLink::Id(r.id()?);
