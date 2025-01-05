@@ -9,13 +9,15 @@ use super::Ghost;
 /// Challenge parameters.
 #[derive(Default)]
 pub struct ChallengeParameters {
-    bronze_time: u32,
-    silver_time: u32,
-    gold_time: u32,
-    author_time: u32,
-    time_limit: u32,
-    author_score: u32,
-    validation_ghost: Option<Arc<Ghost>>,
+    pub(crate) bronze_time: Option<u32>,
+    pub(crate) silver_time: Option<u32>,
+    pub(crate) gold_time: Option<u32>,
+    pub(crate) author_time: Option<u32>,
+    pub(crate) time_limit: u32,
+    pub(crate) author_score: Option<u32>,
+    pub(crate) validation_ghost: Option<Arc<Ghost>>,
+    pub(crate) map_type: String,
+    pub(crate) map_style: Option<String>,
 }
 
 impl Class for ChallengeParameters {
@@ -24,22 +26,22 @@ impl Class for ChallengeParameters {
 
 impl ChallengeParameters {
     /// Bronze time.
-    pub const fn bronze_time(&self) -> u32 {
+    pub const fn bronze_time(&self) -> Option<u32> {
         self.bronze_time
     }
 
     /// Silver time.
-    pub const fn silver_time(&self) -> u32 {
+    pub const fn silver_time(&self) -> Option<u32> {
         self.silver_time
     }
 
     /// Gold time.
-    pub const fn gold_time(&self) -> u32 {
+    pub const fn gold_time(&self) -> Option<u32> {
         self.gold_time
     }
 
     /// Author time.
-    pub const fn author_time(&self) -> u32 {
+    pub const fn author_time(&self) -> Option<u32> {
         self.author_time
     }
 
@@ -49,7 +51,7 @@ impl ChallengeParameters {
     }
 
     /// Author score.
-    pub const fn author_score(&self) -> u32 {
+    pub const fn author_score(&self) -> Option<u32> {
         self.author_score
     }
 
@@ -57,18 +59,25 @@ impl ChallengeParameters {
     pub const fn validation_ghost(&self) -> Option<&Arc<Ghost>> {
         self.validation_ghost.as_ref()
     }
+
+    /// Map type.
+    pub const fn map_type(&self) -> &String {
+        &self.map_type
+    }
+
+    /// Map style.
+    pub const fn map_style(&self) -> Option<&String> {
+        self.map_style.as_ref()
+    }
 }
 
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        game::ctn::ghost::Ghost,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::ChallengeParameters;
@@ -108,10 +117,10 @@ mod read {
         }
 
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.bronze_time = r.u32()?;
-            self.silver_time = r.u32()?;
-            self.gold_time = r.u32()?;
-            self.author_time = r.u32()?;
+            self.bronze_time = r.u32_or_null()?;
+            self.silver_time = r.u32_or_null()?;
+            self.gold_time = r.u32_or_null()?;
+            self.author_time = r.u32_or_null()?;
             r.u32()?;
 
             Ok(())
@@ -119,19 +128,19 @@ mod read {
 
         fn read_chunk_8<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.time_limit = r.u32()?;
-            self.author_score = r.u32()?;
+            self.author_score = r.u32_or_zero()?;
 
             Ok(())
         }
 
         fn read_chunk_10<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _tip = r.string()?;
-            self.bronze_time = r.u32()?;
-            self.silver_time = r.u32()?;
-            self.gold_time = r.u32()?;
-            self.author_time = r.u32()?;
+            self.bronze_time = r.u32_or_null()?;
+            self.silver_time = r.u32_or_null()?;
+            self.gold_time = r.u32_or_null()?;
+            self.author_time = r.u32_or_null()?;
             self.time_limit = r.u32()?;
-            self.author_score = r.u32()?;
+            self.author_score = r.u32_or_zero()?;
 
             Ok(())
         }
@@ -140,14 +149,14 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.validation_ghost = r.internal_node_ref_or_null::<Ghost>()?;
+            self.validation_ghost = r.internal_node_ref_or_null()?;
 
             Ok(())
         }
 
         fn read_chunk_14<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _map_type = r.string()?;
-            let _map_style = r.string()?;
+            self.map_type = r.string()?;
+            self.map_style = r.string_non_empty()?;
             let _is_validated_for_script_modes = r.bool()?;
 
             Ok(())

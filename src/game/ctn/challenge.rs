@@ -4,18 +4,18 @@ use std::sync::Arc;
 
 use crate::{read::reader::FromVariant, script::TraitsMetadata, Class, FileRef, Nat3, Vec2};
 
-use super::{block::Block, AnchoredObject, ChallengeParameters, MediaClip, MediaClipGroup};
+use super::{block::Block, AnchoredObject, Ghost, MediaClip, MediaClipGroup};
 
 /// Challenge.
 pub struct Challenge {
-    medal_times: Option<MedalTimes>,
+    validation: Option<Validation>,
     cost: u32,
     play_mode: u32,
     author_score: Option<u32>,
     editor_mode: EditorMode,
     num_checkpoints: u32,
     num_laps: Option<u32>,
-    uid: Arc<str>,
+    id: Arc<str>,
     author_id: Arc<str>,
     name: String,
     ty: ChallengeType,
@@ -26,10 +26,11 @@ pub struct Challenge {
     pack_mask: [u8; 16],
     map_type: String,
     map_style: Option<String>,
-    lightmap_cache_uid: u64,
+    has_ghost_blocks: bool,
+    lightmap_cache_id: u64,
     has_lightmap: bool,
     title_id: Arc<str>,
-    parameters: Arc<ChallengeParameters>,
+    author_zone: String,
     texture_mod: Option<FileRef>,
     size: Nat3,
     blocks: Vec<Block>,
@@ -51,9 +52,9 @@ impl Class for Challenge {
 }
 
 impl Challenge {
-    /// Medal times.
-    pub const fn medal_times(&self) -> Option<&MedalTimes> {
-        self.medal_times.as_ref()
+    /// Validation.
+    pub const fn validation(&self) -> Option<&Validation> {
+        self.validation.as_ref()
     }
 
     /// Cost.
@@ -76,9 +77,9 @@ impl Challenge {
         self.num_laps
     }
 
-    /// Unique identifier.
-    pub const fn uid(&self) -> &Arc<str> {
-        &self.uid
+    /// Identifier.
+    pub const fn id(&self) -> &Arc<str> {
+        &self.id
     }
 
     /// Author identifier.
@@ -99,11 +100,6 @@ impl Challenge {
     /// Title identifier.
     pub const fn title_id(&self) -> &Arc<str> {
         &self.title_id
-    }
-
-    /// Challenge parameters.
-    pub const fn parameters(&self) -> &Arc<ChallengeParameters> {
-        &self.parameters
     }
 
     /// Texture mod.
@@ -180,17 +176,17 @@ impl Challenge {
 impl Default for Challenge {
     fn default() -> Self {
         Self {
-            medal_times: None,
+            validation: None,
             cost: 0,
             play_mode: 0,
             author_score: None,
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
             num_laps: None,
-            uid: Default::default(), // should be random
+            id: Default::default(), // should be random
             author_id: Default::default(),
             name: Default::default(),
-            ty: Default::default(),
+            ty: ChallengeType::InProgress,
             password: String::new(),
             decoration_id: Arc::from("48x48Screen155Day"),
             coord_origin: Vec2::new(0.0, 0.0),
@@ -198,10 +194,11 @@ impl Default for Challenge {
             pack_mask: [0; 16],
             map_type: "TrackMania\\TM_Race".to_string(),
             map_style: None,
-            lightmap_cache_uid: 0, // should be random
+            lightmap_cache_id: 0, // should be random
             has_lightmap: false,
+            has_ghost_blocks: false,
             title_id: Arc::from("TMStadium"),
-            parameters: Default::default(),
+            author_zone: String::new(),
             texture_mod: None,
             size: Nat3::new(48, 40, 48),
             blocks: vec![],
@@ -220,7 +217,33 @@ impl Default for Challenge {
     }
 }
 
-/// Challenge medal times.
+/// Validation.
+pub struct Validation {
+    objective: Objective,
+    ghost: Option<Arc<Ghost>>,
+}
+
+impl Validation {
+    /// Objective.
+    pub const fn objective(&self) -> &Objective {
+        &self.objective
+    }
+
+    /// Ghost.
+    pub const fn ghost(&self) -> Option<&Arc<Ghost>> {
+        self.ghost.as_ref()
+    }
+}
+
+/// Objective.
+pub enum Objective {
+    /// Medal times.
+    MedalTimes(MedalTimes),
+    /// Author score.
+    AuthorScore(u32),
+}
+
+/// Medal times.
 pub struct MedalTimes {
     bronze_time: u32,
     silver_time: u32,
@@ -271,7 +294,7 @@ impl FromVariant<u32> for EditorMode {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 enum ChallengeType {
     #[default]
     EndMarker,
@@ -291,6 +314,12 @@ enum ChallengeType {
 
 impl FromVariant<u8> for ChallengeType {
     fn from_variant(value: u8) -> Option<Self> {
+        Self::from_variant(value as u32)
+    }
+}
+
+impl FromVariant<u32> for ChallengeType {
+    fn from_variant(value: u32) -> Option<Self> {
         match value {
             0 => Some(Self::EndMarker),
             1 => Some(Self::Campaign),
@@ -329,7 +358,12 @@ impl EmbeddedItems {
 }
 
 mod read {
-    use std::io::{BufRead, Read, Seek};
+    use std::{
+        borrow::Cow,
+        io::{BufRead, Read, Seek},
+        str::FromStr,
+        sync::Arc,
+    };
 
     use quick_xml::events::{attributes::Attributes, Event};
 
@@ -345,14 +379,14 @@ mod read {
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody, Readable,
+            reader::{string_non_empty, IdStateMut, NodeStateMut, Reader},
+            BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
         script::traits_metadata::TraitsMetadata,
         ID_MARKER_BIT,
     };
 
-    use super::{Challenge, EmbeddedItems, MedalTimes};
+    use super::{Challenge, EmbeddedItems, MedalTimes, Objective, Validation};
 
     impl Readable for Challenge {}
 
@@ -459,7 +493,7 @@ mod read {
             let is_lap_race = r.bool()?;
             self.play_mode = r.u32()?;
             r.u32()?;
-            let author_score = r.u32()?;
+            let author_score = r.u32_or_zero()?;
             self.editor_mode = r.enum_u32()?;
             r.u32()?;
             self.num_checkpoints = r.u32()?;
@@ -468,21 +502,25 @@ mod read {
             if let (Some(bronze_time), Some(silver_time), Some(gold_time), Some(author_time)) =
                 (bronze_time, silver_time, gold_time, author_time)
             {
-                self.medal_times = Some(MedalTimes {
-                    bronze_time,
-                    silver_time,
-                    gold_time,
-                    author_time,
+                self.validation = Some(Validation {
+                    objective: Objective::MedalTimes(MedalTimes {
+                        bronze_time,
+                        silver_time,
+                        gold_time,
+                        author_time,
+                    }),
+                    ghost: None,
                 })
+            } else if let Some(author_score) = author_score {
+                self.validation = Some(Validation {
+                    objective: Objective::AuthorScore(author_score),
+                    ghost: None,
+                })
+            } else {
+                self.validation = None;
             }
 
-            self.author_score = if author_score == 0 {
-                None
-            } else {
-                Some(author_score)
-            };
-
-            self.num_laps = if is_lap_race { Some(num_laps) } else { None };
+            self.num_laps = is_lap_race.then_some(num_laps);
 
             Ok(())
         }
@@ -497,7 +535,7 @@ mod read {
                 return Err(Error::chunk_version(version as u32));
             }
 
-            self.uid = r.id()?;
+            self.id = r.id()?;
             r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
@@ -512,14 +550,8 @@ mod read {
             self.pack_mask = r.byte_array::<16>()?;
             self.map_type = r.string()?;
             self.map_style = r.string_non_empty()?;
-            self.lightmap_cache_uid = r.u64()?;
-            let lightmap_version = r.u8()?;
-            self.has_lightmap = lightmap_version != 0;
-
-            if lightmap_version != 0 && lightmap_version != 8 {
-                return Err(Error::version("lightmap", lightmap_version as u32));
-            }
-
+            self.lightmap_cache_id = r.u64()?;
+            self.has_lightmap = has_lightmap(r.u8()?)?;
             self.title_id = r.id()?;
 
             Ok(())
@@ -542,48 +574,62 @@ mod read {
             r.tag(
                 b"header",
                 |r| {
-                    r.attribute(b"type")?;
-                    r.attribute(b"exever")?;
-                    r.attribute(b"exebuild")?;
-                    r.attribute(b"title")?;
-                    r.attribute(b"lightmap")?;
+                    let ty = r.attribute(b"type")?;
+
+                    if ty != "map" {
+                        todo!()
+                    }
+
+                    let exe_ver = r.attribute(b"exever")?;
+
+                    if exe_ver != "3.3.0" {
+                        todo!()
+                    }
+
+                    let _exe_build = r.attribute(b"exebuild")?;
+                    let _title_id = r.attribute(b"title")?;
+                    self.has_lightmap = has_lightmap(r.attribute_from_str(b"lightmap")?)?;
 
                     Ok(())
                 },
                 |r| {
                     r.tag_empty(b"ident", |r| {
-                        r.attribute(b"uid")?;
-                        r.attribute(b"name")?;
-                        r.attribute(b"author")?;
-                        r.attribute(b"authorzone")?;
+                        self.id = Arc::from(r.attribute(b"uid")?);
+                        self.name = r.attribute(b"name")?.to_string();
+                        self.author_id = Arc::from(r.attribute(b"author")?);
+                        self.author_zone = r.attribute(b"authorzone")?.to_string();
 
                         Ok(())
                     })?;
                     r.tag_empty(b"desc", |r| {
-                        r.attribute(b"envir")?;
-                        r.attribute(b"mood")?;
-                        r.attribute(b"type")?;
-                        r.attribute(b"maptype")?;
-                        r.attribute(b"mapstyle")?;
-                        r.attribute(b"validated")?;
-                        r.attribute(b"nblaps")?;
-                        r.attribute(b"displaycost")?;
-                        r.attribute(b"mod")?;
-                        r.attribute(b"hasghostblocks")?;
+                        let _environment = r.attribute(b"envir")?;
+                        let _mood = r.attribute(b"mood")?;
+                        let _type = r.attribute(b"type")?;
+                        self.map_type = r.attribute(b"maptype")?.to_string();
+                        self.map_style = string_non_empty(r.attribute(b"mapstyle")?.to_string());
+                        let _is_validated = r.attribute(b"validated")?;
+                        let _num_laps = r.attribute(b"nblaps")?;
+                        self.cost = r.attribute_from_str(b"displaycost")?;
+                        let _texture_mod = r.attribute(b"mod")?;
+                        self.has_ghost_blocks = match r.attribute(b"hasghostblocks")?.as_ref() {
+                            "0" => false,
+                            "1" => true,
+                            _ => todo!(),
+                        };
 
                         Ok(())
                     })?;
                     r.tag_empty(b"playermodel", |r| {
-                        r.attribute(b"id")?;
+                        let _player_model_id = r.attribute(b"id")?;
 
                         Ok(())
                     })?;
                     r.tag_empty(b"times", |r| {
-                        r.attribute(b"bronze")?;
-                        r.attribute(b"silver")?;
-                        r.attribute(b"gold")?;
-                        r.attribute(b"authortime")?;
-                        r.attribute(b"authorscore")?;
+                        let _bronze_time = r.attribute(b"bronze")?;
+                        let _silver_time = r.attribute(b"silver")?;
+                        let _gold_time = r.attribute(b"gold")?;
+                        let _author_time = r.attribute(b"authortime")?;
+                        let _author_score = r.attribute(b"authorscore")?;
 
                         Ok(())
                     })?;
@@ -647,15 +693,18 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _block_stock = r.internal_node_ref::<CollectorList>()?;
-            self.parameters = r.internal_node_ref::<ChallengeParameters>()?;
-            let _kind = r.u32()?;
+            let parameters = r.internal_node_ref::<ChallengeParameters>()?;
+            self.map_type = parameters.map_type.clone();
+            self.map_style = parameters.map_style.clone();
+            self.ty = r.enum_u32()?;
 
             Ok(())
         }
 
         fn read_chunk_24<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _is_laps_race = r.bool()?;
-            let _num_laps = r.u32()?;
+            let is_lap_race = r.bool()?;
+            let num_laps = r.u32()?;
+            self.num_laps = is_lap_race.then_some(num_laps);
 
             Ok(())
         }
@@ -670,13 +719,13 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.uid = r.id()?;
+            self.id = r.id()?;
             let _collection = r.id_or_null()?;
             self.author_id = r.id()?;
             self.name = r.string()?;
             self.decoration_id = r.id()?;
-            let _deco_collection = r.id_or_null()?;
-            let _deco_author = r.id()?;
+            let _decoration_collection = r.id_or_null()?;
+            let _decoration_author = r.id()?;
             self.size = r.nat3()?;
             let _need_unlock = r.bool()?;
             self.blocks = read_blocks(r)?;
@@ -938,7 +987,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _title_id = r.id()?;
+            self.title_id = r.id()?;
             let _build_version = r.string()?;
 
             Ok(())
@@ -1360,6 +1409,16 @@ mod read {
         }
     }
 
+    fn has_lightmap(lightmap_version: u8) -> Result<bool, Error> {
+        let has_lightmap = lightmap_version != 0;
+
+        if lightmap_version != 0 && lightmap_version != 8 {
+            return Err(Error::version("lightmap", lightmap_version as u32));
+        }
+
+        Ok(has_lightmap)
+    }
+
     fn read_blocks(
         r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
     ) -> Result<Vec<Block>, Error> {
@@ -1410,29 +1469,23 @@ mod read {
                 Event::Start(event) if event.name().as_ref() == name => {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
-                    println!("{:?}", event.name());
-
                     attribute_read_fn(&mut attributes)?;
 
-                    if let Some(a) = attributes.inner.next() {
-                        panic!("{:?}", a.unwrap().key);
+                    if attributes.inner.next().is_some() {
+                        return Err(Error::new(ErrorKind::Format("".into())));
                     }
                 }
-                _ => panic!(),
+                _ => return Err(Error::new(ErrorKind::Format("".into()))),
             }
 
             read_fn(self)?;
 
             let event = self.inner.read_event_into(&mut self.buf).unwrap();
 
-            println!("{event:?}");
-
             match event {
-                Event::End(event) if event.name().as_ref() == name => {}
-                _ => panic!(),
+                Event::End(event) if event.name().as_ref() == name => Ok(()),
+                _ => Err(Error::new(ErrorKind::Format("".into()))),
             }
-
-            Ok(())
         }
 
         fn tag_list(
@@ -1447,11 +1500,11 @@ mod read {
                 Event::Start(event) if event.name().as_ref() == name => {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
-                    if let Some(a) = attributes.inner.next() {
-                        panic!("{:?}", a.unwrap().key);
+                    if attributes.inner.next().is_some() {
+                        return Err(Error::new(ErrorKind::Format("".into())));
                     }
                 }
-                _ => panic!(),
+                _ => return Err(Error::new(ErrorKind::Format("".into()))),
             }
 
             loop {
@@ -1462,15 +1515,13 @@ mod read {
                     Event::Empty(event) if event.name().as_ref() == elem_name => {
                         let mut attributes = XmlAttributes::new(event.attributes());
 
-                        println!("{:?}", event.name());
-
                         attribute_read_fn(&mut attributes)?;
 
-                        if let Some(a) = attributes.inner.next() {
-                            panic!("{:?}", a.unwrap().key);
+                        if attributes.inner.next().is_some() {
+                            return Err(Error::new(ErrorKind::Format("".into())));
                         }
                     }
-                    _ => panic!(),
+                    _ => return Err(Error::new(ErrorKind::Format("".into()))),
                 }
             }
 
@@ -1488,18 +1539,16 @@ mod read {
                 Event::Empty(event) if event.name().as_ref() == name => {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
-                    println!("{:?}", event.name());
-
                     attribute_read_fn(&mut attributes)?;
 
-                    if let Some(a) = attributes.inner.next() {
-                        panic!("{:?}", a.unwrap().key);
+                    if attributes.inner.next().is_some() {
+                        return Err(Error::new(ErrorKind::Format("".into())));
                     }
-                }
-                _ => panic!(),
-            }
 
-            Ok(())
+                    Ok(())
+                }
+                _ => Err(Error::new(ErrorKind::Format("".into()))),
+            }
         }
     }
 
@@ -1512,23 +1561,27 @@ mod read {
             Self { inner }
         }
 
-        fn attribute(&mut self, name: &[u8]) -> Result<(), Error> {
+        fn optional_attribute(&mut self, name: &[u8]) -> Result<Option<Cow<'a, str>>, Error> {
             match self.inner.next() {
-                Some(Ok(attribute)) if attribute.key.as_ref() == name => {}
-                _ => todo!(),
+                Some(Ok(attribute)) if attribute.key.as_ref() == name => {
+                    Ok(Some(attribute.unescape_value().unwrap()))
+                }
+                None => Ok(None),
+                _ => Err(Error::new(ErrorKind::Format("".into()))),
             }
-
-            Ok(())
         }
 
-        fn optional_attribute(&mut self, name: &[u8]) -> Result<(), Error> {
-            match self.inner.next() {
-                Some(Ok(attribute)) if attribute.key.as_ref() == name => {}
-                None => {}
-                _ => todo!(),
+        fn attribute(&mut self, name: &[u8]) -> Result<Cow<'a, str>, Error> {
+            match self.optional_attribute(name)? {
+                Some(value) => Ok(value),
+                None => Err(Error::new(ErrorKind::Format("".into()))),
             }
+        }
 
-            Ok(())
+        fn attribute_from_str<T: FromStr>(&mut self, name: &[u8]) -> Result<T, Error> {
+            let value = self.attribute(name)?;
+
+            T::from_str(&value).map_err(|_| Error::new(ErrorKind::Format("".into())))
         }
     }
 }
@@ -1556,6 +1609,7 @@ mod write {
                 HeaderChunk::normal(2, |s, w| Self::write_chunk_2(s, w)),
                 HeaderChunk::normal(3, |s, w| Self::write_chunk_3(s, w)),
                 HeaderChunk::normal(4, |s, w| Self::write_chunk_4(s, w)),
+                HeaderChunk::normal(5, |s, w| Self::write_chunk_5(s, w)),
             ]
             .into_iter()
         }
@@ -1572,11 +1626,11 @@ mod write {
             w.u8(13)?;
             w.bool(false)?;
 
-            if let Some(ref medal_times) = self.medal_times {
-                w.u32(medal_times.bronze_time)?;
-                w.u32(medal_times.silver_time)?;
-                w.u32(medal_times.gold_time)?;
-                w.u32(medal_times.author_time)?;
+            if let Some(ref validation) = self.validation {
+                // w.u32(medal_times.bronze_time)?;
+                // w.u32(medal_times.silver_time)?;
+                // w.u32(medal_times.gold_time)?;
+                // w.u32(medal_times.author_time)?;
             } else {
                 w.u32(0xffffffff)?;
                 w.u32(0xffffffff)?;
@@ -1613,7 +1667,7 @@ mod write {
             w: &mut Writer<impl Write, impl IdStateMut, N>,
         ) -> Result<(), Error> {
             w.u8(11)?;
-            w.id(&self.uid)?;
+            w.id(&self.id)?;
             w.u32(0x1a)?;
             w.id(&self.author_id)?;
             w.string(&self.name)?;
@@ -1628,7 +1682,7 @@ mod write {
             w.bytes(&self.pack_mask)?;
             w.string(&self.map_type)?;
             w.string_or_empty(self.map_style.as_ref())?;
-            w.u64(self.lightmap_cache_uid)?;
+            w.u64(self.lightmap_cache_id)?;
 
             if self.has_lightmap {
                 w.u8(8)?;
@@ -1645,6 +1699,26 @@ mod write {
             w.u32(6)?;
 
             Ok(())
+        }
+
+        fn write_chunk_5<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            let mut w = XmlWriter::new(w);
+
+            todo!();
+
+            Ok(())
+        }
+    }
+
+    struct XmlWriter<W> {
+        inner: quick_xml::Writer<W>,
+    }
+
+    impl<W> XmlWriter<W> {
+        fn new(inner: W) -> Self {
+            Self {
+                inner: quick_xml::Writer::new(inner),
+            }
         }
     }
 }

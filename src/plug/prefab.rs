@@ -149,7 +149,7 @@ mod read {
                             r.u32()?;
                         }
                         0x0917a000 => {
-                            let mut m = SpawnModel;
+                            let mut m = SpawnModel::default();
                             m.read_body(r)?;
                         }
                         0x0917b000 => {

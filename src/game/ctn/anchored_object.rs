@@ -104,19 +104,19 @@ pub enum PhaseOffset {
     /// No offset.
     #[default]
     None,
-    /// No offset.
+    /// One eighth.
     One8th,
-    /// No offset.
+    /// Two eights.
     Two8th,
-    /// No offset.
+    /// Three eights.
     Three8th,
-    /// No offset.
+    /// Four eights.
     Four8th,
-    /// No offset.
+    /// Five eights.
     Five8th,
-    /// No offset.
+    /// Six eights.
     Six8th,
-    /// No offset.
+    /// Seven eights.
     Seven8th,
 }
 

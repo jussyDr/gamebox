@@ -1,13 +1,22 @@
 //! Spawn model.
 
-use crate::Class;
+use crate::{Class, Iso4};
 
 /// Spawn model.
 #[derive(Default)]
-pub struct SpawnModel;
+pub struct SpawnModel {
+    placement: Iso4,
+}
 
 impl Class for SpawnModel {
     const CLASS_ID: u32 = 0x0917a000;
+}
+
+impl SpawnModel {
+    /// Placement.
+    pub const fn placement(&self) -> &Iso4 {
+        &self.placement
+    }
 }
 
 mod read {
@@ -44,7 +53,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _loc = r.iso4()?;
+            self.placement = r.iso4()?;
             let _torque_x = r.f32()?;
             let _torque_duration = r.u32()?;
             let _default_gravity_spawn = r.vec3()?;

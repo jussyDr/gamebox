@@ -16,8 +16,8 @@ use std::{
 use node::NullNodeState;
 
 use crate::{
-    Byte3, FileRef, Int2, Int3, Iso4, Nat3, PitchYawRoll, Quat, RgbFloat, RgbNat, Rgba, Vec2, Vec3,
-    YawPitchRoll,
+    Box3d, Byte3, FileRef, Int2, Int3, Iso4, Nat3, PitchYawRoll, Quat, RgbFloat, RgbNat, Rgba,
+    Vec2, Vec3, YawPitchRoll,
 };
 
 use super::{Error, ErrorKind};
@@ -229,6 +229,16 @@ impl<R: Read, I, N> Reader<R, I, N> {
         T::from_variant(self.u32()?).ok_or_else(|| Error::new(ErrorKind::Format("enum".into())))
     }
 
+    pub fn u32_or_zero(&mut self) -> Result<Option<u32>, Error> {
+        let value = self.u32()?;
+
+        if value == 0 {
+            Ok(None)
+        } else {
+            Ok(Some(value))
+        }
+    }
+
     pub fn u32_or_null(&mut self) -> Result<Option<u32>, Error> {
         let value = self.u32()?;
 
@@ -288,24 +298,12 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.pod()
     }
 
-    pub fn iso4(&mut self) -> Result<Iso4, Error> {
-        self.vec3()?;
-        self.vec3()?;
-        self.vec3()?;
-        self.vec3()?;
-
-        Ok(Iso4::default())
+    pub fn box3d(&mut self) -> Result<Box3d, Error> {
+        self.pod()
     }
 
-    pub fn box3d(&mut self) -> Result<u8, Error> {
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-
-        Ok(0)
+    pub fn iso4(&mut self) -> Result<Iso4, Error> {
+        self.pod()
     }
 
     pub fn string_of_len(&mut self, len: usize) -> Result<String, Error> {
@@ -321,15 +319,9 @@ impl<R: Read, I, N> Reader<R, I, N> {
     }
 
     pub fn string_non_empty(&mut self) -> Result<Option<String>, Error> {
-        let len = self.u32()?;
+        let s = self.string()?;
 
-        if len == 0 {
-            Ok(None)
-        } else {
-            let string = self.string_of_len(len as usize)?;
-
-            Ok(Some(string))
-        }
+        Ok(string_non_empty(s))
     }
 
     pub fn pack_desc_or_null(&mut self) -> Result<Option<FileRef>, Error> {
@@ -468,7 +460,7 @@ fn bool_from_u32(value: u32) -> Result<bool, Error> {
 
 impl<R: Seek, I, N> Reader<R, I, N> {
     pub fn skip(&mut self, n: u64) -> Result<(), Error> {
-        self.inner.seek_relative(n as i64).map_err(Error::io)?;
+        self.seek_relative(n as i64)?;
 
         Ok(())
     }
@@ -478,13 +470,25 @@ impl<R: Seek, I, N> Reader<R, I, N> {
 
         Ok(())
     }
+
+    fn seek_relative(&mut self, offset: i64) -> Result<(), Error> {
+        self.inner.seek_relative(offset).map_err(Error::io)
+    }
 }
 
 impl<R: Read + Seek, I, N> Reader<R, I, N> {
     pub fn peek_u32(&mut self) -> Result<u32, Error> {
         let value = self.u32()?;
-        self.inner.seek_relative(-4).map_err(Error::io)?;
+        self.seek_relative(-(size_of::<u32>() as i64))?;
 
         Ok(value)
+    }
+}
+
+pub fn string_non_empty(s: String) -> Option<String> {
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
     }
 }

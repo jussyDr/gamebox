@@ -65,11 +65,11 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Byte3 {
-    /// X component.
+    /// X.
     pub x: u8,
-    /// Y component.
+    /// Y.
     pub y: u8,
-    /// Z component.
+    /// Z.
     pub z: u8,
 }
 
@@ -89,11 +89,11 @@ impl Byte3 {
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Nat3 {
-    /// X component.
+    /// X.
     pub x: u32,
-    /// Y component.
+    /// Y.
     pub y: u32,
-    /// Z component.
+    /// Z.
     pub z: u32,
 }
 
@@ -113,9 +113,9 @@ impl Nat3 {
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Int2 {
-    /// X component.
+    /// X.
     pub x: i32,
-    /// Y component.
+    /// Y.
     pub y: i32,
 }
 
@@ -135,11 +135,11 @@ impl Int2 {
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Int3 {
-    /// X component.
+    /// X.
     pub x: i32,
-    /// Y component.
+    /// Y.
     pub y: i32,
-    /// Z component.
+    /// Z.
     pub z: i32,
 }
 
@@ -159,9 +159,9 @@ impl Int3 {
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Vec2 {
-    /// X component.
+    /// X.
     pub x: f32,
-    /// Y component.
+    /// Y.
     pub y: f32,
 }
 
@@ -181,11 +181,11 @@ impl Vec2 {
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Vec3 {
-    /// X component.
+    /// X.
     pub x: f32,
-    /// Y component.
+    /// Y.
     pub y: f32,
-    /// Z component.
+    /// Z.
     pub z: f32,
 }
 
@@ -198,31 +198,6 @@ impl Vec3 {
     /// To array.
     pub const fn to_array(self) -> [f32; 3] {
         [self.x, self.y, self.z]
-    }
-}
-
-/// 4-dimensional vector.
-#[derive(Clone, Copy, Default, Debug)]
-pub struct Vec4<T> {
-    /// X component.
-    pub x: T,
-    /// Y component.
-    pub y: T,
-    /// Z component.
-    pub z: T,
-    /// W component.
-    pub w: T,
-}
-
-impl<T: Copy> Vec4<T> {
-    /// From array.
-    pub const fn from_array(array: [T; 4]) -> Self {
-        Self {
-            x: array[0],
-            y: array[1],
-            z: array[2],
-            w: array[3],
-        }
     }
 }
 
@@ -340,13 +315,13 @@ pub struct PitchYawRoll {
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
 #[repr(C)]
 pub struct Quat {
-    /// X component.
+    /// X.
     pub x: f32,
-    /// Y component.
+    /// Y.
     pub y: f32,
-    /// Z component.
+    /// Z.
     pub z: f32,
-    /// W component.
+    /// W.
     pub w: f32,
 }
 
@@ -362,15 +337,28 @@ impl Quat {
     }
 }
 
+/// Box 3D.
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
+pub struct Box3d {
+    /// A.
+    a: Vec3,
+    /// B.
+    b: Vec3,
+}
+
 /// Iso.
-#[derive(Default, Debug)]
+#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, Debug)]
+#[repr(C)]
 pub struct Iso4 {
     /// X.
-    pub x: Vec4<f32>,
+    pub x: Vec3,
     /// Y.
-    pub y: Vec4<f32>,
+    pub y: Vec3,
     /// Z.
-    pub z: Vec4<f32>,
+    pub z: Vec3,
+    /// T.
+    pub t: Vec3,
 }
 
 /// Reference to a file.
