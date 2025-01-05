@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// Poly line 3
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PolyLine3;
 
 impl Class for PolyLine3 {

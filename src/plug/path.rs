@@ -1,10 +1,16 @@
 //! Path.
 
+use std::sync::Arc;
+
 use crate::Class;
+
+use super::poly_line_3::PolyLine3;
 
 /// Path.
 #[derive(Default, Debug)]
-pub struct Path;
+pub struct Path {
+    poly_lines: Vec<Arc<PolyLine3>>,
+}
 
 impl Class for Path {
     const CLASS_ID: u32 = 0x09119000;
@@ -13,13 +19,10 @@ impl Class for Path {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        plug::poly_line_3::PolyLine3,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::Path;
@@ -51,7 +54,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _poly_lines = r.list(|r| r.internal_node_ref::<PolyLine3>())?;
+            self.poly_lines = r.list(|r| r.internal_node_ref())?;
             r.bool()?;
             r.u8()?;
             r.byte_buf()?;

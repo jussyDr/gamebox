@@ -5,7 +5,7 @@ use crate::Class;
 /// Skeleton.
 #[derive(Default)]
 pub struct Skel {
-    joints: Vec<()>,
+    joints: Vec<Joint>,
     sockets: Vec<Socket>,
 }
 
@@ -20,6 +20,9 @@ impl Skel {
     }
 }
 
+/// Joint.
+pub struct Joint;
+
 /// Socket.
 pub struct Socket;
 
@@ -32,7 +35,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{Skel, Socket};
+    use super::{Joint, Skel, Socket};
 
     impl ReadBody for Skel {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -68,7 +71,7 @@ mod read {
                 let _parent_index = r.u16()?;
                 r.iso4()?;
 
-                Ok(())
+                Ok(Joint)
             })?;
             r.bool()?;
             self.sockets = r.list(|r| {

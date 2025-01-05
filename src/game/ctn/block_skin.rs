@@ -58,8 +58,8 @@ mod read {
     impl BlockSkin {
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let _text = r.string()?;
-            self.skin = r.pack_desc_or_null()?;
-            let _parent_skin = r.pack_desc_or_null()?;
+            self.skin = r.file_ref_or_null()?;
+            let _parent_skin = r.file_ref_or_null()?;
 
             Ok(())
         }
@@ -71,7 +71,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.skin_effect = r.pack_desc_or_null()?;
+            self.skin_effect = r.file_ref_or_null()?;
 
             Ok(())
         }

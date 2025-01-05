@@ -75,7 +75,7 @@ mod read {
 
     impl MediaBlockColorGrading {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.image = r.pack_desc()?;
+            self.image = r.file_ref()?;
 
             Ok(())
         }

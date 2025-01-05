@@ -104,7 +104,7 @@ mod read {
         }
 
         fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.sound = r.pack_desc()?;
+            self.sound = r.file_ref()?;
 
             let version = r.u32()?;
 

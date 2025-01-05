@@ -2,9 +2,13 @@
 
 use std::sync::Arc;
 
-use crate::{read::reader::FromVariant, script::TraitsMetadata, Class, FileRef, Nat3, Vec2};
+use crate::{read::reader::FromVariant, script::TraitsMetadata, Byte3, Class, FileRef, Nat3, Vec2};
 
-use super::{block::Block, AnchoredObject, Ghost, MediaClip, MediaClipGroup};
+use super::{
+    block::{Block, BlockType},
+    AnchoredObject, Direction, ElemColor, Ghost, LightmapQuality, MediaClip, MediaClipGroup,
+    ZoneGenealogy,
+};
 
 /// Challenge.
 pub struct Challenge {
@@ -30,12 +34,14 @@ pub struct Challenge {
     lightmap_cache_id: u64,
     has_lightmap: bool,
     title_id: Arc<str>,
+    thumbnail: Vec<u8>,
     author_zone: String,
     texture_mod: Option<FileRef>,
     size: Nat3,
     blocks: Vec<Block>,
     music: Option<FileRef>,
     items: Vec<AnchoredObject>,
+    zones: Vec<ZoneGenealogy>,
     script_metadata: TraitsMetadata,
     baked_blocks: Vec<Block>,
     intro_clip: Option<Arc<MediaClip>>,
@@ -175,6 +181,35 @@ impl Challenge {
 
 impl Default for Challenge {
     fn default() -> Self {
+        let size = 48;
+
+        let mut baked_blocks = vec![];
+
+        let model_id = Arc::from("Grass");
+
+        for x in 0..size {
+            for z in 0..size {
+                baked_blocks.push(Block {
+                    model_id: Arc::clone(&model_id),
+                    ty: BlockType::Normal {
+                        direction: Direction::North,
+                        coord: Byte3::new(x, 0, z),
+                        is_ghost: false,
+                    },
+                    has_flags: true,
+                    mobil_index: 0,
+                    mobil_sub_index: 0,
+                    is_ground: true,
+                    is_pillar: false,
+                    skin: None,
+                    waypoint_special_property: None,
+                    variant_index: 0,
+                    elem_color: ElemColor::Default,
+                    lightmap_quality: LightmapQuality::Normal,
+                });
+            }
+        }
+
         Self {
             validation: None,
             cost: 0,
@@ -197,15 +232,17 @@ impl Default for Challenge {
             lightmap_cache_id: 0, // should be random
             has_lightmap: false,
             has_ghost_blocks: false,
+            thumbnail: vec![],
             title_id: Arc::from("TMStadium"),
             author_zone: String::new(),
             texture_mod: None,
-            size: Nat3::new(48, 40, 48),
+            size: Nat3::new(size as u32, 40, size as u32),
             blocks: vec![],
             music: None,
+            zones: vec![],
             items: vec![],
             script_metadata: TraitsMetadata::default(),
-            baked_blocks: vec![],
+            baked_blocks,
             intro_clip: None,
             podium_clip: None,
             in_game_clips: None,
@@ -374,7 +411,6 @@ mod read {
             collector_list::CollectorList,
             media_clip::MediaClip,
             media_clip_group::MediaClipGroup,
-            zone_genealogy::ZoneGenealogy,
         },
         read::{
             read_body_chunks,
@@ -656,7 +692,7 @@ mod read {
 
             let thumbnail_size = r.u32()?;
             r.byte_array::<15>()?;
-            let _thumbnail = r.bytes(thumbnail_size as usize)?;
+            self.thumbnail = r.bytes(thumbnail_size as usize)?;
             r.byte_array::<16>()?;
             r.byte_array::<10>()?;
             let _comments = r.string()?;
@@ -710,7 +746,7 @@ mod read {
         }
 
         fn read_chunk_25<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.texture_mod = r.pack_desc_or_null()?;
+            self.texture_mod = r.file_ref_or_null()?;
 
             Ok(())
         }
@@ -740,7 +776,7 @@ mod read {
         }
 
         fn read_chunk_36<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.music = r.pack_desc_or_null()?;
+            self.music = r.file_ref_or_null()?;
 
             Ok(())
         }
@@ -884,7 +920,7 @@ mod read {
         ) -> Result<(), Error> {
             r.u32()?;
             r.encapsulation(|r| {
-                let _zones = r.list(|r| r.node::<ZoneGenealogy>())?;
+                self.zones = r.list(|r| r.node())?;
 
                 Ok(())
             })?;
@@ -1313,7 +1349,7 @@ mod read {
 
             for item in &mut self.items {
                 if r.bool8()? {
-                    item.skin_effect = Some(r.pack_desc()?);
+                    item.skin_effect = Some(r.file_ref()?);
                 }
             }
 
@@ -1402,7 +1438,7 @@ mod read {
 
             let _author_login = r.string()?;
             let _author_nickname = r.string()?;
-            let _author_zone = r.string()?;
+            self.author_zone = r.string()?;
             let _author_extra_info = r.string()?;
 
             Ok(())

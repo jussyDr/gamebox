@@ -197,7 +197,7 @@ mod read {
             self.scale = r.f32()?;
 
             if (flags >> 2) & 1 != 0 {
-                self.skin = r.pack_desc_or_null()?;
+                self.skin = r.file_ref_or_null()?;
             }
 
             r.vec3()?;

@@ -92,7 +92,7 @@ mod read {
             r.id_or_null()?;
             r.id_or_null()?;
             r.vec3()?;
-            let _skin_names = r.list(|r| r.pack_desc())?;
+            let _skin_names = r.list(|r| r.file_ref())?;
             let _has_badges = r.bool()?;
 
             if version >= 11 {

@@ -6,7 +6,7 @@ use crate::Class;
 
 use super::{index_buffer::IndexBuffer, visual3d::Visual3D};
 
-/// A visual indexed.
+/// Visual indexed.
 #[derive(Default, Debug)]
 pub struct VisualIndexed {
     parent: Visual3D,
@@ -26,7 +26,7 @@ impl Deref for VisualIndexed {
 }
 
 impl VisualIndexed {
-    /// Index buffer of the visual.
+    /// Index buffer.
     pub const fn index_buffer(&self) -> &IndexBuffer {
         &self.index_buffer
     }

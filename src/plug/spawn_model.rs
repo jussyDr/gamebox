@@ -14,8 +14,8 @@ impl Class for SpawnModel {
 
 impl SpawnModel {
     /// Placement.
-    pub const fn placement(&self) -> &Iso4 {
-        &self.placement
+    pub const fn placement(&self) -> Iso4 {
+        self.placement
     }
 }
 

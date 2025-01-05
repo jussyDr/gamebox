@@ -48,6 +48,13 @@ impl Error {
             trace: VecDeque::new(),
         }
     }
+
+    pub(crate) fn null(name: &str) -> Self {
+        Self {
+            kind: ErrorKind::Unsupported(format!("{name} is null")),
+            trace: VecDeque::new(),
+        }
+    }
 }
 
 #[derive(Debug)]

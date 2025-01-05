@@ -98,7 +98,7 @@ mod read {
             r.id_or_null()?;
             r.id_or_null()?;
             let _light_trail_color = r.vec3()?;
-            let _skin_pack_descs = r.list(|r| r.pack_desc())?;
+            let _skin_pack_descs = r.list(|r| r.file_ref())?;
             let has_badges = r.bool()?;
 
             if has_badges {

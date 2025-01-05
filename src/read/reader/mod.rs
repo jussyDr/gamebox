@@ -139,6 +139,7 @@ impl<R, I, N> Reader<R, I, N> {
 }
 
 impl<R: Read, I, N> Reader<R, I, N> {
+    /// Reads all bytes until EOF in this source, placing them into `buf`.
     pub fn read_to_end(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         self.inner.read_to_end(buf).map_err(Error::io)
     }
@@ -166,6 +167,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.bytes(size as usize)
     }
 
+    /// Read a "plain old data" value.
     pub fn pod<T: Pod + FromLe>(&mut self) -> Result<T, Error> {
         let mut value = T::zeroed();
 
@@ -306,12 +308,14 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.pod()
     }
 
+    /// Read a string with the given length.
     pub fn string_of_len(&mut self, len: usize) -> Result<String, Error> {
         let bytes = self.bytes(len)?;
 
         String::from_utf8(bytes).map_err(|_| Error::new(ErrorKind::Format("not utf8".into())))
     }
 
+    /// Read a string.
     pub fn string(&mut self) -> Result<String, Error> {
         let len = self.u32()?;
 
@@ -324,11 +328,11 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(string_non_empty(s))
     }
 
-    pub fn pack_desc_or_null(&mut self) -> Result<Option<FileRef>, Error> {
+    pub fn file_ref_or_null(&mut self) -> Result<Option<FileRef>, Error> {
         let version = self.u8()?;
 
         if version != 3 {
-            return Err(Error::version("pack desc", version as u32));
+            return Err(Error::version("file reference", version as u32));
         }
 
         let checksum = self.byte_array::<32>()?;
@@ -352,13 +356,14 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    pub fn pack_desc(&mut self) -> Result<FileRef, Error> {
-        match self.pack_desc_or_null()? {
+    pub fn file_ref(&mut self) -> Result<FileRef, Error> {
+        match self.file_ref_or_null()? {
             Some(pack_desc) => Ok(pack_desc),
-            None => Err(Error::new(ErrorKind::Format("pack desc null".into()))),
+            None => Err(Error::null("file reference")),
         }
     }
 
+    /// Repeat the given `read_fn` a total of `n` times.
     pub fn repeat<T>(
         &mut self,
         n: usize,

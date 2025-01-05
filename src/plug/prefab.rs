@@ -9,6 +9,7 @@ use super::{
 /// Prefab.
 #[derive(Default, Debug)]
 pub struct Prefab {
+    file_write_time: u64,
     entities: Vec<Entity>,
 }
 
@@ -100,7 +101,7 @@ mod read {
                 return Err(Error::version("prefab", version));
             }
 
-            let _file_write_time = r.u64()?;
+            self.file_write_time = r.u64()?;
             let _url = r.string()?;
             let _u01 = r.u32()?;
             let num_entities = r.u32()?;
@@ -111,7 +112,7 @@ mod read {
                 r.test_or_ext_or_null(|r, class_id| {
                     match class_id {
                         0x09119000 => {
-                            let mut m = Path;
+                            let mut m = Path::default();
                             m.read_body(r)?;
 
                             ty = EntityType::Path(m);

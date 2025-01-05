@@ -1,10 +1,17 @@
 //! Tree.
 
+use std::sync::Arc;
+
 use crate::Class;
+
+use super::Surface;
 
 /// Tree.
 #[derive(Default)]
-pub struct Tree;
+pub struct Tree {
+    name: Arc<str>,
+    surface: Arc<Surface>,
+}
 
 impl Class for Tree {
     const CLASS_ID: u32 = 0x0904f000;
@@ -13,13 +20,10 @@ impl Class for Tree {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        plug::Surface,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::Tree;
@@ -58,7 +62,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            let _name = r.id()?;
+            self.name = r.id()?;
             r.id_or_null()?;
 
             Ok(())
@@ -76,7 +80,7 @@ mod read {
         ) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
-            let _surface = r.internal_node_ref::<Surface>()?;
+            self.surface = r.internal_node_ref()?;
             r.u32()?;
 
             Ok(())

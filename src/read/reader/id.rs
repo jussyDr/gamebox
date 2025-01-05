@@ -104,7 +104,7 @@ impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     pub fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
             Some(id) => Ok(id),
-            None => Err(Error::new(ErrorKind::Format("null identifier".into()))),
+            None => Err(Error::null("identifier")),
         }
     }
 }

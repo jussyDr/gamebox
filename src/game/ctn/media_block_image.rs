@@ -60,7 +60,7 @@ mod read {
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             self.effect = r.internal_node_ref()?;
-            self.image = r.pack_desc()?;
+            self.image = r.file_ref()?;
 
             Ok(())
         }

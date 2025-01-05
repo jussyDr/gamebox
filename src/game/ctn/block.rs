@@ -9,16 +9,16 @@ use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 /// Block.
 #[derive(Default, Debug)]
 pub struct Block {
-    model_id: Arc<str>,
+    pub(crate) model_id: Arc<str>,
     pub(crate) ty: BlockType,
     pub(crate) has_flags: bool,
-    mobil_index: u8,
-    mobil_sub_index: u8,
-    is_ground: bool,
-    is_pillar: bool,
-    skin: Option<Arc<BlockSkin>>,
-    waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
-    variant_index: u8,
+    pub(crate) mobil_index: u8,
+    pub(crate) mobil_sub_index: u8,
+    pub(crate) is_ground: bool,
+    pub(crate) is_pillar: bool,
+    pub(crate) skin: Option<Arc<BlockSkin>>,
+    pub(crate) waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
+    pub(crate) variant_index: u8,
     pub(crate) elem_color: ElemColor,
     pub(crate) lightmap_quality: LightmapQuality,
 }
