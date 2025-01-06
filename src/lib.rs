@@ -42,6 +42,7 @@
 //! | `VegetTreeModel.Gbx` | [plug::VegetTreeModel] | [x] | [ ] |
 
 pub mod control;
+pub mod function;
 pub mod game;
 pub mod plug;
 pub mod read;

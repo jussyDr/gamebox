@@ -21,6 +21,7 @@ pub struct Challenge {
     num_laps: Option<u32>,
     id: Arc<str>,
     author_id: Arc<str>,
+    author_name: String,
     name: String,
     ty: ChallengeType,
     password: String,
@@ -34,6 +35,9 @@ pub struct Challenge {
     lightmap_cache_id: u64,
     has_lightmap: bool,
     title_id: Arc<str>,
+    game_build_date: String,
+    game_build_git_tag: String,
+    game_version: String,
     thumbnail: Vec<u8>,
     author_zone: String,
     texture_mod: Option<FileRef>,
@@ -49,6 +53,7 @@ pub struct Challenge {
     in_game_clips: Option<Arc<MediaClipGroup>>,
     end_race_clips: Option<Arc<MediaClipGroup>>,
     ambiance_clip: Option<Arc<MediaClip>>,
+    clip_trigger_size: Nat3,
     decoration_base_height_offset: u32,
     embedded_items: Option<EmbeddedItems>,
 }
@@ -211,6 +216,7 @@ impl Default for Challenge {
         }
 
         Self {
+            clip_trigger_size: Nat3::new(3, 1, 3),
             validation: None,
             cost: 0,
             play_mode: 0,
@@ -218,6 +224,7 @@ impl Default for Challenge {
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
             num_laps: None,
+            author_name: String::new(),
             id: Default::default(), // should be random
             author_id: Default::default(),
             name: Default::default(),
@@ -250,6 +257,9 @@ impl Default for Challenge {
             ambiance_clip: None,
             decoration_base_height_offset: 8,
             embedded_items: None,
+            game_build_date: "2024-09-17_11_17".into(),
+            game_build_git_tag: "127252-120dea21a9e".into(),
+            game_version: "3.3.0".into(),
         }
     }
 }
@@ -585,7 +595,7 @@ mod read {
             self.coord_target = r.vec2()?;
             self.pack_mask = r.byte_array::<16>()?;
             self.map_type = r.string()?;
-            self.map_style = r.string_non_empty()?;
+            self.map_style = r.string_or_empty()?;
             self.lightmap_cache_id = r.u64()?;
             self.has_lightmap = has_lightmap(r.u8()?)?;
             self.title_id = r.id()?;
@@ -622,7 +632,7 @@ mod read {
                         todo!()
                     }
 
-                    let _exe_build = r.attribute(b"exebuild")?;
+                    self.game_build_date = r.attribute(b"exebuild")?.to_string();
                     let _title_id = r.attribute(b"title")?;
                     self.has_lightmap = has_lightmap(r.attribute_from_str(b"lightmap")?)?;
 
@@ -808,7 +818,7 @@ mod read {
                 let _thumbnail_far_clip_plane = r.f32()?;
             }
 
-            let _comments = r.string()?;
+            let _comments = r.string_or_empty()?;
 
             Ok(())
         }
@@ -840,7 +850,7 @@ mod read {
             r.f32()?;
             let _thumbnail_near_clip_plane = r.f32()?;
             let _thumbnail_far_clip_plane = r.f32()?;
-            let _comments = r.string()?;
+            let _comments = r.string_or_empty()?;
 
             Ok(())
         }
@@ -974,16 +984,16 @@ mod read {
             self.in_game_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             self.end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             self.ambiance_clip = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _clip_trigger_size = r.nat3()?;
+            self.clip_trigger_size = r.nat3()?;
 
             Ok(())
         }
 
         fn read_chunk_75<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _objective_text_author = r.string()?;
-            let _objective_text_gold = r.string()?;
-            let _objective_text_silver = r.string()?;
-            let _objective_text_bronze = r.string()?;
+            let _objective_text_author = r.string_or_empty()?;
+            let _objective_text_gold = r.string_or_empty()?;
+            let _objective_text_silver = r.string_or_empty()?;
+            let _objective_text_bronze = r.string_or_empty()?;
 
             Ok(())
         }
@@ -1024,7 +1034,7 @@ mod read {
             }
 
             self.title_id = r.id()?;
-            let _build_version = r.string()?;
+            let _game_build = r.string()?;
 
             Ok(())
         }
@@ -1436,10 +1446,10 @@ mod read {
                 return Err(Error::version("author", version));
             }
 
-            let _author_login = r.string()?;
-            let _author_nickname = r.string()?;
+            self.author_id = r.string()?.into();
+            self.author_name = r.string()?;
             self.author_zone = r.string()?;
-            let _author_extra_info = r.string()?;
+            let _author_extra_info = r.string_or_empty()?;
 
             Ok(())
         }
@@ -1628,6 +1638,8 @@ mod write {
         sync::Arc,
     };
 
+    use quick_xml::events::{BytesEnd, BytesStart, Event};
+
     use crate::write::{writable, writer::IdStateMut, BodyChunk, BodyChunks, Writable, Writer};
 
     use self::writable::{HeaderChunk, HeaderChunks};
@@ -1719,13 +1731,7 @@ mod write {
             w.string(&self.map_type)?;
             w.string_or_empty(self.map_style.as_ref())?;
             w.u64(self.lightmap_cache_id)?;
-
-            if self.has_lightmap {
-                w.u8(8)?;
-            } else {
-                w.u8(0)?;
-            }
-
+            w.u8(self.lightmap_version())?;
             w.id(&self.title_id)?;
 
             Ok(())
@@ -1738,11 +1744,35 @@ mod write {
         }
 
         fn write_chunk_5<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            let mut w = XmlWriter::new(w);
+            let mut w = XmlWriter::new(w.get_mut());
 
-            todo!();
+            w.tag(
+                "header",
+                |w| {
+                    w.attribute("type", "map");
+                    w.attribute("exever", &self.game_version);
+                    w.attribute("exebuild", &self.game_build_date);
+                    w.attribute("title", &self.title_id);
+                    w.attribute("lightmap", &self.lightmap_version().to_string());
+                },
+                |w| {
+                    w.tag_empty("ident", |w| {});
+                    w.tag_empty("desc", |w| {});
+                    w.tag_empty("playermodel", |w| {});
+                    w.tag_empty("times", |w| {});
+                    w.tag("deps", |_| {}, |_| {});
+                },
+            );
 
             Ok(())
+        }
+
+        fn lightmap_version(&self) -> u8 {
+            if self.has_lightmap {
+                8
+            } else {
+                0
+            }
         }
     }
 
@@ -1755,6 +1785,49 @@ mod write {
             Self {
                 inner: quick_xml::Writer::new(inner),
             }
+        }
+    }
+
+    impl<W: Write> XmlWriter<W> {
+        fn tag(
+            &mut self,
+            name: &str,
+            mut attribute_fn: impl FnMut(&mut Attributes),
+            mut write_fn: impl FnMut(&mut Self),
+        ) {
+            let mut bytes_start = BytesStart::new(name);
+
+            attribute_fn(&mut Attributes {
+                bytes_start: &mut bytes_start,
+            });
+
+            self.inner.write_event(Event::Start(bytes_start)).unwrap();
+
+            write_fn(self);
+
+            self.inner
+                .write_event(Event::End(BytesEnd::new(name)))
+                .unwrap();
+        }
+
+        fn tag_empty(&mut self, name: &str, mut attribute_fn: impl FnMut(&mut Attributes)) {
+            let mut bytes_start = BytesStart::new(name);
+
+            attribute_fn(&mut Attributes {
+                bytes_start: &mut bytes_start,
+            });
+
+            self.inner.write_event(Event::Empty(bytes_start)).unwrap();
+        }
+    }
+
+    struct Attributes<'a, 'b> {
+        bytes_start: &'a mut BytesStart<'b>,
+    }
+
+    impl Attributes<'_, '_> {
+        fn attribute(&mut self, name: &str, value: &str) {
+            self.bytes_start.push_attribute((name, value));
         }
     }
 }

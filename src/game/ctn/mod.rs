@@ -48,6 +48,8 @@ pub mod media_block_triangles_3d;
 pub mod media_clip;
 pub mod media_clip_group;
 pub mod media_track;
+pub mod zone;
+pub mod zone_flat;
 pub mod zone_genealogy;
 
 #[doc(inline)]
@@ -130,6 +132,10 @@ pub use media_clip::MediaClip;
 pub use media_clip_group::MediaClipGroup;
 #[doc(inline)]
 pub use media_track::MediaTrack;
+#[doc(inline)]
+pub use zone::Zone;
+#[doc(inline)]
+pub use zone_flat::ZoneFlat;
 #[doc(inline)]
 pub use zone_genealogy::ZoneGenealogy;
 

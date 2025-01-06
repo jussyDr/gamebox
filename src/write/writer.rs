@@ -158,6 +158,10 @@ impl<W, I, N> Writer<W, I, N> {
         self.inner
     }
 
+    pub fn get_mut(&mut self) -> &mut W {
+        &mut self.inner
+    }
+
     pub fn to_buf_inline(
         &mut self,
         mut write_fn: impl FnMut(&mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>,

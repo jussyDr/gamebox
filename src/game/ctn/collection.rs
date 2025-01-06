@@ -1,5 +1,7 @@
 //! Collection.
 
+use std::sync::Arc;
+
 use crate::Class;
 
 /// Collection.
@@ -7,6 +9,7 @@ use crate::Class;
 pub struct Collection {
     square_size: f32,
     square_height: f32,
+    vehicle_id: Arc<str>,
     block_info_folder: String,
     item_folder: Option<String>,
     decoration_folder: String,
@@ -46,10 +49,15 @@ impl Collection {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::read::{
-        readable,
-        reader::{IdStateMut, NodeStateMut, Reader},
-        Error, Readable,
+    use crate::{
+        function::Shader,
+        game::ctn::Zone,
+        plug::Bitmap,
+        read::{
+            readable,
+            reader::{IdStateMut, NodeStateMut, Reader},
+            Error, Readable,
+        },
     };
 
     use self::readable::{
@@ -126,14 +134,15 @@ mod read {
             r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
             let _collection = r.id_or_null()?;
-            let _complete_list_zone_list = r.list_with_version(|r| r.external_node_ref::<()>())?;
-            let _default_zone = r.external_node_ref::<()>()?;
+            let _complete_list_zone_list =
+                r.list_with_version(|r| r.external_node_ref::<Zone>())?;
+            let _default_zone = r.external_node_ref::<Zone>()?;
             let _need_unlock = r.bool()?;
             self.square_size = r.f32()?;
             self.square_height = r.f32()?;
-            let _vehicle = r.id()?;
-            r.id_or_null()?;
-            r.id()?;
+            self.vehicle_id = r.id()?;
+            let _vehicle_collection = r.id_or_null()?;
+            let _vehicle_author = r.id()?;
 
             Ok(())
         }
@@ -150,11 +159,11 @@ mod read {
             r: &mut Reader<impl Read, I, impl NodeStateMut>,
         ) -> Result<(), Error> {
             if r.bool()? {
-                let _icon = r.external_node_ref::<()>()?;
+                let _icon = r.external_node_ref::<Bitmap>()?;
             }
 
             if r.bool()? {
-                let _icon = r.external_node_ref::<()>()?;
+                let _icon = r.external_node_ref::<Bitmap>()?;
             }
 
             Ok(())
@@ -176,7 +185,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, I, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _load_screen = r.external_node_ref::<()>()?;
+            let _load_screen = r.external_node_ref::<Bitmap>()?;
 
             Ok(())
         }
@@ -216,7 +225,7 @@ mod read {
 
         fn read_chunk_32<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.block_info_folder = r.string()?;
-            self.item_folder = r.string_non_empty()?;
+            self.item_folder = r.string_or_empty()?;
             self.decoration_folder = r.string()?;
             let _folder_menus_items = r.string()?;
 
@@ -298,9 +307,9 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            r.external_node_ref::<()>()?;
-            r.external_node_ref::<()>()?;
-            r.external_node_ref::<()>()?;
+            let _clouds_shader = r.external_node_ref::<Shader>()?;
+            let _clouds_texture = r.external_node_ref::<Bitmap>()?;
+            let _env_layer_dirt = r.external_node_ref::<Bitmap>()?;
             r.u32()?;
 
             Ok(())

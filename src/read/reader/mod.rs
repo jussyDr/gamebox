@@ -322,7 +322,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.string_of_len(len as usize)
     }
 
-    pub fn string_non_empty(&mut self) -> Result<Option<String>, Error> {
+    pub fn string_or_empty(&mut self) -> Result<Option<String>, Error> {
         let s = self.string()?;
 
         Ok(string_non_empty(s))

@@ -156,7 +156,7 @@ mod read {
 
         fn read_chunk_14<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.map_type = r.string()?;
-            self.map_style = r.string_non_empty()?;
+            self.map_style = r.string_or_empty()?;
             let _is_validated_for_script_modes = r.bool()?;
 
             Ok(())

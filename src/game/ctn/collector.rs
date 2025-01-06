@@ -2,14 +2,18 @@
 
 use std::sync::Arc;
 
-use crate::{Class, Rgba};
+use crate::{read::reader::FromVariant, Class, Rgba};
 
 /// Collector.
 #[derive(Clone, Default)]
 pub struct Collector {
+    page_name: String,
+    catalog_position: u32,
     icon: Option<Icon>,
     id: Option<Arc<str>>,
     name: String,
+    prod_state: ProdState,
+    description: String,
 }
 
 impl Class for Collector {
@@ -25,6 +29,32 @@ impl Collector {
     /// Identifier.
     pub const fn id(&self) -> Option<&Arc<str>> {
         self.id.as_ref()
+    }
+}
+
+/// Production state.
+#[derive(Clone, Copy, Default, Debug)]
+pub enum ProdState {
+    /// Aborted.
+    Aborted,
+    /// Game box.
+    GameBox,
+    /// Dev build.
+    DevBuild,
+    /// Release.
+    #[default]
+    Release,
+}
+
+impl FromVariant<u8> for ProdState {
+    fn from_variant(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(Self::Aborted),
+            1 => Some(Self::GameBox),
+            2 => Some(Self::DevBuild),
+            3 => Some(Self::Release),
+            _ => None,
+        }
     }
 }
 
@@ -97,12 +127,12 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _page_name = r.string()?;
+            self.page_name = r.string()?;
             r.id_or_null()?;
             let _flags = r.u32()?;
-            let _catalog_position = r.u16()?;
+            self.catalog_position = r.u16()? as u32;
             self.name = r.string()?;
-            let _prod_state = r.u8()?;
+            self.prod_state = r.enum_u8()?;
 
             Ok(())
         }
@@ -138,7 +168,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            let _page_name = r.string()?;
+            self.page_name = r.string()?;
 
             if r.bool()? {
                 r.external_node_ref::<()>()?;
@@ -167,7 +197,7 @@ mod read {
         }
 
         fn read_chunk_13<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _description = r.string()?;
+            self.description = r.string()?;
 
             Ok(())
         }
@@ -187,7 +217,7 @@ mod read {
             }
 
             r.u32()?;
-            let _skin_directory = r.string()?;
+            let _skin_directory = r.string_or_empty()?;
             r.u32()?;
 
             Ok(())
@@ -202,8 +232,8 @@ mod read {
 
             let _is_internal = r.bool()?;
             let _is_advanced = r.bool()?;
-            let _catalog_position = r.u32()?;
-            let _prod_state = r.u8()?;
+            self.catalog_position = r.u32()?;
+            self.prod_state = r.enum_u8()?;
 
             Ok(())
         }

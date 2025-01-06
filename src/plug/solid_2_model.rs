@@ -191,7 +191,7 @@ mod read {
 
             let _file_write_time = r.u64()?;
             r.string()?;
-            self.materials_folder = r.string_non_empty()?;
+            self.materials_folder = r.string_or_empty()?;
             r.string()?;
             self.lights = r.list(|r| {
                 r.id()?;
