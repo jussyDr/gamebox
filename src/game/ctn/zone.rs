@@ -1,4 +1,4 @@
-/// Zone.
+//! Zone.
 
 /// Zone.
 pub struct Zone;

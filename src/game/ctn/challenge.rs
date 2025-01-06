@@ -15,7 +15,6 @@ pub struct Challenge {
     validation: Option<Validation>,
     cost: u32,
     play_mode: u32,
-    author_score: Option<u32>,
     editor_mode: EditorMode,
     num_checkpoints: u32,
     num_laps: Option<u32>,
@@ -36,8 +35,7 @@ pub struct Challenge {
     has_lightmap: bool,
     title_id: Arc<str>,
     game_build_date: String,
-    game_build_git_tag: String,
-    game_version: String,
+    game_build_tag: GameBuildTag,
     thumbnail: Vec<u8>,
     author_zone: String,
     texture_mod: Option<FileRef>,
@@ -68,14 +66,9 @@ impl Challenge {
         self.validation.as_ref()
     }
 
-    /// Cost.
+    /// Display cost.
     pub const fn cost(&self) -> u32 {
         self.cost
-    }
-
-    /// Author score.
-    pub const fn author_score(&self) -> Option<u32> {
-        self.author_score
     }
 
     /// Number of checkpoints.
@@ -83,12 +76,12 @@ impl Challenge {
         self.num_checkpoints
     }
 
-    /// Number of laps.
+    /// Number of laps, or `None` if the challenge is not a laps race.
     pub const fn num_laps(&self) -> Option<u32> {
         self.num_laps
     }
 
-    /// Identifier.
+    /// Unique identifier.
     pub const fn id(&self) -> &Arc<str> {
         &self.id
     }
@@ -113,7 +106,7 @@ impl Challenge {
         &self.title_id
     }
 
-    /// Texture mod.
+    /// Custom texture mod.
     pub const fn texture_mod(&self) -> Option<&FileRef> {
         self.texture_mod.as_ref()
     }
@@ -123,12 +116,12 @@ impl Challenge {
         self.size
     }
 
-    /// Blocks placed in this challenge.
+    /// Blocks.
     pub const fn blocks(&self) -> &Vec<Block> {
         &self.blocks
     }
 
-    /// Music.
+    /// Custom music.
     pub const fn music(&self) -> Option<&FileRef> {
         self.music.as_ref()
     }
@@ -143,7 +136,7 @@ impl Challenge {
         &self.script_metadata
     }
 
-    /// Baked blocks.
+    /// Baked blocks, containing clips and grass blocks.
     pub const fn baked_blocks(&self) -> &Vec<Block> {
         &self.baked_blocks
     }
@@ -158,12 +151,12 @@ impl Challenge {
         self.podium_clip.as_ref()
     }
 
-    /// In game media clip group.
+    /// In game media clips.
     pub const fn in_game_clips(&self) -> Option<&Arc<MediaClipGroup>> {
         self.in_game_clips.as_ref()
     }
 
-    /// End race media clip group.
+    /// End race media clips.
     pub const fn end_race_clips(&self) -> Option<&Arc<MediaClipGroup>> {
         self.end_race_clips.as_ref()
     }
@@ -220,7 +213,6 @@ impl Default for Challenge {
             validation: None,
             cost: 0,
             play_mode: 0,
-            author_score: None,
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
             num_laps: None,
@@ -257,9 +249,8 @@ impl Default for Challenge {
             ambiance_clip: None,
             decoration_base_height_offset: 8,
             embedded_items: None,
-            game_build_date: "2024-09-17_11_17".into(),
-            game_build_git_tag: "127252-120dea21a9e".into(),
-            game_version: "3.3.0".into(),
+            game_build_date: "2024-09-17_11_17".to_string(),
+            game_build_tag: GameBuildTag::Git("127252-120dea21a9e".to_string()),
         }
     }
 }
@@ -404,6 +395,13 @@ impl EmbeddedItems {
     }
 }
 
+enum GameBuildTag {
+    Git(String),
+    Svn(String),
+}
+
+const GAME_VERSION: &str = "3.3.0";
+
 mod read {
     use std::{
         borrow::Cow,
@@ -432,7 +430,9 @@ mod read {
         ID_MARKER_BIT,
     };
 
-    use super::{Challenge, EmbeddedItems, MedalTimes, Objective, Validation};
+    use super::{
+        Challenge, EmbeddedItems, GameBuildTag, MedalTimes, Objective, Validation, GAME_VERSION,
+    };
 
     impl Readable for Challenge {}
 
@@ -1034,7 +1034,46 @@ mod read {
             }
 
             self.title_id = r.id()?;
-            let _game_build = r.string()?;
+            let game_build = r.string()?;
+
+            let mut attributes = game_build.split_ascii_whitespace();
+            let a = attributes.next().unwrap();
+            let b = attributes.next().unwrap();
+            let c = attributes.next().unwrap();
+
+            if attributes.next().is_some() {
+                panic!()
+            }
+
+            let (key, value) = a.split_once('=').unwrap();
+
+            if key != "date" {
+                panic!()
+            }
+
+            self.game_build_date = value.to_string();
+
+            let (key, value) = b.split_once('=').unwrap();
+
+            match key {
+                "git" => {
+                    self.game_build_tag = GameBuildTag::Git(value.to_string());
+                }
+                "Svn" => {
+                    self.game_build_tag = GameBuildTag::Svn(value.to_string());
+                }
+                _ => panic!(),
+            }
+
+            let (key, value) = c.split_once('=').unwrap();
+
+            if key != "GameVersion" {
+                panic!()
+            }
+
+            if value != GAME_VERSION {
+                panic!();
+            }
 
             Ok(())
         }
@@ -1644,7 +1683,7 @@ mod write {
 
     use self::writable::{HeaderChunk, HeaderChunks};
 
-    use super::Challenge;
+    use super::{Challenge, GAME_VERSION};
 
     impl Writable for Challenge {}
 
@@ -1658,6 +1697,8 @@ mod write {
                 HeaderChunk::normal(3, |s, w| Self::write_chunk_3(s, w)),
                 HeaderChunk::normal(4, |s, w| Self::write_chunk_4(s, w)),
                 HeaderChunk::normal(5, |s, w| Self::write_chunk_5(s, w)),
+                HeaderChunk::normal(7, |s, w| Self::write_chunk_7(s, w)),
+                HeaderChunk::normal(8, |s, w| Self::write_chunk_8(s, w)),
             ]
             .into_iter()
         }
@@ -1691,11 +1732,11 @@ mod write {
             w.u32(self.play_mode)?;
             w.u32(0)?;
 
-            if let Some(author_score) = self.author_score {
-                w.u32(author_score)?;
-            } else {
-                w.u32(0)?;
-            }
+            // if let Some(author_score) = self.author_score {
+            //     w.u32(author_score)?;
+            // } else {
+            //     w.u32(0)?;
+            // }
 
             w.u32(self.editor_mode as u32)?;
             w.u32(0)?;
@@ -1750,7 +1791,7 @@ mod write {
                 "header",
                 |w| {
                     w.attribute("type", "map");
-                    w.attribute("exever", &self.game_version);
+                    w.attribute("exever", GAME_VERSION);
                     w.attribute("exebuild", &self.game_build_date);
                     w.attribute("title", &self.title_id);
                     w.attribute("lightmap", &self.lightmap_version().to_string());
@@ -1763,6 +1804,18 @@ mod write {
                     w.tag("deps", |_| {}, |_| {});
                 },
             );
+
+            Ok(())
+        }
+
+        fn write_chunk_7<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            todo!();
+
+            Ok(())
+        }
+
+        fn write_chunk_8<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            todo!();
 
             Ok(())
         }

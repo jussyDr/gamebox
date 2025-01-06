@@ -1,10 +1,14 @@
 //! Item placement param.
 
-use crate::Class;
+use crate::{plug::item_placement::ItemPlacement, Class, NodeRef, Quat, Vec3};
 
 /// An item placement param.
 #[derive(Default)]
-pub struct ItemPlacementParam;
+pub struct ItemPlacementParam {
+    pivot_positions: Vec<Vec3>,
+    pivot_rotations: Vec<Quat>,
+    placement: NodeRef<ItemPlacement>,
+}
 
 impl Class for ItemPlacementParam {
     const CLASS_ID: u32 = 0x2e020000;
@@ -20,6 +24,7 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ReadBody,
         },
+        Quat, Vec3,
     };
 
     use super::ItemPlacementParam;
@@ -70,8 +75,8 @@ mod read {
         }
 
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _pivot_positions = r.list(|r| r.vec3())?;
-            let _pivot_rotations = r.list(|r| r.quat())?;
+            self.pivot_positions = r.list_pod::<Vec3>()?;
+            self.pivot_rotations = r.list_pod::<Quat>()?;
 
             Ok(())
         }
@@ -86,7 +91,7 @@ mod read {
             let placement_version = r.u32()?;
 
             if !matches!(placement_version, 6 | 8 | 10) {
-                return Err(Error::version("", placement_version));
+                return Err(Error::version("item placement", placement_version));
             }
 
             r.u32()?;
@@ -127,7 +132,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            r.node_ref::<ItemPlacement>()?;
+            self.placement = r.node_ref::<ItemPlacement>()?;
 
             Ok(())
         }
