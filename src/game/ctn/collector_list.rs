@@ -4,7 +4,9 @@ use crate::Class;
 
 /// Collector list.
 #[derive(Default)]
-pub struct CollectorList;
+pub struct CollectorList {
+    list: Vec<()>,
+}
 
 impl Class for CollectorList {
     const CLASS_ID: u32 = 0x0301b000;
@@ -42,7 +44,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdStateMut, N>,
         ) -> Result<(), Error> {
-            let _collector_stock = r.list(|r| {
+            self.list = r.list(|r| {
                 let _block_model_id = r.id()?;
                 let _block_model_collection_id = r.id()?;
                 let _block_model_author_id = r.id()?;
@@ -52,6 +54,18 @@ mod read {
             })?;
 
             Ok(())
+        }
+    }
+}
+
+mod write {
+    use crate::write::{BodyChunk, BodyChunks};
+
+    use super::CollectorList;
+
+    impl BodyChunks for CollectorList {
+        fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [].into_iter()
         }
     }
 }

@@ -626,9 +626,9 @@ mod read {
                         todo!()
                     }
 
-                    let exe_ver = r.attribute(b"exever")?;
+                    let game_version = r.attribute(b"exever")?;
 
-                    if exe_ver != "3.3.0" {
+                    if game_version != GAME_VERSION {
                         todo!()
                     }
 
@@ -671,11 +671,32 @@ mod read {
                         Ok(())
                     })?;
                     r.tag_empty(b"times", |r| {
-                        let _bronze_time = r.attribute(b"bronze")?;
-                        let _silver_time = r.attribute(b"silver")?;
-                        let _gold_time = r.attribute(b"gold")?;
-                        let _author_time = r.attribute(b"authortime")?;
-                        let _author_score = r.attribute(b"authorscore")?;
+                        let bronze_time: i32 = r.attribute_from_str(b"bronze")?;
+                        let silver_time: i32 = r.attribute_from_str(b"silver")?;
+                        let gold_time: i32 = r.attribute_from_str(b"gold")?;
+                        let author_time: i32 = r.attribute_from_str(b"authortime")?;
+                        let author_score: u32 = r.attribute_from_str(b"authorscore")?;
+
+                        if bronze_time != -1
+                            && silver_time != -1
+                            && gold_time != -1
+                            && author_time != -1
+                        {
+                            self.validation = Some(Validation {
+                                objective: Objective::MedalTimes(MedalTimes {
+                                    bronze_time: bronze_time as u32,
+                                    silver_time: silver_time as u32,
+                                    gold_time: gold_time as u32,
+                                    author_time: author_time as u32,
+                                }),
+                                ghost: None,
+                            })
+                        } else if author_score != 0 {
+                            self.validation = Some(Validation {
+                                objective: Objective::AuthorScore(author_score),
+                                ghost: None,
+                            })
+                        }
 
                         Ok(())
                     })?;
@@ -701,12 +722,26 @@ mod read {
             }
 
             let thumbnail_size = r.u32()?;
-            r.byte_array::<15>()?;
+
+            if &r.byte_array()? != b"<Thumbnail.jpg>" {
+                todo!()
+            }
+
             self.thumbnail = r.bytes(thumbnail_size as usize)?;
-            r.byte_array::<16>()?;
-            r.byte_array::<10>()?;
-            let _comments = r.string()?;
-            r.byte_array::<11>()?;
+
+            if &r.byte_array()? != b"</Thumbnail.jpg>" {
+                todo!()
+            }
+
+            if &r.byte_array()? != b"<Comments>" {
+                todo!()
+            }
+
+            let _comments = r.string_or_empty()?;
+
+            if &r.byte_array()? != b"</Comments>" {
+                todo!()
+            }
 
             Ok(())
         }
@@ -1679,11 +1714,18 @@ mod write {
 
     use quick_xml::events::{BytesEnd, BytesStart, Event};
 
-    use crate::write::{writable, writer::IdStateMut, BodyChunk, BodyChunks, Writable, Writer};
+    use crate::{
+        game::ctn::{ChallengeParameters, CollectorList},
+        write::{
+            writable,
+            writer::{IdStateMut, NodeStateMut},
+            BodyChunk, BodyChunks, Writable, Writer,
+        },
+    };
 
     use self::writable::{HeaderChunk, HeaderChunks};
 
-    use super::{Challenge, GAME_VERSION};
+    use super::{Challenge, Objective, Validation, GAME_VERSION};
 
     impl Writable for Challenge {}
 
@@ -1705,8 +1747,15 @@ mod write {
     }
 
     impl BodyChunks for Challenge {
-        fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+        fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [
+                BodyChunk::normal(13, Self::write_chunk_13),
+                BodyChunk::normal(17, Self::write_chunk_17),
+                BodyChunk::skippable(24, |s, w| Self::write_chunk_24(s, w)),
+                BodyChunk::skippable(25, |s, w| Self::write_chunk_25(s, w)),
+            ]
+            .into_iter()
         }
     }
 
@@ -1715,11 +1764,15 @@ mod write {
             w.u8(13)?;
             w.bool(false)?;
 
-            if let Some(ref validation) = self.validation {
-                // w.u32(medal_times.bronze_time)?;
-                // w.u32(medal_times.silver_time)?;
-                // w.u32(medal_times.gold_time)?;
-                // w.u32(medal_times.author_time)?;
+            if let Some(Validation {
+                objective: Objective::MedalTimes(ref medal_times),
+                ..
+            }) = self.validation
+            {
+                w.u32(medal_times.bronze_time)?;
+                w.u32(medal_times.silver_time)?;
+                w.u32(medal_times.gold_time)?;
+                w.u32(medal_times.author_time)?;
             } else {
                 w.u32(0xffffffff)?;
                 w.u32(0xffffffff)?;
@@ -1732,11 +1785,15 @@ mod write {
             w.u32(self.play_mode)?;
             w.u32(0)?;
 
-            // if let Some(author_score) = self.author_score {
-            //     w.u32(author_score)?;
-            // } else {
-            //     w.u32(0)?;
-            // }
+            if let Some(Validation {
+                objective: Objective::AuthorScore(author_score),
+                ..
+            }) = self.validation
+            {
+                w.u32(author_score)?;
+            } else {
+                w.u32(0)?;
+            }
 
             w.u32(self.editor_mode as u32)?;
             w.u32(0)?;
@@ -1809,13 +1866,60 @@ mod write {
         }
 
         fn write_chunk_7<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            todo!();
+            w.u32(1)?;
+            w.u32(self.thumbnail.len() as u32)?;
+            w.bytes(b"<Thumbnail.jpg>")?;
+            w.bytes(&self.thumbnail)?;
+            w.bytes(b"</Thumbnail.jpg>")?;
+            w.bytes(b"<Comments>")?;
+            w.u32(0)?;
+            w.bytes(b"</Comments>")?;
 
             Ok(())
         }
 
         fn write_chunk_8<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            todo!();
+            w.u32(1)?;
+            w.u32(0)?;
+            w.string(&self.author_id)?;
+            w.string(&self.author_name)?;
+            w.string(&self.author_zone)?;
+            w.u32(0)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_13<N>(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, N>,
+        ) -> Result<(), Error> {
+            w.id_or_null(None)?;
+            w.id_or_null(None)?;
+            w.id_or_null(None)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_17(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            w.internal_node_ref(Arc::new(CollectorList::default()))?;
+            w.internal_node_ref(Arc::new(ChallengeParameters::default()))?;
+            w.u32(self.ty as u32)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_24<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.bool(self.num_laps.is_some())?;
+            w.u32(self.num_laps.unwrap_or(3))?;
+
+            Ok(())
+        }
+
+        fn write_chunk_25<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.file_ref_or_null(self.texture_mod.as_ref())?;
 
             Ok(())
         }

@@ -163,3 +163,15 @@ mod read {
         }
     }
 }
+
+mod write {
+    use crate::write::{BodyChunk, BodyChunks};
+
+    use super::ChallengeParameters;
+
+    impl BodyChunks for ChallengeParameters {
+        fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [].into_iter()
+        }
+    }
+}

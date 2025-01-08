@@ -3,13 +3,14 @@
 use std::{
     any::Any,
     hash::{Hash, Hasher},
-    io::{Error, Seek, Write},
+    io::{Error, Write},
     sync::Arc,
 };
 
+use bytemuck::{bytes_of, Pod};
 use indexmap::{indexset, IndexSet};
 
-use crate::{Class, Vec2, Vec3, ID_MARKER_BIT};
+use crate::{Class, FileRef, Vec2, Vec3, ID_MARKER_BIT};
 
 use super::{write_body, BodyChunks};
 
@@ -26,7 +27,25 @@ impl ToLe for u8 {
     }
 }
 
+impl ToLe for u16 {
+    fn to_le(self) -> Self {
+        self.to_le()
+    }
+}
+
 impl ToLe for u32 {
+    fn to_le(self) -> Self {
+        self.to_le()
+    }
+}
+
+impl ToLe for u64 {
+    fn to_le(self) -> Self {
+        self.to_le()
+    }
+}
+
+impl ToLe for i32 {
     fn to_le(self) -> Self {
         self.to_le()
     }
@@ -35,25 +54,6 @@ impl ToLe for u32 {
 impl ToLe for f32 {
     fn to_le(self) -> Self {
         Self::from_bits(self.to_bits().to_le())
-    }
-}
-
-impl ToLe for Vec2 {
-    fn to_le(mut self) -> Self {
-        self.x = self.x.to_le();
-        self.y = self.y.to_le();
-
-        self
-    }
-}
-
-impl ToLe for Vec3 {
-    fn to_le(mut self) -> Self {
-        self.x = self.x.to_le();
-        self.y = self.y.to_le();
-        self.z = self.z.to_le();
-
-        self
     }
 }
 
@@ -137,6 +137,12 @@ pub trait NodeStateMut {
     fn get_mut(&mut self) -> &mut NodeState;
 }
 
+impl NodeStateMut for NodeState {
+    fn get_mut(&mut self) -> &mut NodeState {
+        self
+    }
+}
+
 /// Low-level GameBox writer.
 pub struct Writer<W, I, N> {
     inner: W,
@@ -182,36 +188,40 @@ impl<W: Write, I, N> Writer<W, I, N> {
         Ok(())
     }
 
+    pub fn pod<T: Pod + ToLe>(&mut self, value: T) -> Result<(), Error> {
+        self.bytes(bytes_of(&value))
+    }
+
     /// Write an unsigned 8-bit integer.
     pub fn u8(&mut self, value: u8) -> Result<(), Error> {
-        self.bytes(&[value])
+        self.pod(value)
     }
 
     /// Write an unsigned 16-bit integer.
     pub fn u16(&mut self, value: u16) -> Result<(), Error> {
-        self.bytes(&value.to_le_bytes())
+        self.pod(value)
     }
 
     /// Write an unsigned 32-bit integer.
     pub fn u32(&mut self, value: u32) -> Result<(), Error> {
-        self.bytes(&value.to_le_bytes())
+        self.pod(value)
     }
 
     /// Write an unsigned 64-bit integer.
     pub fn u64(&mut self, value: u64) -> Result<(), Error> {
-        self.bytes(&value.to_le_bytes())
+        self.pod(value)
+    }
+
+    pub fn vec2(&mut self, vec: Vec2) -> Result<(), Error> {
+        self.pod(vec)
+    }
+
+    pub fn vec3(&mut self, vec: Vec3) -> Result<(), Error> {
+        self.pod(vec)
     }
 
     pub fn bool(&mut self, value: bool) -> Result<(), Error> {
         self.u32(if value { 1 } else { 0 })
-    }
-
-    pub fn vec2(&mut self, vec: Vec2) -> Result<(), Error> {
-        todo!()
-    }
-
-    pub fn vec3(&mut self, vec: Vec3) -> Result<(), Error> {
-        todo!()
     }
 
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
@@ -236,6 +246,10 @@ impl<W: Write, I, N> Writer<W, I, N> {
             Some(value) => self.string(value),
             None => self.u32(0),
         }
+    }
+
+    pub fn file_ref_or_null(&mut self, file_ref: Option<&FileRef>) -> Result<(), Error> {
+        todo!()
     }
 }
 
@@ -272,7 +286,7 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
     }
 }
 
-impl<W: Write + Seek, I, N: NodeStateMut> Writer<W, I, N> {
+impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
     pub fn internal_node_ref_or_null<T: 'static + Class + BodyChunks>(
         &mut self,
         node: Option<Arc<T>>,

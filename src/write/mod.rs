@@ -4,8 +4,8 @@ pub(crate) mod writable;
 pub(crate) mod writer;
 
 pub(crate) use writable::{write_body, BodyChunk, BodyChunks};
-use writer::IdState;
 pub(crate) use writer::Writer;
+use writer::{IdState, NodeState};
 
 use std::{
     fs::File,
@@ -102,12 +102,15 @@ impl Settings {
 
         match self.body_compression {
             Compression::None => {
+                let mut w = Writer::new(w.into_inner(), IdState::new(), NodeState::new());
+
                 write_body(&mut w, node)?;
             }
             Compression::Compress { level } => {
                 let body = {
                     let mut body = vec![];
-                    let mut w = Writer::new(Cursor::new(&mut body), (), ());
+                    let mut w =
+                        Writer::new(Cursor::new(&mut body), IdState::new(), NodeState::new());
 
                     write_body(&mut w, node)?;
 
