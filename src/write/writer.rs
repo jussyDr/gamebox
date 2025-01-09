@@ -10,9 +10,9 @@ use std::{
 use bytemuck::{bytes_of, Pod};
 use indexmap::{indexset, IndexSet};
 
-use crate::{Class, FileRef, Vec2, Vec3, ID_MARKER_BIT};
+use crate::{Byte3, Class, FileRef, Nat3, Vec2, Vec3, ID_MARKER_BIT};
 
-use super::{write_body, BodyChunks};
+use super::writable::WriteBody;
 
 pub trait ToLe {
     /// Convert `self` to little endian from the target's endianness.
@@ -189,7 +189,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
     }
 
     pub fn pod<T: Pod + ToLe>(&mut self, value: T) -> Result<(), Error> {
-        self.bytes(bytes_of(&value))
+        self.bytes(bytes_of(&value.to_le()))
     }
 
     /// Write an unsigned 8-bit integer.
@@ -210,6 +210,14 @@ impl<W: Write, I, N> Writer<W, I, N> {
     /// Write an unsigned 64-bit integer.
     pub fn u64(&mut self, value: u64) -> Result<(), Error> {
         self.pod(value)
+    }
+
+    pub fn byte3(&mut self, b: Byte3) -> Result<(), Error> {
+        self.pod(b)
+    }
+
+    pub fn nat3(&mut self, nat: Nat3) -> Result<(), Error> {
+        self.pod(nat)
     }
 
     pub fn vec2(&mut self, vec: Vec2) -> Result<(), Error> {
@@ -287,14 +295,14 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
 }
 
 impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
-    pub fn internal_node_ref_or_null<T: 'static + Class + BodyChunks>(
+    pub fn internal_node_ref_or_null<T: 'static + Class + WriteBody>(
         &mut self,
-        node: Option<Arc<T>>,
+        node: Option<&Arc<T>>,
     ) -> Result<(), Error> {
         match node {
             Some(node) => {
                 let internal_node = InternalNode {
-                    node: Arc::clone(&node) as Arc<dyn Any>,
+                    node: Arc::clone(node) as Arc<dyn Any>,
                 };
 
                 match self.node_state.get_mut().nodes.get_index_of(&internal_node) {
@@ -305,7 +313,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
                         let index = self.node_state.get_mut().nodes.len() as u32 + 1;
                         self.u32(index)?;
                         self.u32(T::CLASS_ID)?;
-                        write_body(self, node.as_ref())?;
+                        node.write_body(self)?;
 
                         self.node_state.get_mut().nodes.insert(internal_node);
                     }
@@ -319,9 +327,9 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
         Ok(())
     }
 
-    pub fn internal_node_ref<T: 'static + Class + BodyChunks>(
+    pub fn internal_node_ref<T: 'static + Class + WriteBody>(
         &mut self,
-        node: Arc<T>,
+        node: &Arc<T>,
     ) -> Result<(), Error> {
         self.internal_node_ref_or_null(Some(node))
     }

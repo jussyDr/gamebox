@@ -77,3 +77,52 @@ mod read {
         }
     }
 }
+
+mod write {
+    use std::io::{Error, Write};
+
+    use crate::write::{
+        writable::{write_body_chunks, WriteBody},
+        writer::{IdStateMut, NodeStateMut},
+        BodyChunk, BodyChunks, Writer,
+    };
+
+    use super::BlockSkin;
+
+    impl WriteBody for BlockSkin {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            write_body_chunks(w, self)
+        }
+    }
+
+    impl BodyChunks for BlockSkin {
+        fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [
+                BodyChunk::normal(2, Self::write_chunk_2),
+                BodyChunk::normal(3, Self::write_chunk_3),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl BlockSkin {
+        fn write_chunk_2<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(0)?;
+            w.file_ref_or_null(self.skin.as_ref())?;
+            w.file_ref_or_null(None)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_3<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(0)?;
+            w.file_ref_or_null(self.skin_effect.as_ref())?;
+
+            Ok(())
+        }
+    }
+}

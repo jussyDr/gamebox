@@ -431,9 +431,15 @@ mod read {
 }
 
 mod write {
-    use crate::write::{writable, Writable};
+    use std::io::{Error, Write};
 
-    use self::writable::{BodyChunks, HeaderChunk, HeaderChunks};
+    use crate::write::{
+        writable,
+        writer::{IdStateMut, NodeStateMut},
+        Writable, Writer,
+    };
+
+    use self::writable::{write_body_chunks, BodyChunks, HeaderChunk, HeaderChunks, WriteBody};
 
     use super::ItemModel;
 
@@ -444,6 +450,15 @@ mod write {
     impl HeaderChunks for ItemModel {
         fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
             [].into_iter()
+        }
+    }
+
+    impl WriteBody for ItemModel {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            write_body_chunks(w, self)
         }
     }
 

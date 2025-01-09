@@ -96,3 +96,31 @@ mod read {
         }
     }
 }
+
+mod write {
+    use std::io::{Error, Write};
+
+    use crate::write::{
+        writable::{write_body_chunks, WriteBody},
+        writer::{IdStateMut, NodeStateMut},
+        BodyChunk, BodyChunks, Writer,
+    };
+
+    use super::WaypointSpecialProperty;
+
+    impl WriteBody for WaypointSpecialProperty {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            write_body_chunks(w, self)
+        }
+    }
+
+    impl BodyChunks for WaypointSpecialProperty {
+        fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [].into_iter()
+        }
+    }
+}

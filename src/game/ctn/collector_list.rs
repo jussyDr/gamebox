@@ -59,13 +59,36 @@ mod read {
 }
 
 mod write {
-    use crate::write::{BodyChunk, BodyChunks};
+    use std::io::{Error, Write};
+
+    use crate::write::{
+        writable::{write_body_chunks, WriteBody},
+        writer::{IdStateMut, NodeStateMut},
+        BodyChunk, BodyChunks, Writer,
+    };
 
     use super::CollectorList;
 
+    impl WriteBody for CollectorList {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            write_body_chunks(w, self)
+        }
+    }
+
     impl BodyChunks for CollectorList {
-        fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+        fn body_chunks<W: Write, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [BodyChunk::normal(0, Self::write_chunk_0)].into_iter()
+        }
+    }
+
+    impl CollectorList {
+        fn write_chunk_0<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(0)?;
+
+            Ok(())
         }
     }
 }

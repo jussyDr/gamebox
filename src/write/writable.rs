@@ -1,10 +1,10 @@
-use std::io::{Error, Seek, Write};
+use std::io::{Error, Write};
 
 use crate::{Class, END_OF_NODE_MARKER, SKIPPABLE_CHUNK_MARKER};
 
 use super::writer::{IdStateMut, NodeStateMut, Writer};
 
-pub trait Sealed: Class + HeaderChunks + BodyChunks {}
+pub trait Sealed: Class + HeaderChunks + WriteBody {}
 
 pub trait HeaderChunks: Sized {
     fn header_chunks<W: Write, I: IdStateMut, N>(
@@ -36,6 +36,13 @@ impl<T, W, I, N> HeaderChunk<T, W, I, N> {
 }
 
 type HeaderChunkWriteFn<T, W, I, N> = fn(&T, &mut Writer<W, &mut I, N>) -> Result<(), Error>;
+
+pub trait WriteBody {
+    fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+        &self,
+        w: &mut Writer<W, I, N>,
+    ) -> Result<(), Error>;
+}
 
 pub trait BodyChunks: Sized {
     fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
@@ -73,7 +80,7 @@ type BodyChunkWriteFnNormal<T, W, I, N> = fn(&T, &mut Writer<W, I, N>) -> Result
 type BodyChunkWriteFnSkippable<T, I, N> =
     fn(&T, &mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>;
 
-pub fn write_body<T: Class + BodyChunks>(
+pub fn write_body_chunks<T: Class + BodyChunks>(
     w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
     node: &T,
 ) -> Result<(), Error> {

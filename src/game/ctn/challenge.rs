@@ -200,7 +200,7 @@ impl Default for Challenge {
                     is_ground: true,
                     is_pillar: false,
                     skin: None,
-                    waypoint_special_property: None,
+                    waypoint_property: None,
                     variant_index: 0,
                     elem_color: ElemColor::Default,
                     lightmap_quality: LightmapQuality::Normal,
@@ -395,8 +395,11 @@ impl EmbeddedItems {
     }
 }
 
-enum GameBuildTag {
+/// Game build tag.
+pub enum GameBuildTag {
+    /// Git.
     Git(String),
+    /// Svn.
     Svn(String),
 }
 
@@ -1577,15 +1580,19 @@ mod read {
     }
 
     impl<R: BufRead> XmlReader<R> {
+        fn read_event(&mut self) -> Result<Event, Error> {
+            self.inner
+                .read_event_into(&mut self.buf)
+                .map_err(|_| Error::new(ErrorKind::Format("".into())))
+        }
+
         fn tag(
             &mut self,
             name: &[u8],
             mut attribute_read_fn: impl FnMut(&mut XmlAttributes) -> Result<(), Error>,
             mut read_fn: impl FnMut(&mut Self) -> Result<(), Error>,
         ) -> Result<(), Error> {
-            let event = self.inner.read_event_into(&mut self.buf).unwrap();
-
-            match event {
+            match self.read_event()? {
                 Event::Start(event) if event.name().as_ref() == name => {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
@@ -1600,9 +1607,7 @@ mod read {
 
             read_fn(self)?;
 
-            let event = self.inner.read_event_into(&mut self.buf).unwrap();
-
-            match event {
+            match self.read_event()? {
                 Event::End(event) if event.name().as_ref() == name => Ok(()),
                 _ => Err(Error::new(ErrorKind::Format("".into()))),
             }
@@ -1614,9 +1619,7 @@ mod read {
             elem_name: &[u8],
             mut attribute_read_fn: impl FnMut(&mut XmlAttributes) -> Result<(), Error>,
         ) -> Result<(), Error> {
-            let event = self.inner.read_event_into(&mut self.buf).unwrap();
-
-            match event {
+            match self.read_event()? {
                 Event::Start(event) if event.name().as_ref() == name => {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
@@ -1628,9 +1631,7 @@ mod read {
             }
 
             loop {
-                let event = self.inner.read_event_into(&mut self.buf).unwrap();
-
-                match event {
+                match self.read_event()? {
                     Event::End(event) if event.name().as_ref() == name => break,
                     Event::Empty(event) if event.name().as_ref() == elem_name => {
                         let mut attributes = XmlAttributes::new(event.attributes());
@@ -1653,9 +1654,7 @@ mod read {
             name: &[u8],
             mut attribute_read_fn: impl FnMut(&mut XmlAttributes) -> Result<(), Error>,
         ) -> Result<(), Error> {
-            let event = self.inner.read_event_into(&mut self.buf).unwrap();
-
-            match event {
+            match self.read_event()? {
                 Event::Empty(event) if event.name().as_ref() == name => {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
@@ -1715,7 +1714,7 @@ mod write {
     use quick_xml::events::{BytesEnd, BytesStart, Event};
 
     use crate::{
-        game::ctn::{ChallengeParameters, CollectorList},
+        game::ctn::{Block, ChallengeParameters, CollectorList},
         write::{
             writable,
             writer::{IdStateMut, NodeStateMut},
@@ -1723,7 +1722,7 @@ mod write {
         },
     };
 
-    use self::writable::{HeaderChunk, HeaderChunks};
+    use self::writable::{write_body_chunks, HeaderChunk, HeaderChunks, WriteBody};
 
     use super::{Challenge, Objective, Validation, GAME_VERSION};
 
@@ -1746,6 +1745,15 @@ mod write {
         }
     }
 
+    impl WriteBody for Challenge {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            write_body_chunks(w, self)
+        }
+    }
+
     impl BodyChunks for Challenge {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
@@ -1754,6 +1762,7 @@ mod write {
                 BodyChunk::normal(17, Self::write_chunk_17),
                 BodyChunk::skippable(24, |s, w| Self::write_chunk_24(s, w)),
                 BodyChunk::skippable(25, |s, w| Self::write_chunk_25(s, w)),
+                BodyChunk::normal(31, Self::write_chunk_31),
             ]
             .into_iter()
         }
@@ -1904,8 +1913,8 @@ mod write {
             &self,
             w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            w.internal_node_ref(Arc::new(CollectorList::default()))?;
-            w.internal_node_ref(Arc::new(ChallengeParameters::default()))?;
+            w.internal_node_ref(&Arc::new(CollectorList::default()))?;
+            w.internal_node_ref(&Arc::new(ChallengeParameters::default()))?;
             w.u32(self.ty as u32)?;
 
             Ok(())
@@ -1924,6 +1933,24 @@ mod write {
             Ok(())
         }
 
+        fn write_chunk_31(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            w.id(&self.id)?;
+            w.u32(0x1a)?;
+            w.id(&self.author_id)?;
+            w.string(&self.name)?;
+            w.id(&self.decoration_id)?;
+            w.u32(0x1a)?;
+            w.id(&Arc::from("Nadeo"))?;
+            w.nat3(self.size)?;
+            w.bool(false)?;
+            write_blocks(w, &self.blocks)?;
+
+            Ok(())
+        }
+
         fn lightmap_version(&self) -> u8 {
             if self.has_lightmap {
                 8
@@ -1931,6 +1958,20 @@ mod write {
                 0
             }
         }
+    }
+
+    fn write_blocks(
+        w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+        blocks: &[Block],
+    ) -> Result<(), Error> {
+        w.u32(6)?;
+        w.u32(blocks.len() as u32)?;
+
+        for block in blocks {
+            block.write_body(w)?;
+        }
+
+        Ok(())
     }
 
     struct XmlWriter<W> {
@@ -1951,30 +1992,36 @@ mod write {
             name: &str,
             mut attribute_fn: impl FnMut(&mut Attributes),
             mut write_fn: impl FnMut(&mut Self),
-        ) {
+        ) -> Result<(), Error> {
             let mut bytes_start = BytesStart::new(name);
 
             attribute_fn(&mut Attributes {
                 bytes_start: &mut bytes_start,
             });
 
-            self.inner.write_event(Event::Start(bytes_start)).unwrap();
+            self.inner.write_event(Event::Start(bytes_start))?;
 
             write_fn(self);
 
-            self.inner
-                .write_event(Event::End(BytesEnd::new(name)))
-                .unwrap();
+            self.inner.write_event(Event::End(BytesEnd::new(name)))?;
+
+            Ok(())
         }
 
-        fn tag_empty(&mut self, name: &str, mut attribute_fn: impl FnMut(&mut Attributes)) {
+        fn tag_empty(
+            &mut self,
+            name: &str,
+            mut attribute_fn: impl FnMut(&mut Attributes),
+        ) -> Result<(), Error> {
             let mut bytes_start = BytesStart::new(name);
 
             attribute_fn(&mut Attributes {
                 bytes_start: &mut bytes_start,
             });
 
-            self.inner.write_event(Event::Empty(bytes_start)).unwrap();
+            self.inner.write_event(Event::Empty(bytes_start))?;
+
+            Ok(())
         }
     }
 

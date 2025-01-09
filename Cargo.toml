@@ -23,7 +23,6 @@ bytemuck = { version = "1.21.0", features = ["extern_crate_alloc", "derive"] }
 gamebox-macros = { path = "macros" }
 indexmap = "2.7.0"
 lzo1x = "0.2.0"
-num_enum = "0.7.3"
 quick-xml = "0.37.2"
 
 [dev-dependencies.criterion]

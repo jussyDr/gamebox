@@ -165,9 +165,24 @@ mod read {
 }
 
 mod write {
-    use crate::write::{BodyChunk, BodyChunks};
+    use std::io::{Error, Write};
+
+    use crate::write::{
+        writable::WriteBody,
+        writer::{IdStateMut, NodeStateMut},
+        BodyChunk, BodyChunks, Writer,
+    };
 
     use super::ChallengeParameters;
+
+    impl WriteBody for ChallengeParameters {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            todo!()
+        }
+    }
 
     impl BodyChunks for ChallengeParameters {
         fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {

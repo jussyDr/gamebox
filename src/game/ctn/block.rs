@@ -17,7 +17,7 @@ pub struct Block {
     pub(crate) is_ground: bool,
     pub(crate) is_pillar: bool,
     pub(crate) skin: Option<Arc<BlockSkin>>,
-    pub(crate) waypoint_special_property: Option<Arc<WaypointSpecialProperty>>,
+    pub(crate) waypoint_property: Option<Arc<WaypointSpecialProperty>>,
     pub(crate) variant_index: u8,
     pub(crate) elem_color: ElemColor,
     pub(crate) lightmap_quality: LightmapQuality,
@@ -54,9 +54,9 @@ impl Block {
         self.skin.as_ref()
     }
 
-    /// Waypoint property of the block.
-    pub const fn waypoint_special_property(&self) -> Option<&Arc<WaypointSpecialProperty>> {
-        self.waypoint_special_property.as_ref()
+    /// Waypoint property.
+    pub const fn waypoint_property(&self) -> Option<&Arc<WaypointSpecialProperty>> {
+        self.waypoint_property.as_ref()
     }
 
     /// Block info variant index.
@@ -152,7 +152,7 @@ mod read {
                 let _dunno = (flags >> 17) & 1 != 0;
 
                 if (flags >> 19) & 1 != 0 || (flags >> 20) & 1 != 0 {
-                    self.waypoint_special_property =
+                    self.waypoint_property =
                         Some(r.internal_node_ref::<WaypointSpecialProperty>()?);
                 }
 
@@ -172,6 +172,77 @@ mod read {
                         rotation: PitchYawRoll::default(),
                     };
                 }
+            }
+
+            Ok(())
+        }
+    }
+}
+
+mod write {
+    use std::{
+        io::{Error, Write},
+        sync::Arc,
+    };
+
+    use crate::{
+        game::ctn::Direction,
+        write::{
+            writable::WriteBody,
+            writer::{IdStateMut, NodeStateMut},
+            Writer,
+        },
+        Byte3,
+    };
+
+    use super::{Block, BlockType};
+
+    impl WriteBody for Block {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            w.id(&self.model_id)?;
+
+            let (direction, coord, is_ghost, is_free) = match self.ty {
+                BlockType::Normal {
+                    direction,
+                    coord,
+                    is_ghost,
+                } => (direction, coord, is_ghost, false),
+                BlockType::Free { .. } => (Direction::North, Byte3::new(0, 0, 0), false, true),
+            };
+
+            w.u8(direction as u8)?;
+            w.byte3(coord)?;
+
+            let mut flags = 0;
+
+            if self.skin.is_some() {
+                flags |= 1 << 15;
+            }
+
+            if self.waypoint_property.is_some() {
+                flags |= 1 << 20;
+            }
+
+            if is_ghost {
+                flags |= 1 << 28;
+            }
+
+            if is_free {
+                flags |= 1 << 29;
+            }
+
+            w.u32(flags)?;
+
+            if let Some(ref skin) = self.skin {
+                w.id(&Arc::from("Nadeo"))?;
+                w.internal_node_ref(skin)?;
+            }
+
+            if let Some(ref waypoint_property) = self.waypoint_property {
+                w.internal_node_ref(waypoint_property)?;
             }
 
             Ok(())

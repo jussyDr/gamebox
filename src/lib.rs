@@ -15,14 +15,14 @@
 //! | --- | --- | --- | --- |
 //! | `Block.Gbx` | [game::ItemModel] | [x] | [ ] |
 //! | `Item.Gbx` | [game::ItemModel] | [x] | [ ] |
-//! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
+//! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [x] |
 //!
 //! # Complete file list
 //!
 //! | Extension | Class | Readable | Writable |
 //! | --- | --- | --- | --- |
 //! | `Block.Gbx` | [game::ItemModel] | [x] | [ ] |
-//! | `Challenge.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
+//! | `Challenge.Gbx` | [game::ctn::Challenge] | [x] | [x] |
 //! | `Collection.Gbx` | [game::ctn::Collection] | [x] | [ ] |
 //! | `Decoration.Gbx` | [game::ctn::Decoration] | [x] | [ ] |
 //! | `DecorationMood.Gbx` | [game::ctn::DecorationMood] | [x] | [ ] |
@@ -32,7 +32,7 @@
 //! | `EDHorizontalClip.Gbx` | [game::ctn::BlockInfoClipHorizontal] | [x] | [ ] |
 //! | `EDVerticalClip.Gbx` | [game::ctn::BlockInfoClipVertical] | [x] | [ ] |
 //! | `Item.Gbx` | [game::ItemModel] | [x] | [ ] |
-//! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [ ] |
+//! | `Map.Gbx` | [game::ctn::Challenge] | [x] | [x] |
 //! | `Material.Gbx` | [plug::Material] | [x] | [ ] |
 //! | `Mesh.Gbx` | [plug::Solid2Model] | [x] | [ ] |
 //! | `Prefab.Gbx` | [plug::Prefab] | [x] | [ ] |
