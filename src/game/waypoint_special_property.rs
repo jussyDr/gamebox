@@ -2,7 +2,7 @@
 
 use crate::Class;
 
-/// A waypoint special property.
+/// Waypoint special property.
 #[derive(PartialEq, Default, Debug)]
 pub struct WaypointSpecialProperty {
     tag: String,
@@ -98,12 +98,12 @@ mod read {
 }
 
 mod write {
-    use std::io::{Error, Write};
+    use std::io::Write;
 
     use crate::write::{
         writable::{write_body_chunks, WriteBody},
         writer::{IdStateMut, NodeStateMut},
-        BodyChunk, BodyChunks, Writer,
+        BodyChunk, BodyChunks, Error, Writer,
     };
 
     use super::WaypointSpecialProperty;
@@ -123,4 +123,6 @@ mod write {
             [].into_iter()
         }
     }
+
+    impl WaypointSpecialProperty {}
 }

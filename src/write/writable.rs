@@ -1,8 +1,11 @@
-use std::io::{Error, Write};
+use std::io::Write;
 
 use crate::{Class, END_OF_NODE_MARKER, SKIPPABLE_CHUNK_MARKER};
 
-use super::writer::{IdStateMut, NodeStateMut, Writer};
+use super::{
+    writer::{IdStateMut, NodeStateMut, Writer},
+    Error,
+};
 
 pub trait Sealed: Class + HeaderChunks + WriteBody {}
 

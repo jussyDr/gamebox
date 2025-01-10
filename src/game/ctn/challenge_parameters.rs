@@ -165,12 +165,12 @@ mod read {
 }
 
 mod write {
-    use std::io::{Error, Write};
+    use std::io::Write;
 
     use crate::write::{
-        writable::WriteBody,
+        writable::{write_body_chunks, WriteBody},
         writer::{IdStateMut, NodeStateMut},
-        BodyChunk, BodyChunks, Writer,
+        BodyChunk, BodyChunks, Error, Writer,
     };
 
     use super::ChallengeParameters;
@@ -180,7 +180,7 @@ mod write {
             &self,
             w: &mut Writer<W, I, N>,
         ) -> Result<(), Error> {
-            todo!()
+            write_body_chunks(w, self)
         }
     }
 

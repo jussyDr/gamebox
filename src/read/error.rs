@@ -4,11 +4,11 @@ use std::{
     io,
 };
 
-/// An error that occured while reading.
+/// Read error.
 #[derive(Debug)]
 pub struct Error {
-    pub kind: ErrorKind,
-    pub trace: VecDeque<TraceEntry>,
+    pub(crate) kind: ErrorKind,
+    pub(crate) trace: VecDeque<TraceEntry>,
 }
 
 impl Error {
@@ -51,17 +51,10 @@ impl Error {
 
     pub(crate) fn null(name: &str) -> Self {
         Self {
-            kind: ErrorKind::Unsupported(format!("{name} is null")),
+            kind: ErrorKind::Format(format!("{name} is null")),
             trace: VecDeque::new(),
         }
     }
-}
-
-#[derive(Debug)]
-pub enum ErrorKind {
-    Io(io::Error),
-    Unsupported(String),
-    Format(String),
 }
 
 impl Display for Error {
@@ -72,7 +65,14 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub struct TraceEntry {
+#[derive(Debug)]
+pub(crate) enum ErrorKind {
+    Io(io::Error),
+    Unsupported(String),
+    Format(String),
+}
+
+pub(crate) struct TraceEntry {
     pub class_id: u32,
     pub chunk_num: Option<u16>,
 }

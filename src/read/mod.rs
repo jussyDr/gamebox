@@ -5,7 +5,8 @@ pub(crate) mod reader;
 
 mod error;
 
-pub use error::{Error, ErrorKind, TraceEntry};
+pub use error::Error;
+pub(crate) use error::{ErrorKind, TraceEntry};
 
 pub(crate) use readable::{read_body_chunks, BodyChunk, BodyChunks, ReadBody};
 

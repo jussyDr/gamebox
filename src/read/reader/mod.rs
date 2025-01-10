@@ -16,8 +16,8 @@ use std::{
 use node::NullNodeState;
 
 use crate::{
-    Box3d, Byte3, FileRef, Int2, Int3, Iso4, Nat3, PitchYawRoll, Quat, RgbFloat, RgbNat, Rgba,
-    Vec2, Vec3, YawPitchRoll,
+    Box3d, Byte3, FileRef, Int2, Int3, Iso4, Nat3, Quat, RgbFloat, RgbNat, Rgba, Vec2, Vec3,
+    YawPitchRoll,
 };
 
 use super::{Error, ErrorKind};
@@ -288,10 +288,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
     }
 
     pub fn yaw_pitch_roll(&mut self) -> Result<YawPitchRoll, Error> {
-        self.pod()
-    }
-
-    pub fn pitch_yaw_roll(&mut self) -> Result<PitchYawRoll, Error> {
         self.pod()
     }
 

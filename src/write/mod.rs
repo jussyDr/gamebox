@@ -8,14 +8,42 @@ pub(crate) use writer::Writer;
 use writer::{IdState, NodeState};
 
 use std::{
+    fmt::{self, Display, Formatter},
     fs::File,
-    io::{BufWriter, Cursor, Error, Seek, Write},
+    io::{self, BufWriter, Cursor, Seek, Write},
     path::Path,
 };
 
 use lzo1x::CompressLevel;
 
 use crate::{FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
+
+/// Write error.
+#[derive(Debug)]
+pub struct Error {
+    kind: ErrorKind,
+}
+
+impl Error {
+    pub(crate) const fn io(err: io::Error) -> Self {
+        Self {
+            kind: ErrorKind::Io(err),
+        }
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
+
+impl std::error::Error for Error {}
+
+#[derive(Debug)]
+enum ErrorKind {
+    Io(io::Error),
+}
 
 /// A writable class.
 pub trait Writable: writable::Sealed {}
@@ -130,7 +158,7 @@ impl Settings {
 
     /// Write the given `node` to a file at the given `path`.
     pub fn write_file<T: Writable>(&self, node: &T, path: impl AsRef<Path>) -> Result<(), Error> {
-        let file = File::create(path)?;
+        let file = File::create(path).map_err(Error::io)?;
         let writer = BufWriter::new(file);
 
         self.write(node, writer)

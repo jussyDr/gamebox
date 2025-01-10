@@ -2,7 +2,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use crate::{Class, PitchYawRoll, Vec3};
+use crate::{Class, Vec3, YawPitchRoll};
 
 use super::{material_user_inst::MaterialUserInst, tree_generator::TreeGenerator};
 
@@ -98,7 +98,7 @@ impl Face {
 #[derive(Debug)]
 pub struct SpawnPosition {
     position: Vec3,
-    rotation: PitchYawRoll,
+    rotation: YawPitchRoll,
 }
 
 impl SpawnPosition {
@@ -108,7 +108,7 @@ impl SpawnPosition {
     }
 
     /// Rotation.
-    pub const fn rotation(&self) -> PitchYawRoll {
+    pub const fn rotation(&self) -> YawPitchRoll {
         self.rotation
     }
 }
@@ -123,7 +123,6 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody,
         },
-        PitchYawRoll,
     };
 
     use super::{Crystal, Face, Mesh, SpawnPosition};
@@ -282,14 +281,9 @@ mod read {
                         }
 
                         let position = r.vec3()?;
-                        let yaw = r.f32()?;
-                        let pitch = r.f32()?;
-                        let roll = r.f32()?;
+                        let rotation = r.yaw_pitch_roll()?;
 
-                        self.spawn_position = Some(SpawnPosition {
-                            position,
-                            rotation: PitchYawRoll { pitch, yaw, roll },
-                        });
+                        self.spawn_position = Some(SpawnPosition { position, rotation });
                     }
                     18 => {
                         let version = r.u32()?;

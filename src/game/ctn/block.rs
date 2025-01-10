@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{game::WaypointSpecialProperty, Byte3, PitchYawRoll, Vec3};
+use crate::{game::WaypointSpecialProperty, Byte3, Vec3, YawPitchRoll};
 
 use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 
@@ -92,7 +92,7 @@ pub enum BlockType {
         /// Position.
         position: Vec3,
         /// Rotation.
-        rotation: PitchYawRoll,
+        rotation: YawPitchRoll,
     },
 }
 
@@ -118,7 +118,7 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             Error, ReadBody,
         },
-        PitchYawRoll, Vec3,
+        Vec3, YawPitchRoll,
     };
 
     use super::{Block, BlockType};
@@ -169,7 +169,7 @@ mod read {
                 } else {
                     self.ty = BlockType::Free {
                         position: Vec3::default(),
-                        rotation: PitchYawRoll::default(),
+                        rotation: YawPitchRoll::default(),
                     };
                 }
             }
@@ -180,17 +180,14 @@ mod read {
 }
 
 mod write {
-    use std::{
-        io::{Error, Write},
-        sync::Arc,
-    };
+    use std::{io::Write, sync::Arc};
 
     use crate::{
         game::ctn::Direction,
         write::{
             writable::WriteBody,
             writer::{IdStateMut, NodeStateMut},
-            Writer,
+            Error, Writer,
         },
         Byte3,
     };

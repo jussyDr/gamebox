@@ -59,12 +59,12 @@ mod read {
 }
 
 mod write {
-    use std::io::{Error, Write};
+    use std::io::Write;
 
     use crate::write::{
         writable::{write_body_chunks, WriteBody},
         writer::{IdStateMut, NodeStateMut},
-        BodyChunk, BodyChunks, Writer,
+        BodyChunk, BodyChunks, Error, Writer,
     };
 
     use super::CollectorList;

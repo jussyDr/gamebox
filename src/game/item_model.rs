@@ -431,12 +431,12 @@ mod read {
 }
 
 mod write {
-    use std::io::{Error, Write};
+    use std::io::Write;
 
     use crate::write::{
         writable,
         writer::{IdStateMut, NodeStateMut},
-        Writable, Writer,
+        Error, Writable, Writer,
     };
 
     use self::writable::{write_body_chunks, BodyChunks, HeaderChunk, HeaderChunks, WriteBody};

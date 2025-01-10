@@ -3,16 +3,16 @@
 use std::{
     any::Any,
     hash::{Hash, Hasher},
-    io::{Error, Write},
+    io::Write,
     sync::Arc,
 };
 
 use bytemuck::{bytes_of, Pod};
 use indexmap::{indexset, IndexSet};
 
-use crate::{Byte3, Class, FileRef, Nat3, Vec2, Vec3, ID_MARKER_BIT};
+use crate::{Byte3, Class, FileRef, Nat3, Vec2, Vec3, YawPitchRoll, ID_MARKER_BIT};
 
-use super::writable::WriteBody;
+use super::{writable::WriteBody, Error};
 
 pub trait ToLe {
     /// Convert `self` to little endian from the target's endianness.
@@ -143,6 +143,12 @@ impl NodeStateMut for NodeState {
     }
 }
 
+impl<T: NodeStateMut> NodeStateMut for &mut T {
+    fn get_mut(&mut self) -> &mut NodeState {
+        (**self).get_mut()
+    }
+}
+
 /// Low-level GameBox writer.
 pub struct Writer<W, I, N> {
     inner: W,
@@ -183,7 +189,7 @@ impl<W, I, N> Writer<W, I, N> {
 impl<W: Write, I, N> Writer<W, I, N> {
     /// Write bytes.
     pub fn bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
-        self.inner.write_all(bytes)?;
+        self.inner.write_all(bytes).map_err(Error::io)?;
 
         Ok(())
     }
@@ -212,24 +218,36 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.pod(value)
     }
 
-    pub fn byte3(&mut self, b: Byte3) -> Result<(), Error> {
-        self.pod(b)
+    pub fn f32(&mut self, value: f32) -> Result<(), Error> {
+        self.pod(value)
     }
 
-    pub fn nat3(&mut self, nat: Nat3) -> Result<(), Error> {
-        self.pod(nat)
+    pub fn byte3(&mut self, value: Byte3) -> Result<(), Error> {
+        self.pod(value)
     }
 
-    pub fn vec2(&mut self, vec: Vec2) -> Result<(), Error> {
-        self.pod(vec)
+    pub fn nat3(&mut self, value: Nat3) -> Result<(), Error> {
+        self.pod(value)
     }
 
-    pub fn vec3(&mut self, vec: Vec3) -> Result<(), Error> {
-        self.pod(vec)
+    pub fn vec2(&mut self, value: Vec2) -> Result<(), Error> {
+        self.pod(value)
+    }
+
+    pub fn vec3(&mut self, value: Vec3) -> Result<(), Error> {
+        self.pod(value)
+    }
+
+    pub fn yaw_pitch_roll(&mut self, value: YawPitchRoll) -> Result<(), Error> {
+        self.pod(value)
     }
 
     pub fn bool(&mut self, value: bool) -> Result<(), Error> {
         self.u32(if value { 1 } else { 0 })
+    }
+
+    pub fn bool8(&mut self, value: bool) -> Result<(), Error> {
+        self.u8(if value { 1 } else { 0 })
     }
 
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
@@ -258,6 +276,52 @@ impl<W: Write, I, N> Writer<W, I, N> {
 
     pub fn file_ref_or_null(&mut self, file_ref: Option<&FileRef>) -> Result<(), Error> {
         todo!()
+    }
+
+    pub fn file_ref(&mut self, file_ref: &FileRef) -> Result<(), Error> {
+        self.file_ref_or_null(Some(file_ref))
+    }
+
+    pub fn list<T>(
+        &mut self,
+        list: &[T],
+        mut write_fn: impl FnMut(&mut Self, &T) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        self.u32(list.len() as u32)?;
+
+        for value in list {
+            write_fn(self, value)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn list_with_version<T>(
+        &mut self,
+        list: &[T],
+        write_fn: impl FnMut(&mut Self, &T) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        self.u32(10)?;
+        self.list(list, write_fn)
+    }
+
+    pub fn encapsulation(
+        &mut self,
+        mut write_fn: impl FnMut(&mut Writer<&mut Vec<u8>, IdState, NodeState>) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        let mut buf = vec![];
+
+        let mut w = Writer {
+            inner: &mut buf,
+            id_state: IdState::new(),
+            node_state: NodeState::new(),
+        };
+
+        write_fn(&mut w)?;
+
+        self.byte_buf(&buf)?;
+
+        Ok(())
     }
 }
 
@@ -295,6 +359,21 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
 }
 
 impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
+    pub fn node_or_null<T: Class + WriteBody>(&mut self, value: Option<&T>) -> Result<(), Error> {
+        if let Some(value) = value {
+            self.u32(T::CLASS_ID)?;
+            value.write_body(self)?;
+        } else {
+            self.u32(0xffffffff)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn node<T: Class + WriteBody>(&mut self, value: &T) -> Result<(), Error> {
+        self.node_or_null(Some(value))
+    }
+
     pub fn internal_node_ref_or_null<T: 'static + Class + WriteBody>(
         &mut self,
         node: Option<&Arc<T>>,
@@ -312,8 +391,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
                     None => {
                         let index = self.node_state.get_mut().nodes.len() as u32 + 1;
                         self.u32(index)?;
-                        self.u32(T::CLASS_ID)?;
-                        node.write_body(self)?;
+                        self.node(node.as_ref())?;
 
                         self.node_state.get_mut().nodes.insert(internal_node);
                     }
