@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::Class;
 
 /// Camera effect shake media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockCameraEffectShake {
     keys: Vec<Key>,
 }
@@ -15,7 +15,7 @@ impl Class for MediaBlockCameraEffectShake {
 }
 
 /// Camera effect shake media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     intensity: OrderedFloat<f32>,

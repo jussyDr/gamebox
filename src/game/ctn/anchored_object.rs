@@ -10,7 +10,7 @@ use crate::{
 use super::{ElemColor, LightmapQuality};
 
 /// Anchored object.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct AnchoredObject {
     model_id: Arc<str>,
     rotation: YawPitchRoll,
@@ -99,7 +99,7 @@ impl AnchoredObject {
 }
 
 /// Animation phase offset.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum PhaseOffset {
     /// No offset.
     #[default]

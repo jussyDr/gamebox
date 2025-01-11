@@ -7,7 +7,7 @@ use crate::{game::WaypointSpecialProperty, Byte3, Vec3, YawPitchRoll};
 use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 
 /// Block.
-#[derive(Default, Debug)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Block {
     pub(crate) model_id: Arc<str>,
     pub(crate) ty: BlockType,
@@ -76,7 +76,7 @@ impl Block {
 }
 
 /// Type of block.
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum BlockType {
     /// Normal block.
     Normal {

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::{Class, Int2, Int3, Iso4, Vec2, Vec3};
 
 /// Traits metadata.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct TraitsMetadata {
     traits: HashMap<String, Trait>,
 }
@@ -22,6 +22,7 @@ impl TraitsMetadata {
 }
 
 /// A trait.
+#[derive(PartialEq, Debug)]
 pub enum Trait {
     /// Void.
     Void,

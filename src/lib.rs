@@ -64,7 +64,7 @@ use gamebox_macros::{FromLe, ToLe};
 use std::path::{Path, PathBuf};
 
 /// Byte3.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Byte3 {
     /// X.
@@ -112,7 +112,7 @@ impl Nat3 {
 }
 
 /// Int2.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Int2 {
     /// X.
@@ -134,7 +134,7 @@ impl Int2 {
 }
 
 /// Int3.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Int3 {
     /// X.
@@ -158,7 +158,7 @@ impl Int3 {
 }
 
 /// 2-dimensional vector.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Vec2 {
     /// X.
@@ -180,7 +180,7 @@ impl Vec2 {
 }
 
 /// 3-dimensional vector.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Vec3 {
     /// X.
@@ -312,7 +312,7 @@ pub struct OrderedRgbFloat {
 }
 
 /// Rotation represented as yaw, pitch, and roll angles.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct YawPitchRoll {
     /// Yaw angle.
@@ -372,7 +372,7 @@ pub struct Box3d {
 }
 
 /// Iso.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Iso4 {
     /// X.

@@ -7,7 +7,7 @@ use crate::Class;
 use super::Direction;
 
 /// A zone genealogy.
-#[derive(Default)]
+#[derive(PartialEq, Default, Debug)]
 pub struct ZoneGenealogy {
     zone_ids: Vec<Arc<str>>,
     current_index: u32,

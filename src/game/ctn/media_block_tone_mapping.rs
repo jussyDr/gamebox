@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::Class;
 
 /// Tone mapping.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockToneMapping {
     keys: Vec<Key>,
 }
@@ -22,7 +22,7 @@ impl MediaBlockToneMapping {
 }
 
 /// Tone mapping media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     exposure: OrderedFloat<f32>,

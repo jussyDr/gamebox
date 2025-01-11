@@ -6,7 +6,7 @@ use ordered_float::OrderedFloat;
 use crate::{Class, OrderedRgbFloat, RgbFloat};
 
 /// A media block transition fade.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockTransitionFade {
     keys: Vec<Key>,
     color: OrderedRgbFloat,
@@ -29,7 +29,7 @@ impl MediaBlockTransitionFade {
 }
 
 /// Fading transition media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     opacity: OrderedFloat<f32>,

@@ -11,7 +11,7 @@ use super::{
 };
 
 /// Media block.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub enum MediaBlock {
     /// 2D triangles.
     Triangles2D(MediaBlockTriangles2D),

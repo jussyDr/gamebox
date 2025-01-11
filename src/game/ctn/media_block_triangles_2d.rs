@@ -7,7 +7,7 @@ use crate::Class;
 use super::media_block_triangles::MediaBlockTriangles;
 
 /// 2D triangles media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockTriangles2D {
     parent: MediaBlockTriangles,
 }

@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::Class;
 
 /// Entity media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockEntity {
     keys: Vec<Key>,
 }
@@ -22,7 +22,7 @@ impl MediaBlockEntity {
 }
 
 /// Entity media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
 }

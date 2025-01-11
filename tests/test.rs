@@ -14,7 +14,7 @@ use gamebox::{
         bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model,
         VegetTreeModel,
     },
-    read_file, write,
+    read, read_file, write,
 };
 
 #[test]
@@ -276,10 +276,14 @@ fn read_map_midnight_metropolis() {
 
 #[test]
 fn read_map_mindor() {
-    let challenge: Challenge = read_file("tests/files/map/Mindor.Map.Gbx").unwrap();
+    let challenge_1: Challenge = read_file("tests/files/map/Mindor.Map.Gbx").unwrap();
 
     let mut buf = vec![];
-    write(&challenge, Cursor::new(&mut buf)).unwrap();
+    write(&challenge_1, Cursor::new(&mut buf)).unwrap();
+
+    let challenge_2: Challenge = read(Cursor::new(buf)).unwrap();
+
+    assert_eq!(challenge_1, challenge_2);
 }
 
 #[test]

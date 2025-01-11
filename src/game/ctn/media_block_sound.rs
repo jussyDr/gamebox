@@ -6,7 +6,7 @@ use ordered_float::OrderedFloat;
 use crate::{Class, FileRef, OrderedVec3, Vec3};
 
 /// Sound media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockSound {
     sound: FileRef,
     keys: Vec<Key>,
@@ -29,7 +29,7 @@ impl MediaBlockSound {
 }
 
 /// Sound media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     volume: OrderedFloat<f32>,

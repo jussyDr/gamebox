@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::Class;
 
 /// Dirty lens media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockDirtyLens {
     keys: Vec<Key>,
 }
@@ -22,7 +22,7 @@ impl MediaBlockDirtyLens {
 }
 
 /// Dirty lens media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     intensity: OrderedFloat<f32>,

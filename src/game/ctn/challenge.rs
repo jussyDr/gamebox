@@ -14,6 +14,7 @@ use super::{
 };
 
 /// Challenge.
+#[derive(PartialEq, Debug)]
 pub struct Challenge {
     validation: Option<Validation>,
     cost: u32,
@@ -273,6 +274,7 @@ impl Default for Challenge {
 }
 
 /// Validation.
+#[derive(PartialEq, Debug)]
 pub struct Validation {
     objective: Objective,
     ghost: Option<Arc<Ghost>>,
@@ -291,6 +293,7 @@ impl Validation {
 }
 
 /// Objective.
+#[derive(PartialEq, Debug)]
 pub enum Objective {
     /// Medal times.
     MedalTimes(MedalTimes),
@@ -299,6 +302,7 @@ pub enum Objective {
 }
 
 /// Medal times.
+#[derive(PartialEq, Debug)]
 pub struct MedalTimes {
     bronze_time: u32,
     silver_time: u32,
@@ -328,7 +332,7 @@ impl MedalTimes {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 enum EditorMode {
     #[default]
     Advanced,
@@ -349,7 +353,7 @@ impl FromVariant<u32> for EditorMode {
     }
 }
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 enum ChallengeType {
     #[default]
     EndMarker,
@@ -395,6 +399,7 @@ impl FromVariant<u32> for ChallengeType {
 }
 
 /// Embedded items.
+#[derive(PartialEq, Debug)]
 pub struct EmbeddedItems {
     ids: Vec<Arc<str>>,
     zip_archive: Vec<u8>,
@@ -413,6 +418,7 @@ impl EmbeddedItems {
 }
 
 /// Game build tag.
+#[derive(PartialEq, Debug)]
 pub enum GameBuildTag {
     /// Git.
     Git(String),
@@ -2112,8 +2118,10 @@ mod write {
             w.u32(0)?;
             w.encapsulation(|w| {
                 w.list_with_version(&self.items, |w, item| w.node(item))?;
-
-                todo!();
+                w.u32(0)?;
+                w.u32(0)?;
+                w.u32(0)?;
+                w.u32(0)?;
 
                 Ok(())
             })?;
@@ -2498,7 +2506,11 @@ mod write {
         }
 
         fn write_author<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            todo!();
+            w.u32(0)?;
+            w.string(&self.author_id)?;
+            w.string(&self.author_name)?;
+            w.string(&self.author_zone)?;
+            w.string_or_empty(None)?;
 
             Ok(())
         }

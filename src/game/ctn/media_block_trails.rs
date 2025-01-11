@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::Class;
 
 /// Media block trails.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockTrails {
     start_time: OrderedFloat<f32>,
     end_time: OrderedFloat<f32>,

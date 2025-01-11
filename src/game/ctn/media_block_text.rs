@@ -7,7 +7,7 @@ use bytemuck::cast;
 use crate::{control::EffectSimi, Class, OrderedRgbFloat, RgbFloat};
 
 /// Text media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockText {
     text: String,
     effect: Arc<EffectSimi>,

@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::{Class, FileRef};
 
 /// Media block color grading.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockColorGrading {
     image: FileRef,
     keys: Vec<Key>,
@@ -28,7 +28,7 @@ impl MediaBlockColorGrading {
 }
 
 /// Color grading media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     intensity: OrderedFloat<f32>,

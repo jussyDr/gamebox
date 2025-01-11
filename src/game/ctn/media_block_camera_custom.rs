@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use crate::{read::reader::FromVariant, Class};
 
 /// Custom camera media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockCameraCustom {
     keys: Vec<Key>,
 }
@@ -22,7 +22,7 @@ impl MediaBlockCameraCustom {
 }
 
 /// Custom camera media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     interpolation: Option<Interpolation>,
@@ -41,7 +41,7 @@ impl Key {
 }
 
 /// Interpolation.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Interpolation {
     /// Hermite.
     Hermite,

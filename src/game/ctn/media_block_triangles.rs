@@ -6,7 +6,7 @@ use ordered_float::OrderedFloat;
 use crate::{Class, OrderedVec3, Vec3};
 
 /// A media block triangles.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockTriangles {
     keys: Vec<Key>,
 }
@@ -23,7 +23,7 @@ impl MediaBlockTriangles {
 }
 
 /// Triangles media block key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     positions: Vec<OrderedVec3>,

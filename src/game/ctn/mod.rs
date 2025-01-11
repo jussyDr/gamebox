@@ -174,7 +174,7 @@ impl FromVariant<u32> for Direction {
 }
 
 /// Element color.
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum ElemColor {
     /// Default color.
     #[default]
@@ -206,7 +206,7 @@ impl FromVariant<u8> for ElemColor {
 }
 
 /// Lightmap quality
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum LightmapQuality {
     /// Normal quality.
     #[default]

@@ -7,7 +7,7 @@ use crate::{Class, Nat3};
 use super::MediaClip;
 
 /// A media clip group.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaClipGroup {
     clips: Vec<ClipTrigger>,
 }
@@ -24,7 +24,7 @@ impl MediaClipGroup {
 }
 
 /// Clip trigger.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct ClipTrigger {
     clip: Arc<MediaClip>,
     coords: Vec<Nat3>,

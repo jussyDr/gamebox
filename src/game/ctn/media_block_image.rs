@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::{control::EffectSimi, Class, FileRef};
 
 /// Image media block.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaBlockImage {
     effect: Arc<EffectSimi>,
     image: FileRef,

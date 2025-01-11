@@ -6,7 +6,7 @@ use ordered_float::OrderedFloat;
 use crate::{Class, OrderedVec2, Vec2};
 
 /// Effect simi.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct EffectSimi {
     keys: Vec<Key>,
 }
@@ -23,7 +23,7 @@ impl EffectSimi {
 }
 
 /// Effect simi key.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
     position: OrderedVec2,

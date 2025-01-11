@@ -1,19 +1,19 @@
 //! Low-level GameBox writer.
 
-use std::{
-    any::Any,
-    hash::{Hash, Hasher},
-    io::Write,
-    sync::Arc,
-};
+mod id;
+mod node;
+
+pub use id::{IdState, IdStateMut};
+pub use node::{NodeState, NodeStateMut};
+
+use std::io::Write;
 
 use bytemuck::{bytes_of, Pod};
-use indexmap::{indexset, IndexSet};
 use ordered_float::OrderedFloat;
 
-use crate::{Byte3, Class, FileRef, Nat3, Vec2, Vec3, YawPitchRoll, ID_MARKER_BIT};
+use crate::{Byte3, FileRef, Nat3, Vec2, Vec3, YawPitchRoll};
 
-use super::{writable::WriteBody, Error};
+use super::Error;
 
 pub trait ToLe {
     /// Convert `self` to little endian from the target's endianness.
@@ -61,114 +61,6 @@ impl ToLe for f32 {
 impl<T: ToLe> ToLe for OrderedFloat<T> {
     fn to_le(self) -> Self {
         Self(self.0.to_le())
-    }
-}
-
-/// Identifier state.
-pub struct IdState {
-    seen_id: bool,
-    ids: IndexSet<Arc<str>>,
-}
-
-impl IdState {
-    pub fn new() -> Self {
-        Self {
-            seen_id: false,
-            ids: indexset![],
-        }
-    }
-}
-
-impl Default for IdState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-pub trait IdStateMut {
-    fn get_mut(&mut self) -> &mut IdState;
-}
-
-impl IdStateMut for IdState {
-    fn get_mut(&mut self) -> &mut IdState {
-        self
-    }
-}
-
-impl<T: IdStateMut> IdStateMut for &mut T {
-    fn get_mut(&mut self) -> &mut IdState {
-        (**self).get_mut()
-    }
-}
-
-trait DynAnyEqHash: Any {
-    fn dyn_eq(&self, other: &dyn Any) -> bool;
-
-    fn dyn_hash(&self, state: &mut dyn Hasher);
-}
-
-impl<T: 'static + Eq + Hash> DynAnyEqHash for T {
-    fn dyn_eq(&self, other: &dyn Any) -> bool {
-        other.downcast_ref() == Some(self)
-    }
-
-    fn dyn_hash(&self, mut state: &mut dyn Hasher) {
-        self.hash(&mut state);
-    }
-}
-
-struct InternalNode {
-    node: Arc<dyn DynAnyEqHash>,
-}
-
-impl PartialEq for InternalNode {
-    fn eq(&self, other: &Self) -> bool {
-        self.node.dyn_eq(other)
-    }
-}
-
-impl Eq for InternalNode {}
-
-impl Hash for InternalNode {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.node.dyn_hash(state);
-    }
-}
-
-/// Node state.
-pub struct NodeState {
-    nodes: IndexSet<InternalNode>,
-}
-
-impl NodeState {
-    pub fn new() -> Self {
-        Self { nodes: indexset![] }
-    }
-
-    pub fn num_nodes(&self) -> usize {
-        self.nodes.len()
-    }
-}
-
-impl Default for NodeState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-pub trait NodeStateMut {
-    fn get_mut(&mut self) -> &mut NodeState;
-}
-
-impl NodeStateMut for NodeState {
-    fn get_mut(&mut self) -> &mut NodeState {
-        self
-    }
-}
-
-impl<T: NodeStateMut> NodeStateMut for &mut T {
-    fn get_mut(&mut self) -> &mut NodeState {
-        (**self).get_mut()
     }
 }
 
@@ -372,93 +264,5 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.byte_buf(&buf)?;
 
         Ok(())
-    }
-}
-
-impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
-    pub fn id_or_null(&mut self, id: Option<&Arc<str>>) -> Result<(), Error> {
-        if !self.id_state.get_mut().seen_id {
-            self.u32(3)?;
-
-            self.id_state.get_mut().seen_id = true;
-        }
-
-        match id {
-            Some(id) => match self.id_state.get_mut().ids.get_index_of(id) {
-                Some(index) => {
-                    self.u32(((index as u32) + 1) | ID_MARKER_BIT)?;
-                }
-                None => {
-                    self.u32(ID_MARKER_BIT)?;
-                    self.string(&id)?;
-
-                    self.id_state.get_mut().ids.insert(Arc::clone(id));
-                }
-            },
-            None => {
-                self.u32(0xffffffff)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn id(&mut self, id: &Arc<str>) -> Result<(), Error> {
-        self.id_or_null(Some(id))
-    }
-}
-
-impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
-    pub fn node_or_null<T: Class + WriteBody>(&mut self, value: Option<&T>) -> Result<(), Error> {
-        if let Some(value) = value {
-            self.u32(T::CLASS_ID)?;
-            value.write_body(self)?;
-        } else {
-            self.u32(0xffffffff)?;
-        }
-
-        Ok(())
-    }
-
-    pub fn node<T: Class + WriteBody>(&mut self, value: &T) -> Result<(), Error> {
-        self.node_or_null(Some(value))
-    }
-
-    pub fn internal_node_ref_or_null<T: 'static + Class + WriteBody + Eq + Hash>(
-        &mut self,
-        node: Option<&Arc<T>>,
-    ) -> Result<(), Error> {
-        match node {
-            Some(node) => {
-                let internal_node = InternalNode {
-                    node: Arc::clone(node) as Arc<dyn DynAnyEqHash>,
-                };
-
-                match self.node_state.get_mut().nodes.get_index_of(&internal_node) {
-                    Some(index) => {
-                        self.u32(index as u32 + 1)?;
-                    }
-                    None => {
-                        let index = self.node_state.get_mut().nodes.len() as u32 + 1;
-                        self.u32(index)?;
-                        self.node(node.as_ref())?;
-
-                        self.node_state.get_mut().nodes.insert(internal_node);
-                    }
-                }
-            }
-            None => {
-                self.u32(0xffffffff)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn internal_node_ref<T: 'static + Class + WriteBody + Eq + Hash>(
-        &mut self,
-        node: &Arc<T>,
-    ) -> Result<(), Error> {
-        self.internal_node_ref_or_null(Some(node))
     }
 }
