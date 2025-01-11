@@ -1,9 +1,11 @@
 //! Media block camera custom.
 
+use ordered_float::OrderedFloat;
+
 use crate::{read::reader::FromVariant, Class};
 
 /// Custom camera media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockCameraCustom {
     keys: Vec<Key>,
 }
@@ -20,15 +22,16 @@ impl MediaBlockCameraCustom {
 }
 
 /// Custom camera media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
+    time: OrderedFloat<f32>,
     interpolation: Option<Interpolation>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Interpolation.
@@ -38,7 +41,7 @@ impl Key {
 }
 
 /// Interpolation.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Interpolation {
     /// Hermite.
     Hermite,
@@ -62,6 +65,8 @@ impl FromVariant<u32> for Option<Interpolation> {
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -132,7 +137,7 @@ mod read {
                 }
 
                 Ok(Key {
-                    time,
+                    time: OrderedFloat(time),
                     interpolation,
                 })
             })?;

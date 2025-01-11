@@ -1201,11 +1201,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            r.u32()?;
-            self.time_of_day = r.u32_or_null()?;
-            r.u32()?;
-            let _dynamic_daylight = r.bool()?;
-            let _day_duration = r.u32()?;
+            self.read_dynamic_lighting(r)?;
 
             Ok(())
         }
@@ -1525,13 +1521,7 @@ mod read {
         }
 
         fn read_chunk_107<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            r.u32()?;
-            let _day_time = r.u32()?;
-            r.u32()?;
-            let _dynamic_daylight = r.bool()?;
-            let _day_duration = r.u32()?;
-
-            Ok(())
+            self.read_dynamic_lighting(r)
         }
 
         fn read_chunk_108<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
@@ -1552,6 +1542,19 @@ mod read {
             self.author_name = r.string()?;
             self.author_zone = r.string()?;
             let _author_extra_info = r.string_or_empty()?;
+
+            Ok(())
+        }
+
+        fn read_dynamic_lighting<I, N>(
+            &mut self,
+            r: &mut Reader<impl Read, I, N>,
+        ) -> Result<(), Error> {
+            r.u32()?;
+            self.time_of_day = r.u32_or_null()?;
+            r.u32()?;
+            let _dynamic_daylight = r.bool()?;
+            let _day_duration = r.u32()?;
 
             Ok(())
         }

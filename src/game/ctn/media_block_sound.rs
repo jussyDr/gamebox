@@ -1,9 +1,12 @@
 //! Media block sound.
 
-use crate::{Class, FileRef, Vec3};
+use bytemuck::cast;
+use ordered_float::OrderedFloat;
+
+use crate::{Class, FileRef, OrderedVec3, Vec3};
 
 /// Sound media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockSound {
     sound: FileRef,
     keys: Vec<Key>,
@@ -26,37 +29,40 @@ impl MediaBlockSound {
 }
 
 /// Sound media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    volume: f32,
-    pan: f32,
-    position: Vec3,
+    time: OrderedFloat<f32>,
+    volume: OrderedFloat<f32>,
+    pan: OrderedFloat<f32>,
+    position: OrderedVec3,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Volume.
     pub const fn volume(&self) -> f32 {
-        self.volume
+        self.volume.0
     }
 
     /// Pan.
     pub const fn pan(&self) -> f32 {
-        self.pan
+        self.pan.0
     }
 
     /// Position.
-    pub const fn position(&self) -> Vec3 {
-        self.position
+    pub fn position(&self) -> Vec3 {
+        cast(self.position)
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -116,12 +122,12 @@ mod read {
                 let time = r.f32()?;
                 let volume = r.f32()?;
                 let pan = r.f32()?;
-                let position = r.vec3()?;
+                let position = r.vec3_ordered()?;
 
                 Ok(Key {
-                    time,
-                    volume,
-                    pan,
+                    time: OrderedFloat(time),
+                    volume: OrderedFloat(volume),
+                    pan: OrderedFloat(pan),
                     position,
                 })
             })?;

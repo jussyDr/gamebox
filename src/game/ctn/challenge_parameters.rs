@@ -7,7 +7,7 @@ use crate::Class;
 use super::Ghost;
 
 /// Challenge parameters.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct ChallengeParameters {
     pub(crate) bronze_time: Option<u32>,
     pub(crate) silver_time: Option<u32>,

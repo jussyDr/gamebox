@@ -1,12 +1,14 @@
 //! Media block interface.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Interface media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockInterface {
-    start_time: f32,
-    end_time: f32,
+    start_time: OrderedFloat<f32>,
+    end_time: OrderedFloat<f32>,
     show: bool,
     manialink: String,
 }
@@ -18,12 +20,12 @@ impl Class for MediaBlockInterface {
 impl MediaBlockInterface {
     /// Start time.
     pub const fn start_time(&self) -> f32 {
-        self.start_time
+        self.start_time.0
     }
 
     /// End time.
     pub const fn end_time(&self) -> f32 {
-        self.end_time
+        self.end_time.0
     }
 
     /// Show.
@@ -39,6 +41,8 @@ impl MediaBlockInterface {
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -71,8 +75,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.start_time = r.f32()?;
-            self.end_time = r.f32()?;
+            self.start_time = OrderedFloat(r.f32()?);
+            self.end_time = OrderedFloat(r.f32()?);
             self.show = r.bool()?;
             self.manialink = r.string()?;
 

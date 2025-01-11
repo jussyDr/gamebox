@@ -231,10 +231,13 @@ mod read {
 mod write {
     use std::io::Write;
 
-    use crate::write::{
-        writable::{write_body_chunks, WriteBody},
-        writer::{IdStateMut, NodeStateMut},
-        BodyChunk, BodyChunks, Error, Writer,
+    use crate::{
+        write::{
+            writable::{write_body_chunks, WriteBody},
+            writer::{IdStateMut, NodeStateMut},
+            BodyChunk, BodyChunks, Error, Writer,
+        },
+        Vec3,
     };
 
     use super::AnchoredObject;
@@ -251,7 +254,65 @@ mod write {
     impl BodyChunks for AnchoredObject {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+            [
+                BodyChunk::normal(2, Self::write_chunk_2),
+                BodyChunk::skippable(4, |s, w| Self::write_chunk_4(s, w)),
+                BodyChunk::skippable(5, |s, w| Self::write_chunk_5(s, w)),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl AnchoredObject {
+        fn write_chunk_2(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            w.u32(8)?;
+            w.id(&self.model_id)?;
+            w.u32(0x1a)?;
+            w.id_or_null(None)?;
+            w.yaw_pitch_roll(self.rotation)?;
+            w.byte3(self.unit_coord)?;
+            w.id_or_null(None)?;
+            w.vec3(self.position)?;
+            w.node_or_null(self.waypoint_property.as_ref())?;
+
+            let mut flags = 0;
+
+            if self.skin.is_some() {
+                flags |= 1 << 2;
+            }
+
+            flags |= (self.variant_index as u16) << 8;
+
+            w.u16(flags)?;
+            w.vec3(self.pivot_position)?;
+            w.f32(self.scale)?;
+
+            if let Some(ref skin) = self.skin {
+                w.file_ref(skin)?;
+            }
+
+            w.vec3(Vec3::new(0.0, 0.0, 0.0))?;
+            w.vec3(Vec3::new(-1.0, -1.0, -1.0))?;
+
+            Ok(())
+        }
+
+        fn write_chunk_4<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(0)?;
+            w.u32(0xffffffff)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_5<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(1)?;
+            w.u32(4)?;
+            w.u8(0)?;
+
+            Ok(())
         }
     }
 }

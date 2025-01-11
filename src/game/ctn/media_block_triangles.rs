@@ -1,9 +1,12 @@
 //! Media block triangles.
 
-use crate::{Class, Vec3};
+use bytemuck::cast_slice;
+use ordered_float::OrderedFloat;
+
+use crate::{Class, OrderedVec3, Vec3};
 
 /// A media block triangles.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockTriangles {
     keys: Vec<Key>,
 }
@@ -20,25 +23,28 @@ impl MediaBlockTriangles {
 }
 
 /// Triangles media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    positions: Vec<Vec3>,
+    time: OrderedFloat<f32>,
+    positions: Vec<OrderedVec3>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Positions.
-    pub const fn positions(&self) -> &Vec<Vec3> {
-        &self.positions
+    pub fn positions(&self) -> &[Vec3] {
+        cast_slice(&self.positions)
     }
 }
 
 mod read {
     use std::io::Read;
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{reader::Reader, BodyChunk, BodyChunks, Error, ErrorKind};
 
@@ -60,7 +66,7 @@ mod read {
                 let time = r.f32()?;
 
                 Ok(Key {
-                    time,
+                    time: OrderedFloat(time),
                     positions: Vec::default(),
                 })
             })?;
@@ -74,7 +80,7 @@ mod read {
                     .get_mut(key_index as usize)
                     .ok_or_else(|| Error::new(ErrorKind::Format("index".into())))?;
 
-                key.positions = r.repeat(num_verts as usize, |r| r.vec3())?;
+                key.positions = r.repeat(num_verts as usize, |r| r.vec3_ordered())?;
             }
 
             let _vertices = r.list(|r| {

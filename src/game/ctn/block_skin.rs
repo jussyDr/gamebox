@@ -3,7 +3,7 @@
 use crate::{Class, FileRef};
 
 /// Block skin.
-#[derive(Default, Debug)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct BlockSkin {
     skin: Option<FileRef>,
     skin_effect: Option<FileRef>,

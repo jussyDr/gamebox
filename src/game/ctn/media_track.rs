@@ -7,7 +7,7 @@ use crate::Class;
 use super::MediaBlock;
 
 /// Media track.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaTrack {
     name: String,
     blocks: Vec<Arc<MediaBlock>>,

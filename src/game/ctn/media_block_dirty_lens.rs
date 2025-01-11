@@ -1,9 +1,11 @@
 //! Media block dirty lens.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Dirty lens media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockDirtyLens {
     keys: Vec<Key>,
 }
@@ -20,25 +22,28 @@ impl MediaBlockDirtyLens {
 }
 
 /// Dirty lens media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    intensity: f32,
+    time: OrderedFloat<f32>,
+    intensity: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Intensity.
     pub const fn intensity(&self) -> f32 {
-        self.intensity
+        self.intensity.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -76,7 +81,10 @@ mod read {
                 let time = r.f32()?;
                 let intensity = r.f32()?;
 
-                Ok(Key { time, intensity })
+                Ok(Key {
+                    time: OrderedFloat(time),
+                    intensity: OrderedFloat(intensity),
+                })
             })?;
 
             Ok(())

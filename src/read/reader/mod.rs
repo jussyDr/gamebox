@@ -6,6 +6,7 @@ mod node;
 use bytemuck::{bytes_of_mut, cast_slice_mut, Pod};
 pub use id::{IdState, IdStateMut};
 pub use node::{NodeState, NodeStateMut};
+use ordered_float::OrderedFloat;
 
 use std::{
     cmp::min,
@@ -16,8 +17,8 @@ use std::{
 use node::NullNodeState;
 
 use crate::{
-    Box3d, Byte3, FileRef, Int2, Int3, Iso4, Nat3, Quat, RgbFloat, RgbNat, Rgba, Vec2, Vec3,
-    YawPitchRoll,
+    Box3d, Byte3, FileRef, Int2, Int3, Iso4, Nat3, OrderedRgbFloat, OrderedVec2, OrderedVec3, Quat,
+    RgbFloat, RgbNat, Rgba, Vec2, Vec3, YawPitchRoll,
 };
 
 use super::{Error, ErrorKind};
@@ -67,6 +68,12 @@ impl FromLe for i32 {
 impl FromLe for f32 {
     fn from_le(value: Self) -> Self {
         Self::from_bits(u32::from_le(value.to_bits()))
+    }
+}
+
+impl<T: FromLe> FromLe for OrderedFloat<T> {
+    fn from_le(value: Self) -> Self {
+        Self(T::from_le(value.0))
     }
 }
 
@@ -271,7 +278,15 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.pod()
     }
 
+    pub fn vec2_ordered(&mut self) -> Result<OrderedVec2, Error> {
+        self.pod()
+    }
+
     pub fn vec3(&mut self) -> Result<Vec3, Error> {
+        self.pod()
+    }
+
+    pub fn vec3_ordered(&mut self) -> Result<OrderedVec3, Error> {
         self.pod()
     }
 
@@ -284,6 +299,10 @@ impl<R: Read, I, N> Reader<R, I, N> {
     }
 
     pub fn rgb_float(&mut self) -> Result<RgbFloat, Error> {
+        self.pod()
+    }
+
+    pub fn rgb_float_ordered(&mut self) -> Result<OrderedRgbFloat, Error> {
         self.pod()
     }
 

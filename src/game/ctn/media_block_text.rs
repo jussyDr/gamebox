@@ -2,14 +2,16 @@
 
 use std::sync::Arc;
 
-use crate::{control::EffectSimi, Class, RgbFloat};
+use bytemuck::cast;
+
+use crate::{control::EffectSimi, Class, OrderedRgbFloat, RgbFloat};
 
 /// Text media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockText {
     text: String,
     effect: Arc<EffectSimi>,
-    color: RgbFloat,
+    color: OrderedRgbFloat,
 }
 
 impl Class for MediaBlockText {
@@ -28,8 +30,8 @@ impl MediaBlockText {
     }
 
     /// Color.
-    pub const fn color(&self) -> RgbFloat {
-        self.color
+    pub fn color(&self) -> RgbFloat {
+        cast(self.color)
     }
 }
 
@@ -79,7 +81,7 @@ mod read {
         }
 
         fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.color = r.rgb_float()?;
+            self.color = r.rgb_float_ordered()?;
 
             Ok(())
         }

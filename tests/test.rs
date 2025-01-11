@@ -1,3 +1,5 @@
+use std::io::Cursor;
+
 use gamebox::{
     game::{
         ctn::{
@@ -12,7 +14,7 @@ use gamebox::{
         bitmap::Bitmap, material::Material, prefab::Prefab, solid_2_model::Solid2Model,
         VegetTreeModel,
     },
-    read_file,
+    read_file, write,
 };
 
 #[test]
@@ -274,7 +276,10 @@ fn read_map_midnight_metropolis() {
 
 #[test]
 fn read_map_mindor() {
-    read_file::<Challenge>("tests/files/map/Mindor.Map.Gbx").unwrap();
+    let challenge: Challenge = read_file("tests/files/map/Mindor.Map.Gbx").unwrap();
+
+    let mut buf = vec![];
+    write(&challenge, Cursor::new(&mut buf)).unwrap();
 }
 
 #[test]

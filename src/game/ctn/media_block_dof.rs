@@ -1,9 +1,11 @@
 //! Media block DOF.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// DOF media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockDof {
     keys: Vec<Key>,
 }
@@ -20,19 +22,22 @@ impl MediaBlockDof {
 }
 
 /// DOF media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
+    time: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -66,7 +71,9 @@ mod read {
                 let _target = r.u32()?;
                 let _target_position = r.vec3()?;
 
-                Ok(Key { time })
+                Ok(Key {
+                    time: OrderedFloat(time),
+                })
             })?;
 
             Ok(())

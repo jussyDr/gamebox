@@ -1,9 +1,11 @@
 //! Tone mapping.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Tone mapping.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockToneMapping {
     keys: Vec<Key>,
 }
@@ -20,37 +22,40 @@ impl MediaBlockToneMapping {
 }
 
 /// Tone mapping media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    exposure: f32,
-    max_hdr: f32,
-    light_trail_scale: f32,
+    time: OrderedFloat<f32>,
+    exposure: OrderedFloat<f32>,
+    max_hdr: OrderedFloat<f32>,
+    light_trail_scale: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Exposure.
     pub const fn exposure(&self) -> f32 {
-        self.exposure
+        self.exposure.0
     }
 
     /// Max HDR.
     pub const fn max_hdr(&self) -> f32 {
-        self.max_hdr
+        self.max_hdr.0
     }
 
     /// Light trail scale.
     pub const fn light_trail_scale(&self) -> f32 {
-        self.light_trail_scale
+        self.light_trail_scale.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -85,10 +90,10 @@ mod read {
                 r.u32()?;
 
                 Ok(Key {
-                    time,
-                    exposure,
-                    max_hdr,
-                    light_trail_scale,
+                    time: OrderedFloat(time),
+                    exposure: OrderedFloat(exposure),
+                    max_hdr: OrderedFloat(max_hdr),
+                    light_trail_scale: OrderedFloat(light_trail_scale),
                 })
             })?;
 

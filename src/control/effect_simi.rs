@@ -1,9 +1,12 @@
 //! Effect simi.
 
-use crate::{Class, Vec2};
+use bytemuck::cast;
+use ordered_float::OrderedFloat;
+
+use crate::{Class, OrderedVec2, Vec2};
 
 /// Effect simi.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct EffectSimi {
     keys: Vec<Key>,
 }
@@ -20,49 +23,52 @@ impl EffectSimi {
 }
 
 /// Effect simi key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    position: Vec2,
-    rotation: f32,
-    scale: Vec2,
-    opacity: f32,
-    depth: f32,
+    time: OrderedFloat<f32>,
+    position: OrderedVec2,
+    rotation: OrderedFloat<f32>,
+    scale: OrderedVec2,
+    opacity: OrderedFloat<f32>,
+    depth: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Position.
-    pub const fn position(&self) -> Vec2 {
-        self.position
+    pub fn position(&self) -> Vec2 {
+        cast(self.position)
     }
 
     /// Rotation.
     pub const fn rotation(&self) -> f32 {
-        self.rotation
+        self.rotation.0
     }
 
     /// Scale.
-    pub const fn scale(&self) -> Vec2 {
-        self.scale
+    pub fn scale(&self) -> Vec2 {
+        cast(self.scale)
     }
 
     /// Opacity.
     pub const fn opacity(&self) -> f32 {
-        self.opacity
+        self.opacity.0
     }
 
     /// Depth.
     pub const fn depth(&self) -> f32 {
-        self.depth
+        self.depth.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -91,9 +97,9 @@ mod read {
         fn read_chunk_5<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             self.keys = r.list(|r| {
                 let time = r.f32()?;
-                let position = r.vec2()?;
+                let position = r.vec2_ordered()?;
                 let rotation = r.f32()?;
-                let scale = r.vec2()?;
+                let scale = r.vec2_ordered()?;
                 let opacity = r.f32()?;
                 let depth = r.f32()?;
                 r.f32()?;
@@ -102,12 +108,12 @@ mod read {
                 r.f32()?;
 
                 Ok(Key {
-                    time,
+                    time: OrderedFloat(time),
                     position,
-                    rotation,
+                    rotation: OrderedFloat(rotation),
                     scale,
-                    opacity,
-                    depth,
+                    opacity: OrderedFloat(opacity),
+                    depth: OrderedFloat(depth),
                 })
             })?;
             let _centered = r.bool()?;

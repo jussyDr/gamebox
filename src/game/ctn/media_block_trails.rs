@@ -1,12 +1,14 @@
 //! Media block trails.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Media block trails.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockTrails {
-    start_time: f32,
-    end_time: f32,
+    start_time: OrderedFloat<f32>,
+    end_time: OrderedFloat<f32>,
 }
 
 impl Class for MediaBlockTrails {
@@ -16,17 +18,19 @@ impl Class for MediaBlockTrails {
 impl MediaBlockTrails {
     /// Start time.
     pub const fn start_time(&self) -> f32 {
-        self.start_time
+        self.start_time.0
     }
 
     /// End time.
     pub const fn end_time(&self) -> f32 {
-        self.end_time
+        self.end_time.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -53,8 +57,8 @@ mod read {
 
     impl MediaBlockTrails {
         fn read_chunk_0<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            self.start_time = r.f32()?;
-            self.end_time = r.f32()?;
+            self.start_time = OrderedFloat(r.f32()?);
+            self.end_time = OrderedFloat(r.f32()?);
 
             Ok(())
         }

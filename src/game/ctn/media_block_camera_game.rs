@@ -1,12 +1,14 @@
 //! Media block camera game.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Media block camera game.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockCameraGame {
-    start_time: f32,
-    end_time: f32,
+    start_time: OrderedFloat<f32>,
+    end_time: OrderedFloat<f32>,
 }
 
 impl Class for MediaBlockCameraGame {
@@ -16,17 +18,19 @@ impl Class for MediaBlockCameraGame {
 impl MediaBlockCameraGame {
     /// Start time.
     pub const fn start_time(&self) -> f32 {
-        self.start_time
+        self.start_time.0
     }
 
     /// End time.
     pub const fn end_time(&self) -> f32 {
-        self.end_time
+        self.end_time.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -59,8 +63,8 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.start_time = r.f32()?;
-            self.end_time = r.f32()?;
+            self.start_time = OrderedFloat(r.f32()?);
+            self.end_time = OrderedFloat(r.f32()?);
             let _game_cam = r.u32()?;
             let _clip_ent_id = r.u32()?;
             let _cam_position = r.vec3()?;

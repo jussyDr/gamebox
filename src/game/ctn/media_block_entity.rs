@@ -1,9 +1,11 @@
 //! Media block entity.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Entity media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockEntity {
     keys: Vec<Key>,
 }
@@ -20,19 +22,22 @@ impl MediaBlockEntity {
 }
 
 /// Entity media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
+    time: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::{
         plug::ent_record_data::EntRecordData,
@@ -111,7 +116,9 @@ mod read {
                     let _self_illum_intensity = r.f32()?;
                 }
 
-                Ok(Key { time })
+                Ok(Key {
+                    time: OrderedFloat(time),
+                })
             })?;
 
             if version >= 7 {

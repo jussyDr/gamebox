@@ -7,7 +7,7 @@ use crate::Class;
 use super::MediaTrack;
 
 /// A media clip.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaClip {
     tracks: Vec<Arc<MediaTrack>>,
     name: String,

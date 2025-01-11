@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// Collector list.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct CollectorList {
     list: Vec<()>,
 }

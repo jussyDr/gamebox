@@ -52,6 +52,7 @@ pub mod write;
 mod node_ref;
 
 use bytemuck::{Pod, Zeroable};
+use ordered_float::OrderedFloat;
 #[doc(inline)]
 pub use read::{read, read_file};
 #[doc(inline)]
@@ -87,7 +88,7 @@ impl Byte3 {
 }
 
 /// Nat3.
-#[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
 pub struct Nat3 {
     /// X.
@@ -202,6 +203,28 @@ impl Vec3 {
     }
 }
 
+/// 3-dimensional vector.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[repr(C)]
+pub struct OrderedVec2 {
+    /// X.
+    pub x: OrderedFloat<f32>,
+    /// Y.
+    pub y: OrderedFloat<f32>,
+}
+
+/// 3-dimensional vector.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[repr(C)]
+pub struct OrderedVec3 {
+    /// X.
+    pub x: OrderedFloat<f32>,
+    /// Y.
+    pub y: OrderedFloat<f32>,
+    /// Z.
+    pub z: OrderedFloat<f32>,
+}
+
 /// Rgba.
 #[derive(Clone, Copy, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
 #[repr(C)]
@@ -274,6 +297,18 @@ impl RgbFloat {
     pub const fn to_array(self) -> [f32; 3] {
         [self.r, self.g, self.b]
     }
+}
+
+/// Rgb.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
+#[repr(C)]
+pub struct OrderedRgbFloat {
+    /// Red.
+    pub r: OrderedFloat<f32>,
+    /// Green.
+    pub g: OrderedFloat<f32>,
+    /// Blue.
+    pub b: OrderedFloat<f32>,
 }
 
 /// Rotation represented as yaw, pitch, and roll angles.
@@ -351,7 +386,7 @@ pub struct Iso4 {
 }
 
 /// Reference to a file.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub enum FileRef {
     /// Reference to an internal game file.
     Internal {

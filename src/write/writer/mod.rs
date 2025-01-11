@@ -9,6 +9,7 @@ use std::{
 
 use bytemuck::{bytes_of, Pod};
 use indexmap::{indexset, IndexSet};
+use ordered_float::OrderedFloat;
 
 use crate::{Byte3, Class, FileRef, Nat3, Vec2, Vec3, YawPitchRoll, ID_MARKER_BIT};
 
@@ -57,6 +58,12 @@ impl ToLe for f32 {
     }
 }
 
+impl<T: ToLe> ToLe for OrderedFloat<T> {
+    fn to_le(self) -> Self {
+        Self(self.0.to_le())
+    }
+}
+
 /// Identifier state.
 pub struct IdState {
     seen_id: bool,
@@ -94,21 +101,37 @@ impl<T: IdStateMut> IdStateMut for &mut T {
     }
 }
 
+trait DynAnyEqHash: Any {
+    fn dyn_eq(&self, other: &dyn Any) -> bool;
+
+    fn dyn_hash(&self, state: &mut dyn Hasher);
+}
+
+impl<T: 'static + Eq + Hash> DynAnyEqHash for T {
+    fn dyn_eq(&self, other: &dyn Any) -> bool {
+        other.downcast_ref() == Some(self)
+    }
+
+    fn dyn_hash(&self, mut state: &mut dyn Hasher) {
+        self.hash(&mut state);
+    }
+}
+
 struct InternalNode {
-    node: Arc<dyn Any>,
+    node: Arc<dyn DynAnyEqHash>,
 }
 
 impl PartialEq for InternalNode {
-    fn eq(&self, _other: &Self) -> bool {
-        todo!()
+    fn eq(&self, other: &Self) -> bool {
+        self.node.dyn_eq(other)
     }
 }
 
 impl Eq for InternalNode {}
 
 impl Hash for InternalNode {
-    fn hash<H: Hasher>(&self, _state: &mut H) {
-        todo!()
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.node.dyn_hash(state);
     }
 }
 
@@ -275,7 +298,34 @@ impl<W: Write, I, N> Writer<W, I, N> {
     }
 
     pub fn file_ref_or_null(&mut self, file_ref: Option<&FileRef>) -> Result<(), Error> {
-        todo!()
+        self.u8(3)?;
+
+        match file_ref {
+            Some(FileRef::Internal { path }) => {
+                let mut checksum = [0; 32];
+                checksum[0] = 2;
+
+                self.bytes(&checksum)?;
+                self.string(path.to_str().unwrap())?;
+                self.string_or_empty(None)?;
+            }
+            Some(FileRef::External {
+                checksum,
+                path,
+                locator_url,
+            }) => {
+                self.bytes(checksum)?;
+                self.string(path.to_str().unwrap())?;
+                self.string(locator_url)?;
+            }
+            None => {
+                self.bytes(&[0; 32])?;
+                self.string_or_empty(None)?;
+                self.string_or_empty(None)?;
+            }
+        }
+
+        Ok(())
     }
 
     pub fn file_ref(&mut self, file_ref: &FileRef) -> Result<(), Error> {
@@ -374,14 +424,14 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
         self.node_or_null(Some(value))
     }
 
-    pub fn internal_node_ref_or_null<T: 'static + Class + WriteBody>(
+    pub fn internal_node_ref_or_null<T: 'static + Class + WriteBody + Eq + Hash>(
         &mut self,
         node: Option<&Arc<T>>,
     ) -> Result<(), Error> {
         match node {
             Some(node) => {
                 let internal_node = InternalNode {
-                    node: Arc::clone(node) as Arc<dyn Any>,
+                    node: Arc::clone(node) as Arc<dyn DynAnyEqHash>,
                 };
 
                 match self.node_state.get_mut().nodes.get_index_of(&internal_node) {
@@ -405,7 +455,7 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
         Ok(())
     }
 
-    pub fn internal_node_ref<T: 'static + Class + WriteBody>(
+    pub fn internal_node_ref<T: 'static + Class + WriteBody + Eq + Hash>(
         &mut self,
         node: &Arc<T>,
     ) -> Result<(), Error> {

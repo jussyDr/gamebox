@@ -1,9 +1,11 @@
 //! Media block Fx colors.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Fx colors media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockFxColors {
     keys: Vec<Key>,
 }
@@ -20,19 +22,22 @@ impl MediaBlockFxColors {
 }
 
 /// Fx colors media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
+    time: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -86,7 +91,9 @@ mod read {
                 r.f32()?;
                 r.f32()?;
 
-                Ok(Key { time })
+                Ok(Key {
+                    time: OrderedFloat(time),
+                })
             })?;
 
             Ok(())

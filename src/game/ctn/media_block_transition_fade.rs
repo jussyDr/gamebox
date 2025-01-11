@@ -1,12 +1,15 @@
 //! Media block transition fade.
 
-use crate::{Class, RgbFloat};
+use bytemuck::cast;
+use ordered_float::OrderedFloat;
+
+use crate::{Class, OrderedRgbFloat, RgbFloat};
 
 /// A media block transition fade.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockTransitionFade {
     keys: Vec<Key>,
-    color: RgbFloat,
+    color: OrderedRgbFloat,
 }
 
 impl Class for MediaBlockTransitionFade {
@@ -20,31 +23,34 @@ impl MediaBlockTransitionFade {
     }
 
     /// Color.
-    pub const fn color(&self) -> RgbFloat {
-        self.color
+    pub fn color(&self) -> RgbFloat {
+        cast(self.color)
     }
 }
 
 /// Fading transition media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    opacity: f32,
+    time: OrderedFloat<f32>,
+    opacity: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Opacity.
     pub const fn opacity(&self) -> f32 {
-        self.opacity
+        self.opacity.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -75,9 +81,12 @@ mod read {
                 let time = r.f32()?;
                 let opacity = r.f32()?;
 
-                Ok(Key { time, opacity })
+                Ok(Key {
+                    time: OrderedFloat(time),
+                    opacity: OrderedFloat(opacity),
+                })
             })?;
-            self.color = r.rgb_float()?;
+            self.color = r.rgb_float_ordered()?;
             r.f32()?;
 
             Ok(())

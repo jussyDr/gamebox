@@ -1,9 +1,11 @@
 //! Media block camera effect shake.
 
+use ordered_float::OrderedFloat;
+
 use crate::Class;
 
 /// Camera effect shake media block.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockCameraEffectShake {
     keys: Vec<Key>,
 }
@@ -13,31 +15,34 @@ impl Class for MediaBlockCameraEffectShake {
 }
 
 /// Camera effect shake media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    intensity: f32,
-    speed: f32,
+    time: OrderedFloat<f32>,
+    intensity: OrderedFloat<f32>,
+    speed: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Intensity.
     pub const fn intensity(&self) -> f32 {
-        self.intensity
+        self.intensity.0
     }
 
     /// Speed.
     pub const fn speed(&self) -> f32 {
-        self.speed
+        self.speed.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -70,9 +75,9 @@ mod read {
                 let speed = r.f32()?;
 
                 Ok(Key {
-                    time,
-                    intensity,
-                    speed,
+                    time: OrderedFloat(time),
+                    intensity: OrderedFloat(intensity),
+                    speed: OrderedFloat(speed),
                 })
             })?;
 

@@ -7,7 +7,7 @@ use crate::Class;
 use super::media_block_triangles::MediaBlockTriangles;
 
 /// A media block triangles 3D.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockTriangles3D {
     parent: MediaBlockTriangles,
 }

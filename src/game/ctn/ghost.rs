@@ -5,7 +5,7 @@ use std::ops::Deref;
 use crate::{game::ghost, Class};
 
 /// Ghost.
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct Ghost {
     parent: ghost::Ghost,
     events_duration: u32,

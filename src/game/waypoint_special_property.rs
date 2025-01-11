@@ -3,7 +3,7 @@
 use crate::Class;
 
 /// Waypoint special property.
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct WaypointSpecialProperty {
     tag: String,
     order: u32,

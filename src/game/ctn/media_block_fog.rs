@@ -1,9 +1,12 @@
 //! Media block fog.
 
-use crate::{Class, RgbFloat};
+use bytemuck::cast;
+use ordered_float::OrderedFloat;
+
+use crate::{Class, OrderedRgbFloat, RgbFloat};
 
 /// A media block fog.
-#[derive(Default)]
+#[derive(PartialEq, Eq, Hash, Default)]
 pub struct MediaBlockFog {
     keys: Vec<Key>,
 }
@@ -20,61 +23,64 @@ impl MediaBlockFog {
 }
 
 /// Fog media block key.
+#[derive(PartialEq, Eq, Hash)]
 pub struct Key {
-    time: f32,
-    intensity: f32,
-    sky_intensity: f32,
-    distance: f32,
-    coefficient: f32,
-    color: RgbFloat,
-    clouds_opacity: f32,
-    clouds_speed: f32,
+    time: OrderedFloat<f32>,
+    intensity: OrderedFloat<f32>,
+    sky_intensity: OrderedFloat<f32>,
+    distance: OrderedFloat<f32>,
+    coefficient: OrderedFloat<f32>,
+    color: OrderedRgbFloat,
+    clouds_opacity: OrderedFloat<f32>,
+    clouds_speed: OrderedFloat<f32>,
 }
 
 impl Key {
     /// Time.
     pub const fn time(&self) -> f32 {
-        self.time
+        self.time.0
     }
 
     /// Intensity.
     pub const fn intensity(&self) -> f32 {
-        self.intensity
+        self.intensity.0
     }
 
     /// Sky intensity.
     pub const fn sky_intensity(&self) -> f32 {
-        self.sky_intensity
+        self.sky_intensity.0
     }
 
     /// Distance.
     pub const fn distance(&self) -> f32 {
-        self.distance
+        self.distance.0
     }
 
     /// Coefficient.
     pub const fn coefficient(&self) -> f32 {
-        self.coefficient
+        self.coefficient.0
     }
 
     /// Color
-    pub const fn color(&self) -> RgbFloat {
-        self.color
+    pub fn color(&self) -> RgbFloat {
+        cast(self.color)
     }
 
     /// Clouds opacity.
     pub const fn clouds_opacity(&self) -> f32 {
-        self.clouds_opacity
+        self.clouds_opacity.0
     }
 
     /// Clouds speed.
     pub const fn clouds_speed(&self) -> f32 {
-        self.clouds_speed
+        self.clouds_speed.0
     }
 }
 
 mod read {
     use std::io::{Read, Seek};
+
+    use ordered_float::OrderedFloat;
 
     use crate::read::{
         read_body_chunks,
@@ -113,19 +119,19 @@ mod read {
                 let sky_intensity = r.f32()?;
                 let distance = r.f32()?;
                 let coefficient = r.f32()?;
-                let color = r.rgb_float()?;
+                let color = r.rgb_float_ordered()?;
                 let clouds_opacity = r.f32()?;
                 let clouds_speed = r.f32()?;
 
                 Ok(Key {
-                    time,
-                    intensity,
-                    sky_intensity,
-                    distance,
-                    coefficient,
+                    time: OrderedFloat(time),
+                    intensity: OrderedFloat(intensity),
+                    sky_intensity: OrderedFloat(sky_intensity),
+                    distance: OrderedFloat(distance),
+                    coefficient: OrderedFloat(coefficient),
                     color,
-                    clouds_opacity,
-                    clouds_speed,
+                    clouds_opacity: OrderedFloat(clouds_opacity),
+                    clouds_speed: OrderedFloat(clouds_speed),
                 })
             })?;
 
