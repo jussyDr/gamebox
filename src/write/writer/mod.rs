@@ -64,6 +64,17 @@ impl<T: ToLe> ToLe for OrderedFloat<T> {
     }
 }
 
+pub fn write_to_buf<I, N>(
+    mut write_fn: impl FnMut(&mut Writer<Vec<u8>, I, N>) -> Result<(), Error>,
+    id_state: I,
+    node_state: N,
+) -> Result<Vec<u8>, Error> {
+    let mut w = Writer::new(vec![], id_state, node_state);
+    write_fn(&mut w)?;
+
+    Ok(w.inner)
+}
+
 /// Low-level GameBox writer.
 pub struct Writer<W, I, N> {
     inner: W,
@@ -89,15 +100,16 @@ impl<W, I, N> Writer<W, I, N> {
         &mut self.inner
     }
 
-    pub fn to_buf_inline(
-        &mut self,
-        mut write_fn: impl FnMut(&mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>,
-    ) -> Result<Vec<u8>, Error> {
-        let mut w = Writer::new(vec![], &mut self.id_state, &mut self.node_state);
+    pub fn state(&mut self) -> (&mut I, &mut N) {
+        (&mut self.id_state, &mut self.node_state)
+    }
 
-        write_fn(&mut w)?;
+    pub fn id_state(&mut self) -> &mut I {
+        &mut self.id_state
+    }
 
-        Ok(w.inner)
+    pub fn node_state(&mut self) -> &mut N {
+        &mut self.node_state
     }
 }
 
@@ -168,14 +180,6 @@ impl<W: Write, I, N> Writer<W, I, N> {
     pub fn byte_buf(&mut self, bytes: &[u8]) -> Result<(), Error> {
         self.u32(bytes.len() as u32)?;
         self.bytes(bytes)
-    }
-
-    pub fn byte_buf_inline(
-        &mut self,
-        write_fn: impl FnMut(&mut Writer<Vec<u8>, &mut I, &mut N>) -> Result<(), Error>,
-    ) -> Result<(), Error> {
-        let buf = self.to_buf_inline(write_fn)?;
-        self.byte_buf(&buf)
     }
 
     pub fn string(&mut self, value: &str) -> Result<(), Error> {

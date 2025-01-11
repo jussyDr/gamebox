@@ -1,49 +1,23 @@
 //! Writing GameBox files.
 
+mod error;
 pub(crate) mod writable;
 pub(crate) mod writer;
 
+pub use error::Error;
 pub(crate) use writable::{BodyChunk, BodyChunks};
 pub(crate) use writer::Writer;
-use writer::{IdState, NodeState};
+use writer::{write_to_buf, IdState, NodeState};
 
 use std::{
-    fmt::{self, Display, Formatter},
     fs::File,
-    io::{self, BufWriter, Cursor, Seek, Write},
+    io::{BufWriter, Seek, Write},
     path::Path,
 };
 
 use lzo1x::CompressLevel;
 
 use crate::{FILE_SIGNATURE, HEAVY_CHUNK_MARKER_BIT};
-
-/// Write error.
-#[derive(Debug)]
-pub struct Error {
-    kind: ErrorKind,
-}
-
-impl Error {
-    pub(crate) const fn io(err: io::Error) -> Self {
-        Self {
-            kind: ErrorKind::Io(err),
-        }
-    }
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        todo!()
-    }
-}
-
-impl std::error::Error for Error {}
-
-#[derive(Debug)]
-enum ErrorKind {
-    Io(io::Error),
-}
 
 /// A writable class.
 pub trait Writable: writable::Sealed {}
@@ -95,61 +69,58 @@ impl Settings {
 
         w.u8(b'R')?;
         w.u32(T::CLASS_ID)?;
-        w.byte_buf_inline(|w| {
-            let header_chunks = T::header_chunks();
+        let header_data = write_to_buf(
+            |w| {
+                let header_chunks = T::header_chunks();
 
-            let mut hh = vec![];
+                let mut chunk_bytes = vec![];
 
-            let mut id_state = IdState::new();
+                let mut id_state = IdState::new();
 
-            for header_chunk in header_chunks {
-                let mut w2 = Writer::new(vec![], &mut id_state, ());
-                (header_chunk.write_fn)(node, &mut w2)?;
-                let buf = w2.into_inner();
+                w.u32(header_chunks.len() as u32)?;
 
-                let mut len = buf.len() as u32;
+                for header_chunk in header_chunks {
+                    let bytes =
+                        write_to_buf(|w| (header_chunk.write_fn)(node, w), &mut id_state, ())?;
 
-                if header_chunk.heavy {
-                    len |= HEAVY_CHUNK_MARKER_BIT;
+                    let mut len = bytes.len() as u32;
+
+                    if header_chunk.heavy {
+                        len |= HEAVY_CHUNK_MARKER_BIT;
+                    }
+
+                    w.u32(T::CLASS_ID | header_chunk.num as u32)?;
+                    w.u32(len)?;
+
+                    chunk_bytes.push(bytes);
                 }
 
-                w.u32(T::CLASS_ID | header_chunk.num as u32)?;
-                w.u32(len)?;
+                for bytes in chunk_bytes {
+                    w.bytes(&bytes)?;
+                }
 
-                hh.push(buf);
-            }
+                Ok(())
+            },
+            (),
+            (),
+        )?;
+        w.byte_buf(&header_data)?;
 
-            for h in hh {
-                w.bytes(&h)?;
-            }
+        let mut node_state = NodeState::new();
+        let body = write_to_buf(|w| node.write_body(w), IdState::new(), &mut node_state)?;
 
-            Ok(())
-        })?;
-        w.u32(1)?;
+        w.u32(node_state.num_nodes() as u32 + 1)?;
         w.u32(0)?;
 
         match self.body_compression {
             Compression::None => {
-                let mut w = Writer::new(w.into_inner(), IdState::new(), NodeState::new());
-
-                node.write_body(&mut w)?;
+                w.bytes(&body)?;
             }
             Compression::Compress { level } => {
-                let body = {
-                    let mut body = vec![];
-                    let mut w =
-                        Writer::new(Cursor::new(&mut body), IdState::new(), NodeState::new());
-
-                    node.write_body(&mut w)?;
-
-                    body
-                };
-
                 let compressed_body = lzo1x::compress(&body, level);
 
                 w.u32(body.len() as u32)?;
-                w.u32(compressed_body.len() as u32)?;
-                w.bytes(&compressed_body)?;
+                w.byte_buf(&compressed_body)?;
             }
         }
 

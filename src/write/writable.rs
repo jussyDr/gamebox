@@ -3,7 +3,7 @@ use std::io::Write;
 use crate::{Class, END_OF_NODE_MARKER, SKIPPABLE_CHUNK_MARKER};
 
 use super::{
-    writer::{IdStateMut, NodeStateMut, Writer},
+    writer::{write_to_buf, IdStateMut, NodeStateMut, Writer},
     Error,
 };
 
@@ -11,7 +11,7 @@ pub trait Sealed: Class + HeaderChunks + WriteBody {}
 
 pub trait HeaderChunks: Sized {
     fn header_chunks<W: Write, I: IdStateMut, N>(
-    ) -> impl Iterator<Item = HeaderChunk<Self, W, I, N>>;
+    ) -> impl ExactSizeIterator<Item = HeaderChunk<Self, W, I, N>>;
 }
 
 pub struct HeaderChunk<T, W, I, N> {
@@ -96,7 +96,9 @@ pub fn write_body_chunks<T: Class + BodyChunks>(
             }
             BodyChunkWriteFn::Skippable(write_fn) => {
                 w.u32(SKIPPABLE_CHUNK_MARKER)?;
-                w.byte_buf_inline(|w| write_fn(node, w))?;
+                let (id_state, node_state) = w.state();
+                let chunk = write_to_buf(|w| write_fn(node, w), id_state, node_state)?;
+                w.byte_buf(&chunk)?;
             }
         }
     }

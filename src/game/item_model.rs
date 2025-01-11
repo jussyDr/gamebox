@@ -448,7 +448,7 @@ mod write {
     impl writable::Sealed for ItemModel {}
 
     impl HeaderChunks for ItemModel {
-        fn header_chunks<W, I, N>() -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
+        fn header_chunks<W, I, N>() -> impl ExactSizeIterator<Item = HeaderChunk<Self, W, I, N>> {
             [].into_iter()
         }
     }

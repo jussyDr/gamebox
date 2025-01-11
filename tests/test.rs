@@ -283,7 +283,9 @@ fn read_map_mindor() {
 
     let challenge_2: Challenge = read(Cursor::new(buf)).unwrap();
 
-    assert_eq!(challenge_1, challenge_2);
+    if challenge_1 != challenge_2 {
+        panic!()
+    }
 }
 
 #[test]

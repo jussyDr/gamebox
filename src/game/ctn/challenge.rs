@@ -1617,7 +1617,7 @@ mod read {
         fn read_event(&mut self) -> Result<Event, Error> {
             self.inner
                 .read_event_into(&mut self.buf)
-                .map_err(|_| Error::new(ErrorKind::Format("".into())))
+                .map_err(|_| Error::new(ErrorKind::Format("expected event".into())))
         }
 
         fn tag(
@@ -1633,17 +1633,17 @@ mod read {
                     attribute_read_fn(&mut attributes)?;
 
                     if attributes.inner.next().is_some() {
-                        return Err(Error::new(ErrorKind::Format("".into())));
+                        return Err(Error::new(ErrorKind::Format("unexpected attribute".into())));
                     }
                 }
-                _ => return Err(Error::new(ErrorKind::Format("".into()))),
+                _ => return Err(Error::new(ErrorKind::Format("expected start event".into()))),
             }
 
             read_fn(self)?;
 
             match self.read_event()? {
                 Event::End(event) if event.name().as_ref() == name => Ok(()),
-                _ => Err(Error::new(ErrorKind::Format("".into()))),
+                _ => Err(Error::new(ErrorKind::Format("expected end event".into()))),
             }
         }
 
@@ -1658,10 +1658,10 @@ mod read {
                     let mut attributes = XmlAttributes::new(event.attributes());
 
                     if attributes.inner.next().is_some() {
-                        return Err(Error::new(ErrorKind::Format("".into())));
+                        return Err(Error::new(ErrorKind::Format("unexpected attribute".into())));
                     }
                 }
-                _ => return Err(Error::new(ErrorKind::Format("".into()))),
+                _ => return Err(Error::new(ErrorKind::Format("expected start event".into()))),
             }
 
             loop {
@@ -1673,10 +1673,12 @@ mod read {
                         attribute_read_fn(&mut attributes)?;
 
                         if attributes.inner.next().is_some() {
-                            return Err(Error::new(ErrorKind::Format("".into())));
+                            return Err(Error::new(ErrorKind::Format(
+                                "unexpected attribute".into(),
+                            )));
                         }
                     }
-                    _ => return Err(Error::new(ErrorKind::Format("".into()))),
+                    _ => return Err(Error::new(ErrorKind::Format("expected empty event".into()))),
                 }
             }
 
@@ -1695,12 +1697,12 @@ mod read {
                     attribute_read_fn(&mut attributes)?;
 
                     if attributes.inner.next().is_some() {
-                        return Err(Error::new(ErrorKind::Format("".into())));
+                        return Err(Error::new(ErrorKind::Format("unexpected attribute".into())));
                     }
 
                     Ok(())
                 }
-                _ => Err(Error::new(ErrorKind::Format("".into()))),
+                _ => Err(Error::new(ErrorKind::Format("expected empty event".into()))),
             }
         }
     }
@@ -1720,21 +1722,24 @@ mod read {
                     Ok(Some(attribute.unescape_value().unwrap()))
                 }
                 None => Ok(None),
-                _ => Err(Error::new(ErrorKind::Format("".into()))),
+                _ => Err(Error::new(ErrorKind::Format(
+                    "expected attribute optional".into(),
+                ))),
             }
         }
 
         fn attribute(&mut self, name: &[u8]) -> Result<Cow<'a, str>, Error> {
             match self.optional_attribute(name)? {
                 Some(value) => Ok(value),
-                None => Err(Error::new(ErrorKind::Format("".into()))),
+                None => Err(Error::new(ErrorKind::Format("expected attribute".into()))),
             }
         }
 
         fn attribute_from_str<T: FromStr>(&mut self, name: &[u8]) -> Result<T, Error> {
             let value = self.attribute(name)?;
 
-            T::from_str(&value).map_err(|_| Error::new(ErrorKind::Format("".into())))
+            T::from_str(&value)
+                .map_err(|_| Error::new(ErrorKind::Format("expected attribute from str".into())))
         }
     }
 }
@@ -1748,7 +1753,7 @@ mod write {
         game::ctn::{block::BlockType, Block, ChallengeParameters, CollectorList},
         write::{
             writable,
-            writer::{IdStateMut, NodeStateMut},
+            writer::{write_to_buf, IdStateMut, NodeStateMut},
             BodyChunk, BodyChunks, Error, Writable, Writer,
         },
         Nat3, Vec2,
@@ -1764,7 +1769,7 @@ mod write {
 
     impl HeaderChunks for Challenge {
         fn header_chunks<W: Write, I: IdStateMut, N>(
-        ) -> impl Iterator<Item = HeaderChunk<Self, W, I, N>> {
+        ) -> impl ExactSizeIterator<Item = HeaderChunk<Self, W, I, N>> {
             [
                 HeaderChunk::normal(2, |s, w| Self::write_chunk_2(s, w)),
                 HeaderChunk::normal(3, |s, w| Self::write_chunk_3(s, w)),
@@ -1929,27 +1934,61 @@ mod write {
         }
 
         fn write_chunk_5<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            let mut w = XmlWriter::new(w.get_mut());
+            let xml = write_to_buf(
+                |w| {
+                    let mut w = XmlWriter::new(w.get_mut());
 
-            w.tag(
-                "header",
-                |w| {
-                    w.attribute("type", "map");
-                    w.attribute("exever", GAME_VERSION);
-                    w.attribute("exebuild", &self.game_build_date);
-                    w.attribute("title", &self.title_id);
-                    w.attribute("lightmap", &self.lightmap_version().to_string());
-                },
-                |w| {
-                    w.tag_empty("ident", |w| {})?;
-                    w.tag_empty("desc", |w| {})?;
-                    w.tag_empty("playermodel", |w| {})?;
-                    w.tag_empty("times", |w| {})?;
-                    w.tag("deps", |_| {}, |_| Ok(()))?;
+                    w.tag(
+                        "header",
+                        |w| {
+                            w.attribute("type", "map");
+                            w.attribute("exever", GAME_VERSION);
+                            w.attribute("exebuild", &self.game_build_date);
+                            w.attribute("title", &self.title_id);
+                            w.attribute("lightmap", &self.lightmap_version().to_string());
+                        },
+                        |w| {
+                            w.tag_empty("ident", |w| {
+                                w.attribute("uid", &self.id);
+                                w.attribute("name", &self.name);
+                                w.attribute("author", &self.author_id);
+                                w.attribute("authorzone", &self.author_zone);
+                            })?;
+                            w.tag_empty("desc", |w| {
+                                w.attribute("envir", "Stadium");
+                                w.attribute("mood", "Day");
+                                w.attribute("type", "");
+                                w.attribute("maptype", &self.map_type);
+                                w.attribute("mapstyle", "");
+                                w.attribute_bool("validated", self.validation.is_some());
+                                w.attribute("nblaps", "3");
+                                w.attribute("displaycost", &self.cost.to_string());
+                                w.attribute("mod", "");
+                                w.attribute_bool("hasghostblocks", self.has_ghost_blocks);
+                            })?;
+                            w.tag_empty("playermodel", |w| {
+                                w.attribute("id", "CarSport");
+                            })?;
+                            w.tag_empty("times", |w| {
+                                w.attribute("bronze", "-1");
+                                w.attribute("silver", "-1");
+                                w.attribute("gold", "-1");
+                                w.attribute("authortime", "-1");
+                                w.attribute("authorscore", "0");
+                            })?;
+                            w.tag("deps", |_| {}, |_| Ok(()))?;
+
+                            Ok(())
+                        },
+                    )?;
 
                     Ok(())
                 },
+                (),
+                (),
             )?;
+
+            w.byte_buf(&xml)?;
 
             Ok(())
         }
@@ -2118,6 +2157,7 @@ mod write {
             w.u32(0)?;
             w.encapsulation(|w| {
                 w.list_with_version(&self.items, |w, item| w.node(item))?;
+                w.u32(0)?;
                 w.u32(0)?;
                 w.u32(0)?;
                 w.u32(0)?;
@@ -2588,6 +2628,11 @@ mod write {
     impl Attributes<'_, '_> {
         fn attribute(&mut self, name: &str, value: &str) {
             self.bytes_start.push_attribute((name, value));
+        }
+
+        fn attribute_bool(&mut self, name: &str, value: bool) {
+            let s = if value { "1" } else { "0" };
+            self.bytes_start.push_attribute((name, s));
         }
     }
 }
