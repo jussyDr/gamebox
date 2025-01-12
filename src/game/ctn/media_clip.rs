@@ -11,6 +11,8 @@ use super::MediaTrack;
 pub struct MediaClip {
     tracks: Vec<Arc<MediaTrack>>,
     name: String,
+    stop_when_leave: bool,
+    stop_when_respawn: bool,
 }
 
 impl Class for MediaClip {
@@ -73,10 +75,10 @@ mod read {
 
             self.tracks = r.list_with_version(|r| r.internal_node_ref())?;
             self.name = r.string()?;
-            let _stop_when_leave = r.bool()?;
+            self.stop_when_leave = r.bool()?;
             r.bool()?;
-            let _stop_when_respawn = r.bool()?;
-            r.string()?;
+            self.stop_when_respawn = r.bool()?;
+            r.string_or_empty()?;
             r.f32()?;
             let _local_player_clip_ent_index = r.u32()?;
 
@@ -115,7 +117,37 @@ mod write {
     impl BodyChunks for MediaClip {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+            [
+                BodyChunk::normal(13, Self::write_chunk_13),
+                BodyChunk::skippable(14, |s, w| Self::write_chunk_14(s, w)),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl MediaClip {
+        fn write_chunk_13(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            w.u32(1)?;
+            w.list_with_version(&self.tracks, |w, track| w.internal_node_ref(track))?;
+            w.string(&self.name)?;
+            w.bool(self.stop_when_leave)?;
+            w.bool(false)?;
+            w.bool(self.stop_when_respawn)?;
+            w.string_or_empty(None)?;
+            w.f32(0.2)?;
+            w.u32(0)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_14<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(1)?;
+            w.u32(0)?;
+
+            Ok(())
         }
     }
 }

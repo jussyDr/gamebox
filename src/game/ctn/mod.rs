@@ -205,6 +205,19 @@ impl FromVariant<u8> for ElemColor {
     }
 }
 
+impl Into<u8> for ElemColor {
+    fn into(self) -> u8 {
+        match self {
+            Self::Default => 0,
+            Self::White => 1,
+            Self::Green => 2,
+            Self::Blue => 3,
+            Self::Red => 4,
+            Self::Black => 5,
+        }
+    }
+}
+
 /// Lightmap quality
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum LightmapQuality {
@@ -236,6 +249,20 @@ impl FromVariant<u8> for LightmapQuality {
             5 => Some(Self::VeryLow),
             6 => Some(Self::Lowest),
             _ => None,
+        }
+    }
+}
+
+impl Into<u8> for LightmapQuality {
+    fn into(self) -> u8 {
+        match self {
+            Self::Normal => 0,
+            Self::High => 1,
+            Self::VeryHigh => 2,
+            Self::Highest => 3,
+            Self::Low => 4,
+            Self::VeryLow => 5,
+            Self::Lowest => 6,
         }
     }
 }

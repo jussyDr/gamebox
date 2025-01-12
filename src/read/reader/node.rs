@@ -216,6 +216,29 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         }
     }
 
+    pub fn internal_node_ref_any<T>(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Self, u32) -> Result<(Arc<dyn Any + Send + Sync>, T), Error>,
+    ) -> Result<T, Error> {
+        let index = self.u32()? - 1;
+
+        match self.node_state.get_mut().get_entry(index as usize)? {
+            None => {
+                let class_id = self.u32()?;
+                let (node, value) = read_fn(self, class_id)?;
+
+                *self.node_state.get_mut().get_entry(index as usize)? =
+                    Some(NodeRef::Internal(node));
+
+                Ok(value)
+            }
+            Some(node_ref) => match node_ref {
+                NodeRef::Internal { .. } => todo!(),
+                NodeRef::External(_) => todo!(),
+            },
+        }
+    }
+
     pub fn test_or_ext<T>(
         &mut self,
         mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,

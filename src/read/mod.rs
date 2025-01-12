@@ -259,7 +259,7 @@ impl Settings {
 
             let chunk_num = (chunk_id & 0x00000fff) as u16;
 
-            println!("{:08X?}, {}", class_id, chunk_num);
+            // println!("{:08X?}, {}", class_id, chunk_num);
 
             let chunk = h
                 .find(|header_chunk| header_chunk.num == chunk_num)

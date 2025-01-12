@@ -80,3 +80,31 @@ mod read {
         }
     }
 }
+
+mod write {
+    use std::io::Write;
+
+    use crate::write::{
+        writable::{write_body_chunks, WriteBody},
+        writer::{IdStateMut, NodeStateMut},
+        BodyChunk, BodyChunks, Error, Writer,
+    };
+
+    use super::MediaBlockDof;
+
+    impl WriteBody for MediaBlockDof {
+        fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
+            &self,
+            w: &mut Writer<W, I, N>,
+        ) -> Result<(), Error> {
+            write_body_chunks(w, self)
+        }
+    }
+
+    impl BodyChunks for MediaBlockDof {
+        fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [].into_iter()
+        }
+    }
+}

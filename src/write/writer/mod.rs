@@ -8,7 +8,7 @@ pub use node::{NodeState, NodeStateMut};
 
 use std::io::Write;
 
-use bytemuck::{bytes_of, Pod};
+use bytemuck::{bytes_of, cast_slice, Pod};
 use ordered_float::OrderedFloat;
 
 use crate::{Byte3, FileRef, Nat3, Vec2, Vec3, YawPitchRoll};
@@ -238,6 +238,13 @@ impl<W: Write, I, N> Writer<W, I, N> {
         for value in list {
             write_fn(self, value)?;
         }
+
+        Ok(())
+    }
+
+    pub fn list_pod<T: Pod>(&mut self, list: &[T]) -> Result<(), Error> {
+        self.u32(list.len() as u32)?;
+        self.bytes(cast_slice(list))?;
 
         Ok(())
     }

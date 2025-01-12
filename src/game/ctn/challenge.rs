@@ -17,7 +17,7 @@ use super::{
 #[derive(PartialEq, Debug)]
 pub struct Challenge {
     validation: Option<Validation>,
-    cost: u32,
+    display_cost: u32,
     play_mode: u32,
     editor_mode: EditorMode,
     num_checkpoints: u32,
@@ -73,8 +73,8 @@ impl Challenge {
     }
 
     /// Display cost.
-    pub const fn cost(&self) -> u32 {
-        self.cost
+    pub const fn display_cost(&self) -> u32 {
+        self.display_cost
     }
 
     /// Number of checkpoints.
@@ -226,7 +226,7 @@ impl Default for Challenge {
 
         Self {
             validation: None,
-            cost: 0,
+            display_cost: 0,
             play_mode: 0,
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
@@ -353,6 +353,17 @@ impl FromVariant<u32> for EditorMode {
     }
 }
 
+impl Into<u32> for EditorMode {
+    fn into(self) -> u32 {
+        match self {
+            Self::Advanced => 0,
+            Self::Simple => 1,
+            Self::HasGhostBlocks => 2,
+            Self::Gamepad => 4,
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
 enum ChallengeType {
     #[default]
@@ -394,6 +405,26 @@ impl FromVariant<u32> for ChallengeType {
             11 => Some(Self::SoloNadeo),
             12 => Some(Self::MultiNadeo),
             _ => None,
+        }
+    }
+}
+
+impl Into<u32> for ChallengeType {
+    fn into(self) -> u32 {
+        match self {
+            Self::EndMarker => 0,
+            Self::Campaign => 1,
+            Self::Puzzle => 2,
+            Self::Retro => 3,
+            Self::TimeAttack => 4,
+            Self::Rounds => 5,
+            Self::InProgress => 6,
+            Self::Campaign7 => 7,
+            Self::Multi => 8,
+            Self::Solo => 9,
+            Self::Site => 10,
+            Self::SoloNadeo => 11,
+            Self::MultiNadeo => 12,
         }
     }
 }
@@ -561,7 +592,7 @@ mod read {
             let silver_time = r.u32_or_null()?;
             let gold_time = r.u32_or_null()?;
             let author_time = r.u32_or_null()?;
-            self.cost = r.u32()?;
+            self.display_cost = r.u32()?;
             let is_lap_race = r.bool()?;
             self.play_mode = r.u32()?;
             r.u32()?;
@@ -681,7 +712,7 @@ mod read {
                         self.map_style = string_non_empty(r.attribute(b"mapstyle")?.to_string());
                         let _is_validated = r.attribute(b"validated")?;
                         let _num_laps = r.attribute(b"nblaps")?;
-                        self.cost = r.attribute_from_str(b"displaycost")?;
+                        self.display_cost = r.attribute_from_str(b"displaycost")?;
                         let _texture_mod = r.attribute(b"mod")?;
                         self.has_ghost_blocks = match r.attribute(b"hasghostblocks")?.as_ref() {
                             "0" => false,
@@ -1872,7 +1903,7 @@ mod write {
                 w.u32(0xffffffff)?;
             }
 
-            w.u32(self.cost)?;
+            w.u32(self.display_cost)?;
             w.bool(self.num_laps.is_some())?;
             w.u32(self.play_mode)?;
             w.u32(0)?;
@@ -1887,7 +1918,7 @@ mod write {
                 w.u32(0)?;
             }
 
-            w.u32(self.editor_mode as u32)?;
+            w.u32(self.editor_mode.into())?;
             w.u32(0)?;
             w.u32(self.num_checkpoints)?;
 
@@ -1904,12 +1935,14 @@ mod write {
             &self,
             w: &mut Writer<impl Write, impl IdStateMut, N>,
         ) -> Result<(), Error> {
+            let ty: u32 = self.ty.into();
+
             w.u8(11)?;
             w.id(&self.id)?;
             w.u32(0x1a)?;
             w.id(&self.author_id)?;
             w.string(&self.name)?;
-            w.u8(self.ty as u8)?;
+            w.u8(ty as u8)?;
             w.u32(0)?;
             w.string(&self.password)?;
             w.id(&self.decoration_id)?;
@@ -1962,7 +1995,7 @@ mod write {
                                 w.attribute("mapstyle", "");
                                 w.attribute_bool("validated", self.validation.is_some());
                                 w.attribute("nblaps", "3");
-                                w.attribute("displaycost", &self.cost.to_string());
+                                w.attribute("displaycost", &self.display_cost.to_string());
                                 w.attribute("mod", "");
                                 w.attribute_bool("hasghostblocks", self.has_ghost_blocks);
                             })?;
@@ -2034,7 +2067,7 @@ mod write {
         ) -> Result<(), Error> {
             w.internal_node_ref(&Arc::new(CollectorList::default()))?;
             w.internal_node_ref(&Arc::new(ChallengeParameters::default()))?;
-            w.u32(self.ty as u32)?;
+            w.u32(self.ty.into())?;
 
             Ok(())
         }
@@ -2429,15 +2462,15 @@ mod write {
             w.u32(0)?;
 
             for block in &self.blocks {
-                w.u8(block.elem_color as u8)?;
+                w.u8(block.elem_color.into())?;
             }
 
             for baked_block in &self.baked_blocks {
-                w.u8(baked_block.elem_color as u8)?;
+                w.u8(baked_block.elem_color.into())?;
             }
 
             for item in &self.items {
-                w.u8(item.elem_color as u8)?;
+                w.u8(item.elem_color.into())?;
             }
 
             Ok(())
@@ -2447,7 +2480,7 @@ mod write {
             w.u32(0)?;
 
             for item in &self.items {
-                w.u8(item.anim_offset as u8)?;
+                w.u8(item.anim_offset.into())?;
             }
 
             Ok(())
@@ -2490,15 +2523,15 @@ mod write {
             w.u32(1)?;
 
             for block in &self.blocks {
-                w.u8(block.lightmap_quality as u8)?;
+                w.u8(block.lightmap_quality.into())?;
             }
 
             for baked_block in &self.baked_blocks {
-                w.u8(baked_block.lightmap_quality as u8)?;
+                w.u8(baked_block.lightmap_quality.into())?;
             }
 
             for item in &self.items {
-                w.u8(item.lightmap_quality as u8)?;
+                w.u8(item.lightmap_quality.into())?;
             }
 
             Ok(())

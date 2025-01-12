@@ -136,6 +136,21 @@ impl FromVariant<u8> for PhaseOffset {
     }
 }
 
+impl Into<u8> for PhaseOffset {
+    fn into(self) -> u8 {
+        match self {
+            Self::None => 0,
+            Self::One8th => 1,
+            Self::Two8th => 2,
+            Self::Three8th => 3,
+            Self::Four8th => 4,
+            Self::Five8th => 5,
+            Self::Six8th => 6,
+            Self::Seven8th => 7,
+        }
+    }
+}
+
 mod read {
     use std::io::{Read, Seek};
 
