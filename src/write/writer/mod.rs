@@ -202,7 +202,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
                 checksum[0] = 2;
 
                 self.bytes(&checksum)?;
-                self.string(path.to_str().unwrap())?;
+                self.string(path)?;
                 self.string_or_empty(None)?;
             }
             Some(FileRef::External {
@@ -211,7 +211,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
                 locator_url,
             }) => {
                 self.bytes(checksum)?;
-                self.string(path.to_str().unwrap())?;
+                self.string(path)?;
                 self.string(locator_url)?;
             }
             None => {

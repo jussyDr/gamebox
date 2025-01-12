@@ -58,7 +58,7 @@ impl<W: Write, I: IdStateMut, N> Writer<W, I, N> {
                 }
                 None => {
                     self.u32(ID_MARKER_BIT)?;
-                    self.string(&id)?;
+                    self.string(id)?;
 
                     self.id_state.get_mut().ids.insert(Arc::clone(id));
                 }

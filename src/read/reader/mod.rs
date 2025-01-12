@@ -11,7 +11,6 @@ use ordered_float::OrderedFloat;
 use std::{
     cmp::min,
     io::{self, Read, Seek, SeekFrom},
-    path::PathBuf,
 };
 
 use node::NullNodeState;
@@ -359,12 +358,10 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
 
         if locator_url.is_empty() {
-            Ok(Some(FileRef::Internal {
-                path: PathBuf::from(path),
-            }))
+            Ok(Some(FileRef::Internal { path }))
         } else {
             Ok(Some(FileRef::External {
-                path: PathBuf::from(path),
+                path,
                 locator_url,
                 checksum,
             }))

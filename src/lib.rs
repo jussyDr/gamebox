@@ -61,7 +61,7 @@ pub use write::{write, write_file};
 pub use node_ref::{ExternalNodeRef, NodeRef};
 
 use gamebox_macros::{FromLe, ToLe};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Byte3.
 #[derive(Clone, Copy, PartialEq, Zeroable, Pod, Default, FromLe, ToLe, Debug)]
@@ -391,14 +391,14 @@ pub enum FileRef {
     /// Reference to an internal game file.
     Internal {
         /// Path.
-        path: PathBuf,
+        path: String,
     },
     /// Reference to an external file.
     External {
         /// Checksum.
         checksum: [u8; 32],
         /// Path.
-        path: PathBuf,
+        path: String,
         /// Locator URL.
         locator_url: String,
     },
@@ -407,7 +407,7 @@ pub enum FileRef {
 impl Default for FileRef {
     fn default() -> Self {
         Self::Internal {
-            path: PathBuf::default(),
+            path: String::new(),
         }
     }
 }
