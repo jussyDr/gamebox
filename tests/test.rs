@@ -477,7 +477,5 @@ fn write_map_new() {
 
     let challenge_2: Challenge = read(Cursor::new(buf)).unwrap();
 
-    if challenge_1 != challenge_2 {
-        panic!()
-    }
+    assert_eq!(challenge_1, challenge_2);
 }

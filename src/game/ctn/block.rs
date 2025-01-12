@@ -215,6 +215,17 @@ mod write {
 
             let mut flags = 0;
 
+            flags |= self.mobil_index as u32;
+            flags |= (self.mobil_sub_index as u32) << 6;
+
+            if self.is_ground {
+                flags |= 1 << 12;
+            }
+
+            if self.is_pillar {
+                flags |= 1 << 14;
+            }
+
             if self.skin.is_some() {
                 flags |= 1 << 15;
             }
@@ -222,6 +233,8 @@ mod write {
             if self.waypoint_property.is_some() {
                 flags |= 1 << 20;
             }
+
+            flags |= (self.variant_index as u32) << 21;
 
             if is_ghost {
                 flags |= 1 << 28;
