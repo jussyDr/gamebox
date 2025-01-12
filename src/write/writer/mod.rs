@@ -11,7 +11,7 @@ use std::io::Write;
 use bytemuck::{bytes_of, cast_slice, Pod};
 use ordered_float::OrderedFloat;
 
-use crate::{Byte3, FileRef, Nat3, Vec2, Vec3, YawPitchRoll};
+use crate::{Byte3, FileRef, Int2, Int3, Iso4, Nat3, Vec2, Vec3, YawPitchRoll};
 
 use super::Error;
 
@@ -145,6 +145,10 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.pod(value)
     }
 
+    pub fn i32(&mut self, value: i32) -> Result<(), Error> {
+        self.pod(value)
+    }
+
     pub fn f32(&mut self, value: f32) -> Result<(), Error> {
         self.pod(value)
     }
@@ -157,6 +161,14 @@ impl<W: Write, I, N> Writer<W, I, N> {
         self.pod(value)
     }
 
+    pub fn int2(&mut self, value: Int2) -> Result<(), Error> {
+        self.pod(value)
+    }
+
+    pub fn int3(&mut self, value: Int3) -> Result<(), Error> {
+        self.pod(value)
+    }
+
     pub fn vec2(&mut self, value: Vec2) -> Result<(), Error> {
         self.pod(value)
     }
@@ -166,6 +178,10 @@ impl<W: Write, I, N> Writer<W, I, N> {
     }
 
     pub fn yaw_pitch_roll(&mut self, value: YawPitchRoll) -> Result<(), Error> {
+        self.pod(value)
+    }
+
+    pub fn iso4(&mut self, value: Iso4) -> Result<(), Error> {
         self.pod(value)
     }
 

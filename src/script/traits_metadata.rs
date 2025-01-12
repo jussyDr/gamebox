@@ -7,7 +7,7 @@ use crate::{Class, Int2, Int3, Iso4, Vec2, Vec3};
 /// Traits metadata.
 #[derive(PartialEq, Default, Debug)]
 pub struct TraitsMetadata {
-    traits: HashMap<String, Trait>,
+    traits: HashMap<String, Value>,
 }
 
 impl Class for TraitsMetadata {
@@ -16,14 +16,14 @@ impl Class for TraitsMetadata {
 
 impl TraitsMetadata {
     /// Metadata traits.
-    pub const fn traits(&self) -> &HashMap<String, Trait> {
+    pub const fn traits(&self) -> &HashMap<String, Value> {
         &self.traits
     }
 }
 
-/// A trait.
+/// Value.
 #[derive(PartialEq, Debug)]
-pub enum Trait {
+pub enum Value {
     /// Void.
     Void,
     /// Boolean.
@@ -39,12 +39,7 @@ pub enum Trait {
     /// Enum.
     Enum,
     /// Associative array.
-    Array {
-        /// Keys.
-        keys: Vec<Trait>,
-        /// Values.
-        values: Vec<Trait>,
-    },
+    Array(ArrayValue),
     /// Parameter array.
     ParamArray,
     /// 2-dimensional vector.
@@ -64,13 +59,34 @@ pub enum Trait {
         /// Name.
         name: String,
         /// Members.
-        members: HashMap<String, Trait>,
+        members: HashMap<String, Value>,
     },
     /// Value not computed.
     ValueNotComputed,
 }
 
-#[derive(Debug)]
+/// Array value.
+#[derive(PartialEq, Debug)]
+pub struct ArrayValue {
+    key_type: Type,
+    value_type: Type,
+    keys: Vec<Value>,
+    values: Vec<Value>,
+}
+
+impl ArrayValue {
+    /// Keys.
+    pub const fn keys(&self) -> &Vec<Value> {
+        &self.keys
+    }
+
+    /// Values.
+    pub const fn values(&self) -> &Vec<Value> {
+        &self.values
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 enum Type {
     Void,
     Boolean,
@@ -109,7 +125,7 @@ mod read {
         BodyChunk, BodyChunks, Error, ReadBody,
     };
 
-    use super::{Trait, TraitsMetadata, Type};
+    use super::{ArrayValue, TraitsMetadata, Type, Value};
 
     impl ReadBody for TraitsMetadata {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -143,7 +159,7 @@ mod read {
                 let name_len = read_len(r)? as usize;
                 let name = r.string_of_len(name_len)?;
                 let type_index = read_len(r)? as usize;
-                let tr = read_contents(r, &types[type_index])?;
+                let tr = read_value(r, &types[type_index])?;
 
                 self.traits.insert(name, tr);
             }
@@ -205,19 +221,19 @@ mod read {
         }
     }
 
-    fn read_contents<I, N>(r: &mut Reader<impl Read, I, N>, ty: &Type) -> Result<Trait, Error> {
+    fn read_value<I, N>(r: &mut Reader<impl Read, I, N>, ty: &Type) -> Result<Value, Error> {
         match ty {
-            Type::Void => Ok(Trait::Void),
-            Type::Boolean => Ok(Trait::Boolean(r.bool8()?)),
-            Type::Integer => Ok(Trait::Integer(r.i32()?)),
-            Type::Real => Ok(Trait::Real(r.f32()?)),
-            Type::Class => Ok(Trait::Class),
+            Type::Void => Ok(Value::Void),
+            Type::Boolean => Ok(Value::Boolean(r.bool8()?)),
+            Type::Integer => Ok(Value::Integer(r.i32()?)),
+            Type::Real => Ok(Value::Real(r.f32()?)),
+            Type::Class => Ok(Value::Class),
             Type::Text => {
                 let len = read_len(r)? as usize;
 
-                Ok(Trait::Text(r.string_of_len(len)?))
+                Ok(Value::Text(r.string_of_len(len)?))
             }
-            Type::Enum => Ok(Trait::Enum),
+            Type::Enum => Ok(Value::Enum),
             Type::Array {
                 key_type,
                 value_type,
@@ -228,37 +244,42 @@ mod read {
                 let mut values = vec![];
 
                 for _ in 0..len {
-                    let key = read_contents(r, key_type)?;
-                    let value = read_contents(r, value_type)?;
+                    let key = read_value(r, key_type)?;
+                    let value = read_value(r, value_type)?;
 
                     keys.push(key);
                     values.push(value);
                 }
 
-                Ok(Trait::Array { keys, values })
+                Ok(Value::Array(ArrayValue {
+                    key_type: *key_type.clone(),
+                    keys,
+                    value_type: *value_type.clone(),
+                    values,
+                }))
             }
-            Type::ParamArray => Ok(Trait::ParamArray),
-            Type::Vec2 => Ok(Trait::Vec2(r.vec2()?)),
-            Type::Vec3 => Ok(Trait::Vec3(r.vec3()?)),
-            Type::Int3 => Ok(Trait::Int3(r.int3()?)),
-            Type::Iso4 => Ok(Trait::Iso4(r.iso4()?)),
-            Type::Ident => Ok(Trait::Ident),
-            Type::Int2 => Ok(Trait::Int2(r.int2()?)),
+            Type::ParamArray => Ok(Value::ParamArray),
+            Type::Vec2 => Ok(Value::Vec2(r.vec2()?)),
+            Type::Vec3 => Ok(Value::Vec3(r.vec3()?)),
+            Type::Int3 => Ok(Value::Int3(r.int3()?)),
+            Type::Iso4 => Ok(Value::Iso4(r.iso4()?)),
+            Type::Ident => Ok(Value::Ident),
+            Type::Int2 => Ok(Value::Int2(r.int2()?)),
             Type::Struct { name, member_types } => {
                 let mut members = HashMap::new();
 
                 for (member_name, member_type) in member_types {
-                    let member = read_contents(r, member_type)?;
+                    let member = read_value(r, member_type)?;
 
                     members.insert(member_name.clone(), member);
                 }
 
-                Ok(Trait::Struct {
+                Ok(Value::Struct {
                     name: name.clone(),
                     members,
                 })
             }
-            Type::ValueNotComputed => Ok(Trait::ValueNotComputed),
+            Type::ValueNotComputed => Ok(Value::ValueNotComputed),
         }
     }
 }
@@ -266,13 +287,15 @@ mod read {
 mod write {
     use std::io::Write;
 
+    use indexmap::indexset;
+
     use crate::write::{
         writable::{write_body_chunks, WriteBody},
         writer::{IdStateMut, NodeStateMut},
         BodyChunk, BodyChunks, Error, Writer,
     };
 
-    use super::TraitsMetadata;
+    use super::{ArrayValue, TraitsMetadata, Type, Value};
 
     impl WriteBody for TraitsMetadata {
         fn write_body<W: Write, I: IdStateMut, N: NodeStateMut>(
@@ -286,7 +309,169 @@ mod write {
     impl BodyChunks for TraitsMetadata {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+            [BodyChunk::normal(0, Self::write_chunk_0)].into_iter()
+        }
+    }
+
+    impl TraitsMetadata {
+        fn write_chunk_0<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(6)?;
+
+            let mut types = indexset![];
+            let mut type_indices = vec![];
+
+            for t in self.traits.values() {
+                let ty = value_type(t);
+                let (index, _) = types.insert_full(ty);
+                type_indices.push(index);
+            }
+
+            write_len(w, types.len())?;
+
+            for ty in types {
+                write_type(w, &ty)?;
+            }
+
+            write_len(w, self.traits.len())?;
+
+            for (i, (name, t)) in self.traits.iter().enumerate() {
+                let type_index = type_indices[i];
+
+                write_len(w, name.len())?;
+                w.bytes(name.as_bytes())?;
+                write_len(w, type_index)?;
+                write_value(w, t)?;
+            }
+
+            Ok(())
+        }
+    }
+
+    fn write_len<I, N>(w: &mut Writer<impl Write, I, N>, len: usize) -> Result<(), Error> {
+        if len > 127 {
+            w.u8((len & 127) as u8)?;
+            w.u16((len >> 7) as u16)?;
+        } else {
+            w.u8(len as u8)?;
+        }
+
+        Ok(())
+    }
+
+    fn write_type<I, N>(w: &mut Writer<impl Write, I, N>, ty: &Type) -> Result<(), Error> {
+        match ty {
+            Type::Void => w.u8(0)?,
+            Type::Boolean => w.u8(1)?,
+            Type::Integer => w.u8(2)?,
+            Type::Real => w.u8(3)?,
+            Type::Class => w.u8(4)?,
+            Type::Text => w.u8(5)?,
+            Type::Enum => w.u8(6)?,
+            Type::Array {
+                key_type,
+                value_type,
+            } => {
+                w.u8(7)?;
+                write_type(w, key_type)?;
+                write_type(w, value_type)?;
+            }
+            Type::ParamArray => w.u8(8)?,
+            Type::Vec2 => w.u8(9)?,
+            Type::Vec3 => w.u8(10)?,
+            Type::Int3 => w.u8(11)?,
+            Type::Iso4 => w.u8(12)?,
+            Type::Ident => w.u8(13)?,
+            Type::Int2 => w.u8(14)?,
+            Type::Struct { name, member_types } => {
+                w.u8(15)?;
+                w.u8(member_types.len() as u8)?;
+                w.string(name)?;
+
+                for (name, ty) in member_types {
+                    w.string(name)?;
+                    write_type(w, ty)?;
+                }
+            }
+            Type::ValueNotComputed => w.u8(16)?,
+        }
+
+        Ok(())
+    }
+
+    fn write_value<I, N>(w: &mut Writer<impl Write, I, N>, value: &Value) -> Result<(), Error> {
+        match *value {
+            Value::Array(ArrayValue {
+                ref keys,
+                ref values,
+                ..
+            }) => {
+                write_len(w, values.len())?;
+
+                for i in 0..values.len() {
+                    write_value(w, &keys[i])?;
+                    write_value(w, &values[i])?;
+                }
+            }
+            Value::Boolean(value) => w.bool8(value)?,
+            Value::Class => {}
+            Value::Enum => {}
+            Value::Ident => {}
+            Value::Int2(value) => w.int2(value)?,
+            Value::Int3(value) => w.int3(value)?,
+            Value::Integer(value) => w.i32(value)?,
+            Value::Iso4(value) => w.iso4(value)?,
+            Value::ParamArray => {}
+            Value::Real(value) => w.f32(value)?,
+            Value::Struct { ref members, .. } => {
+                for value in members.values() {
+                    write_value(w, value)?;
+                }
+            }
+            Value::Text(ref text) => {
+                write_len(w, text.len())?;
+                w.bytes(text.as_bytes())?;
+            }
+            Value::ValueNotComputed => {}
+            Value::Vec2(value) => w.vec2(value)?,
+            Value::Vec3(value) => w.vec3(value)?,
+            Value::Void => {}
+        }
+
+        Ok(())
+    }
+
+    fn value_type(value: &Value) -> Type {
+        match value {
+            Value::Array(ArrayValue {
+                key_type,
+                value_type,
+                ..
+            }) => Type::Array {
+                key_type: Box::new(key_type.clone()),
+                value_type: Box::new(value_type.clone()),
+            },
+            Value::Boolean(_) => Type::Boolean,
+            Value::Class => Type::Class,
+            Value::Enum => Type::Enum,
+            Value::Ident => Type::Ident,
+            Value::Int2(_) => Type::Int2,
+            Value::Int3(_) => Type::Int3,
+            Value::Integer(_) => Type::Integer,
+            Value::Iso4(_) => Type::Iso4,
+            Value::ParamArray => Type::ParamArray,
+            Value::Real(_) => Type::Real,
+            Value::Struct { name, members } => Type::Struct {
+                name: name.clone(),
+                member_types: members
+                    .iter()
+                    .map(|(name, value)| (name.clone(), value_type(value)))
+                    .collect(),
+            },
+            Value::Text(_) => Type::Text,
+            Value::ValueNotComputed => Type::ValueNotComputed,
+            Value::Vec2(_) => Type::Vec2,
+            Value::Vec3(_) => Type::Vec3,
+            Value::Void => Type::Void,
         }
     }
 }

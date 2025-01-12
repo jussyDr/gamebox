@@ -173,6 +173,28 @@ impl FromVariant<u32> for Direction {
     }
 }
 
+impl Into<u8> for Direction {
+    fn into(self) -> u8 {
+        match self {
+            Self::North => 0,
+            Self::East => 1,
+            Self::South => 2,
+            Self::West => 3,
+        }
+    }
+}
+
+impl Into<u32> for Direction {
+    fn into(self) -> u32 {
+        match self {
+            Self::North => 0,
+            Self::East => 1,
+            Self::South => 2,
+            Self::West => 3,
+        }
+    }
+}
+
 /// Element color.
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum ElemColor {

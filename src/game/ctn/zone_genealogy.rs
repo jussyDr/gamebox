@@ -84,7 +84,21 @@ mod write {
     impl BodyChunks for ZoneGenealogy {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+            [BodyChunk::normal(2, Self::write_chunk_2)].into_iter()
+        }
+    }
+
+    impl ZoneGenealogy {
+        fn write_chunk_2<N>(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, N>,
+        ) -> Result<(), Error> {
+            w.list(&self.zone_ids, |w, zone_id| w.id(zone_id))?;
+            w.u32(self.current_index)?;
+            w.u32(self.dir.into())?;
+            w.id_or_null(self.current_zone_id.as_ref())?;
+
+            Ok(())
         }
     }
 }

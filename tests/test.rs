@@ -276,16 +276,7 @@ fn read_map_midnight_metropolis() {
 
 #[test]
 fn read_map_mindor() {
-    let challenge_1: Challenge = read_file("tests/files/map/Mindor.Map.Gbx").unwrap();
-
-    let mut buf = vec![];
-    write(&challenge_1, Cursor::new(&mut buf)).unwrap();
-
-    let challenge_2: Challenge = read(Cursor::new(buf)).unwrap();
-
-    if challenge_1 != challenge_2 {
-        panic!()
-    }
+    read_file::<Challenge>("tests/files/map/Mindor.Map.Gbx").unwrap();
 }
 
 #[test]
@@ -475,4 +466,18 @@ fn read_veget_tree_model_cypress_dirt_tall() {
 fn read_veget_tree_model_fall_tree_medium() {
     read_file::<VegetTreeModel>("tests/files/veget_tree_model/FallTreeMedium.VegetTreeModel.Gbx")
         .unwrap();
+}
+
+#[test]
+fn write_map_new() {
+    let challenge_1: Challenge = read_file("tests/files/map/New.Map.Gbx").unwrap();
+
+    let mut buf = vec![];
+    write(&challenge_1, Cursor::new(&mut buf)).unwrap();
+
+    let challenge_2: Challenge = read(Cursor::new(buf)).unwrap();
+
+    if challenge_1 != challenge_2 {
+        panic!()
+    }
 }

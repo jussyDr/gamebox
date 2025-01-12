@@ -7,7 +7,7 @@ use crate::Class;
 use super::Ghost;
 
 /// Challenge parameters.
-#[derive(PartialEq, Eq, Hash, Default)]
+#[derive(PartialEq, Eq, Hash)]
 pub struct ChallengeParameters {
     pub(crate) bronze_time: Option<u32>,
     pub(crate) silver_time: Option<u32>,
@@ -22,6 +22,22 @@ pub struct ChallengeParameters {
 
 impl Class for ChallengeParameters {
     const CLASS_ID: u32 = 0x0305b000;
+}
+
+impl Default for ChallengeParameters {
+    fn default() -> Self {
+        Self {
+            bronze_time: None,
+            silver_time: None,
+            gold_time: None,
+            author_time: None,
+            time_limit: 60000,
+            author_score: None,
+            validation_ghost: None,
+            map_type: "TrackMania\\TM_Race".to_string(),
+            map_style: None,
+        }
+    }
 }
 
 impl ChallengeParameters {
@@ -108,10 +124,10 @@ mod read {
 
     impl ChallengeParameters {
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _tip = r.string()?;
-            let _tip = r.string()?;
-            let _tip = r.string()?;
-            let _tip = r.string()?;
+            let _tip = r.string_or_empty()?;
+            let _tip = r.string_or_empty()?;
+            let _tip = r.string_or_empty()?;
+            let _tip = r.string_or_empty()?;
 
             Ok(())
         }
@@ -134,7 +150,7 @@ mod read {
         }
 
         fn read_chunk_10<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _tip = r.string()?;
+            let _tip = r.string_or_empty()?;
             self.bronze_time = r.u32_or_null()?;
             self.silver_time = r.u32_or_null()?;
             self.gold_time = r.u32_or_null()?;
@@ -185,8 +201,74 @@ mod write {
     }
 
     impl BodyChunks for ChallengeParameters {
-        fn body_chunks<W, I, N>() -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+        fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
+        ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            [
+                BodyChunk::normal(1, Self::write_chunk_1),
+                BodyChunk::normal(4, Self::write_chunk_4),
+                BodyChunk::normal(8, Self::write_chunk_8),
+                BodyChunk::skippable(10, |s, w| Self::write_chunk_10(s, w)),
+                BodyChunk::normal(13, Self::write_chunk_13),
+                BodyChunk::skippable(14, |s, w| Self::write_chunk_14(s, w)),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl ChallengeParameters {
+        fn write_chunk_1<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.string_or_empty(None)?;
+            w.string_or_empty(None)?;
+            w.string_or_empty(None)?;
+            w.string_or_empty(None)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_4<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(self.bronze_time.unwrap_or(0xffffffff))?;
+            w.u32(self.silver_time.unwrap_or(0xffffffff))?;
+            w.u32(self.gold_time.unwrap_or(0xffffffff))?;
+            w.u32(self.author_score.unwrap_or(0xffffffff))?;
+            w.u32(0)?;
+
+            Ok(())
+        }
+
+        fn write_chunk_8<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(self.time_limit)?;
+            w.u32(self.author_score.unwrap_or(0))?;
+
+            Ok(())
+        }
+
+        fn write_chunk_10<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.string_or_empty(None)?;
+            w.u32(self.bronze_time.unwrap_or(0xffffffff))?;
+            w.u32(self.silver_time.unwrap_or(0xffffffff))?;
+            w.u32(self.gold_time.unwrap_or(0xffffffff))?;
+            w.u32(self.author_score.unwrap_or(0xffffffff))?;
+            w.u32(self.time_limit)?;
+            w.u32(self.author_score.unwrap_or(0))?;
+
+            Ok(())
+        }
+
+        fn write_chunk_13(
+            &self,
+            w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+        ) -> Result<(), Error> {
+            w.internal_node_ref_or_null(self.validation_ghost.as_ref())?;
+
+            Ok(())
+        }
+
+        fn write_chunk_14<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.string(&self.map_type)?;
+            w.string_or_empty(self.map_style.as_ref())?;
+            w.bool(false)?;
+
+            Ok(())
         }
     }
 }

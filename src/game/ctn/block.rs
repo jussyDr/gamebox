@@ -210,7 +210,7 @@ mod write {
                 BlockType::Free { .. } => (Direction::North, Byte3::new(0, 0, 0), false, true),
             };
 
-            w.u8(direction as u8)?;
+            w.u8(direction.into())?;
             w.byte3(coord)?;
 
             let mut flags = 0;

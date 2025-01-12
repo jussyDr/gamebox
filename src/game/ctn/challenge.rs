@@ -2065,8 +2065,46 @@ mod write {
             &self,
             w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
+            let challenge_parameters = match self.validation {
+                Some(ref validation) => match validation.objective {
+                    Objective::MedalTimes(ref medal_times) => ChallengeParameters {
+                        bronze_time: Some(medal_times.bronze_time),
+                        silver_time: Some(medal_times.silver_time),
+                        gold_time: Some(medal_times.gold_time),
+                        author_time: Some(medal_times.author_time),
+                        time_limit: 60000,
+                        author_score: None,
+                        validation_ghost: validation.ghost.clone(),
+                        map_type: self.map_type.clone(),
+                        map_style: self.map_style.clone(),
+                    },
+                    Objective::AuthorScore(author_score) => ChallengeParameters {
+                        bronze_time: None,
+                        silver_time: None,
+                        gold_time: None,
+                        author_time: None,
+                        time_limit: 60000,
+                        author_score: Some(author_score),
+                        validation_ghost: validation.ghost.clone(),
+                        map_type: self.map_type.clone(),
+                        map_style: self.map_style.clone(),
+                    },
+                },
+                None => ChallengeParameters {
+                    bronze_time: None,
+                    silver_time: None,
+                    gold_time: None,
+                    author_time: None,
+                    time_limit: 60000,
+                    author_score: None,
+                    validation_ghost: None,
+                    map_type: self.map_type.clone(),
+                    map_style: self.map_style.clone(),
+                },
+            };
+
             w.internal_node_ref(&Arc::new(CollectorList::default()))?;
-            w.internal_node_ref(&Arc::new(ChallengeParameters::default()))?;
+            w.internal_node_ref(&Arc::new(challenge_parameters))?;
             w.u32(self.ty.into())?;
 
             Ok(())

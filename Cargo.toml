@@ -19,7 +19,11 @@ name = "bench"
 harness = false
 
 [dependencies]
-bytemuck = { version = "1.21.0", features = ["extern_crate_alloc", "derive"] }
+bytemuck = { version = "1.21.0", features = [
+    "extern_crate_alloc",
+    "derive",
+    "must_cast",
+] }
 gamebox-macros = { path = "macros" }
 indexmap = "2.7.0"
 lzo1x = "0.2.0"

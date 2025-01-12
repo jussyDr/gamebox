@@ -139,7 +139,25 @@ mod write {
     impl BodyChunks for MediaBlockTriangles {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+            [
+                BodyChunk::normal(1, Self::write_chunk_1),
+                BodyChunk::skippable(2, |s, w| Self::write_chunk_2(s, w)),
+            ]
+            .into_iter()
+        }
+    }
+
+    impl MediaBlockTriangles {
+        fn write_chunk_1<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            todo!();
+
+            Ok(())
+        }
+
+        fn write_chunk_2<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(0xffffffff)?;
+
+            Ok(())
         }
     }
 }
