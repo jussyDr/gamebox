@@ -116,11 +116,12 @@ impl<W: Write, I: IdStateMut, N: NodeStateMut> Writer<W, I, N> {
                         self.u32(index as u32 + 1)?;
                     }
                     None => {
-                        let index = self.node_state.get_mut().nodes.len() as u32 + 1;
+                        self.node_state.get_mut().nodes.insert(internal_node);
+
+                        let index = self.node_state.get_mut().nodes.len() as u32;
+
                         self.u32(index)?;
                         self.node(node.as_ref())?;
-
-                        self.node_state.get_mut().nodes.insert(internal_node);
                     }
                 }
             }

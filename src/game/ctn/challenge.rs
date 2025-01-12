@@ -2187,7 +2187,6 @@ mod write {
 
         fn write_chunk_64<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
             w.u32(8)?;
-            w.u32(0)?;
             w.encapsulation(|w| {
                 w.list_with_version(&self.items, |w, item| w.node(item))?;
                 w.u32(0)?;
@@ -2210,7 +2209,6 @@ mod write {
         }
 
         fn write_chunk_67<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            w.u32(0)?;
             w.encapsulation(|w| {
                 w.list(&self.zones, |w, zone| w.node(zone))?;
 
@@ -2221,7 +2219,6 @@ mod write {
         }
 
         fn write_chunk_68<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            w.u32(0)?;
             w.encapsulation(|w| {
                 self.script_metadata.write_body(w)?;
 
@@ -2319,7 +2316,6 @@ mod write {
 
         fn write_chunk_84<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
             w.u32(1)?;
-            w.u32(0)?;
             w.encapsulation(|w| {
                 if let Some(ref embedded_items) = self.embedded_items {
                     w.list(&embedded_items.ids, |w, id| {

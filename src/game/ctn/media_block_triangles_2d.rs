@@ -76,6 +76,10 @@ mod write {
     }
 
     impl BodyChunks for MediaBlockTriangles2D {
+        fn parent(&self) -> Option<&impl BodyChunks> {
+            Some(&self.parent)
+        }
+
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
             [].into_iter()

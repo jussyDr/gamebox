@@ -47,7 +47,11 @@ pub trait WriteBody {
     ) -> Result<(), Error>;
 }
 
-pub trait BodyChunks: Sized {
+pub trait BodyChunks: Class + Sized {
+    fn parent(&self) -> Option<&impl BodyChunks> {
+        None::<&Self>
+    }
+
     fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
     ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>>;
 }
@@ -87,6 +91,20 @@ pub fn write_body_chunks<T: Class + BodyChunks>(
     w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
     node: &T,
 ) -> Result<(), Error> {
+    write_body_chunks_inner(w, node)?;
+    w.u32(END_OF_NODE_MARKER)?;
+
+    Ok(())
+}
+
+fn write_body_chunks_inner<T: Class + BodyChunks>(
+    w: &mut Writer<impl Write, impl IdStateMut, impl NodeStateMut>,
+    node: &T,
+) -> Result<(), Error> {
+    if let Some(parent) = node.parent() {
+        write_body_chunks_inner(w, parent)?;
+    }
+
     for body_chunk in T::body_chunks() {
         w.u32(T::CLASS_ID | body_chunk.num as u32)?;
 
@@ -102,8 +120,6 @@ pub fn write_body_chunks<T: Class + BodyChunks>(
             }
         }
     }
-
-    w.u32(END_OF_NODE_MARKER)?;
 
     Ok(())
 }

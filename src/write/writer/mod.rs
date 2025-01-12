@@ -272,6 +272,7 @@ impl<W: Write, I, N> Writer<W, I, N> {
 
         write_fn(&mut w)?;
 
+        self.u32(0)?;
         self.byte_buf(&buf)?;
 
         Ok(())

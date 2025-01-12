@@ -19,7 +19,7 @@ impl Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        todo!()
+        Display::fmt(&self.kind, f)
     }
 }
 
@@ -28,4 +28,12 @@ impl std::error::Error for Error {}
 #[derive(Debug)]
 enum ErrorKind {
     Io(io::Error),
+}
+
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::Io(ref err) => Display::fmt(err, f),
+        }
+    }
 }

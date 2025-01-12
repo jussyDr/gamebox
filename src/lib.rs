@@ -422,10 +422,6 @@ const ID_MARKER_BIT: u32 = 0x40000000;
 
 const HEAVY_CHUNK_MARKER_BIT: u32 = 0x80000000;
 
-trait Class: Sized {
-    const CLASS_ID: u32;
-}
-
 /// Extract the sub-extension of `path.file_name`, if possible.
 ///
 /// # Examples
@@ -448,3 +444,11 @@ pub fn sub_extension(path: &Path) -> Option<&str> {
 
     Some(sub_extension)
 }
+
+mod private {
+    pub trait Class: Sized {
+        const CLASS_ID: u32;
+    }
+}
+
+pub(crate) use private::Class;
