@@ -112,9 +112,21 @@ impl<R: Read> Read for Take<R> {
     }
 }
 
-impl<R> Seek for Take<R> {
-    fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        unimplemented!()
+impl<R: Seek> Seek for Take<R> {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+        match pos {
+            SeekFrom::Start(_) => unimplemented!(),
+            SeekFrom::End(_) => unimplemented!(),
+            SeekFrom::Current(offset) => {
+                if offset.is_negative() {
+                    self.limit += (-offset) as u64;
+                } else {
+                    self.limit += offset as u64;
+                }
+            }
+        }
+
+        self.inner.seek(pos)
     }
 }
 
@@ -141,6 +153,17 @@ impl<R, I, N> Reader<R, I, N> {
 
     pub fn get_mut(&mut self) -> &mut R {
         &mut self.inner
+    }
+
+    pub fn take(&mut self, limit: u64) -> Reader<Take<&mut R>, &mut I, &mut N> {
+        Reader::new(
+            Take {
+                inner: &mut self.inner,
+                limit,
+            },
+            &mut self.id_state,
+            &mut self.node_state,
+        )
     }
 }
 
@@ -339,7 +362,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn string_or_empty(&mut self) -> Result<Option<String>, Error> {
         let s = self.string()?;
 
-        Ok(string_non_empty(s))
+        Ok(string_or_empty(s))
     }
 
     pub fn file_ref_or_null(&mut self) -> Result<Option<FileRef>, Error> {
@@ -432,28 +455,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.list(read_elem_fn)
     }
 
-    pub fn encapsulation(
-        &mut self,
-        mut read_fn: impl FnMut(&mut Reader<Take<&mut R>, IdState, NullNodeState>) -> Result<(), Error>,
-    ) -> Result<(), Error> {
-        let size = self.u32()?;
-
-        let mut reader = Reader::new(
-            Take {
-                inner: &mut self.inner,
-                limit: size as u64,
-            },
-            IdState::new(),
-            NullNodeState,
-        );
-
-        read_fn(&mut reader)?;
-
-        reader.expect_eof()?;
-
-        Ok(())
-    }
-
     pub fn expect_eof(&mut self) -> Result<(), Error> {
         let mut buf = [0];
 
@@ -465,13 +466,33 @@ impl<R: Read, I, N> Reader<R, I, N> {
 
         Ok(())
     }
-}
 
-fn bool_from_u32(value: u32) -> Result<bool, Error> {
-    match value {
-        0 => Ok(false),
-        1 => Ok(true),
-        _ => Err(Error::new(ErrorKind::Format("expected a boolean".into()))),
+    pub fn encapsulation(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Reader<Take<&mut R>, IdState, NullNodeState>) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        let version = self.u32()?;
+
+        if version != 0 {
+            return Err(Error::version("encapsulation", version));
+        }
+
+        let size = self.u32()?;
+
+        let mut r = Reader::new(
+            Take {
+                inner: &mut self.inner,
+                limit: size as u64,
+            },
+            IdState::new(),
+            NullNodeState,
+        );
+
+        read_fn(&mut r)?;
+
+        r.expect_eof()?;
+
+        Ok(())
     }
 }
 
@@ -502,7 +523,15 @@ impl<R: Read + Seek, I, N> Reader<R, I, N> {
     }
 }
 
-pub fn string_non_empty(s: String) -> Option<String> {
+fn bool_from_u32(value: u32) -> Result<bool, Error> {
+    match value {
+        0 => Ok(false),
+        1 => Ok(true),
+        _ => Err(Error::new(ErrorKind::Format("expected a boolean".into()))),
+    }
+}
+
+pub fn string_or_empty(s: String) -> Option<String> {
     if s.is_empty() {
         None
     } else {

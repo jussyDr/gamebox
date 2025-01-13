@@ -3,7 +3,7 @@ use std::io::{Read, Seek};
 use crate::{read::ErrorKind, Class, END_OF_NODE_MARKER, SKIPPABLE_CHUNK_MARKER};
 
 use super::{
-    reader::{IdStateMut, NodeStateMut, Reader},
+    reader::{IdStateMut, NodeStateMut, Reader, Take},
     Error,
 };
 
@@ -106,9 +106,11 @@ fn read_body_chunks_inner<T: Class + BodyChunks>(
 
                 let size = r.u32()?;
 
-                // println!("{size}");
+                let mut r = r.take(size as u64);
 
-                read_fn(node, r)?;
+                read_fn(node, &mut r)?;
+
+                r.expect_eof()?;
             }
         }
 
@@ -140,7 +142,7 @@ pub enum BodyChunkReadFn<T, R, I, N> {
 pub type BodyChunkReadFnNormal<T, R, I, N> = fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>;
 
 pub type BodyChunkReadFnSkippable<T, R, I, N> =
-    fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>;
+    fn(&mut T, &mut Reader<Take<&mut R>, &mut I, &mut N>) -> Result<(), Error>;
 
 impl<T, R, I, N> BodyChunk<T, R, I, N> {
     pub const fn normal(num: u16, read_fn: BodyChunkReadFnNormal<T, R, I, N>) -> Self {

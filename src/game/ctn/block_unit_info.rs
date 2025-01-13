@@ -56,7 +56,7 @@ mod read {
             [
                 BodyChunk::normal(0, Self::read_chunk_0),
                 BodyChunk::normal(1, Self::read_chunk_1),
-                BodyChunk::skippable(2, Self::read_chunk_2),
+                BodyChunk::skippable(2, |s, r| Self::read_chunk_2(s, r)),
                 BodyChunk::normal(4, Self::read_chunk_4),
                 BodyChunk::normal(5, Self::read_chunk_5),
                 BodyChunk::normal(7, Self::read_chunk_7),

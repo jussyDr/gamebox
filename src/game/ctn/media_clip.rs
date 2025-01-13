@@ -56,7 +56,7 @@ mod read {
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::normal(13, Self::read_chunk_13),
-                BodyChunk::skippable(14, Self::read_chunk_14),
+                BodyChunk::skippable(14, |s, r| Self::read_chunk_14(s, r)),
             ]
             .into_iter()
         }

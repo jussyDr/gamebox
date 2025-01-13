@@ -39,6 +39,11 @@ impl ClipTrigger {
         &self.clip
     }
 
+    /// Condition.
+    pub const fn condition(&self) -> Option<Condition> {
+        self.condition
+    }
+
     /// Coordinates.
     pub const fn coords(&self) -> &Vec<Nat3> {
         &self.coords
@@ -46,7 +51,7 @@ impl ClipTrigger {
 }
 
 /// Clip trigger condition.
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Condition {
     /// Race time less than.
     RaceTimeLessThan(OrderedFloat<f32>),

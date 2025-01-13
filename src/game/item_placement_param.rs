@@ -42,11 +42,11 @@ mod read {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::skippable(0, Self::read_chunk_0),
-                BodyChunk::skippable(1, Self::read_chunk_1),
-                BodyChunk::skippable(3, Self::read_chunk_3),
-                BodyChunk::skippable(4, Self::read_chunk_4),
-                BodyChunk::skippable(5, Self::read_chunk_5),
+                BodyChunk::skippable(0, |s, r| Self::read_chunk_0(s, r)),
+                BodyChunk::skippable(1, |s, r| Self::read_chunk_1(s, r)),
+                BodyChunk::skippable(3, |s, r| Self::read_chunk_3(s, r)),
+                BodyChunk::skippable(4, |s, r| Self::read_chunk_4(s, r)),
+                BodyChunk::skippable(5, |s, r| Self::read_chunk_5(s, r)),
             ]
             .into_iter()
         }

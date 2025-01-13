@@ -25,7 +25,7 @@ impl MediaBlockCameraCustom {
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Key {
     time: OrderedFloat<f32>,
-    interpolation: Option<Interpolation>,
+    interpolation: Interpolation,
 }
 
 impl Key {
@@ -35,7 +35,7 @@ impl Key {
     }
 
     /// Interpolation.
-    pub const fn interpolation(&self) -> Option<Interpolation> {
+    pub const fn interpolation(&self) -> Interpolation {
         self.interpolation
     }
 }
@@ -43,6 +43,8 @@ impl Key {
 /// Interpolation.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Interpolation {
+    /// None.
+    None,
     /// Hermite.
     Hermite,
     /// Linear.
@@ -51,14 +53,25 @@ pub enum Interpolation {
     FixedTangent,
 }
 
-impl FromVariant<u32> for Option<Interpolation> {
+impl FromVariant<u32> for Interpolation {
     fn from_variant(value: u32) -> Option<Self> {
         match value {
-            0 => Some(None),
-            1 => Some(Some(Interpolation::Hermite)),
-            2 => Some(Some(Interpolation::Linear)),
-            3 => Some(Some(Interpolation::FixedTangent)),
+            0 => Some(Self::None),
+            1 => Some(Self::Hermite),
+            2 => Some(Self::Linear),
+            3 => Some(Self::FixedTangent),
             _ => None,
+        }
+    }
+}
+
+impl Into<u32> for Interpolation {
+    fn into(self) -> u32 {
+        match self {
+            Self::None => 0,
+            Self::Hermite => 1,
+            Self::Linear => 2,
+            Self::FixedTangent => 3,
         }
     }
 }
@@ -170,7 +183,24 @@ mod write {
     impl BodyChunks for MediaBlockCameraCustom {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
-            [].into_iter()
+            [BodyChunk::normal(6, Self::write_chunk_6)].into_iter()
+        }
+    }
+
+    impl MediaBlockCameraCustom {
+        fn write_chunk_6<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
+            w.u32(4)?;
+
+            w.list(&self.keys, |w, key| {
+                w.f32(key.time.0)?;
+                w.u32(key.interpolation.into())?;
+
+                todo!();
+
+                Ok(())
+            })?;
+
+            Ok(())
         }
     }
 }

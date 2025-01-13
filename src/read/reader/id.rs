@@ -41,6 +41,12 @@ impl IdStateMut for IdState {
     }
 }
 
+impl<T: IdStateMut> IdStateMut for &mut T {
+    fn get_mut(&mut self) -> &mut IdState {
+        (**self).get_mut()
+    }
+}
+
 impl<R: Read, I: IdStateMut, N> Reader<R, I, N> {
     /// Read an identifier that may be null.
     pub fn id_or_null(&mut self) -> Result<Option<Arc<str>>, Error> {

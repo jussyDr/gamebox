@@ -191,6 +191,11 @@ impl Challenge {
     pub const fn thumbnail_fov(&self) -> f32 {
         self.thumbnail_fov
     }
+
+    /// Set name.
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
 }
 
 impl Default for Challenge {
@@ -234,7 +239,7 @@ impl Default for Challenge {
             author_name: String::new(),
             id: Default::default(), // should be random
             author_id: Default::default(),
-            name: Default::default(),
+            name: String::new(),
             ty: ChallengeType::InProgress,
             password: String::new(),
             decoration_id: Arc::from("48x48Screen155Day"),
@@ -480,7 +485,7 @@ mod read {
         read::{
             read_body_chunks,
             readable::{HeaderChunk, HeaderChunks, Sealed},
-            reader::{string_non_empty, IdStateMut, NodeStateMut, Reader},
+            reader::{string_or_empty, IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
         script::traits_metadata::TraitsMetadata,
@@ -525,55 +530,55 @@ mod read {
             [
                 BodyChunk::normal(13, Self::read_chunk_13),
                 BodyChunk::normal(17, Self::read_chunk_17),
-                BodyChunk::skippable(24, Self::read_chunk_24),
-                BodyChunk::skippable(25, Self::read_chunk_25),
+                BodyChunk::skippable(24, |s, r| Self::read_chunk_24(s, r)),
+                BodyChunk::skippable(25, |s, r| Self::read_chunk_25(s, r)),
                 BodyChunk::normal(31, Self::read_chunk_31),
                 BodyChunk::normal(34, Self::read_chunk_34),
                 BodyChunk::normal(36, Self::read_chunk_36),
                 BodyChunk::normal(37, Self::read_chunk_37),
                 BodyChunk::normal(38, Self::read_chunk_38),
                 BodyChunk::normal(40, Self::read_chunk_40),
-                BodyChunk::skippable(41, Self::read_chunk_41),
+                BodyChunk::skippable(41, |s, r| Self::read_chunk_41(s, r)),
                 BodyChunk::normal(42, Self::read_chunk_42),
-                BodyChunk::skippable(52, Self::read_chunk_52),
-                BodyChunk::skippable(54, Self::read_chunk_54),
-                BodyChunk::skippable(56, Self::read_chunk_56),
-                BodyChunk::skippable(62, Self::read_chunk_62),
-                BodyChunk::skippable(64, Self::read_chunk_64),
-                BodyChunk::skippable(66, Self::read_chunk_66),
-                BodyChunk::skippable(67, Self::read_chunk_67),
-                BodyChunk::skippable(68, Self::read_chunk_68),
-                BodyChunk::skippable(72, Self::read_chunk_72),
+                BodyChunk::skippable(52, |s, r| Self::read_chunk_52(s, r)),
+                BodyChunk::skippable(54, |s, r| Self::read_chunk_54(s, r)),
+                BodyChunk::skippable(56, |s, r| Self::read_chunk_56(s, r)),
+                BodyChunk::skippable(62, |s, r| Self::read_chunk_62(s, r)),
+                BodyChunk::skippable(64, |s, r| Self::read_chunk_64(s, r)),
+                BodyChunk::skippable(66, |s, r| Self::read_chunk_66(s, r)),
+                BodyChunk::skippable(67, |s, r| Self::read_chunk_67(s, r)),
+                BodyChunk::skippable(68, |s, r| Self::read_chunk_68(s, r)),
+                BodyChunk::skippable(72, |s, r| Self::read_chunk_72(s, r)),
                 BodyChunk::normal(73, Self::read_chunk_73),
-                BodyChunk::skippable(75, Self::read_chunk_75),
-                BodyChunk::skippable(79, Self::read_chunk_79),
-                BodyChunk::skippable(80, Self::read_chunk_80),
-                BodyChunk::skippable(81, Self::read_chunk_81),
-                BodyChunk::skippable(82, Self::read_chunk_82),
-                BodyChunk::skippable(83, Self::read_chunk_83),
-                BodyChunk::skippable(84, Self::read_chunk_84),
-                BodyChunk::skippable(85, Self::read_chunk_85),
-                BodyChunk::skippable(86, Self::read_chunk_86),
-                BodyChunk::skippable(87, Self::read_chunk_87),
-                BodyChunk::skippable(88, Self::read_chunk_88),
-                BodyChunk::skippable(89, Self::read_chunk_89),
-                BodyChunk::skippable(90, Self::read_chunk_90),
-                BodyChunk::skippable(91, Self::read_chunk_91),
-                BodyChunk::skippable(92, Self::read_chunk_92),
-                BodyChunk::skippable(93, Self::read_chunk_93),
-                BodyChunk::skippable(94, Self::read_chunk_94),
-                BodyChunk::skippable(95, Self::read_chunk_95),
-                BodyChunk::skippable(96, Self::read_chunk_96),
-                BodyChunk::skippable(97, Self::read_chunk_97),
-                BodyChunk::skippable(98, Self::read_chunk_98),
-                BodyChunk::skippable(99, Self::read_chunk_99),
-                BodyChunk::skippable(100, Self::read_chunk_100),
-                BodyChunk::skippable(101, Self::read_chunk_101),
-                BodyChunk::skippable(103, Self::read_chunk_103),
-                BodyChunk::skippable(104, Self::read_chunk_104),
-                BodyChunk::skippable(105, Self::read_chunk_105),
-                BodyChunk::skippable(107, Self::read_chunk_107),
-                BodyChunk::skippable(108, Self::read_chunk_108),
+                BodyChunk::skippable(75, |s, r| Self::read_chunk_75(s, r)),
+                BodyChunk::skippable(79, |s, r| Self::read_chunk_79(s, r)),
+                BodyChunk::skippable(80, |s, r| Self::read_chunk_80(s, r)),
+                BodyChunk::skippable(81, |s, r| Self::read_chunk_81(s, r)),
+                BodyChunk::skippable(82, |s, r| Self::read_chunk_82(s, r)),
+                BodyChunk::skippable(83, |s, r| Self::read_chunk_83(s, r)),
+                BodyChunk::skippable(84, |s, r| Self::read_chunk_84(s, r)),
+                BodyChunk::skippable(85, |s, r| Self::read_chunk_85(s, r)),
+                BodyChunk::skippable(86, |s, r| Self::read_chunk_86(s, r)),
+                BodyChunk::skippable(87, |s, r| Self::read_chunk_87(s, r)),
+                BodyChunk::skippable(88, |s, r| Self::read_chunk_88(s, r)),
+                BodyChunk::skippable(89, |s, r| Self::read_chunk_89(s, r)),
+                BodyChunk::skippable(90, |s, r| Self::read_chunk_90(s, r)),
+                BodyChunk::skippable(91, |s, r| Self::read_chunk_91(s, r)),
+                BodyChunk::skippable(92, |s, r| Self::read_chunk_92(s, r)),
+                BodyChunk::skippable(93, |s, r| Self::read_chunk_93(s, r)),
+                BodyChunk::skippable(94, |s, r| Self::read_chunk_94(s, r)),
+                BodyChunk::skippable(95, |s, r| Self::read_chunk_95(s, r)),
+                BodyChunk::skippable(96, |s, r| Self::read_chunk_96(s, r)),
+                BodyChunk::skippable(97, |s, r| Self::read_chunk_97(s, r)),
+                BodyChunk::skippable(98, |s, r| Self::read_chunk_98(s, r)),
+                BodyChunk::skippable(99, |s, r| Self::read_chunk_99(s, r)),
+                BodyChunk::skippable(100, |s, r| Self::read_chunk_100(s, r)),
+                BodyChunk::skippable(101, |s, r| Self::read_chunk_101(s, r)),
+                BodyChunk::skippable(103, |s, r| Self::read_chunk_103(s, r)),
+                BodyChunk::skippable(104, |s, r| Self::read_chunk_104(s, r)),
+                BodyChunk::skippable(105, |s, r| Self::read_chunk_105(s, r)),
+                BodyChunk::skippable(107, |s, r| Self::read_chunk_107(s, r)),
+                BodyChunk::skippable(108, |s, r| Self::read_chunk_108(s, r)),
             ]
             .into_iter()
         }
@@ -709,7 +714,7 @@ mod read {
                         let _mood = r.attribute(b"mood")?;
                         let _type = r.attribute(b"type")?;
                         self.map_type = r.attribute(b"maptype")?.to_string();
-                        self.map_style = string_non_empty(r.attribute(b"mapstyle")?.to_string());
+                        self.map_style = string_or_empty(r.attribute(b"mapstyle")?.to_string());
                         let _is_validated = r.attribute(b"validated")?;
                         let _num_laps = r.attribute(b"nblaps")?;
                         self.display_cost = r.attribute_from_str(b"displaycost")?;
@@ -920,7 +925,6 @@ mod read {
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => None,
                 hash => Some(hash),
             };
-
             self.checksum = r.u32()?;
 
             Ok(())
@@ -979,7 +983,6 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            r.u32()?;
             r.encapsulation(|r| {
                 self.items = r.list_with_version(|r| r.node())?;
 
@@ -1024,7 +1027,6 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, I, N>,
         ) -> Result<(), Error> {
-            r.u32()?;
             r.encapsulation(|r| {
                 self.zones = r.list(|r| r.node())?;
 
@@ -1038,7 +1040,6 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, I, N>,
         ) -> Result<(), Error> {
-            r.u32()?;
             r.encapsulation(|r| {
                 self.script_metadata = TraitsMetadata::read_from_body(r)?;
 
@@ -1205,7 +1206,6 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            r.u32()?;
             r.encapsulation(|r| {
                 let ids = r.list(|r| {
                     let id = r.id()?;
@@ -1288,15 +1288,8 @@ mod read {
             if r.bool()? {
                 // only deco base map.
 
-                r.u32()?;
-                r.list(|r| r.u32())?;
-                r.u32()?;
-                r.u32()?;
-                r.u8()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
-                r.u32()?;
+                let mut buf = vec![];
+                r.read_to_end(&mut buf)?;
             }
 
             Ok(())
@@ -1354,31 +1347,8 @@ mod read {
             }
 
             if r.bool()? {
-                let a = r.u32()?;
-                let b = r.u32()?;
-                let c = r.u32()?;
-                let d = r.u32()?;
-                let e = r.u32()?;
-
-                match (a, b, c, d, e) {
-                    (256, 221, 55, 200, 4292) => {
-                        r.bytes(83832)?;
-                    }
-                    (256, 87, 255, 109, 3384) => {
-                        r.bytes(51051)?;
-                    }
-                    (128, 98, 38, 66, 8) => {
-                        r.bytes(256)?;
-                        r.u8()?;
-                    }
-                    (512, 47, 56, 512, 272) => {
-                        r.bytes(6196)?;
-                    }
-                    (256, 43, 158, 42, 321) => {
-                        r.bytes(5046)?;
-                    }
-                    _ => todo!("{a}, {b}, {c}, {d}, {e}"),
-                }
+                let mut buf = vec![];
+                r.read_to_end(&mut buf)?;
             }
 
             Ok(())

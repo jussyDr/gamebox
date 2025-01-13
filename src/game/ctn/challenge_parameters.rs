@@ -114,9 +114,9 @@ mod read {
                 BodyChunk::normal(1, Self::read_chunk_1),
                 BodyChunk::normal(4, Self::read_chunk_4),
                 BodyChunk::normal(8, Self::read_chunk_8),
-                BodyChunk::skippable(10, Self::read_chunk_10),
+                BodyChunk::skippable(10, |s, r| Self::read_chunk_10(s, r)),
                 BodyChunk::normal(13, Self::read_chunk_13),
-                BodyChunk::skippable(14, Self::read_chunk_14),
+                BodyChunk::skippable(14, |s, r| Self::read_chunk_14(s, r)),
             ]
             .into_iter()
         }

@@ -130,10 +130,10 @@ mod read {
                 BodyChunk::normal(32, Self::read_chunk_32),
                 BodyChunk::normal(33, Self::read_chunk_33),
                 BodyChunk::normal(35, Self::read_chunk_35),
-                BodyChunk::skippable(36, Self::read_chunk_36),
-                BodyChunk::skippable(37, Self::read_chunk_37),
-                BodyChunk::skippable(38, Self::read_chunk_38),
-                BodyChunk::skippable(39, Self::read_chunk_39),
+                BodyChunk::skippable(36, |s, r| Self::read_chunk_36(s, r)),
+                BodyChunk::skippable(37, |s, r| Self::read_chunk_37(s, r)),
+                BodyChunk::skippable(38, |s, r| Self::read_chunk_38(s, r)),
+                BodyChunk::skippable(39, |s, r| Self::read_chunk_39(s, r)),
             ]
             .into_iter()
         }

@@ -13,9 +13,11 @@ use crate::{
 
 use super::{IdStateMut, Reader};
 
+type NodeRefSlot = Option<NodeRef<dyn Any + Send + Sync>>;
+
 /// Node state.
 pub struct NodeState {
-    node_refs: Box<[Option<NodeRef<dyn Any + Send + Sync>>]>,
+    node_refs: Box<[NodeRefSlot]>,
 }
 
 impl NodeState {
@@ -68,6 +70,12 @@ impl NodeStateMut for NodeState {
     }
 }
 
+impl<T: NodeStateMut> NodeStateMut for &mut T {
+    fn get_mut(&mut self) -> &mut NodeState {
+        (**self).get_mut()
+    }
+}
+
 pub struct NullNodeState;
 
 impl NodeStateMut for NullNodeState {
@@ -77,9 +85,7 @@ impl NodeStateMut for NullNodeState {
 }
 
 impl<R: Read, I, N: NodeStateMut> Reader<R, I, N> {
-    fn get_entry_or_null(
-        &mut self,
-    ) -> Result<Option<(usize, &mut Option<NodeRef<dyn Any + Send + Sync>>)>, Error> {
+    fn get_entry_or_null(&mut self) -> Result<Option<(usize, &mut NodeRefSlot)>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {

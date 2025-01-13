@@ -145,7 +145,7 @@ mod read {
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::normal(3, Self::read_chunk_3),
-                BodyChunk::skippable(4, Self::read_chunk_4),
+                BodyChunk::skippable(4, |s, r| Self::read_chunk_4(s, r)),
                 BodyChunk::normal(5, Self::read_chunk_5),
                 BodyChunk::normal(6, Self::read_chunk_6),
                 BodyChunk::normal(7, Self::read_chunk_7),
