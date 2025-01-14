@@ -125,10 +125,10 @@ mod read {
             r.bool()?;
 
             for vertex_attr_desc in vertex_attr_descs {
-                let ty = (vertex_attr_desc.flags >> 9) & 0x000001ff;
+                let data_type = (vertex_attr_desc.flags >> 9) & 0x000001ff;
                 let weight_count = vertex_attr_desc.flags & 0x000001ff;
 
-                match ty {
+                match data_type {
                     1 => {
                         let data = r.repeat_pod::<[f32; 2]>(count as usize)?;
 

@@ -3,7 +3,7 @@
 use crate::{Class, Iso4};
 
 /// Spawn model.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SpawnModel {
     placement: Iso4,
 }

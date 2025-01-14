@@ -54,6 +54,7 @@ mod read {
     impl BodyChunks for MediaClip {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(13, Self::read_chunk_13),
                 BodyChunk::skippable(14, |s, r| Self::read_chunk_14(s, r)),
@@ -117,6 +118,7 @@ mod write {
     impl BodyChunks for MediaClip {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(13, Self::write_chunk_13),
                 BodyChunk::skippable(14, |s, w| Self::write_chunk_14(s, w)),

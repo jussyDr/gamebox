@@ -5,7 +5,7 @@ use crate::{Class, ExternalNodeRef};
 use super::Prefab;
 
 /// Editor helper.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct EditorHelper {
     prefab: ExternalNodeRef<Prefab>,
 }

@@ -68,6 +68,7 @@ mod read {
 
         fn body_chunks<R: Read, I: IdStateMut, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>>
         {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(2, Self::read_chunk_2),
                 BodyChunk::normal(4, Self::read_chunk_4),

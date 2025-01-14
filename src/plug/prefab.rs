@@ -1,16 +1,19 @@
 //! Prefab.
 
-use crate::{Class, Quat, Vec3};
+use std::{any::Any, marker::PhantomData, sync::Arc};
+
+use crate::{Class, ExternalNodeRef, NodeRef, Quat, Vec3};
 
 use super::{
-    dyna_kinematic_contraint::DynaKinematicConstraint, DynaObjectModel, Path, StaticObjectModel,
+    dyna_kinematic_contraint::DynaKinematicConstraint, DynaObjectModel, EditorHelper, Path,
+    SpawnModel, StaticObjectModel,
 };
 
 /// Prefab.
 #[derive(Default, Debug)]
 pub struct Prefab {
     file_write_time: u64,
-    entities: Vec<Entity>,
+    entities: Vec<PrefabEntity>,
 }
 
 impl Class for Prefab {
@@ -19,25 +22,20 @@ impl Class for Prefab {
 
 impl Prefab {
     /// Entities.
-    pub const fn entities(&self) -> &Vec<Entity> {
+    pub const fn entities(&self) -> &Vec<PrefabEntity> {
         &self.entities
     }
 }
 
 /// Prefab entity.
 #[derive(Debug)]
-pub struct Entity {
-    ty: EntityType,
+pub struct PrefabEntity {
+    ty: Option<PrefabEntityType>,
     rotation: Quat,
     position: Vec3,
 }
 
-impl Entity {
-    /// Type.
-    pub const fn ty(&self) -> &EntityType {
-        &self.ty
-    }
-
+impl PrefabEntity {
     /// Rotation.
     pub const fn rotation(&self) -> Quat {
         self.rotation
@@ -51,19 +49,64 @@ impl Entity {
 
 /// Prefab entity type.
 #[derive(Debug)]
-pub enum EntityType {
+pub enum PrefabEntityType {
     /// Dynamic kinematic constraint.
-    DynaKinematicConstraint(DynaKinematicConstraint),
+    DynaKinematicConstraint(Arc<DynaKinematicConstraint>),
     /// Dynamic object model.
-    DynaObjectModel(DynaObjectModel),
+    DynaObjectModel(Arc<DynaObjectModel>),
+    /// Editor helper.
+    EditorHelper(Arc<EditorHelper>),
     /// Path.
-    Path(Path),
+    Path(Arc<Path>),
+    /// Prefab.
+    Prefab(ExternalNodeRef<Prefab>),
+    /// Spawn model.
+    SpawnModel(Arc<SpawnModel>),
     /// Static object model.
-    StaticObjectModel(StaticObjectModel),
+    StaticObjectModel(Arc<StaticObjectModel>),
+    /// Trigger special.
+    TriggerSpecial(Arc<TriggerSpecial>),
+    /// Trigger waypoint.
+    TriggerWaypoint(Arc<TriggerWaypoint>),
 }
 
+impl TryFrom<NodeRef<dyn Any + Send + Sync>> for PrefabEntityType {
+    type Error = ();
+
+    fn try_from(value: NodeRef<dyn Any + Send + Sync>) -> Result<Self, ()> {
+        match value {
+            NodeRef::Internal(node_ref) => node_ref
+                .downcast()
+                .map(Self::DynaKinematicConstraint)
+                .or_else(|value| value.downcast().map(Self::DynaObjectModel))
+                .or_else(|value| value.downcast().map(Self::EditorHelper))
+                .or_else(|value| value.downcast().map(Self::Path))
+                .or_else(|value| value.downcast().map(Self::SpawnModel))
+                .or_else(|value| value.downcast().map(Self::StaticObjectModel))
+                .or_else(|value| value.downcast().map(Self::TriggerSpecial))
+                .or_else(|value| value.downcast().map(Self::TriggerWaypoint))
+                .map_err(|_| ()),
+            NodeRef::External(node_ref) => Ok(Self::Prefab(ExternalNodeRef {
+                ancestor_level: node_ref.ancestor_level,
+                use_file: node_ref.use_file,
+                path: node_ref.path,
+                phantom: PhantomData,
+            })),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct TriggerWaypoint;
+
+#[derive(Debug)]
+struct TriggerSpecial;
+
 mod read {
-    use std::io::{Read, Seek};
+    use std::{
+        io::{Read, Seek},
+        sync::Arc,
+    };
 
     use crate::{
         plug::{
@@ -78,7 +121,7 @@ mod read {
         },
     };
 
-    use super::{Entity, EntityType, Prefab};
+    use super::{Prefab, PrefabEntity, TriggerSpecial, TriggerWaypoint};
 
     impl Readable for Prefab {}
 
@@ -107,27 +150,25 @@ mod read {
             let num_entities = r.u32()?;
             let _u02 = r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let mut ty = EntityType::StaticObjectModel(StaticObjectModel::default());
-
-                r.test_or_ext_or_null(|r, class_id| {
+                let ty = r.node_ref_any_or_null(|r, class_id| {
                     match class_id {
                         0x09119000 => {
-                            let mut m = Path::default();
-                            m.read_body(r)?;
+                            let mut path = Path::default();
+                            path.read_body(r)?;
 
-                            ty = EntityType::Path(m);
+                            Ok(Arc::new(path))
                         }
                         0x09144000 => {
-                            let mut m = DynaObjectModel::default();
-                            m.read_body(r)?;
+                            let mut dyna_object_model = DynaObjectModel::default();
+                            dyna_object_model.read_body(r)?;
 
-                            ty = EntityType::DynaObjectModel(m);
+                            Ok(Arc::new(dyna_object_model))
                         }
                         0x09159000 => {
-                            let mut m = StaticObjectModel::default();
-                            m.read_body(r)?;
+                            let mut static_object_model = StaticObjectModel::default();
+                            static_object_model.read_body(r)?;
 
-                            ty = EntityType::StaticObjectModel(m);
+                            Ok(Arc::new(static_object_model))
                         }
                         0x09178000 => {
                             // NPlugTrigger_SWaypoint
@@ -141,6 +182,8 @@ mod read {
                             let _ty = r.u32()?;
                             let _trigger_shape = r.external_node_ref::<Surface>()?;
                             let _no_respawn = r.bool()?;
+
+                            Ok(Arc::new(TriggerWaypoint))
                         }
                         0x09179000 => {
                             // NPlugTrigger_SSpecial
@@ -148,29 +191,31 @@ mod read {
                             r.u32()?;
                             r.u32()?;
                             r.u32()?;
+
+                            Ok(Arc::new(TriggerSpecial))
                         }
                         0x0917a000 => {
-                            let mut m = SpawnModel::default();
-                            m.read_body(r)?;
+                            let mut spawn_model = SpawnModel::default();
+                            spawn_model.read_body(r)?;
+
+                            Ok(Arc::new(spawn_model))
                         }
                         0x0917b000 => {
-                            let mut m = EditorHelper::default();
-                            m.read_body(r)?;
+                            let mut editor_helper = EditorHelper::default();
+                            editor_helper.read_body(r)?;
+
+                            Ok(Arc::new(editor_helper))
                         }
                         0x2f0ca000 => {
-                            let mut m = DynaKinematicConstraint;
-                            m.read_body(r)?;
+                            let mut dyna_kinematic_constraint = DynaKinematicConstraint;
+                            dyna_kinematic_constraint.read_body(r)?;
 
-                            ty = EntityType::DynaKinematicConstraint(m);
+                            Ok(Arc::new(dyna_kinematic_constraint))
                         }
-                        _ => {
-                            return Err(Error::new(ErrorKind::Unsupported(
-                                "prefab entity type".into(),
-                            )));
-                        }
+                        _ => Err(Error::new(ErrorKind::Unsupported(
+                            "prefab entity type".into(),
+                        ))),
                     }
-
-                    Ok(())
                 })?;
                 let rotation = r.quat()?;
                 let position = r.vec3()?;
@@ -242,7 +287,7 @@ mod read {
 
                 r.string()?;
 
-                Ok(Entity {
+                Ok(PrefabEntity {
                     ty,
                     rotation,
                     position,

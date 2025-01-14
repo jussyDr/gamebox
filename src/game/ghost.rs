@@ -19,6 +19,7 @@ mod read {
 
     impl BodyChunks for Ghost {
         fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(6, Self::read_chunk_6),
                 BodyChunk::skippable(7, |s, r| Self::read_chunk_7(s, r)),

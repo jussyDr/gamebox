@@ -53,6 +53,7 @@ mod read {
     impl BodyChunks for BlockUnitInfo {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(0, Self::read_chunk_0),
                 BodyChunk::normal(1, Self::read_chunk_1),

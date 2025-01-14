@@ -358,13 +358,13 @@ impl FromVariant<u32> for EditorMode {
     }
 }
 
-impl Into<u32> for EditorMode {
-    fn into(self) -> u32 {
-        match self {
-            Self::Advanced => 0,
-            Self::Simple => 1,
-            Self::HasGhostBlocks => 2,
-            Self::Gamepad => 4,
+impl From<EditorMode> for u32 {
+    fn from(value: EditorMode) -> u32 {
+        match value {
+            EditorMode::Advanced => 0,
+            EditorMode::Simple => 1,
+            EditorMode::HasGhostBlocks => 2,
+            EditorMode::Gamepad => 4,
         }
     }
 }
@@ -414,22 +414,22 @@ impl FromVariant<u32> for ChallengeType {
     }
 }
 
-impl Into<u32> for ChallengeType {
-    fn into(self) -> u32 {
-        match self {
-            Self::EndMarker => 0,
-            Self::Campaign => 1,
-            Self::Puzzle => 2,
-            Self::Retro => 3,
-            Self::TimeAttack => 4,
-            Self::Rounds => 5,
-            Self::InProgress => 6,
-            Self::Campaign7 => 7,
-            Self::Multi => 8,
-            Self::Solo => 9,
-            Self::Site => 10,
-            Self::SoloNadeo => 11,
-            Self::MultiNadeo => 12,
+impl From<ChallengeType> for u32 {
+    fn from(value: ChallengeType) -> u32 {
+        match value {
+            ChallengeType::EndMarker => 0,
+            ChallengeType::Campaign => 1,
+            ChallengeType::Puzzle => 2,
+            ChallengeType::Retro => 3,
+            ChallengeType::TimeAttack => 4,
+            ChallengeType::Rounds => 5,
+            ChallengeType::InProgress => 6,
+            ChallengeType::Campaign7 => 7,
+            ChallengeType::Multi => 8,
+            ChallengeType::Solo => 9,
+            ChallengeType::Site => 10,
+            ChallengeType::SoloNadeo => 11,
+            ChallengeType::MultiNadeo => 12,
         }
     }
 }
@@ -527,6 +527,7 @@ mod read {
     impl BodyChunks for Challenge {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(13, Self::read_chunk_13),
                 BodyChunk::normal(17, Self::read_chunk_17),
@@ -1795,6 +1796,7 @@ mod write {
     impl BodyChunks for Challenge {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(13, Self::write_chunk_13),
                 BodyChunk::normal(17, Self::write_chunk_17),

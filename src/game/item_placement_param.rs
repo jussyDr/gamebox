@@ -41,6 +41,7 @@ mod read {
     impl BodyChunks for ItemPlacementParam {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::skippable(0, |s, r| Self::read_chunk_0(s, r)),
                 BodyChunk::skippable(1, |s, r| Self::read_chunk_1(s, r)),

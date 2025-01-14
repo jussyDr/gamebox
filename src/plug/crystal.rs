@@ -143,6 +143,7 @@ mod read {
 
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(3, Self::read_chunk_3),
                 BodyChunk::skippable(4, |s, r| Self::read_chunk_4(s, r)),

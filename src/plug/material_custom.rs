@@ -44,6 +44,7 @@ mod read {
     impl BodyChunks for MaterialCustom {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(4, Self::read_chunk_4),
                 BodyChunk::normal(10, Self::read_chunk_10),

@@ -136,17 +136,17 @@ impl FromVariant<u8> for PhaseOffset {
     }
 }
 
-impl Into<u8> for PhaseOffset {
-    fn into(self) -> u8 {
-        match self {
-            Self::None => 0,
-            Self::One8th => 1,
-            Self::Two8th => 2,
-            Self::Three8th => 3,
-            Self::Four8th => 4,
-            Self::Five8th => 5,
-            Self::Six8th => 6,
-            Self::Seven8th => 7,
+impl From<PhaseOffset> for u8 {
+    fn from(value: PhaseOffset) -> u8 {
+        match value {
+            PhaseOffset::None => 0,
+            PhaseOffset::One8th => 1,
+            PhaseOffset::Two8th => 2,
+            PhaseOffset::Three8th => 3,
+            PhaseOffset::Four8th => 4,
+            PhaseOffset::Five8th => 5,
+            PhaseOffset::Six8th => 6,
+            PhaseOffset::Seven8th => 7,
         }
     }
 }
@@ -177,6 +177,7 @@ mod read {
     impl BodyChunks for AnchoredObject {
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(2, Self::read_chunk_2),
                 BodyChunk::skippable(4, |s, r| Self::read_chunk_4(s, r)),
@@ -269,6 +270,7 @@ mod write {
     impl BodyChunks for AnchoredObject {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(2, Self::write_chunk_2),
                 BodyChunk::skippable(4, |s, w| Self::write_chunk_4(s, w)),

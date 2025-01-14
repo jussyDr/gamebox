@@ -14,7 +14,14 @@ pub enum NodeRef<T: ?Sized> {
     External(ExternalNodeRef<T>),
 }
 
-impl<T> NodeRef<T> {}
+impl<T: ?Sized> Clone for NodeRef<T> {
+    fn clone(&self) -> Self {
+        match *self {
+            Self::Internal(ref node) => Self::Internal(node.clone()),
+            Self::External(ref node) => Self::External(node.clone()),
+        }
+    }
+}
 
 impl<T: Default> Default for NodeRef<T> {
     fn default() -> Self {
@@ -47,7 +54,7 @@ impl<T> ExternalNodeRef<T> {
     }
 }
 
-impl<T> Clone for ExternalNodeRef<T> {
+impl<T: ?Sized> Clone for ExternalNodeRef<T> {
     fn clone(&self) -> Self {
         Self {
             ancestor_level: self.ancestor_level,

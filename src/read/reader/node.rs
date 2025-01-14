@@ -1,5 +1,6 @@
 use std::{
     any::Any,
+    fmt::Debug,
     io::{Read, Seek},
     iter,
     marker::PhantomData,
@@ -222,104 +223,10 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref_any<T>(
+    pub fn node_ref_any_or_null<T: TryFrom<NodeRef<dyn Any + Send + Sync>, Error: Debug>>(
         &mut self,
-        mut read_fn: impl FnMut(&mut Self, u32) -> Result<(Arc<dyn Any + Send + Sync>, T), Error>,
-    ) -> Result<T, Error> {
-        let index = self.u32()? - 1;
-
-        match self.node_state.get_mut().get_entry(index as usize)? {
-            None => {
-                let class_id = self.u32()?;
-                let (node, value) = read_fn(self, class_id)?;
-
-                *self.node_state.get_mut().get_entry(index as usize)? =
-                    Some(NodeRef::Internal(node));
-
-                Ok(value)
-            }
-            Some(node_ref) => match node_ref {
-                NodeRef::Internal { .. } => todo!(),
-                NodeRef::External(_) => todo!(),
-            },
-        }
-    }
-
-    pub fn test_or_ext<T>(
-        &mut self,
-        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<Option<ExternalNodeRef<()>>, Error> {
-        let index = self.u32()? - 1;
-
-        match self.node_state.get_mut().get_entry(index as usize)? {
-            None => {
-                let class_id = self.u32()?;
-                let node = Arc::new(read_fn(self, class_id)?);
-
-                Ok(None)
-            }
-            Some(node_ref) => match node_ref {
-                NodeRef::Internal { .. } => todo!(),
-                NodeRef::External(external_node_ref) => Ok(Some(ExternalNodeRef {
-                    use_file: external_node_ref.use_file,
-                    ancestor_level: external_node_ref.ancestor_level,
-                    path: Arc::clone(&external_node_ref.path),
-                    phantom: PhantomData,
-                })),
-            },
-        }
-    }
-
-    pub fn test_or_ext_or_null<T>(
-        &mut self,
-        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<(), Error> {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return Ok(());
-        }
-
-        let index = index - 1;
-
-        match self.node_state.get_mut().get_entry(index as usize)? {
-            None => {
-                let class_id = self.u32()?;
-                let node = Arc::new(read_fn(self, class_id)?);
-
-                Ok(())
-            }
-            Some(node_ref) => match node_ref {
-                NodeRef::Internal { .. } => todo!(),
-                NodeRef::External(_) => Ok(()),
-            },
-        }
-    }
-
-    pub fn test<T>(
-        &mut self,
-        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<Arc<T>, Error> {
-        let index = self.u32()? - 1;
-
-        match self.node_state.get_mut().get_entry(index as usize)? {
-            None => {
-                let class_id = self.u32()?;
-                let node = Arc::new(read_fn(self, class_id)?);
-
-                Ok(node)
-            }
-            Some(node_ref) => match node_ref {
-                NodeRef::Internal { .. } => todo!(),
-                NodeRef::External(_) => todo!(),
-            },
-        }
-    }
-
-    pub fn test_or_null<T>(
-        &mut self,
-        mut read_fn: impl FnMut(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<Option<Arc<T>>, Error> {
+        mut read_fn: impl FnMut(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<Option<T>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
@@ -331,14 +238,62 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
         match self.node_state.get_mut().get_entry(index as usize)? {
             None => {
                 let class_id = self.u32()?;
-                let node = Arc::new(read_fn(self, class_id)?);
+                let node_ref = NodeRef::Internal(read_fn(self, class_id)?);
 
-                Ok(Some(node))
+                *self.node_state.get_mut().get_entry(index as usize)? = Some(node_ref.clone());
+
+                Ok(Some(node_ref.try_into().unwrap()))
+            }
+            Some(node_ref) => Ok(Some(node_ref.clone().try_into().unwrap())),
+        }
+    }
+
+    pub fn node_ref_any<T: TryFrom<NodeRef<dyn Any + Send + Sync>, Error: Debug>>(
+        &mut self,
+        read_fn: impl FnMut(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<T, Error> {
+        match self.node_ref_any_or_null(read_fn)? {
+            Some(node) => Ok(node),
+            None => todo!(),
+        }
+    }
+
+    pub fn internal_node_ref_any_or_null<T: TryFrom<Arc<dyn Any + Send + Sync>, Error: Debug>>(
+        &mut self,
+        mut read_fn: impl FnMut(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<Option<T>, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let index = index - 1;
+
+        match self.node_state.get_mut().get_entry(index as usize)? {
+            None => {
+                let class_id = self.u32()?;
+                let node = read_fn(self, class_id)?;
+
+                *self.node_state.get_mut().get_entry(index as usize)? =
+                    Some(NodeRef::Internal(Arc::clone(&node)));
+
+                Ok(Some(node.try_into().unwrap()))
             }
             Some(node_ref) => match node_ref {
-                NodeRef::Internal { .. } => todo!(),
+                NodeRef::Internal(node) => Ok(Some(Arc::clone(node).try_into().unwrap())),
                 NodeRef::External(_) => todo!(),
             },
+        }
+    }
+
+    pub fn internal_node_ref_any<T: TryFrom<Arc<dyn Any + Send + Sync>, Error: Debug>>(
+        &mut self,
+        read_fn: impl FnMut(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<T, Error> {
+        match self.internal_node_ref_any_or_null(read_fn)? {
+            Some(value) => Ok(value),
+            None => todo!(),
         }
     }
 }

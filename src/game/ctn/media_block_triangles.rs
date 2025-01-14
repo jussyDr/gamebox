@@ -52,6 +52,7 @@ mod read {
 
     impl BodyChunks for MediaBlockTriangles {
         fn body_chunks<R: Read, I, N>() -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(1, Self::read_chunk_1),
                 BodyChunk::skippable(2, |s, r| Self::read_chunk_2(s, r)),
@@ -139,6 +140,7 @@ mod write {
     impl BodyChunks for MediaBlockTriangles {
         fn body_chunks<W: Write, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, W, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(1, Self::write_chunk_1),
                 BodyChunk::skippable(2, |s, w| Self::write_chunk_2(s, w)),

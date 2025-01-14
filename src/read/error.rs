@@ -49,6 +49,10 @@ impl Error {
         }
     }
 
+    pub(crate) fn index() -> Self {
+        todo!()
+    }
+
     pub(crate) fn null(name: &str) -> Self {
         Self {
             kind: ErrorKind::Format(format!("{name} is null")),
@@ -59,7 +63,7 @@ impl Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str("Error")
+        Display::fmt(&self.kind, f)
     }
 }
 
@@ -70,6 +74,16 @@ pub(crate) enum ErrorKind {
     Io(io::Error),
     Unsupported(String),
     Format(String),
+}
+
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::Io(ref err) => Display::fmt(err, f),
+            Self::Unsupported(ref message) => f.write_str(message),
+            Self::Format(ref message) => f.write_str(message),
+        }
+    }
 }
 
 pub(crate) struct TraceEntry {

@@ -85,7 +85,7 @@ impl Settings {
 
                     let mut len = bytes.len() as u32;
 
-                    if header_chunk.heavy {
+                    if header_chunk.is_heavy {
                         len |= HEAVY_CHUNK_MARKER_BIT;
                     }
 

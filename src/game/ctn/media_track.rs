@@ -1,6 +1,6 @@
 //! Media track.
 
-use std::sync::Arc;
+use std::{any::Any, sync::Arc};
 
 use crate::Class;
 
@@ -85,9 +85,38 @@ pub enum MediaBlockType {
     Entity(Arc<MediaBlockEntity>),
 }
 
+impl TryFrom<Arc<dyn Any + Send + Sync>> for MediaBlockType {
+    type Error = ();
+
+    fn try_from(value: Arc<dyn Any + Send + Sync>) -> Result<Self, ()> {
+        value
+            .downcast()
+            .map(Self::CameraCustom)
+            .or_else(|value| value.downcast().map(Self::CameraEffectShake))
+            .or_else(|value| value.downcast().map(Self::CameraGame))
+            .or_else(|value| value.downcast().map(Self::CameraPath))
+            .or_else(|value| value.downcast().map(Self::ColorGrading))
+            .or_else(|value| value.downcast().map(Self::DirtyLens))
+            .or_else(|value| value.downcast().map(Self::Dof))
+            .or_else(|value| value.downcast().map(Self::Entity))
+            .or_else(|value| value.downcast().map(Self::Fog))
+            .or_else(|value| value.downcast().map(Self::FxColors))
+            .or_else(|value| value.downcast().map(Self::Image))
+            .or_else(|value| value.downcast().map(Self::Interface))
+            .or_else(|value| value.downcast().map(Self::Manialink))
+            .or_else(|value| value.downcast().map(Self::Sound))
+            .or_else(|value| value.downcast().map(Self::Text))
+            .or_else(|value| value.downcast().map(Self::ToneMapping))
+            .or_else(|value| value.downcast().map(Self::Trails))
+            .or_else(|value| value.downcast().map(Self::TransitionFade))
+            .or_else(|value| value.downcast().map(Self::Triangles2D))
+            .or_else(|value| value.downcast().map(Self::Triangles3D))
+            .map_err(|_| ())
+    }
+}
+
 mod read {
     use std::{
-        any::Any,
         io::{Read, Seek},
         sync::Arc,
     };
@@ -110,7 +139,7 @@ mod read {
         },
     };
 
-    use super::{MediaBlockType, MediaTrack};
+    use super::MediaTrack;
 
     impl ReadBody for MediaTrack {
         fn read_body<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
@@ -143,202 +172,122 @@ mod read {
                     0x0304b000 => {
                         let mut triangles_2d = MediaBlockTriangles2D::default();
                         read_body_chunks(&mut triangles_2d, r)?;
-                        let triangles_2d = Arc::new(triangles_2d);
 
-                        Ok((
-                            Arc::clone(&triangles_2d) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Triangles2D(triangles_2d),
-                        ))
+                        Ok(Arc::new(triangles_2d))
                     }
                     0x0304c000 => {
                         let mut triangles_3d = MediaBlockTriangles3D::default();
                         read_body_chunks(&mut triangles_3d, r)?;
-                        let triangles_3d = Arc::new(triangles_3d);
 
-                        Ok((
-                            Arc::clone(&triangles_3d) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Triangles3D(triangles_3d),
-                        ))
+                        Ok(Arc::new(triangles_3d))
                     }
                     0x03080000 => {
                         let mut fx_colors = MediaBlockFxColors::default();
                         read_body_chunks(&mut fx_colors, r)?;
-                        let fx_colors = Arc::new(fx_colors);
 
-                        Ok((
-                            Arc::clone(&fx_colors) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::FxColors(fx_colors),
-                        ))
+                        Ok(Arc::new(fx_colors))
                     }
                     0x03084000 => {
                         let mut camera_game = MediaBlockCameraGame::default();
                         read_body_chunks(&mut camera_game, r)?;
-                        let camera_game = Arc::new(camera_game);
 
-                        Ok((
-                            Arc::clone(&camera_game) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::CameraGame(camera_game),
-                        ))
+                        Ok(Arc::new(camera_game))
                     }
                     0x030a1000 => {
                         let mut camera_path = MediaBlockCameraPath::default();
                         read_body_chunks(&mut camera_path, r)?;
-                        let camera_path = Arc::new(camera_path);
 
-                        Ok((
-                            Arc::clone(&camera_path) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::CameraPath(camera_path),
-                        ))
+                        Ok(Arc::new(camera_path))
                     }
                     0x030a2000 => {
                         let mut camera_custom = MediaBlockCameraCustom::default();
                         read_body_chunks(&mut camera_custom, r)?;
-                        let camera_custom = Arc::new(camera_custom);
 
-                        Ok((
-                            Arc::clone(&camera_custom) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::CameraCustom(camera_custom),
-                        ))
+                        Ok(Arc::new(camera_custom))
                     }
                     0x030a4000 => {
                         let mut camera_effect_shake = MediaBlockCameraEffectShake::default();
                         read_body_chunks(&mut camera_effect_shake, r)?;
-                        let camera_effect_shake = Arc::new(camera_effect_shake);
 
-                        Ok((
-                            Arc::clone(&camera_effect_shake) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::CameraEffectShake(camera_effect_shake),
-                        ))
+                        Ok(Arc::new(camera_effect_shake))
                     }
                     0x030a5000 => {
                         let mut image = MediaBlockImage::default();
                         read_body_chunks(&mut image, r)?;
-                        let image = Arc::new(image);
 
-                        Ok((
-                            Arc::clone(&image) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Image(image),
-                        ))
+                        Ok(Arc::new(image))
                     }
                     0x030a7000 => {
                         let mut sound = MediaBlockSound::default();
                         read_body_chunks(&mut sound, r)?;
-                        let sound = Arc::new(sound);
 
-                        Ok((
-                            Arc::clone(&sound) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Sound(sound),
-                        ))
+                        Ok(Arc::new(sound))
                     }
                     0x030a8000 => {
                         let mut text = MediaBlockText::default();
                         read_body_chunks(&mut text, r)?;
-                        let text = Arc::new(text);
 
-                        Ok((
-                            Arc::clone(&text) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Text(text),
-                        ))
+                        Ok(Arc::new(text))
                     }
                     0x030a9000 => {
                         let mut trails = MediaBlockTrails::default();
                         read_body_chunks(&mut trails, r)?;
-                        let trails = Arc::new(trails);
 
-                        Ok((
-                            Arc::clone(&trails) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Trails(trails),
-                        ))
+                        Ok(Arc::new(trails))
                     }
                     0x030ab000 => {
                         let mut transition_fade = MediaBlockTransitionFade::default();
                         read_body_chunks(&mut transition_fade, r)?;
-                        let transition_fade = Arc::new(transition_fade);
 
-                        Ok((
-                            Arc::clone(&transition_fade) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::TransitionFade(transition_fade),
-                        ))
+                        Ok(Arc::new(transition_fade))
                     }
                     0x03126000 => {
                         let mut dof = MediaBlockDof::default();
                         read_body_chunks(&mut dof, r)?;
-                        let dof = Arc::new(dof);
 
-                        Ok((
-                            Arc::clone(&dof) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Dof(dof),
-                        ))
+                        Ok(Arc::new(dof))
                     }
                     0x03127000 => {
                         let mut tone_mapping = MediaBlockToneMapping::default();
                         read_body_chunks(&mut tone_mapping, r)?;
-                        let tone_mapping = Arc::new(tone_mapping);
 
-                        Ok((
-                            Arc::clone(&tone_mapping) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::ToneMapping(tone_mapping),
-                        ))
+                        Ok(Arc::new(tone_mapping))
                     }
                     0x0312a000 => {
                         let mut manialink = MediaBlockManialink::default();
                         read_body_chunks(&mut manialink, r)?;
-                        let manialink = Arc::new(manialink);
 
-                        Ok((
-                            Arc::clone(&manialink) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Manialink(manialink),
-                        ))
+                        Ok(Arc::new(manialink))
                     }
                     0x03165000 => {
                         let mut dirty_lens = MediaBlockDirtyLens::default();
                         read_body_chunks(&mut dirty_lens, r)?;
-                        let dirty_lens = Arc::new(dirty_lens);
 
-                        Ok((
-                            Arc::clone(&dirty_lens) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::DirtyLens(dirty_lens),
-                        ))
+                        Ok(Arc::new(dirty_lens))
                     }
                     0x03186000 => {
                         let mut color_grading = MediaBlockColorGrading::default();
                         read_body_chunks(&mut color_grading, r)?;
-                        let color_grading = Arc::new(color_grading);
 
-                        Ok((
-                            Arc::clone(&color_grading) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::ColorGrading(color_grading),
-                        ))
+                        Ok(Arc::new(color_grading))
                     }
                     0x03195000 => {
                         let mut interface = MediaBlockInterface::default();
                         read_body_chunks(&mut interface, r)?;
-                        let interface = Arc::new(interface);
 
-                        Ok((
-                            Arc::clone(&interface) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Interface(interface),
-                        ))
+                        Ok(Arc::new(interface))
                     }
                     0x03199000 => {
                         let mut fog = MediaBlockFog::default();
                         read_body_chunks(&mut fog, r)?;
-                        let fog = Arc::new(fog);
 
-                        Ok((
-                            Arc::clone(&fog) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Fog(fog),
-                        ))
+                        Ok(Arc::new(fog))
                     }
                     0x0329f000 => {
                         let mut entity = MediaBlockEntity::default();
                         read_body_chunks(&mut entity, r)?;
-                        let entity = Arc::new(entity);
 
-                        Ok((
-                            Arc::clone(&entity) as Arc<dyn Any + Send + Sync>,
-                            MediaBlockType::Entity(entity),
-                        ))
+                        Ok(Arc::new(entity))
                     }
                     _ => Err(Error::new(ErrorKind::Unsupported(format!(
                         "{class_id:08x?}"

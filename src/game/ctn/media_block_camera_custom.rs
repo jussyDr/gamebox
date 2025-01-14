@@ -65,13 +65,13 @@ impl FromVariant<u32> for Interpolation {
     }
 }
 
-impl Into<u32> for Interpolation {
-    fn into(self) -> u32 {
-        match self {
-            Self::None => 0,
-            Self::Hermite => 1,
-            Self::Linear => 2,
-            Self::FixedTangent => 3,
+impl From<Interpolation> for u32 {
+    fn from(value: Interpolation) -> u32 {
+        match value {
+            Interpolation::None => 0,
+            Interpolation::Hermite => 1,
+            Interpolation::Linear => 2,
+            Interpolation::FixedTangent => 3,
         }
     }
 }

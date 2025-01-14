@@ -1,10 +1,10 @@
 //! Item model.
 
-use std::{ops::Deref, sync::Arc};
+use std::{any::Any, marker::PhantomData, ops::Deref, sync::Arc};
 
 use crate::{
     plug::{item_variant_list::ItemVariantList, Prefab},
-    Class, NodeRef,
+    Class, ExternalNodeRef, NodeRef,
 };
 
 use super::{
@@ -58,10 +58,44 @@ impl Default for ItemModelType {
     }
 }
 
+impl TryFrom<Arc<dyn Any + Send + Sync>> for ItemModelType {
+    type Error = ();
+
+    fn try_from(value: Arc<dyn Any + Send + Sync>) -> Result<Self, ()> {
+        value
+            .downcast()
+            .map(Self::BlockItem)
+            .or_else(|value| value.downcast().map(Self::CommonItemEntityModel))
+            .or_else(|value| value.downcast().map(Self::CommonItemEntityModelEdition))
+            .or_else(|value| value.downcast().map(Self::ItemVariantList))
+            .or_else(|value| {
+                value
+                    .downcast()
+                    .map(|value| Self::Prefab(NodeRef::Internal(value)))
+            })
+            .map_err(|_| ())
+    }
+}
+
+impl TryFrom<NodeRef<dyn Any + Send + Sync>> for ItemModelType {
+    type Error = ();
+
+    fn try_from(value: NodeRef<dyn Any + Send + Sync>) -> Result<Self, ()> {
+        match value {
+            NodeRef::Internal(node_ref) => node_ref.try_into(),
+            NodeRef::External(node_ref) => Ok(Self::Prefab(NodeRef::External(ExternalNodeRef {
+                ancestor_level: node_ref.ancestor_level,
+                use_file: node_ref.use_file,
+                path: node_ref.path,
+                phantom: PhantomData,
+            }))),
+        }
+    }
+}
+
 mod read {
     use std::{
         io::{Read, Seek},
-        marker::PhantomData,
         sync::Arc,
     };
 
@@ -77,10 +111,9 @@ mod read {
             reader::{IdStateMut, NodeStateMut, Reader},
             BodyChunk, BodyChunks, Error, ErrorKind, ReadBody, Readable,
         },
-        ExternalNodeRef, NodeRef,
     };
 
-    use super::{ItemModel, ItemModelType};
+    use super::ItemModel;
 
     impl Readable for ItemModel {}
 
@@ -116,6 +149,7 @@ mod read {
 
         fn body_chunks<R: Read + Seek, I: IdStateMut, N: NodeStateMut>(
         ) -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+            #![allow(clippy::redundant_closure)]
             [
                 BodyChunk::normal(8, Self::read_chunk_8),
                 BodyChunk::normal(9, Self::read_chunk_9),
@@ -201,61 +235,48 @@ mod read {
             let _vis_custom_model = r.u32()?;
             let _actions = r.list(|r| r.u32())?;
             let _default_cam = r.u32()?;
-            let model_edition = r.test_or_null(|r, class_id| match class_id {
+            let model_edition = r.internal_node_ref_any_or_null(|r, class_id| match class_id {
                 0x2e025000 => {
                     let mut block_item = BlockItem::default();
                     block_item.read_body(r)?;
 
-                    self.ty = ItemModelType::BlockItem(Arc::new(block_item));
-
-                    Ok(())
+                    Ok(Arc::new(block_item))
                 }
                 0x2e026000 => {
                     let mut entity_model_edition = CommonItemEntityModelEdition::default();
                     entity_model_edition.read_body(r)?;
 
-                    self.ty =
-                        ItemModelType::CommonItemEntityModelEdition(Arc::new(entity_model_edition));
-
-                    Ok(())
+                    Ok(Arc::new(entity_model_edition))
                 }
                 _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
             })?;
 
-            if model_edition.is_none() {
-                let ext = r.test_or_ext(|r, class_id| {
-                    match class_id {
+            match model_edition {
+                Some(model_edition) => {
+                    self.ty = model_edition;
+                }
+                None => {
+                    self.ty = r.node_ref_any(|r, class_id| match class_id {
                         0x09145000 => {
-                            let mut model = Prefab::default();
-                            model.read_body(r)?;
+                            let mut prefab = Prefab::default();
+                            prefab.read_body(r)?;
 
-                            self.ty = ItemModelType::Prefab(NodeRef::Internal(Arc::new(model)))
+                            Ok(Arc::new(prefab))
                         }
                         0x2e027000 => {
-                            let mut model = CommonItemEntityModel::default();
-                            model.read_body(r)?;
+                            let mut common_item_entity_model = CommonItemEntityModel::default();
+                            common_item_entity_model.read_body(r)?;
 
-                            self.ty = ItemModelType::CommonItemEntityModel(Arc::new(model))
+                            Ok(Arc::new(common_item_entity_model))
                         }
                         0x2f0bc000 => {
-                            let mut model = ItemVariantList::default();
-                            model.read_body(r)?;
+                            let mut item_variant_list = ItemVariantList::default();
+                            item_variant_list.read_body(r)?;
 
-                            self.ty = ItemModelType::ItemVariantList(Arc::new(model))
+                            Ok(Arc::new(item_variant_list))
                         }
-                        _ => return Err(Error::new(ErrorKind::Unsupported("".into()))),
-                    }
-
-                    Ok(())
-                })?;
-
-                if let Some(ext) = ext {
-                    self.ty = ItemModelType::Prefab(NodeRef::External(ExternalNodeRef {
-                        ancestor_level: ext.ancestor_level,
-                        use_file: ext.use_file,
-                        path: ext.path,
-                        phantom: PhantomData,
-                    }));
+                        _ => Err(Error::new(ErrorKind::Unsupported("".into()))),
+                    })?;
                 }
             }
 

@@ -17,7 +17,7 @@ pub trait HeaderChunks: Sized {
 pub struct HeaderChunk<T, W, I, N> {
     pub num: u16,
     pub write_fn: HeaderChunkWriteFn<T, W, I, N>,
-    pub heavy: bool,
+    pub is_heavy: bool,
 }
 
 impl<T, W, I, N> HeaderChunk<T, W, I, N> {
@@ -25,7 +25,7 @@ impl<T, W, I, N> HeaderChunk<T, W, I, N> {
         Self {
             num,
             write_fn,
-            heavy: false,
+            is_heavy: false,
         }
     }
 
@@ -33,7 +33,7 @@ impl<T, W, I, N> HeaderChunk<T, W, I, N> {
         Self {
             num,
             write_fn,
-            heavy: true,
+            is_heavy: true,
         }
     }
 }
