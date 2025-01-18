@@ -1,4 +1,5 @@
 use std::{
+    any::Any,
     fmt::Debug,
     marker::PhantomData,
     path::{Path, PathBuf},
@@ -12,6 +13,15 @@ pub enum NodeRef<T: ?Sized> {
     Internal(Arc<T>),
     /// External node referece.
     External(ExternalNodeRef<T>),
+}
+
+impl NodeRef<dyn Any + Send + Sync> {
+    pub(crate) fn downcast<T: 'static + Send + Sync>(self) -> Option<NodeRef<T>> {
+        match self {
+            Self::Internal(node_ref) => node_ref.downcast().ok().map(NodeRef::Internal),
+            Self::External(node_ref) => node_ref.downcast().map(NodeRef::External),
+        }
+    }
 }
 
 impl<T: ?Sized> Clone for NodeRef<T> {
@@ -29,7 +39,7 @@ impl<T: Default> Default for NodeRef<T> {
     }
 }
 
-/// Reference to a node in an external file.
+/// External node reference.
 pub struct ExternalNodeRef<T: ?Sized> {
     pub(crate) ancestor_level: u8,
     pub(crate) use_file: bool,
@@ -51,6 +61,17 @@ impl<T> ExternalNodeRef<T> {
         path.push(&self.path);
 
         path
+    }
+}
+
+impl ExternalNodeRef<dyn Any + Send + Sync> {
+    pub(crate) fn downcast<T: 'static + Send + Sync>(self) -> Option<ExternalNodeRef<T>> {
+        Some(ExternalNodeRef {
+            ancestor_level: self.ancestor_level,
+            use_file: self.use_file,
+            path: self.path,
+            phantom: PhantomData,
+        })
     }
 }
 

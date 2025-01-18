@@ -168,27 +168,15 @@ impl<R: Read + Seek, I: IdStateMut, N: NodeStateMut> Reader<R, I, N> {
     ) -> Result<Option<NodeRef<T>>, Error> {
         match self.get_entry_or_null()? {
             None => Ok(None),
-            Some((_, Some(node_ref))) => match node_ref {
-                NodeRef::Internal(internal_node_ref) => Ok(Some(NodeRef::Internal(
-                    Arc::clone(&internal_node_ref).downcast().unwrap(),
-                ))),
-                NodeRef::External(external_node_ref) => {
-                    Ok(Some(NodeRef::External(ExternalNodeRef {
-                        ancestor_level: external_node_ref.ancestor_level,
-                        use_file: external_node_ref.use_file,
-                        path: Arc::clone(&external_node_ref.path),
-                        phantom: PhantomData,
-                    })))
-                }
-            },
+            Some((_, Some(node_ref))) => Ok(Some(node_ref.clone().downcast().unwrap())),
             Some((index, _)) => {
-                let node: Arc<dyn Any + Send + Sync> = Arc::new(self.node::<T>()?);
+                let node_ref: Arc<dyn Any + Send + Sync> = Arc::new(self.node::<T>()?);
 
                 self.node_state
                     .get_mut()
-                    .set_node_ref(index, NodeRef::Internal(Arc::clone(&node)))?;
+                    .set_node_ref(index, NodeRef::Internal(Arc::clone(&node_ref)))?;
 
-                Ok(Some(NodeRef::Internal(node.downcast().unwrap())))
+                Ok(Some(NodeRef::Internal(node_ref.downcast().unwrap())))
             }
         }
     }

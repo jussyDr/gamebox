@@ -141,7 +141,7 @@ mod read {
                     7 => Some(Condition::MaxPlayCount(OrderedFloat(condition_value))),
                     8 => Some(Condition::RandomOnce(OrderedFloat(condition_value))),
                     9 => Some(Condition::Random(OrderedFloat(condition_value))),
-                    _ => todo!(),
+                    _ => return Err(Error::enum_variant("condition", condition)),
                 };
 
                 self.clips.push(ClipTrigger {

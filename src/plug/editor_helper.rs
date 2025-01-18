@@ -24,12 +24,9 @@ impl EditorHelper {
 mod read {
     use std::io::Read;
 
-    use crate::{
-        plug::Prefab,
-        read::{
-            reader::{NodeStateMut, Reader},
-            Error, ReadBody,
-        },
+    use crate::read::{
+        reader::{NodeStateMut, Reader},
+        Error, ReadBody,
     };
 
     use super::EditorHelper;
@@ -45,7 +42,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            self.prefab = r.external_node_ref::<Prefab>()?;
+            self.prefab = r.external_node_ref()?;
 
             Ok(())
         }

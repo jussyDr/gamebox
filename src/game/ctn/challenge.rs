@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use crate::{
-    read::reader::FromVariant, script::TraitsMetadata, Byte3, Class, FileRef, Nat3, Vec3,
+    read::reader::FromVariant, script::TraitsMetadata, Byte3, Class, FileRef, Nat3, Vec2, Vec3,
     YawPitchRoll,
 };
 
@@ -16,34 +16,43 @@ use super::{
 /// Challenge.
 #[derive(PartialEq, Debug)]
 pub struct Challenge {
-    validation: Option<Validation>,
+    // header
     display_cost: u32,
     play_mode: u32,
+    validation: Option<Validation>,
     editor_mode: EditorMode,
     num_checkpoints: u32,
     num_laps: Option<u32>,
     id: Arc<str>,
     author_id: Arc<str>,
-    author_name: String,
     name: String,
     ty: ChallengeType,
     password: String,
     decoration_id: Arc<str>,
+    coord_origin: Vec2,
+    coord_target: Vec2,
     pack_mask: [u8; 16],
     map_type: String,
     map_style: Option<String>,
-    has_ghost_blocks: bool,
     lightmap_cache_id: u64,
     has_lightmap: bool,
     title_id: Arc<str>,
+    game_version: String,
     game_build_date: String,
-    game_build_tag: GameBuildTag,
-    thumbnail: Vec<u8>,
     author_zone: String,
+    has_ghost_blocks: bool,
+    thumbnail: Vec<u8>,
+    author_name: String,
+    // body
     texture_mod: Option<FileRef>,
     size: Nat3,
     blocks: Vec<Block>,
     music: Option<FileRef>,
+    password_hash: Option<[u8; 16]>,
+    checksum: u32,
+    thumbnail_position: Vec3,
+    thumbnail_rotation: YawPitchRoll,
+    thumbnail_fov: f32,
     items: Vec<AnchoredObject>,
     zones: Vec<ZoneGenealogy>,
     script_metadata: TraitsMetadata,
@@ -53,12 +62,10 @@ pub struct Challenge {
     in_game_clips: Option<Arc<MediaClipGroup>>,
     end_race_clips: Option<Arc<MediaClipGroup>>,
     ambiance_clip: Option<Arc<MediaClip>>,
+    clip_trigger_size: Nat3,
+    game_build_tag: GameBuildTag,
+    decoration_base_height: u32,
     embedded_items: Option<EmbeddedItems>,
-    password_hash: Option<[u8; 16]>,
-    checksum: u32,
-    thumbnail_position: Vec3,
-    thumbnail_rotation: YawPitchRoll,
-    thumbnail_fov: f32,
     time_of_day: Option<u32>,
 }
 
@@ -142,7 +149,7 @@ impl Challenge {
         &self.script_metadata
     }
 
-    /// Baked blocks, containing clips and grass blocks.
+    /// Baked blocks.
     pub const fn baked_blocks(&self) -> &Vec<Block> {
         &self.baked_blocks
     }
@@ -236,6 +243,7 @@ impl Default for Challenge {
             editor_mode: EditorMode::default(),
             num_checkpoints: 0,
             num_laps: None,
+            game_version: "3.3.0".to_string(),
             author_name: String::new(),
             id: Default::default(), // should be random
             author_id: Default::default(),
@@ -246,8 +254,11 @@ impl Default for Challenge {
             pack_mask: [0; 16],
             map_type: "TrackMania\\TM_Race".to_string(),
             map_style: None,
+            clip_trigger_size: Nat3::new(3, 1, 3),
             lightmap_cache_id: 0, // should be random
             has_lightmap: false,
+            coord_origin: Vec2::new(0.0, 0.0),
+            coord_target: Vec2::new(0.0, 0.0),
             has_ghost_blocks: false,
             thumbnail: vec![],
             title_id: Arc::from("TMStadium"),
@@ -256,6 +267,13 @@ impl Default for Challenge {
             size: Nat3::new(size as u32, 40, size as u32),
             blocks: vec![],
             music: None,
+            game_build_date: "2024-09-17_11_17".to_string(),
+            game_build_tag: GameBuildTag::Git("127252-120dea21a9e".to_string()),
+            password_hash: None,
+            checksum: 0, // generate
+            thumbnail_position: Vec3::new(0.0, 0.0, 0.0),
+            thumbnail_rotation: YawPitchRoll::new(0.0, 0.0, 0.0),
+            thumbnail_fov: 90.0,
             zones: vec![],
             items: vec![],
             script_metadata: TraitsMetadata::default(),
@@ -265,14 +283,8 @@ impl Default for Challenge {
             in_game_clips: None,
             end_race_clips: None,
             ambiance_clip: None,
+            decoration_base_height: 8,
             embedded_items: None,
-            game_build_date: "2024-09-17_11_17".to_string(),
-            game_build_tag: GameBuildTag::Git("127252-120dea21a9e".to_string()),
-            password_hash: None,
-            checksum: 0, // generate
-            thumbnail_position: Vec3::new(0.0, 0.0, 0.0),
-            thumbnail_rotation: YawPitchRoll::new(0.0, 0.0, 0.0),
-            thumbnail_fov: 90.0,
             time_of_day: None,
         }
     }
@@ -462,8 +474,6 @@ pub enum GameBuildTag {
     Svn(String),
 }
 
-const GAME_VERSION: &str = "3.3.0";
-
 mod read {
     use std::{
         borrow::Cow,
@@ -492,9 +502,7 @@ mod read {
         ID_MARKER_BIT,
     };
 
-    use super::{
-        Challenge, EmbeddedItems, GameBuildTag, MedalTimes, Objective, Validation, GAME_VERSION,
-    };
+    use super::{Challenge, EmbeddedItems, GameBuildTag, MedalTimes, Objective, Validation};
 
     impl Readable for Challenge {}
 
@@ -652,10 +660,10 @@ mod read {
             r.u32()?;
             self.password = r.string()?;
             self.decoration_id = r.id()?;
-            let _deco_collection = r.id_or_null()?;
-            let _deco_author = r.id()?;
-            let _coord_origin = r.vec2()?;
-            let _coord_target = r.vec2()?;
+            let _decoration_collection = r.id_or_null()?;
+            let _decoration_author = r.id()?;
+            self.coord_origin = r.vec2()?;
+            self.coord_target = r.vec2()?;
             self.pack_mask = r.byte_array::<16>()?;
             self.map_type = r.string()?;
             self.map_style = r.string_or_empty()?;
@@ -689,14 +697,9 @@ mod read {
                         todo!()
                     }
 
-                    let game_version = r.attribute(b"exever")?;
-
-                    if game_version != GAME_VERSION {
-                        todo!()
-                    }
-
+                    self.game_version = r.attribute(b"exever")?.to_string();
                     self.game_build_date = r.attribute(b"exebuild")?.to_string();
-                    let _title_id = r.attribute(b"title")?;
+                    self.title_id = r.attribute(b"title")?.into();
                     self.has_lightmap = has_lightmap(r.attribute_from_str(b"lightmap")?)?;
 
                     Ok(())
@@ -716,15 +719,11 @@ mod read {
                         let _type = r.attribute(b"type")?;
                         self.map_type = r.attribute(b"maptype")?.to_string();
                         self.map_style = string_or_empty(r.attribute(b"mapstyle")?.to_string());
-                        let _is_validated = r.attribute(b"validated")?;
+                        let _is_validated = r.attribute_bool(b"validated")?;
                         let _num_laps = r.attribute(b"nblaps")?;
                         self.display_cost = r.attribute_from_str(b"displaycost")?;
                         let _texture_mod = r.attribute(b"mod")?;
-                        self.has_ghost_blocks = match r.attribute(b"hasghostblocks")?.as_ref() {
-                            "0" => false,
-                            "1" => true,
-                            _ => todo!(),
-                        };
+                        self.has_ghost_blocks = r.attribute_bool(b"hasghostblocks")?;
 
                         Ok(())
                     })?;
@@ -890,8 +889,8 @@ mod read {
         }
 
         fn read_chunk_37<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
-            let _coord_origin = r.vec2()?;
-            let _coord_target = r.vec2()?;
+            self.coord_origin = r.vec2()?;
+            self.coord_target = r.vec2()?;
 
             Ok(())
         }
@@ -1082,7 +1081,7 @@ mod read {
             self.in_game_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             self.end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             self.ambiance_clip = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _clip_trigger_size = r.nat3()?;
+            self.clip_trigger_size = r.nat3()?;
 
             Ok(())
         }
@@ -1169,9 +1168,7 @@ mod read {
                 panic!()
             }
 
-            if value != GAME_VERSION {
-                panic!();
-            }
+            self.game_version = value.to_string();
 
             Ok(())
         }
@@ -1183,7 +1180,7 @@ mod read {
                 return Err(Error::chunk_version(version));
             }
 
-            let _decoration_base_height_offset = r.u32()?;
+            self.decoration_base_height = r.u32()?;
 
             Ok(())
         }
@@ -1737,6 +1734,14 @@ mod read {
             }
         }
 
+        fn attribute_bool(&mut self, name: &[u8]) -> Result<bool, Error> {
+            match self.attribute(name)?.as_ref() {
+                "0" => Ok(false),
+                "1" => Ok(true),
+                _ => todo!(),
+            }
+        }
+
         fn attribute_from_str<T: FromStr>(&mut self, name: &[u8]) -> Result<T, Error> {
             let value = self.attribute(name)?;
 
@@ -1758,12 +1763,12 @@ mod write {
             writer::{write_to_buf, IdStateMut, NodeStateMut},
             BodyChunk, BodyChunks, Error, Writable, Writer,
         },
-        Nat3, Vec2,
+        Nat3,
     };
 
     use self::writable::{write_body_chunks, HeaderChunk, HeaderChunks, WriteBody};
 
-    use super::{Challenge, GameBuildTag, Objective, Validation, GAME_VERSION};
+    use super::{Challenge, GameBuildTag, Objective, Validation};
 
     impl Writable for Challenge {}
 
@@ -1920,8 +1925,8 @@ mod write {
             w.id(&self.decoration_id)?;
             w.u32(0x1a)?;
             w.id(&Arc::from("Nadeo"))?;
-            w.vec2(Vec2::new(0.0, 0.0))?;
-            w.vec2(Vec2::new(0.0, 0.0))?;
+            w.vec2(self.coord_origin)?;
+            w.vec2(self.coord_target)?;
             w.bytes(&self.pack_mask)?;
             w.string(&self.map_type)?;
             w.string_or_empty(self.map_style.as_ref())?;
@@ -1947,7 +1952,7 @@ mod write {
                         "header",
                         |w| {
                             w.attribute("type", "map");
-                            w.attribute("exever", GAME_VERSION);
+                            w.attribute("exever", &self.game_version);
                             w.attribute("exebuild", &self.game_build_date);
                             w.attribute("title", &self.title_id);
                             w.attribute("lightmap", &self.lightmap_version().to_string());
@@ -2126,8 +2131,8 @@ mod write {
         }
 
         fn write_chunk_37<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            w.vec2(Vec2::new(0.0, 0.0))?;
-            w.vec2(Vec2::new(0.0, 0.0))?;
+            w.vec2(self.coord_origin)?;
+            w.vec2(self.coord_target)?;
 
             Ok(())
         }
@@ -2260,7 +2265,7 @@ mod write {
             w.internal_node_ref_or_null(self.in_game_clips.as_ref())?;
             w.internal_node_ref_or_null(self.end_race_clips.as_ref())?;
             w.internal_node_ref_or_null(self.ambiance_clip.as_ref())?;
-            w.nat3(Nat3::new(3, 1, 3))?;
+            w.nat3(self.clip_trigger_size)?;
 
             Ok(())
         }
@@ -2312,7 +2317,7 @@ mod write {
 
         fn write_chunk_82<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
             w.u32(0)?;
-            w.u32(8)?;
+            w.u32(self.decoration_base_height)?;
 
             Ok(())
         }
@@ -2355,11 +2360,7 @@ mod write {
 
         fn write_chunk_86<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
             w.u32(3)?;
-            w.u32(0)?;
-            w.u32(self.time_of_day.unwrap_or(0xffffffff))?;
-            w.u32(0)?;
-            w.bool(false)?;
-            w.u32(300000)?;
+            self.write_dynamic_lighting(w)?;
 
             Ok(())
         }
@@ -2560,11 +2561,7 @@ mod write {
         }
 
         fn write_chunk_107<I, N>(&self, w: &mut Writer<impl Write, I, N>) -> Result<(), Error> {
-            w.u32(0)?;
-            w.u32(self.time_of_day.unwrap_or(0xffffffff))?;
-            w.u32(0)?;
-            w.bool(false)?;
-            w.u32(300000)?;
+            self.write_dynamic_lighting(w)?;
 
             Ok(())
         }
@@ -2590,6 +2587,19 @@ mod write {
             w.string(&self.author_name)?;
             w.string(&self.author_zone)?;
             w.string_or_empty(None)?;
+
+            Ok(())
+        }
+
+        fn write_dynamic_lighting<I, N>(
+            &self,
+            w: &mut Writer<impl Write, I, N>,
+        ) -> Result<(), Error> {
+            w.u32(0)?;
+            w.u32(self.time_of_day.unwrap_or(0xffffffff))?;
+            w.u32(0)?;
+            w.bool(false)?;
+            w.u32(300000)?;
 
             Ok(())
         }

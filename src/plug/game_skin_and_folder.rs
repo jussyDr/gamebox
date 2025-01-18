@@ -9,7 +9,7 @@ use super::GameSkin;
 /// Game skin and folder.
 #[derive(Default)]
 pub struct GameSkinAndFolder {
-    skin: Arc<GameSkin>,
+    game_skin: Arc<GameSkin>,
     folder: String,
 }
 
@@ -18,9 +18,9 @@ impl Class for GameSkinAndFolder {
 }
 
 impl GameSkinAndFolder {
-    /// Skin.
-    pub const fn skin(&self) -> &Arc<GameSkin> {
-        &self.skin
+    /// Game skin.
+    pub const fn game_skin(&self) -> &Arc<GameSkin> {
+        &self.game_skin
     }
 
     /// Folder.
@@ -32,13 +32,10 @@ impl GameSkinAndFolder {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        plug::GameSkin,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::GameSkinAndFolder;
@@ -68,7 +65,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read + Seek, impl IdStateMut, impl NodeStateMut>,
         ) -> Result<(), Error> {
-            self.skin = r.internal_node_ref::<GameSkin>()?;
+            self.game_skin = r.internal_node_ref()?;
             self.folder = r.string()?;
 
             Ok(())

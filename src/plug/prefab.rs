@@ -30,12 +30,17 @@ impl Prefab {
 /// Prefab entity.
 #[derive(Debug)]
 pub struct PrefabEntity {
-    ty: Option<PrefabEntityType>,
+    ty: PrefabEntityType,
     rotation: Quat,
     position: Vec3,
 }
 
 impl PrefabEntity {
+    /// Type.
+    pub const fn ty(&self) -> &PrefabEntityType {
+        &self.ty
+    }
+
     /// Rotation.
     pub const fn rotation(&self) -> Quat {
         self.rotation
@@ -51,11 +56,25 @@ impl PrefabEntity {
 #[derive(Debug)]
 pub enum PrefabEntityType {
     /// Dynamic kinematic constraint.
-    DynaKinematicConstraint(Arc<DynaKinematicConstraint>),
+    DynaKinematicConstraint {
+        /// Constraint.
+        constraint: Arc<DynaKinematicConstraint>,
+        /// Params.
+        params: DynaPrefabConstraintParams,
+    },
     /// Dynamic object model.
-    DynaObjectModel(Arc<DynaObjectModel>),
+    DynaObject {
+        /// Model.
+        model: Arc<DynaObjectModel>,
+        /// Params.
+        params: DynaObjectModelInstanceParams,
+    },
     /// Editor helper.
     EditorHelper(Arc<EditorHelper>),
+    /// Item placement placement.
+    ItemPlacementPlacement(ItemPlacementPlacement),
+    /// Item placement placement group.
+    ItemPlacementPlacementGroup(ItemPlacementPlacementGroup),
     /// Path.
     Path(Arc<Path>),
     /// Prefab.
@@ -63,7 +82,12 @@ pub enum PrefabEntityType {
     /// Spawn model.
     SpawnModel(Arc<SpawnModel>),
     /// Static object model.
-    StaticObjectModel(Arc<StaticObjectModel>),
+    StaticObject {
+        ///  Model.
+        model: NodeRef<StaticObjectModel>,
+        /// Params.
+        params: StaticObjectModelInstanceParams,
+    },
     /// Trigger special.
     TriggerSpecial(Arc<TriggerSpecial>),
     /// Trigger waypoint.
@@ -77,21 +101,52 @@ impl TryFrom<NodeRef<dyn Any + Send + Sync>> for PrefabEntityType {
         match value {
             NodeRef::Internal(node_ref) => node_ref
                 .downcast()
-                .map(Self::DynaKinematicConstraint)
-                .or_else(|value| value.downcast().map(Self::DynaObjectModel))
+                .map(|value| Self::DynaKinematicConstraint {
+                    constraint: value,
+                    params: Default::default(),
+                })
+                .or_else(|value| {
+                    value.downcast().map(|value| Self::DynaObject {
+                        model: value,
+                        params: Default::default(),
+                    })
+                })
                 .or_else(|value| value.downcast().map(Self::EditorHelper))
                 .or_else(|value| value.downcast().map(Self::Path))
                 .or_else(|value| value.downcast().map(Self::SpawnModel))
-                .or_else(|value| value.downcast().map(Self::StaticObjectModel))
+                .or_else(|value| {
+                    value.downcast().map(|value| Self::StaticObject {
+                        model: NodeRef::Internal(value),
+                        params: StaticObjectModelInstanceParams::default(),
+                    })
+                })
                 .or_else(|value| value.downcast().map(Self::TriggerSpecial))
                 .or_else(|value| value.downcast().map(Self::TriggerWaypoint))
                 .map_err(|_| ()),
-            NodeRef::External(node_ref) => Ok(Self::Prefab(ExternalNodeRef {
-                ancestor_level: node_ref.ancestor_level,
-                use_file: node_ref.use_file,
-                path: node_ref.path,
-                phantom: PhantomData,
-            })),
+            NodeRef::External(node_ref) => {
+                let path = node_ref.path.to_str().unwrap();
+
+                if path.ends_with("Prefab.Gbx") {
+                    Ok(Self::Prefab(ExternalNodeRef {
+                        ancestor_level: node_ref.ancestor_level,
+                        use_file: node_ref.use_file,
+                        path: node_ref.path,
+                        phantom: PhantomData,
+                    }))
+                } else if path.ends_with("StaticObject.Gbx") {
+                    Ok(Self::StaticObject {
+                        model: NodeRef::External(ExternalNodeRef {
+                            ancestor_level: node_ref.ancestor_level,
+                            use_file: node_ref.use_file,
+                            path: node_ref.path,
+                            phantom: PhantomData,
+                        }),
+                        params: StaticObjectModelInstanceParams::default(),
+                    })
+                } else {
+                    todo!("{:?}", path)
+                }
+            }
         }
     }
 }
@@ -102,6 +157,21 @@ struct TriggerWaypoint;
 #[derive(Debug)]
 struct TriggerSpecial;
 
+#[derive(Default, Debug)]
+pub struct StaticObjectModelInstanceParams;
+
+#[derive(Debug)]
+pub struct ItemPlacementPlacement;
+
+#[derive(Default, Debug)]
+pub struct DynaObjectModelInstanceParams;
+
+#[derive(Default, Debug)]
+pub struct DynaPrefabConstraintParams;
+
+#[derive(Debug)]
+pub struct ItemPlacementPlacementGroup;
+
 mod read {
     use std::{
         io::{Read, Seek},
@@ -110,7 +180,7 @@ mod read {
 
     use crate::{
         plug::{
-            dyna_kinematic_contraint::DynaKinematicConstraint,
+            dyna_kinematic_contraint::DynaKinematicConstraint, prefab::PrefabEntityType,
             static_object_model::StaticObjectModel, DynaObjectModel, EditorHelper, Path,
             SpawnModel, Surface,
         },
@@ -121,7 +191,10 @@ mod read {
         },
     };
 
-    use super::{Prefab, PrefabEntity, TriggerSpecial, TriggerWaypoint};
+    use super::{
+        ItemPlacementPlacement, ItemPlacementPlacementGroup, Prefab, PrefabEntity, TriggerSpecial,
+        TriggerWaypoint,
+    };
 
     impl Readable for Prefab {}
 
@@ -150,7 +223,7 @@ mod read {
             let num_entities = r.u32()?;
             let _u02 = r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let ty = r.node_ref_any_or_null(|r, class_id| {
+                let mut ty = r.node_ref_any_or_null(|r, class_id| {
                     match class_id {
                         0x09119000 => {
                             let mut path = Path::default();
@@ -224,6 +297,10 @@ mod read {
                 match class_id {
                     0x2f0a9000 => {
                         read_item_placement_placement(r)?;
+
+                        ty = Some(PrefabEntityType::ItemPlacementPlacement(
+                            ItemPlacementPlacement,
+                        ));
                     }
                     0x2f0b6000 => {
                         let version = r.u32()?;
@@ -239,6 +316,11 @@ mod read {
                         let _phase_01 = r.f32()?;
                         let _phase_01_max = r.f32()?;
                         r.u32()?;
+
+                        match ty {
+                            Some(PrefabEntityType::DynaObject { .. }) => {}
+                            _ => panic!("{ty:?}"),
+                        }
                     }
                     0x2f0c8000 => {
                         let version = r.u32()?;
@@ -251,6 +333,11 @@ mod read {
                         let _ent_2 = r.u32()?;
                         let _position_1 = r.vec3()?;
                         let _position_2 = r.vec3()?;
+
+                        match ty {
+                            Some(PrefabEntityType::DynaKinematicConstraint { .. }) => {}
+                            _ => panic!("{ty:?}"),
+                        }
                     }
                     0x2f0d8000 => {
                         let version = r.u32()?;
@@ -267,6 +354,10 @@ mod read {
 
                             Ok(())
                         })?;
+
+                        ty = Some(PrefabEntityType::ItemPlacementPlacementGroup(
+                            ItemPlacementPlacementGroup,
+                        ));
                     }
                     0x2f0d9000 => {
                         let version = r.u32()?;
@@ -276,6 +367,11 @@ mod read {
                         }
 
                         let _phase_01 = r.f32()?;
+
+                        match &mut ty {
+                            Some(PrefabEntityType::StaticObject { params, .. }) => {}
+                            _ => todo!(),
+                        }
                     }
                     0xffffffff => {}
                     _ => {
@@ -283,12 +379,12 @@ mod read {
                             "prefab entity parameters".into(),
                         )));
                     }
-                }
+                };
 
                 r.string()?;
 
                 Ok(PrefabEntity {
-                    ty,
+                    ty: ty.unwrap(),
                     rotation,
                     position,
                 })
