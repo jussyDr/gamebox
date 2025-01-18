@@ -8,7 +8,7 @@ use crate::{Class, Nat3};
 
 use super::MediaClip;
 
-/// A media clip group.
+/// Media clip group.
 #[derive(PartialEq, Eq, Hash, Default, Debug)]
 pub struct MediaClipGroup {
     clips: Vec<ClipTrigger>,

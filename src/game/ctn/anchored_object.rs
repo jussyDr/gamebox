@@ -154,13 +154,10 @@ impl From<PhaseOffset> for u8 {
 mod read {
     use std::io::{Read, Seek};
 
-    use crate::{
-        game::WaypointSpecialProperty,
-        read::{
-            read_body_chunks,
-            reader::{IdStateMut, NodeStateMut, Reader},
-            BodyChunk, BodyChunks, Error, ReadBody,
-        },
+    use crate::read::{
+        read_body_chunks,
+        reader::{IdStateMut, NodeStateMut, Reader},
+        BodyChunk, BodyChunks, Error, ReadBody,
     };
 
     use super::AnchoredObject;
@@ -205,7 +202,7 @@ mod read {
             self.unit_coord = r.byte3()?;
             let _anchor_tree_id = r.id_or_null()?;
             self.position = r.vec3()?;
-            self.waypoint_property = r.node_or_null::<WaypointSpecialProperty>()?;
+            self.waypoint_property = r.node_or_null()?;
             let flags = r.u16()?;
             self.variant_index = ((flags >> 8) & 255) as u8;
             let _show = ((flags >> 12) & 1) != 0;

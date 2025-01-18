@@ -2,7 +2,6 @@
 
 pub mod anchored_object;
 pub mod auto_terrain;
-pub mod block;
 pub mod block_info;
 pub mod block_info_classic;
 pub mod block_info_clip;
@@ -52,12 +51,14 @@ pub mod zone;
 pub mod zone_flat;
 pub mod zone_genealogy;
 
+mod block;
+
+pub use block::{Block, BlockType};
+
 #[doc(inline)]
 pub use anchored_object::AnchoredObject;
 #[doc(inline)]
 pub use auto_terrain::AutoTerrain;
-#[doc(inline)]
-pub use block::Block;
 #[doc(inline)]
 pub use block_info::BlockInfo;
 #[doc(inline)]

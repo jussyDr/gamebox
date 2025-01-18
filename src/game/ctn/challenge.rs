@@ -27,7 +27,7 @@ pub struct Challenge {
     author_id: Arc<str>,
     name: String,
     ty: ChallengeType,
-    password: String,
+    password: Option<String>,
     decoration_id: Arc<str>,
     coord_origin: Vec2,
     coord_target: Vec2,
@@ -74,14 +74,24 @@ impl Class for Challenge {
 }
 
 impl Challenge {
+    /// Display cost.
+    pub const fn display_cost(&self) -> u32 {
+        self.display_cost
+    }
+
+    /// Play mode.
+    pub const fn play_mode(&self) -> u32 {
+        self.play_mode
+    }
+
     /// Validation.
     pub const fn validation(&self) -> Option<&Validation> {
         self.validation.as_ref()
     }
 
-    /// Display cost.
-    pub const fn display_cost(&self) -> u32 {
-        self.display_cost
+    /// Editor mode.
+    pub const fn editor_mode(&self) -> EditorMode {
+        self.editor_mode
     }
 
     /// Number of checkpoints.
@@ -89,7 +99,7 @@ impl Challenge {
         self.num_checkpoints
     }
 
-    /// Number of laps, or `None` if the challenge is not a laps race.
+    /// Number of laps.
     pub const fn num_laps(&self) -> Option<u32> {
         self.num_laps
     }
@@ -109,14 +119,89 @@ impl Challenge {
         &self.name
     }
 
+    /// Type.
+    pub const fn ty(&self) -> ChallengeType {
+        self.ty
+    }
+
+    /// Password.
+    pub const fn password(&self) -> Option<&String> {
+        self.password.as_ref()
+    }
+
     /// Decoration identifier.
     pub const fn decoration_id(&self) -> &Arc<str> {
         &self.decoration_id
     }
 
+    /// Coordinate origin.
+    pub const fn coord_origin(&self) -> Vec2 {
+        self.coord_origin
+    }
+
+    /// Coordinate target.
+    pub const fn coord_target(&self) -> Vec2 {
+        self.coord_target
+    }
+
+    /// Pack mask.
+    pub const fn pack_mask(&self) -> [u8; 16] {
+        self.pack_mask
+    }
+
+    /// Map type.
+    pub const fn map_type(&self) -> &String {
+        &self.map_type
+    }
+
+    /// Map style.
+    pub const fn map_style(&self) -> Option<&String> {
+        self.map_style.as_ref()
+    }
+
+    /// Lightmap cache identifier.
+    pub const fn lightmap_cache_id(&self) -> u64 {
+        self.lightmap_cache_id
+    }
+
+    /// Has lightmap.
+    pub const fn has_lightmap(&self) -> bool {
+        self.has_lightmap
+    }
+
     /// Title identifier.
     pub const fn title_id(&self) -> &Arc<str> {
         &self.title_id
+    }
+
+    /// Game version.
+    pub const fn game_version(&self) -> &String {
+        &self.game_version
+    }
+
+    /// Game build date.
+    pub const fn game_build_date(&self) -> &String {
+        &self.game_build_date
+    }
+
+    /// Author zone.
+    pub const fn author_zone(&self) -> &String {
+        &self.author_zone
+    }
+
+    /// Has ghost blocks.
+    pub const fn has_ghost_blocks(&self) -> bool {
+        self.has_ghost_blocks
+    }
+
+    /// Thumbnail.
+    pub const fn thumbnail(&self) -> &Vec<u8> {
+        &self.thumbnail
+    }
+
+    /// Author name.
+    pub const fn author_name(&self) -> &String {
+        &self.author_name
     }
 
     /// Custom texture mod.
@@ -139,9 +224,39 @@ impl Challenge {
         self.music.as_ref()
     }
 
+    /// Password hash.
+    pub const fn password_hash(&self) -> Option<[u8; 16]> {
+        self.password_hash
+    }
+
+    /// Checksum.
+    pub const fn checksum(&self) -> u32 {
+        self.checksum
+    }
+
+    /// Thumbnail position.
+    pub const fn thumbnail_position(&self) -> Vec3 {
+        self.thumbnail_position
+    }
+
+    /// Thumbnail rotation.
+    pub const fn thumbnail_rotation(&self) -> YawPitchRoll {
+        self.thumbnail_rotation
+    }
+
+    /// Thumbnail field-of-view.
+    pub const fn thumbnail_fov(&self) -> f32 {
+        self.thumbnail_fov
+    }
+
     /// Items.
     pub const fn items(&self) -> &Vec<AnchoredObject> {
         &self.items
+    }
+
+    /// Zones.
+    pub const fn zones(&self) -> &Vec<ZoneGenealogy> {
+        &self.zones
     }
 
     /// Script metadata.
@@ -179,24 +294,29 @@ impl Challenge {
         self.ambiance_clip.as_ref()
     }
 
+    /// Media clip trigger size.
+    pub const fn clip_trigger_size(&self) -> Nat3 {
+        self.clip_trigger_size
+    }
+
+    /// Game build tag.
+    pub const fn game_build_tag(&self) -> &GameBuildTag {
+        &self.game_build_tag
+    }
+
+    /// Decoration base height.
+    pub const fn decoration_base_height(&self) -> u32 {
+        self.decoration_base_height
+    }
+
     /// Embedded items.
     pub const fn embedded_items(&self) -> Option<&EmbeddedItems> {
         self.embedded_items.as_ref()
     }
 
-    /// Thumbnail position.
-    pub const fn thumbnail_position(&self) -> Vec3 {
-        self.thumbnail_position
-    }
-
-    /// Thumbnail rotation.
-    pub const fn thumbnail_rotation(&self) -> YawPitchRoll {
-        self.thumbnail_rotation
-    }
-
-    /// Thumbnail field-of-view.
-    pub const fn thumbnail_fov(&self) -> f32 {
-        self.thumbnail_fov
+    /// Time of day.
+    pub const fn time_of_day(&self) -> Option<u32> {
+        self.time_of_day
     }
 
     /// Set name.
@@ -249,7 +369,7 @@ impl Default for Challenge {
             author_id: Default::default(),
             name: String::new(),
             ty: ChallengeType::InProgress,
-            password: String::new(),
+            password: None,
             decoration_id: Arc::from("48x48Screen155Day"),
             pack_mask: [0; 16],
             map_type: "TrackMania\\TM_Race".to_string(),
@@ -349,12 +469,17 @@ impl MedalTimes {
     }
 }
 
+/// Editor mode.
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
-enum EditorMode {
+pub enum EditorMode {
+    /// Advanced.
     #[default]
     Advanced,
+    /// Simple.
     Simple,
+    /// Has ghost blocks.
     HasGhostBlocks,
+    /// Gamepad.
     Gamepad,
 }
 
@@ -381,8 +506,9 @@ impl From<EditorMode> for u32 {
     }
 }
 
+/// Challenge type.
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
-enum ChallengeType {
+pub enum ChallengeType {
     #[default]
     EndMarker,
     Campaign,
@@ -658,7 +784,7 @@ mod read {
             self.name = r.string()?;
             self.ty = r.enum_u8()?;
             r.u32()?;
-            self.password = r.string()?;
+            self.password = r.string_or_empty()?;
             self.decoration_id = r.id()?;
             let _decoration_collection = r.id_or_null()?;
             let _decoration_author = r.id()?;
@@ -1921,7 +2047,7 @@ mod write {
             w.string(&self.name)?;
             w.u8(ty as u8)?;
             w.u32(0)?;
-            w.string(&self.password)?;
+            w.string_or_empty(self.password.as_ref())?;
             w.id(&self.decoration_id)?;
             w.u32(0x1a)?;
             w.id(&Arc::from("Nadeo"))?;

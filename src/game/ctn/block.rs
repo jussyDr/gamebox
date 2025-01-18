@@ -10,7 +10,6 @@ use super::{BlockSkin, Direction, ElemColor, LightmapQuality};
 #[derive(PartialEq, Default, Debug)]
 pub struct Block {
     pub(crate) model_id: Arc<str>,
-    pub(crate) ty: BlockType,
     pub(crate) has_flags: bool,
     pub(crate) mobil_index: u8,
     pub(crate) mobil_sub_index: u8,
@@ -19,6 +18,7 @@ pub struct Block {
     pub(crate) skin: Option<Arc<BlockSkin>>,
     pub(crate) waypoint_property: Option<Arc<WaypointSpecialProperty>>,
     pub(crate) variant_index: u8,
+    pub(crate) ty: BlockType,
     pub(crate) elem_color: ElemColor,
     pub(crate) lightmap_quality: LightmapQuality,
 }
@@ -27,11 +27,6 @@ impl Block {
     /// Model identifier.
     pub const fn model_id(&self) -> &Arc<str> {
         &self.model_id
-    }
-
-    /// Type.
-    pub const fn ty(&self) -> &BlockType {
-        &self.ty
     }
 
     /// Variant mobil index.
@@ -49,6 +44,11 @@ impl Block {
         self.is_ground
     }
 
+    /// Is pillar.
+    pub const fn is_pillar(&self) -> bool {
+        self.is_pillar
+    }
+
     /// Skin.
     pub const fn skin(&self) -> Option<&Arc<BlockSkin>> {
         self.skin.as_ref()
@@ -64,6 +64,11 @@ impl Block {
         self.variant_index
     }
 
+    /// Type.
+    pub const fn ty(&self) -> &BlockType {
+        &self.ty
+    }
+
     /// Element color.
     pub const fn elem_color(&self) -> ElemColor {
         self.elem_color
@@ -73,21 +78,26 @@ impl Block {
     pub const fn lightmap_quality(&self) -> LightmapQuality {
         self.lightmap_quality
     }
+
+    /// Set element color.
+    pub const fn set_elem_color(&mut self, elem_color: ElemColor) {
+        self.elem_color = elem_color;
+    }
 }
 
-/// Type of block.
+/// Block type.
 #[derive(PartialEq, Debug)]
 pub enum BlockType {
-    /// Normal block.
+    /// Normal.
     Normal {
-        /// Cardinal direction.
+        /// Direction.
         direction: Direction,
         /// Coordinate.
         coord: Byte3,
         /// Is ghost.
         is_ghost: bool,
     },
-    /// Free block.
+    /// Free.
     Free {
         /// Position.
         position: Vec3,
@@ -110,10 +120,6 @@ mod read {
     use std::io::{Read, Seek};
 
     use crate::{
-        game::{
-            ctn::{block_skin::BlockSkin, Direction},
-            waypoint_special_property::WaypointSpecialProperty,
-        },
         read::{
             reader::{IdStateMut, NodeStateMut, Reader},
             Error, ReadBody,
@@ -129,7 +135,7 @@ mod read {
             r: &mut Reader<R, I, N>,
         ) -> Result<(), Error> {
             self.model_id = r.id()?;
-            let direction = r.enum_u8::<Direction>()?;
+            let direction = r.enum_u8()?;
             let coord = r.byte3()?;
             let flags = r.u32()?;
 
@@ -145,15 +151,14 @@ mod read {
 
                 if (flags >> 15) & 1 != 0 {
                     let _author = r.id()?;
-                    self.skin = r.internal_node_ref_or_null::<BlockSkin>()?;
+                    self.skin = r.internal_node_ref_or_null()?;
                 }
 
                 let _dunno = (flags >> 16) & 1 != 0;
                 let _dunno = (flags >> 17) & 1 != 0;
 
                 if (flags >> 19) & 1 != 0 || (flags >> 20) & 1 != 0 {
-                    self.waypoint_property =
-                        Some(r.internal_node_ref::<WaypointSpecialProperty>()?);
+                    self.waypoint_property = Some(r.internal_node_ref()?);
                 }
 
                 self.variant_index = ((flags >> 21) & 3) as u8;
