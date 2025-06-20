@@ -11,8 +11,8 @@ use std::{
 };
 
 use crate::{
-    Class, FILE_SIGNATURE, FILE_VERSION,
-    read::reader::{ExternalNodeRef, NodeRefs, NodesMut, Reader},
+    Class, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
+    read::reader::{IdRefs, IdsMut, NodeRefs, NodesMut, Reader},
 };
 
 /// Read a node of type `T` from the given `reader`.
@@ -97,7 +97,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         }
     }
 
-    let mut r = Reader::new(r.into_inner(), (), node_refs);
+    let mut r = Reader::new(r.into_inner(), IdRefs::new(), node_refs);
 
     if body_compressed {
         todo!()
@@ -153,5 +153,75 @@ impl std::error::Error for Error {}
 pub trait Readable: Default + Class + ReadBody {}
 
 pub trait ReadBody {
-    fn read_body<I>(&mut self, r: &mut Reader<impl Read, I, impl NodesMut>) -> Result<(), Error>;
+    fn read_body(
+        &mut self,
+        r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+    ) -> Result<(), Error>;
+}
+
+pub fn read_body_chunks<T: BodyChunks>(
+    r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+    node: &mut T,
+) -> Result<(), Error> {
+    let chunk_id = read_body_chunks_inner(r, node)?;
+
+    if let Some(_chunk_id) = chunk_id {
+        return Err(Error("unknown chunk"));
+    }
+
+    Ok(())
+}
+
+fn read_body_chunks_inner<T: BodyChunks>(
+    r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+    node: &mut T,
+) -> Result<Option<u32>, Error> {
+    let mut chunk_id = match node.parent() {
+        None => r.u32()?,
+        Some(parent) => match read_body_chunks_inner(r, parent)? {
+            None => return Ok(None),
+            Some(chunk_id) => chunk_id,
+        },
+    };
+
+    let mut chunks = T::body_chunks();
+
+    loop {
+        if chunk_id == 0xfacade01 {
+            break;
+        }
+
+        println!("{chunk_id:08X?}");
+
+        let chunk = match chunks.find(|chunk| chunk.id == chunk_id) {
+            None => return Ok(Some(chunk_id)),
+            Some(chunk) => chunk,
+        };
+
+        if chunk.skippable {
+            r.u32()?;
+            r.u32()?;
+        }
+
+        (chunk.read_fn)(node, r)?;
+
+        chunk_id = r.u32()?;
+    }
+
+    Ok(None)
+}
+
+pub trait BodyChunks {
+    type Parent: BodyChunks;
+
+    fn parent(&mut self) -> Option<&mut Self::Parent>;
+
+    fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
+    -> impl Iterator<Item = BodyChunk<Self, R, I, N>>;
+}
+
+pub struct BodyChunk<T: ?Sized, R, I, N> {
+    pub id: u32,
+    pub read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
+    pub skippable: bool,
 }

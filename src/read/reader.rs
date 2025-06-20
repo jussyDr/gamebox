@@ -4,13 +4,12 @@ use std::{
     cell::OnceCell,
     io::{self, Read},
     iter,
-    path::Path,
     sync::Arc,
 };
 
 use crate::{
-    Quat, Vec3,
-    read::{Class, Error},
+    ExternalNodeRef, NodeRef, Quat, Vec2, Vec3,
+    read::{Class, Error, ReadBody},
 };
 
 /// Reader
@@ -20,28 +19,28 @@ pub struct Reader<R, I, N> {
     nodes: N,
 }
 
-/// Reference to a node.
-#[derive(Clone, Debug)]
-pub enum NodeRef {
-    Internal(Arc<dyn Class>),
-    /// Reference to a node in an external file.
-    External(ExternalNodeRef),
+pub struct IdRefs {
+    seen_id: bool,
+    id_refs: Vec<Arc<str>>,
 }
 
-/// Reference to a node in an external file.
-#[derive(Clone, Debug)]
-pub struct ExternalNodeRef {
-    pub path: Arc<Path>,
-    pub ancestor_level: u32,
-}
-
-impl Default for ExternalNodeRef {
-    fn default() -> Self {
+impl IdRefs {
+    pub fn new() -> Self {
         Self {
-            path: Arc::from(Path::new("")),
-            ancestor_level: 0,
+            seen_id: false,
+            id_refs: vec![],
         }
     }
+}
+
+impl IdsMut for IdRefs {
+    fn get_mut(&mut self) -> &mut IdRefs {
+        self
+    }
+}
+
+pub trait IdsMut {
+    fn get_mut(&mut self) -> &mut IdRefs;
 }
 
 pub struct NodeRefs {
@@ -144,6 +143,13 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(u64::from_le_bytes(bytes))
     }
 
+    /// Read a signed 16-bit integer.
+    pub fn i16(&mut self) -> Result<i16, Error> {
+        let bytes = self.byte_array()?;
+
+        Ok(i16::from_le_bytes(bytes))
+    }
+
     /// Read a 32-bit floating point number
     pub fn f32(&mut self) -> Result<f32, Error> {
         let bytes = self.byte_array()?;
@@ -169,6 +175,14 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
+    /// Read a 2-dimensional vector.
+    pub fn vec2(&mut self) -> Result<Vec2, Error> {
+        let x = self.f32()?;
+        let y = self.f32()?;
+
+        Ok(Vec2 { x, y })
+    }
+
     /// Read a 3-dimensional vector.
     pub fn vec3(&mut self) -> Result<Vec3, Error> {
         let x = self.f32()?;
@@ -186,6 +200,23 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let w = self.f32()?;
 
         Ok(Quat { x, y, z, w })
+    }
+
+    pub fn iso4(&mut self) -> Result<(), Error> {
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+
+        Ok(())
     }
 
     /// Read an UTF-8 encoded string.
@@ -211,6 +242,19 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let len = self.u32()?;
 
         self.repeat(len as usize, read_elem)
+    }
+
+    pub fn list_with_version<T>(
+        &mut self,
+        read_elem: impl Fn(&mut Self) -> Result<T, Error>,
+    ) -> Result<Vec<T>, Error> {
+        let version = self.u32()?;
+
+        if version != 10 {
+            return Err(Error("unknown list version"));
+        }
+
+        self.list(read_elem)
     }
 
     pub fn expect_eof(&mut self) -> Result<(), Error> {
@@ -258,17 +302,76 @@ impl<R: Read, I, N> Reader<R, I, N> {
             Some(node) => Ok(node),
         }
     }
+
+    pub fn box3d(&mut self) -> Result<(), Error> {
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+        self.f32()?;
+
+        Ok(())
+    }
 }
 
-impl<R: Read, I, N: NodesMut> Reader<R, I, N> {
-    pub fn node_ref_generic(
+impl<R: Read, I: IdsMut, N> Reader<R, I, N> {
+    pub fn id_or_null(&mut self) -> Result<Option<Arc<str>>, Error> {
+        if !self.ids.get_mut().seen_id {
+            let version = self.u32()?;
+
+            if version != 3 {
+                return Err(Error("unknown identifier version"));
+            }
+
+            self.ids.get_mut().seen_id = true;
+        }
+
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        if index & 0x40000000 == 0 {
+            return Err(Error("expected an identifier"));
+        }
+
+        let index = index & 0x37ffffff;
+
+        match index.checked_sub(1) {
+            None => {
+                let id = Arc::from(self.string()?);
+                self.ids.get_mut().id_refs.push(Arc::clone(&id));
+
+                Ok(Some(id))
+            }
+            Some(index) => {
+                todo!()
+            }
+        }
+    }
+
+    pub fn id(&mut self) -> Result<Arc<str>, Error> {
+        match self.id_or_null()? {
+            None => Err(Error("expected an identifier")),
+            Some(id) => Ok(id),
+        }
+    }
+}
+
+impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
+    pub fn node_ref_generic_or_null(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Class>, Error>,
-    ) -> Result<NodeRef, Error> {
-        let index = self
-            .u32()?
-            .checked_sub(1)
-            .ok_or(Error("node index is zero"))?;
+    ) -> Result<Option<NodeRef>, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let index = index.checked_sub(1).ok_or(Error("node index is zero"))?;
 
         let slot = self
             .nodes
@@ -285,9 +388,34 @@ impl<R: Read, I, N: NodesMut> Reader<R, I, N> {
 
                 slot.set(NodeRef::Internal(Arc::clone(&node))).unwrap();
 
-                Ok(NodeRef::Internal(node))
+                Ok(Some(NodeRef::Internal(node)))
             }
-            Some(node_ref) => Ok(NodeRef::clone(node_ref)),
+            Some(node_ref) => Ok(Some(NodeRef::clone(node_ref))),
+        }
+    }
+
+    pub fn internal_node_ref_generic_or_null(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Class>, Error>,
+    ) -> Result<Option<Arc<dyn Class>>, Error> {
+        let node_ref = self.node_ref_generic_or_null(read_fn)?;
+
+        match node_ref {
+            None => Ok(None),
+            Some(NodeRef::Internal(node)) => Ok(Some(node)),
+            Some(NodeRef::External(_)) => Err(Error("expected an internal node reference")),
+        }
+    }
+
+    pub fn node_ref_generic(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Class>, Error>,
+    ) -> Result<NodeRef, Error> {
+        let node_ref = self.node_ref_generic_or_null(read_fn)?;
+
+        match node_ref {
+            None => Err(Error("node reference is null")),
+            Some(node_ref) => Ok(node_ref),
         }
     }
 
@@ -300,6 +428,63 @@ impl<R: Read, I, N: NodesMut> Reader<R, I, N> {
         match node_ref {
             NodeRef::Internal(node) => Ok(node),
             NodeRef::External(_) => Err(Error("expected an internal node reference")),
+        }
+    }
+
+    pub fn node_ref_or_null<T: Default + Class + ReadBody + 'static>(
+        &mut self,
+    ) -> Result<Option<NodeRef>, Error> {
+        let node_ref = self.node_ref_generic_or_null(|r, class_id| {
+            let mut node = T::default();
+
+            if class_id != node.class_id() {
+                todo!()
+            }
+
+            node.read_body(r)?;
+
+            Ok(Arc::new(node))
+        })?;
+
+        match node_ref {
+            None => Ok(None),
+            Some(node_ref) => Ok(Some(node_ref)),
+        }
+    }
+
+    pub fn node_ref<T: Default + Class + ReadBody + 'static>(&mut self) -> Result<NodeRef, Error> {
+        let node_ref = self.node_ref_or_null::<T>()?;
+
+        match node_ref {
+            None => Err(Error("node reference is null")),
+            Some(node_ref) => Ok(node_ref),
+        }
+    }
+
+    pub fn internal_node_ref_or_null<T: Default + Class + ReadBody + 'static>(
+        &mut self,
+    ) -> Result<Option<Arc<dyn Class>>, Error> {
+        self.internal_node_ref_generic_or_null(|r, class_id| {
+            let mut node = T::default();
+
+            if class_id != node.class_id() {
+                todo!()
+            }
+
+            node.read_body(r)?;
+
+            Ok(Arc::new(node))
+        })
+    }
+
+    pub fn internal_node_ref<T: Default + Class + ReadBody + 'static>(
+        &mut self,
+    ) -> Result<Arc<dyn Class>, Error> {
+        let node = self.internal_node_ref_or_null::<T>()?;
+
+        match node {
+            None => Err(Error("node reference is null")),
+            Some(node) => Ok(node),
         }
     }
 
@@ -325,5 +510,21 @@ impl<R: Read, I, N: NodesMut> Reader<R, I, N> {
             }
             Some(NodeRef::External(external_node_ref)) => Ok(external_node_ref.clone()),
         }
+    }
+
+    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T, Error> {
+        let node = self.node_generic(|r, class_id| {
+            let mut node = T::default();
+
+            if class_id != node.class_id() {
+                todo!("{:08X?}", class_id);
+            }
+
+            node.read_body(r)?;
+
+            Ok(node)
+        })?;
+
+        Ok(node)
     }
 }

@@ -1,6 +1,6 @@
 //! Static object model.
 
-use crate::{Class, read::reader::ExternalNodeRef};
+use crate::{Class, ExternalNodeRef};
 
 /// Static object model.
 #[derive(Default)]
@@ -21,15 +21,17 @@ mod read {
     use crate::{
         class::static_object_model::StaticObjectModel,
         read::{
-            Error, ReadBody,
-            reader::{NodesMut, Reader},
+            Error, ReadBody, Readable,
+            reader::{IdsMut, NodesMut, Reader},
         },
     };
 
+    impl Readable for StaticObjectModel {}
+
     impl ReadBody for StaticObjectModel {
-        fn read_body<I>(
+        fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, I, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

@@ -19,16 +19,16 @@ mod read {
         class::challenge::Challenge,
         read::{
             Error, ReadBody, Readable,
-            reader::{NodesMut, Reader},
+            reader::{IdsMut, NodesMut, Reader},
         },
     };
 
     impl Readable for Challenge {}
 
     impl ReadBody for Challenge {
-        fn read_body<I>(
+        fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, I, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
         ) -> Result<(), Error> {
             todo!()
         }

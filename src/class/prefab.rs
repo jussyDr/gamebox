@@ -3,12 +3,11 @@
 use std::{any::Any, sync::Arc};
 
 use crate::{
-    Class, Quat, Vec3,
+    Class, NodeRef, Quat, Vec3,
     class::{
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         static_object_model::StaticObjectModel,
     },
-    read::reader::NodeRef,
 };
 
 /// Prefab
@@ -95,16 +94,16 @@ mod read {
         },
         read::{
             Error, ReadBody, Readable,
-            reader::{NodesMut, Reader},
+            reader::{IdsMut, NodesMut, Reader},
         },
     };
 
     impl Readable for Prefab {}
 
     impl ReadBody for Prefab {
-        fn read_body<I>(
+        fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, I, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -139,7 +138,7 @@ mod read {
                     }
                     _ => todo!("{class_id:08X?}"),
                 })?;
-                let _u03 = r.string()?;
+                let u03 = r.string()?;
 
                 Ok(Entity {
                     model,
