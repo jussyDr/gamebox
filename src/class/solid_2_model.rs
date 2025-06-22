@@ -1,7 +1,32 @@
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{Class, ExternalNodeRef, class::visual_indexed_triangles::VisualIndexedTriangles};
 
 #[derive(Default)]
-pub struct Solid2Model;
+pub struct Solid2Model {
+    shaded_geoms: Vec<ShadedGeom>,
+    visuals: Vec<Arc<VisualIndexedTriangles>>,
+    materials: Vec<ExternalNodeRef>,
+    lights: Vec<Light>,
+}
+
+impl Solid2Model {
+    pub fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
+        &self.shaded_geoms
+    }
+
+    pub fn visuals(&self) -> &Vec<Arc<VisualIndexedTriangles>> {
+        &self.visuals
+    }
+
+    pub fn materials(&self) -> &Vec<ExternalNodeRef> {
+        &self.materials
+    }
+
+    pub fn lights(&self) -> &Vec<Light> {
+        &self.lights
+    }
+}
 
 impl Class for Solid2Model {
     fn class_id(&self) -> u32 {
@@ -9,11 +34,18 @@ impl Class for Solid2Model {
     }
 }
 
+pub struct ShadedGeom {
+    visual_index: u32,
+    material_index: u32,
+}
+
+pub struct Light {}
+
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::{solid2_model::Solid2Model, visual_indexed_triangles::VisualIndexedTriangles},
+        class::solid_2_model::{Light, ShadedGeom, Solid2Model},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
             reader::{IdsMut, NodesMut, Reader},
@@ -41,16 +73,8 @@ mod read {
         fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
         -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk {
-                    id: 0x090BB000,
-                    read_fn: Self::read_chunk_0,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x090BB002,
-                    read_fn: Self::read_chunk_2,
-                    skippable: true,
-                },
+                BodyChunk::new(0x090bb000, Self::read_chunk_0),
+                BodyChunk::skippable(0x090bb002, Self::read_chunk_2),
             ]
             .into_iter()
         }
@@ -64,26 +88,28 @@ mod read {
             let version = r.u32()?;
 
             if version != 34 {
-                return Err(Error("unknown chunk version"));
+                return Err(Error("unknown chunk version".into()));
             }
 
             let u01 = r.id_or_null()?;
-            let shaded_geoms = r.list(|r| {
+            self.shaded_geoms = r.list(|r| {
                 let visual_index = r.u32()?;
                 let material_index = r.u32()?;
                 r.u32()?;
                 let lod = r.u32()?;
                 r.u32()?;
 
-                Ok(())
+                Ok(ShadedGeom {
+                    visual_index,
+                    material_index,
+                })
             })?;
-            let visuals =
-                r.list_with_version(|r| r.internal_node_ref::<VisualIndexedTriangles>())?;
+            self.visuals = r.list_with_version(|r| r.internal_node_ref())?;
             let material_ids = r.list(|r| r.id())?;
             let material_count = r.u32()?;
 
             if material_count == 0 {
-                let materials = r.list_with_version(|r| r.external_node_ref())?;
+                self.materials = r.list_with_version(|r| r.external_node_ref())?;
             }
 
             let skel = r.u32()?;
@@ -101,7 +127,7 @@ mod read {
                     let version = r.u32()?;
 
                     if version != 1 {
-                        return Err(Error("unknown pre light generator version"));
+                        return Err(Error("unknown pre light generator version".into()));
                     }
 
                     r.u32()?;
@@ -147,7 +173,7 @@ mod read {
             }
 
             if version >= 8 {
-                let lights = r.list(|r| {
+                self.lights = r.list(|r| {
                     r.id()?;
 
                     if r.bool32()? {
@@ -170,7 +196,7 @@ mod read {
                         r.f32()?;
                     }
 
-                    Ok(())
+                    Ok(Light {})
                 })?;
             }
 

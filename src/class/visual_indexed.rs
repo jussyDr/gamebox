@@ -1,8 +1,12 @@
-use crate::{Class, class::visual_3d::Visual3D};
+use crate::{
+    Class,
+    class::{index_buffer::IndexBuffer, visual_3d::Visual3D},
+};
 
 #[derive(Default)]
 pub struct VisualIndexed {
     parent: Visual3D,
+    index_buffer: IndexBuffer,
 }
 
 impl Class for VisualIndexed {
@@ -15,9 +19,9 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::{index_buffer::IndexBuffer, visual_3d::Visual3D, visual_indexed::VisualIndexed},
+        class::{visual_3d::Visual3D, visual_indexed::VisualIndexed},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody,
+            BodyChunk, BodyChunks, Error, read_node,
             reader::{IdsMut, NodesMut, Reader},
         },
     };
@@ -31,12 +35,7 @@ mod read {
 
         fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
         -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk {
-                id: 0x0906a001,
-                read_fn: Self::read_chunk_1,
-                skippable: false,
-            }]
-            .into_iter()
+            [BodyChunk::new(0x0906a001, Self::read_chunk_1)].into_iter()
         }
     }
 
@@ -46,8 +45,7 @@ mod read {
             r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
         ) -> Result<(), Error> {
             if r.bool32()? {
-                let mut index_buffer = IndexBuffer::default();
-                index_buffer.read_body(r)?;
+                self.index_buffer = read_node(r)?;
             }
 
             Ok(())

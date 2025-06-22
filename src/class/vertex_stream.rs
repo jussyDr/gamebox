@@ -1,7 +1,25 @@
-use crate::Class;
+use crate::{Class, Vec2, Vec3};
 
 #[derive(Default)]
-pub struct VertexStream;
+pub struct VertexStream {
+    positions: Vec<Vec3>,
+    texcoords_0: Vec<Vec2>,
+    texcoords_1: Vec<Vec2>,
+}
+
+impl VertexStream {
+    pub fn positions(&self) -> &Vec<Vec3> {
+        &self.positions
+    }
+
+    pub fn texcoords_0(&self) -> &Vec<Vec2> {
+        &self.texcoords_0
+    }
+
+    pub fn texcoords_1(&self) -> &Vec<Vec2> {
+        &self.texcoords_1
+    }
+}
 
 impl Class for VertexStream {
     fn class_id(&self) -> u32 {
@@ -43,12 +61,7 @@ mod read {
 
         fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
         -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk {
-                id: 0x09056000,
-                read_fn: Self::read_chunk_0,
-                skippable: false,
-            }]
-            .into_iter()
+            [BodyChunk::new(0x09056000, Self::read_chunk_0)].into_iter()
         }
     }
 
@@ -60,7 +73,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 1 {
-                return Err(Error("unknown chunk version"));
+                return Err(Error("unknown chunk version".into()));
             }
 
             let count = r.u32()?;
@@ -85,16 +98,16 @@ mod read {
                 match (decl.flags1 >> 9) & 0x000001ff {
                     1 => match decl.flags1 & 0x000001ff {
                         10 => {
-                            let texcoords0 = r.repeat(count as usize, |r| r.vec2())?;
+                            self.texcoords_0 = r.repeat(count as usize, |r| r.vec2())?;
                         }
                         11 => {
-                            let texcoords1 = r.repeat(count as usize, |r| r.vec2())?;
+                            self.texcoords_1 = r.repeat(count as usize, |r| r.vec2())?;
                         }
                         wc => todo!("{wc}"),
                     },
                     2 => match decl.flags1 & 0x000001ff {
                         0 => {
-                            let positions = r.repeat(count as usize, |r| r.vec3())?;
+                            self.positions = r.repeat(count as usize, |r| r.vec3())?;
                         }
                         wc => todo!("{wc}"),
                     },

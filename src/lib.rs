@@ -1,4 +1,10 @@
-#![warn(missing_docs, clippy::todo, clippy::unwrap_used, clippy::print_stdout)]
+#![warn(
+    missing_docs,
+    clippy::todo,
+    clippy::unwrap_used,
+    clippy::print_stdout,
+    clippy::undocumented_unsafe_blocks
+)]
 
 //! Gamebox
 
@@ -73,5 +79,11 @@ pub struct Quat {
     pub w: f32,
 }
 
+/// Matrix with 4 rows and 3 columns.
+pub struct Iso4([f32; 12]);
+
 const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 const FILE_VERSION: u16 = 6;
+
+const END_OF_BODY_MARKER: u32 = 0xfacade01;
+const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;

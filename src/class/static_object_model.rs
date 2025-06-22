@@ -6,7 +6,17 @@ use crate::{Class, ExternalNodeRef};
 #[derive(Default)]
 pub struct StaticObjectModel {
     mesh: ExternalNodeRef,
-    shape: Option<ExternalNodeRef>,
+    hit_shape: Option<ExternalNodeRef>,
+}
+
+impl StaticObjectModel {
+    pub fn mesh(&self) -> &ExternalNodeRef {
+        &self.mesh
+    }
+
+    pub fn hit_shape(&self) -> &Option<ExternalNodeRef> {
+        &self.hit_shape
+    }
 }
 
 impl Class for StaticObjectModel {
@@ -36,11 +46,11 @@ mod read {
             let version = r.u32()?;
 
             if version != 3 {
-                return Err(Error("unknown static object model version"));
+                return Err(Error("unknown static object model version".into()));
             }
 
             self.mesh = r.external_node_ref()?;
-            self.shape = if r.bool8()? {
+            self.hit_shape = if r.bool8()? {
                 None
             } else {
                 Some(r.external_node_ref()?)

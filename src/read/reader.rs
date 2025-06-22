@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-    ExternalNodeRef, NodeRef, Quat, Vec2, Vec3,
+    ExternalNodeRef, Iso4, NodeRef, Quat, Vec2, Vec3,
     read::{Class, Error, ReadBody},
 };
 
@@ -61,9 +61,9 @@ impl NodeRefs {
     ) -> Result<(), Error> {
         self.node_refs
             .get(index as usize)
-            .ok_or(Error("node index exceeds number of nodes"))?
+            .ok_or(Error("node index exceeds number of nodes".into()))?
             .set(NodeRef::External(external_node_ref))
-            .map_err(|_| Error(""))
+            .map_err(|_| Error("".into()))
     }
 }
 
@@ -95,7 +95,7 @@ impl<R, I, N> Reader<R, I, N> {
 }
 
 fn map_io_error(_io_error: io::Error) -> Error {
-    Error("IO error")
+    Error("IO error".into())
 }
 
 impl<R: Read, I, N> Reader<R, I, N> {
@@ -162,7 +162,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         match self.u8()? {
             0 => Ok(false),
             1 => Ok(true),
-            _ => Err(Error("expected an 8-bit boolean")),
+            _ => Err(Error("expected an 8-bit boolean".into())),
         }
     }
 
@@ -171,7 +171,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         match self.u32()? {
             0 => Ok(false),
             1 => Ok(true),
-            _ => Err(Error("expected a 32-bit boolean")),
+            _ => Err(Error("expected a 32-bit boolean".into())),
         }
     }
 
@@ -202,21 +202,23 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(Quat { x, y, z, w })
     }
 
-    pub fn iso4(&mut self) -> Result<(), Error> {
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
+    pub fn iso4(&mut self) -> Result<Iso4, Error> {
+        let elements = [
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+        ];
 
-        Ok(())
+        Ok(Iso4(elements))
     }
 
     /// Read an UTF-8 encoded string.
@@ -224,20 +226,20 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let len = self.u32()?;
         let bytes = self.bytes(len as usize)?;
 
-        String::from_utf8(bytes).map_err(|_| Error("expected an UTF-8 encoded string"))
+        String::from_utf8(bytes).map_err(|_| Error("expected an UTF-8 encoded string".into()))
     }
 
     pub fn repeat<T>(
         &mut self,
         n: usize,
-        read_elem: impl Fn(&mut Self) -> Result<T, Error>,
+        mut read_elem: impl FnMut(&mut Self) -> Result<T, Error>,
     ) -> Result<Vec<T>, Error> {
         iter::repeat_with(|| read_elem(self)).take(n).collect()
     }
 
     pub fn list<T>(
         &mut self,
-        read_elem: impl Fn(&mut Self) -> Result<T, Error>,
+        read_elem: impl FnMut(&mut Self) -> Result<T, Error>,
     ) -> Result<Vec<T>, Error> {
         let len = self.u32()?;
 
@@ -251,7 +253,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let version = self.u32()?;
 
         if version != 10 {
-            return Err(Error("unknown list version"));
+            return Err(Error("unknown list version".into()));
         }
 
         self.list(read_elem)
@@ -262,7 +264,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let n = self.inner.read(&mut buf).map_err(map_io_error)?;
 
         if n != 0 {
-            return Err(Error("expected EOF"));
+            return Err(Error("expected EOF".into()));
         }
 
         Ok(())
@@ -298,7 +300,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let node = self.node_or_null_generic(read_fn)?;
 
         match node {
-            None => Err(Error("node is null")),
+            None => Err(Error("node is null".into())),
             Some(node) => Ok(node),
         }
     }
@@ -321,7 +323,7 @@ impl<R: Read, I: IdsMut, N> Reader<R, I, N> {
             let version = self.u32()?;
 
             if version != 3 {
-                return Err(Error("unknown identifier version"));
+                return Err(Error("unknown identifier version".into()));
             }
 
             self.ids.get_mut().seen_id = true;
@@ -334,7 +336,7 @@ impl<R: Read, I: IdsMut, N> Reader<R, I, N> {
         }
 
         if index & 0x40000000 == 0 {
-            return Err(Error("expected an identifier"));
+            return Err(Error("expected an identifier".into()));
         }
 
         let index = index & 0x37ffffff;
@@ -354,7 +356,7 @@ impl<R: Read, I: IdsMut, N> Reader<R, I, N> {
 
     pub fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
-            None => Err(Error("expected an identifier")),
+            None => Err(Error("expected an identifier".into())),
             Some(id) => Ok(id),
         }
     }
@@ -371,14 +373,16 @@ impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
             return Ok(None);
         }
 
-        let index = index.checked_sub(1).ok_or(Error("node index is zero"))?;
+        let index = index
+            .checked_sub(1)
+            .ok_or(Error("node index is zero".into()))?;
 
         let slot = self
             .nodes
             .get()
             .node_refs
             .get(index as usize)
-            .ok_or(Error("node index exceeds number of nodes"))?;
+            .ok_or(Error("node index exceeds number of nodes".into()))?;
 
         match slot.get() {
             None => {
@@ -403,7 +407,7 @@ impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
         match node_ref {
             None => Ok(None),
             Some(NodeRef::Internal(node)) => Ok(Some(node)),
-            Some(NodeRef::External(_)) => Err(Error("expected an internal node reference")),
+            Some(NodeRef::External(_)) => Err(Error("expected an internal node reference".into())),
         }
     }
 
@@ -414,7 +418,7 @@ impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
         let node_ref = self.node_ref_generic_or_null(read_fn)?;
 
         match node_ref {
-            None => Err(Error("node reference is null")),
+            None => Err(Error("node reference is null".into())),
             Some(node_ref) => Ok(node_ref),
         }
     }
@@ -427,7 +431,7 @@ impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
 
         match node_ref {
             NodeRef::Internal(node) => Ok(node),
-            NodeRef::External(_) => Err(Error("expected an internal node reference")),
+            NodeRef::External(_) => Err(Error("expected an internal node reference".into())),
         }
     }
 
@@ -456,15 +460,15 @@ impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
         let node_ref = self.node_ref_or_null::<T>()?;
 
         match node_ref {
-            None => Err(Error("node reference is null")),
+            None => Err(Error("node reference is null".into())),
             Some(node_ref) => Ok(node_ref),
         }
     }
 
     pub fn internal_node_ref_or_null<T: Default + Class + ReadBody + 'static>(
         &mut self,
-    ) -> Result<Option<Arc<dyn Class>>, Error> {
-        self.internal_node_ref_generic_or_null(|r, class_id| {
+    ) -> Result<Option<Arc<T>>, Error> {
+        let node = self.internal_node_ref_generic_or_null(|r, class_id| {
             let mut node = T::default();
 
             if class_id != node.class_id() {
@@ -474,32 +478,56 @@ impl<R: Read, I: IdsMut, N: NodesMut> Reader<R, I, N> {
             node.read_body(r)?;
 
             Ok(Arc::new(node))
-        })
+        })?;
+
+        match node {
+            None => Ok(None),
+            Some(node) => {
+                let ptr = Arc::into_raw(node);
+                unsafe { Ok(Some(Arc::from_raw(ptr.cast()))) }
+            }
+        }
     }
 
     pub fn internal_node_ref<T: Default + Class + ReadBody + 'static>(
         &mut self,
-    ) -> Result<Arc<dyn Class>, Error> {
+    ) -> Result<Arc<T>, Error> {
         let node = self.internal_node_ref_or_null::<T>()?;
 
         match node {
-            None => Err(Error("node reference is null")),
+            None => Err(Error("node reference is null".into())),
             Some(node) => Ok(node),
         }
     }
 
-    pub fn external_node_ref(&mut self) -> Result<ExternalNodeRef, Error> {
+    pub fn external_node_ref_or_null(&mut self) -> Result<Option<ExternalNodeRef>, Error> {
         let index = self
             .u32()?
             .checked_sub(1)
-            .ok_or(Error("node index is zero"))?;
+            .ok_or(Error("node index is zero".into()))?;
 
         let slot = self
             .nodes
             .get()
             .node_refs
             .get(index as usize)
-            .ok_or(Error("node index exceeds number of nodes"))?;
+            .ok_or(Error("node index exceeds number of nodes".into()))?;
+
+        todo!();
+    }
+
+    pub fn external_node_ref(&mut self) -> Result<ExternalNodeRef, Error> {
+        let index = self
+            .u32()?
+            .checked_sub(1)
+            .ok_or(Error("node index is zero".into()))?;
+
+        let slot = self
+            .nodes
+            .get()
+            .node_refs
+            .get(index as usize)
+            .ok_or(Error("node index exceeds number of nodes".into()))?;
 
         match slot.get() {
             None => {

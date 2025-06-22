@@ -108,7 +108,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 11 {
-                return Err(Error("unknown prefab version"));
+                return Err(Error("unknown prefab version".into()));
             }
 
             self.file_write_time = r.u64()?;

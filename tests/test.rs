@@ -1,7 +1,15 @@
 use gamebox::{
-    class::{prefab::Prefab, solid2_model::Solid2Model, static_object_model::StaticObjectModel},
+    class::{
+        prefab::Prefab, solid_2_model::Solid2Model, static_object_model::StaticObjectModel,
+        surface::Surface,
+    },
     read::read_file,
 };
+
+#[test]
+fn read_hit_shape_stade1536v2() {
+    let _hit_shape: Surface = read_file("tests/files/Stade1536v2.HitShape.Gbx").unwrap();
+}
 
 #[test]
 fn read_mesh_stade1536v2() {

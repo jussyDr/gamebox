@@ -58,7 +58,9 @@ mod read {
             let version = r.u32()?;
 
             if version != 2 {
-                return Err(Error("unknown dyna object model instance params version"));
+                return Err(Error(
+                    "unknown dyna object model instance params version".into(),
+                ));
             }
 
             self.period_sc = r.f32()?;

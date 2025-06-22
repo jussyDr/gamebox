@@ -11,7 +11,8 @@ use std::{
 };
 
 use crate::{
-    Class, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
+    Class, END_OF_BODY_MARKER, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
+    SKIPPABLE_CHUNK_MARKER,
     read::reader::{IdRefs, IdsMut, NodeRefs, NodesMut, Reader},
 };
 
@@ -20,29 +21,31 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let mut r = Reader::new(reader, (), ());
 
     if r.byte_array()? != FILE_SIGNATURE {
-        return Err(Error("invalid file signature"));
+        return Err(Error("unknown file signature".into()));
     }
 
     if r.u16()? != FILE_VERSION {
-        return Err(Error("unknown file version"));
+        return Err(Error("unknown file version".into()));
     }
 
     if r.u8()? != b'B' {
-        return Err(Error("unknown file format"));
+        return Err(Error("unknown file format".into()));
     }
 
     if r.u8()? != b'U' {
-        return Err(Error("unknown external reference table compression format"));
+        return Err(Error(
+            "unknown external reference table compression format".into(),
+        ));
     }
 
     let body_compressed = match r.u8()? {
         b'C' => true,
         b'U' => false,
-        _ => return Err(Error("unknown body compression format")),
+        _ => return Err(Error("unknown body compression format".into())),
     };
 
     if r.u8()? != b'R' {
-        return Err(Error("unknown file format"));
+        return Err(Error("unknown file format".into()));
     }
 
     let mut node = T::default();
@@ -50,7 +53,11 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let class_id = r.u32()?;
 
     if class_id != node.class_id() {
-        return Err(Error("class id does not match"));
+        return Err(Error(format!(
+            "class id does not match: expected 0x{:08x} but was 0x{:08x}",
+            node.class_id(),
+            class_id
+        )));
     }
 
     let header_data_size = r.u32()?;
@@ -62,7 +69,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let num_nodes = r.u32()?;
 
     if num_nodes == 0 {
-        return Err(Error("number of nodes is zero"));
+        return Err(Error("number of nodes is zero".into()));
     }
 
     let node_refs = NodeRefs::new((num_nodes - 1) as usize);
@@ -76,13 +83,16 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         for _ in 0..num_external_nodes {
             let flags = r.u32()?;
             let file_name = r.string()?;
-            let node_index = r.u32()?.checked_sub(1).ok_or(Error("node index is zero"))?;
+            let node_index = r
+                .u32()?
+                .checked_sub(1)
+                .ok_or(Error("node index is zero".into()))?;
             let use_file = r.bool32()?;
             let folder_index = r.u32()?;
 
             let mut path = folders
                 .get(folder_index as usize)
-                .ok_or(Error("folder index exceeds number of folders"))?
+                .ok_or(Error("folder index exceeds number of folders".into()))?
                 .clone();
 
             path.push(&file_name);
@@ -132,7 +142,7 @@ fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, E
 
 /// Read a node of type `T` from a file at the given `path`.
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
-    let file = File::open(path).map_err(|_| Error(""))?;
+    let file = File::open(path).map_err(|_| Error("".into()))?;
     let reader = BufReader::new(file);
 
     read(reader)
@@ -140,11 +150,11 @@ pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
 
 /// Error that occured while reading.
 #[derive(Debug)]
-pub struct Error(pub &'static str);
+pub struct Error(pub String);
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(self.0)
+        f.write_str(&self.0)
     }
 }
 
@@ -165,8 +175,8 @@ pub fn read_body_chunks<T: BodyChunks>(
 ) -> Result<(), Error> {
     let chunk_id = read_body_chunks_inner(r, node)?;
 
-    if let Some(_chunk_id) = chunk_id {
-        return Err(Error("unknown chunk"));
+    if let Some(chunk_id) = chunk_id {
+        return Err(Error(format!("unknown chunk: 0x{chunk_id:08x}")));
     }
 
     Ok(())
@@ -187,7 +197,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     let mut chunks = T::body_chunks();
 
     loop {
-        if chunk_id == 0xfacade01 {
+        if chunk_id == END_OF_BODY_MARKER {
             break;
         }
 
@@ -199,8 +209,11 @@ fn read_body_chunks_inner<T: BodyChunks>(
         };
 
         if chunk.skippable {
-            r.u32()?;
-            r.u32()?;
+            if r.u32()? != SKIPPABLE_CHUNK_MARKER {
+                todo!()
+            }
+
+            let size = r.u32()?;
         }
 
         (chunk.read_fn)(node, r)?;
@@ -221,7 +234,36 @@ pub trait BodyChunks {
 }
 
 pub struct BodyChunk<T: ?Sized, R, I, N> {
-    pub id: u32,
-    pub read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
-    pub skippable: bool,
+    id: u32,
+    read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
+    skippable: bool,
+}
+
+impl<T, R, I, N> BodyChunk<T, R, I, N> {
+    pub fn new(id: u32, read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>) -> Self {
+        Self {
+            id,
+            read_fn,
+            skippable: false,
+        }
+    }
+
+    pub fn skippable(
+        id: u32,
+        read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
+    ) -> Self {
+        Self {
+            id,
+            read_fn,
+            skippable: true,
+        }
+    }
+}
+
+pub fn read_node<T: Default + Class + ReadBody>(
+    r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+) -> Result<T, Error> {
+    let mut node = T::default();
+    node.read_body(r)?;
+    Ok(node)
 }

@@ -32,16 +32,8 @@ mod read {
         fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
         -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk {
-                    id: 0x0902C002,
-                    read_fn: Self::read_chunk_2,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x0902C004,
-                    read_fn: Self::read_chunk_4,
-                    skippable: false,
-                },
+                BodyChunk::new(0x0902c002, Self::read_chunk_2),
+                BodyChunk::new(0x0902c004, Self::read_chunk_4),
             ]
             .into_iter()
         }

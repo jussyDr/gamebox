@@ -1,11 +1,17 @@
+use std::sync::Arc;
+
+use crate::class::vertex_stream::VertexStream;
+
 #[derive(Default)]
-pub struct Visual;
+pub struct Visual {
+    vertex_streams: Vec<Arc<VertexStream>>,
+}
 
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::{vertex_stream::VertexStream, visual::Visual},
+        class::visual::Visual,
         read::{
             BodyChunk, BodyChunks, Error,
             reader::{IdsMut, NodesMut, Reader},
@@ -22,36 +28,12 @@ mod read {
         fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
         -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk {
-                    id: 0x09006001,
-                    read_fn: Self::read_chunk_1,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x09006005,
-                    read_fn: Self::read_chunk_5,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x09006009,
-                    read_fn: Self::read_chunk_9,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x0900600b,
-                    read_fn: Self::read_chunk_11,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x0900600f,
-                    read_fn: Self::read_chunk_15,
-                    skippable: false,
-                },
-                BodyChunk {
-                    id: 0x09006010,
-                    read_fn: Self::read_chunk_16,
-                    skippable: false,
-                },
+                BodyChunk::new(0x09006001, Self::read_chunk_1),
+                BodyChunk::new(0x09006005, Self::read_chunk_5),
+                BodyChunk::new(0x09006009, Self::read_chunk_9),
+                BodyChunk::new(0x0900600b, Self::read_chunk_11),
+                BodyChunk::new(0x0900600f, Self::read_chunk_15),
+                BodyChunk::new(0x09006010, Self::read_chunk_16),
             ]
             .into_iter()
         }
@@ -104,13 +86,13 @@ mod read {
             let version = r.u32()?;
 
             if version != 6 {
-                return Err(Error("unknown chunk version"));
+                return Err(Error("unknown chunk version".into()));
             }
 
             let flags = r.u32()?;
             let num_texcoord_sets = r.u32()?;
             let count = r.u32()?;
-            let vertex_streams = r.list(|r| r.internal_node_ref::<VertexStream>())?;
+            self.vertex_streams = r.list(|r| r.internal_node_ref())?;
             let texcoord_sets: Vec<()> = r.repeat(num_texcoord_sets as usize, |r| todo!())?;
             let bounding_box = r.box3d()?;
             let bitmap_elem_to_packs: Vec<()> = r.list(|r| todo!())?;
@@ -131,10 +113,14 @@ mod read {
             let version = r.u32()?;
 
             if version != 0 {
-                return Err(Error("unknown chunk version"));
+                return Err(Error("unknown chunk version".into()));
             }
 
             let morph_count = r.u32()?;
+
+            if morph_count > 0 {
+                todo!()
+            }
 
             Ok(())
         }
