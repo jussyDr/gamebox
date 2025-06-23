@@ -6,9 +6,7 @@ pub struct VisualIndexedTriangles {
 }
 
 impl Class for VisualIndexedTriangles {
-    fn class_id(&self) -> u32 {
-        0x0901e000
-    }
+    const CLASS_ID: u32 = 0x0901e000;
 }
 
 mod read {
@@ -18,14 +16,14 @@ mod read {
         class::{visual_indexed::VisualIndexed, visual_indexed_triangles::VisualIndexedTriangles},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl ReadBody for VisualIndexedTriangles {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
@@ -38,9 +36,9 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [].into_iter()
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+            []
         }
     }
 }

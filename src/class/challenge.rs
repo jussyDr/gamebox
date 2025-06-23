@@ -7,9 +7,7 @@ use crate::Class;
 pub struct Challenge;
 
 impl Class for Challenge {
-    fn class_id(&self) -> u32 {
-        0x03043000
-    }
+    const CLASS_ID: u32 = 0x03043000;
 }
 
 mod read {
@@ -19,7 +17,7 @@ mod read {
         class::challenge::Challenge,
         read::{
             Error, ReadBody, Readable,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -28,7 +26,7 @@ mod read {
     impl ReadBody for Challenge {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             todo!()
         }

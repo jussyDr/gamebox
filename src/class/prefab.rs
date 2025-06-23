@@ -33,9 +33,7 @@ impl Prefab {
 }
 
 impl Class for Prefab {
-    fn class_id(&self) -> u32 {
-        0x09145000
-    }
+    const CLASS_ID: u32 = 0x09145000;
 }
 
 /// Prefab entity.
@@ -94,7 +92,7 @@ mod read {
         },
         read::{
             Error, ReadBody, Readable,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -103,7 +101,7 @@ mod read {
     impl ReadBody for Prefab {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

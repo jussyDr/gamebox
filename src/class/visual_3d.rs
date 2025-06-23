@@ -6,9 +6,7 @@ pub struct Visual3D {
 }
 
 impl Class for Visual3D {
-    fn class_id(&self) -> u32 {
-        0x0902C000
-    }
+    const CLASS_ID: u32 = 0x0902C000;
 }
 
 mod read {
@@ -18,7 +16,7 @@ mod read {
         class::{visual::Visual, visual_3d::Visual3D},
         read::{
             BodyChunk, BodyChunks, Error,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -29,13 +27,12 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(0x0902c002, Self::read_chunk_2),
                 BodyChunk::new(0x0902c004, Self::read_chunk_4),
             ]
-            .into_iter()
         }
     }
 

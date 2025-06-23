@@ -3,7 +3,8 @@
     clippy::todo,
     clippy::unwrap_used,
     clippy::print_stdout,
-    clippy::undocumented_unsafe_blocks
+    clippy::undocumented_unsafe_blocks,
+    clippy::panic
 )]
 
 //! Gamebox
@@ -11,15 +12,26 @@
 pub mod class;
 pub mod read;
 
-pub use read::read;
+pub use read::{read, read_file};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
 
+/// A GameBox class.
 pub trait Class {
+    const CLASS_ID: u32;
+}
+
+pub trait DynClass {
     fn class_id(&self) -> u32;
 }
 
-impl Debug for dyn Class {
+impl<T: Class> DynClass for T {
+    fn class_id(&self) -> u32 {
+        Self::CLASS_ID
+    }
+}
+
+impl Debug for dyn DynClass {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
@@ -28,7 +40,7 @@ impl Debug for dyn Class {
 /// Reference to a node.
 #[derive(Clone, Debug)]
 pub enum NodeRef {
-    Internal(Arc<dyn Class>),
+    Internal(Arc<dyn DynClass>),
     /// Reference to a node in an external file.
     External(ExternalNodeRef),
 }

@@ -22,9 +22,7 @@ impl VertexStream {
 }
 
 impl Class for VertexStream {
-    fn class_id(&self) -> u32 {
-        0x09056000
-    }
+    const CLASS_ID: u32 = 0x09056000;
 }
 
 struct DataDecl {
@@ -39,14 +37,14 @@ mod read {
         class::vertex_stream::{DataDecl, VertexStream},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl ReadBody for VertexStream {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
@@ -59,16 +57,16 @@ mod read {
             None
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x09056000, Self::read_chunk_0)].into_iter()
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+            [BodyChunk::new(0x09056000, Self::read_chunk_0)]
         }
     }
 
     impl VertexStream {
         fn read_chunk_0(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

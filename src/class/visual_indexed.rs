@@ -10,9 +10,7 @@ pub struct VisualIndexed {
 }
 
 impl Class for VisualIndexed {
-    fn class_id(&self) -> u32 {
-        0x0906a000
-    }
+    const CLASS_ID: u32 = 0x0906a000;
 }
 
 mod read {
@@ -22,7 +20,7 @@ mod read {
         class::{visual_3d::Visual3D, visual_indexed::VisualIndexed},
         read::{
             BodyChunk, BodyChunks, Error, read_node,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -33,16 +31,16 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x0906a001, Self::read_chunk_1)].into_iter()
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+            [BodyChunk::new(0x0906a001, Self::read_chunk_1)]
         }
     }
 
     impl VisualIndexed {
         fn read_chunk_1(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             if r.bool32()? {
                 self.index_buffer = read_node(r)?;

@@ -13,7 +13,7 @@ use std::{
 use crate::{
     Class, END_OF_BODY_MARKER, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
     SKIPPABLE_CHUNK_MARKER,
-    read::reader::{IdRefs, IdsMut, NodeRefs, NodesMut, Reader},
+    read::reader::{IdTable, IdTableRef, NodeTable, NodeTableRef, Reader},
 };
 
 /// Read a node of type `T` from the given `reader`.
@@ -48,33 +48,32 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         return Err(Error("unknown file format".into()));
     }
 
-    let mut node = T::default();
-
     let class_id = r.u32()?;
 
-    if class_id != node.class_id() {
+    if class_id != T::CLASS_ID {
         return Err(Error(format!(
             "class id does not match: expected 0x{:08x} but was 0x{:08x}",
-            node.class_id(),
+            T::CLASS_ID,
             class_id
         )));
     }
 
     let header_data_size = r.u32()?;
 
+    let mut node = T::default();
+
     if header_data_size > 0 {
         let header_data = r.bytes(header_data_size as usize)?;
     }
 
-    let num_nodes = r.u32()?;
-
-    if num_nodes == 0 {
-        return Err(Error("number of nodes is zero".into()));
-    }
-
-    let node_refs = NodeRefs::new((num_nodes - 1) as usize);
+    let num_nodes = r
+        .u32()?
+        .checked_sub(1)
+        .ok_or(Error("number of nodes is zero".into()))?;
 
     let num_external_nodes = r.u32()?;
+
+    let mut node_table = NodeTable::new(num_nodes as usize);
 
     if num_external_nodes != 0 {
         let ancestor_level = r.u32()?;
@@ -97,7 +96,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 
             path.push(&file_name);
 
-            node_refs.set_external(
+            node_table.set_external(
                 node_index,
                 ExternalNodeRef {
                     path: Arc::from(path),
@@ -107,7 +106,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         }
     }
 
-    let mut r = Reader::new(r.into_inner(), IdRefs::new(), node_refs);
+    let mut r = Reader::new(r.into_inner(), IdTable::new(), node_table);
 
     if body_compressed {
         todo!()
@@ -165,12 +164,12 @@ pub trait Readable: Default + Class + ReadBody {}
 pub trait ReadBody {
     fn read_body(
         &mut self,
-        r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+        r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
     ) -> Result<(), Error>;
 }
 
 pub fn read_body_chunks<T: BodyChunks>(
-    r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
     node: &mut T,
 ) -> Result<(), Error> {
     let chunk_id = read_body_chunks_inner(r, node)?;
@@ -183,7 +182,7 @@ pub fn read_body_chunks<T: BodyChunks>(
 }
 
 fn read_body_chunks_inner<T: BodyChunks>(
-    r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
     node: &mut T,
 ) -> Result<Option<u32>, Error> {
     let mut chunk_id = match node.parent() {
@@ -194,14 +193,12 @@ fn read_body_chunks_inner<T: BodyChunks>(
         },
     };
 
-    let mut chunks = T::body_chunks();
+    let mut chunks = T::body_chunks().into_iter();
 
     loop {
         if chunk_id == END_OF_BODY_MARKER {
             break;
         }
-
-        println!("{chunk_id:08X?}");
 
         let chunk = match chunks.find(|chunk| chunk.id == chunk_id) {
             None => return Ok(Some(chunk_id)),
@@ -229,8 +226,8 @@ pub trait BodyChunks {
 
     fn parent(&mut self) -> Option<&mut Self::Parent>;
 
-    fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-    -> impl Iterator<Item = BodyChunk<Self, R, I, N>>;
+    fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+    -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>>;
 }
 
 pub struct BodyChunk<T: ?Sized, R, I, N> {
@@ -261,7 +258,7 @@ impl<T, R, I, N> BodyChunk<T, R, I, N> {
 }
 
 pub fn read_node<T: Default + Class + ReadBody>(
-    r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
 ) -> Result<T, Error> {
     let mut node = T::default();
     node.read_body(r)?;

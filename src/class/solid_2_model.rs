@@ -29,9 +29,7 @@ impl Solid2Model {
 }
 
 impl Class for Solid2Model {
-    fn class_id(&self) -> u32 {
-        0x090BB000
-    }
+    const CLASS_ID: u32 = 0x090bb000;
 }
 
 pub struct ShadedGeom {
@@ -48,7 +46,7 @@ mod read {
         class::solid_2_model::{Light, ShadedGeom, Solid2Model},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -57,7 +55,7 @@ mod read {
     impl ReadBody for Solid2Model {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
@@ -70,20 +68,19 @@ mod read {
             None
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(0x090bb000, Self::read_chunk_0),
                 BodyChunk::skippable(0x090bb002, Self::read_chunk_2),
             ]
-            .into_iter()
         }
     }
 
     impl Solid2Model {
         fn read_chunk_0(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -107,161 +104,90 @@ mod read {
             self.visuals = r.list_with_version(|r| r.internal_node_ref())?;
             let material_ids = r.list(|r| r.id())?;
             let material_count = r.u32()?;
-
             if material_count == 0 {
                 self.materials = r.list_with_version(|r| r.external_node_ref())?;
             }
-
             let skel = r.u32()?;
+            r.list(|r| r.f32())?;
+            let vis_cst_type = r.u32()?;
+            if r.bool32()? {
+                let version = r.u32()?;
 
-            if version >= 1 {
-                r.list(|r| r.f32())?;
-            }
-
-            if version >= 2 {
-                let vis_cst_type = r.u32()?;
-            }
-
-            if version >= 3 {
-                if r.bool32()? {
-                    let version = r.u32()?;
-
-                    if version != 1 {
-                        return Err(Error("unknown pre light generator version".into()));
-                    }
-
-                    r.u32()?;
-                    r.f32()?;
-                    r.bool32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    r.u32()?;
-                    r.u32()?;
-                    r.list(|r| r.box3d())?;
-                    let uv_groups = r.list(|r| {
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-
-                        Ok(())
-                    })?;
+                if version != 1 {
+                    return Err(Error("unknown pre light generator version".into()));
                 }
-            }
 
-            if version >= 4 {
-                let file_write_time = r.u64()?;
-            }
-
-            if version >= 5 {
-                r.string()?;
-            }
-
-            if version >= 7 {
-                let materials_folder_name = r.string()?;
-            }
-
-            if version >= 19 {
-                r.string()?;
-            }
-
-            if version >= 8 {
-                self.lights = r.list(|r| {
-                    r.id()?;
-
-                    if r.bool32()? {
-                        r.external_node_ref()?;
-                    } else {
-                        todo!()
-                    }
-
-                    r.iso4()?;
-                    r.u32()?;
+                r.u32()?;
+                r.f32()?;
+                r.bool32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.u32()?;
+                r.u32()?;
+                r.list(|r| r.box3d())?;
+                let uv_groups = r.list(|r| {
                     r.u32()?;
                     r.u32()?;
                     r.u32()?;
                     r.u32()?;
                     r.u32()?;
 
-                    if r.bool32()? {
-                        r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
-                    }
-
-                    Ok(Light {})
+                    Ok(())
                 })?;
             }
+            let file_write_time = r.u64()?;
+            r.string()?;
+            let materials_folder_name = r.string()?;
+            r.string()?;
+            self.lights = r.list(|r| {
+                r.id()?;
 
-            if version >= 10 {
-                let light_user_models: Vec<()> = r.list(|r| todo!())?;
-                let light_insts: Vec<()> = r.list(|r| todo!())?;
-            }
+                if r.bool32()? {
+                    r.external_node_ref()?;
+                } else {
+                    todo!()
+                }
 
-            if version >= 11 {
-                let damage_zone = r.u32()?;
-            }
-
-            if version >= 12 {
-                let flags = r.u32()?;
-            }
-
-            if version >= 13 {
+                r.iso4()?;
                 r.u32()?;
-            }
-
-            if version >= 14 {
-                r.string()?;
-            }
-
-            if version >= 30 {
                 r.u32()?;
-            }
-
-            if version >= 15 {
-                let custom_materials: Vec<()> = r.list(|r| todo!())?;
-            }
-
-            if version >= 20 {
-                r.list(|r| r.id())?;
-            }
-
-            if version >= 22 {
-                r.list(|r| r.u32())?;
-            }
-
-            if version >= 23 {
                 r.u32()?;
-            }
-
-            if version >= 24 {
                 r.u32()?;
-            }
-
-            if version >= 25 {
                 r.u32()?;
-                r.f32()?;
-                r.f32()?;
-            }
-
-            if version >= 27 {
-                r.id_or_null()?;
-            }
-
-            if version >= 31 {
                 r.u32()?;
-            }
 
-            if version >= 33 {
-                r.list(|r| r.u32())?;
-            }
+                if r.bool32()? {
+                    r.f32()?;
+                    r.f32()?;
+                    r.f32()?;
+                }
+
+                Ok(Light {})
+            })?;
+            let light_user_models: Vec<()> = r.list(|r| todo!())?;
+            let light_insts: Vec<()> = r.list(|r| todo!())?;
+            let damage_zone = r.u32()?;
+            let flags = r.u32()?;
+            r.u32()?;
+            r.string()?;
+            r.u32()?;
+            let custom_materials: Vec<()> = r.list(|r| todo!())?;
+            r.list(|r| r.id())?;
+            r.list(|r| r.u32())?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.f32()?;
+            r.id_or_null()?;
+            r.u32()?;
+            r.list(|r| r.u32())?;
 
             Ok(())
         }

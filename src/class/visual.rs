@@ -14,7 +14,7 @@ mod read {
         class::visual::Visual,
         read::{
             BodyChunk, BodyChunks, Error,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -25,8 +25,8 @@ mod read {
             None
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
                 BodyChunk::new(0x09006001, Self::read_chunk_1),
                 BodyChunk::new(0x09006005, Self::read_chunk_5),
@@ -35,14 +35,13 @@ mod read {
                 BodyChunk::new(0x0900600f, Self::read_chunk_15),
                 BodyChunk::new(0x09006010, Self::read_chunk_16),
             ]
-            .into_iter()
         }
     }
 
     impl Visual {
         fn read_chunk_1<N>(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, N>,
+            r: &mut Reader<impl Read, impl IdTableRef, N>,
         ) -> Result<(), Error> {
             r.id_or_null()?;
 
@@ -81,7 +80,7 @@ mod read {
 
         fn read_chunk_15(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

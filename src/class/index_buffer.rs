@@ -6,9 +6,7 @@ pub struct IndexBuffer {
 }
 
 impl Class for IndexBuffer {
-    fn class_id(&self) -> u32 {
-        0x09057000
-    }
+    const CLASS_ID: u32 = 0x09057000;
 }
 
 impl IndexBuffer {
@@ -24,14 +22,14 @@ mod read {
         class::index_buffer::IndexBuffer,
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl ReadBody for IndexBuffer {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
@@ -44,9 +42,9 @@ mod read {
             None
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x09057001, Self::read_chunk_1)].into_iter()
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+            [BodyChunk::new(0x09057001, Self::read_chunk_1)]
         }
     }
 

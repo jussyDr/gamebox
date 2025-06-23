@@ -46,14 +46,14 @@ mod read {
         class::dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         read::{
             Error, ReadBody,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl ReadBody for DynaObjectModelInstanceParams {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 

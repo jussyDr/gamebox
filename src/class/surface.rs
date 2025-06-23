@@ -1,22 +1,29 @@
-use crate::Class;
+use crate::{Class, ExternalNodeRef};
 
 #[derive(Default)]
-pub struct Surface;
+pub struct Surface {
+    kind: SurfaceKind,
+    materials: Vec<ExternalNodeRef>,
+}
 
 impl Class for Surface {
-    fn class_id(&self) -> u32 {
-        0x0900c000
-    }
+    const CLASS_ID: u32 = 0x0900c000;
+}
+
+#[derive(Default)]
+pub enum SurfaceKind {
+    #[default]
+    Mesh,
 }
 
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::surface::Surface,
+        class::surface::{Surface, SurfaceKind},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
-            reader::{IdsMut, NodesMut, Reader},
+            reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
@@ -25,7 +32,7 @@ mod read {
     impl ReadBody for Surface {
         fn read_body(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
@@ -38,16 +45,16 @@ mod read {
             None
         }
 
-        fn body_chunks<R: Read, I: IdsMut, N: NodesMut>()
-        -> impl Iterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x0900c003, Self::read_chunk_3)].into_iter()
+        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
+        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+            [BodyChunk::new(0x0900c003, Self::read_chunk_3)]
         }
     }
 
     impl Surface {
         fn read_chunk_3(
             &mut self,
-            r: &mut Reader<impl Read, impl IdsMut, impl NodesMut>,
+            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -57,32 +64,36 @@ mod read {
 
             let surface_version = if version >= 2 { Some(r.u32()?) } else { None };
 
-            match r.u32()? {
-                7 => match r.u32()? {
-                    7 => {
-                        let vertices = r.list(|r| r.vec3())?;
-                        let triangles = r.list(|r| {
-                            r.u32()?;
-                            r.u32()?;
-                            r.u32()?;
-                            r.u8()?;
-                            r.u8()?;
-                            r.u8()?;
-                            r.u8()?;
+            if surface_version != Some(2) {
+                panic!()
+            }
 
-                            Ok(())
-                        })?;
+            self.kind = match r.u32()? {
+                7 => {
+                    match r.u32()? {
+                        7 => {
+                            let vertices = r.list(|r| r.vec3())?;
+                            let triangles = r.list(|r| {
+                                r.u32()?;
+                                r.u32()?;
+                                r.u32()?;
+                                r.u8()?;
+                                r.u8()?;
+                                r.u8()?;
+                                r.u8()?;
+
+                                Ok(())
+                            })?;
+                        }
+                        sv => todo!("{sv}"),
                     }
-                    sv => todo!("{sv}"),
-                },
+
+                    SurfaceKind::Mesh
+                }
                 si => todo!("{si}"),
-            }
-
-            if version >= 2 {
-                r.vec3()?;
-            }
-
-            let materials = r.list(|r| {
+            };
+            r.vec3()?;
+            self.materials = r.list(|r| {
                 if r.bool32()? {
                     r.external_node_ref()
                 } else {
@@ -90,17 +101,12 @@ mod read {
                 }
             })?;
 
-            if version >= 4 && !materials.is_empty() {
+            if !self.materials.is_empty() {
                 r.u32()?;
             }
 
-            if version >= 4 {
-                r.list(|r| r.u16())?;
-            }
-
-            if version >= 1 {
-                let skel = r.u32()?;
-            }
+            r.list(|r| r.u16())?;
+            let skel = r.u32()?;
 
             Ok(())
         }
