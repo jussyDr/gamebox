@@ -1,10 +1,20 @@
 use gamebox::{
     class::{
-        prefab::Prefab, solid_2_model::Solid2Model, static_object_model::StaticObjectModel,
-        surface::Surface,
+        dyna_object_model::DynaObjectModel, prefab::Prefab, solid_2_model::Solid2Model,
+        static_object_model::StaticObjectModel, surface::Surface,
     },
     read::read_file,
 };
+
+#[test]
+fn read_dyna_object_flag() {
+    let _dyna_object: DynaObjectModel = read_file("tests/files/Flag.DynaObject.Gbx").unwrap();
+}
+
+#[test]
+fn read_dyna_object_light_ray() {
+    let _dyna_object: DynaObjectModel = read_file("tests/files/LightRay.DynaObject.Gbx").unwrap();
+}
 
 #[test]
 fn read_hit_shape_stade1536v2() {

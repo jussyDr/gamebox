@@ -19,12 +19,6 @@ mod read {
     };
 
     impl BodyChunks for Visual {
-        type Parent = Self;
-
-        fn parent(&mut self) -> Option<&mut Self::Parent> {
-            None
-        }
-
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [

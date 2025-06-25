@@ -1,9 +1,20 @@
 use crate::{Class, ExternalNodeRef};
 
+/// A surface.
 #[derive(Default)]
 pub struct Surface {
     kind: SurfaceKind,
-    materials: Vec<ExternalNodeRef>,
+    materials: Vec<Material>,
+}
+
+impl Surface {
+    pub fn kind(&self) -> &SurfaceKind {
+        &self.kind
+    }
+
+    pub fn materials(&self) -> &Vec<Material> {
+        &self.materials
+    }
 }
 
 impl Class for Surface {
@@ -12,15 +23,25 @@ impl Class for Surface {
 
 #[derive(Default)]
 pub enum SurfaceKind {
+    Box,
     #[default]
     Mesh,
+}
+
+pub enum Material {
+    Internal(InternalMaterial),
+    External(ExternalNodeRef),
+}
+
+pub enum InternalMaterial {
+    Metal,
 }
 
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::surface::{Surface, SurfaceKind},
+        class::surface::{InternalMaterial, Material, Surface, SurfaceKind},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -39,12 +60,6 @@ mod read {
     }
 
     impl BodyChunks for Surface {
-        type Parent = Self;
-
-        fn parent(&mut self) -> Option<&mut Self::Parent> {
-            None
-        }
-
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [BodyChunk::new(0x0900c003, Self::read_chunk_3)]
@@ -69,6 +84,12 @@ mod read {
             }
 
             self.kind = match r.u32()? {
+                6 => {
+                    let transform = r.box3d()?;
+                    r.u16()?;
+
+                    SurfaceKind::Box
+                }
                 7 => {
                     match r.u32()? {
                         7 => {
@@ -95,9 +116,12 @@ mod read {
             r.vec3()?;
             self.materials = r.list(|r| {
                 if r.bool32()? {
-                    r.external_node_ref()
+                    Ok(Material::External(r.external_node_ref()?))
                 } else {
-                    todo!()
+                    match r.u16()? {
+                        4 => Ok(Material::Internal(InternalMaterial::Metal)),
+                        xx => todo!("{xx}"),
+                    }
                 }
             })?;
 

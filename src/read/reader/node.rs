@@ -193,8 +193,13 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
     }
 
     pub fn external_node_ref_or_null(&mut self) -> Result<Option<ExternalNodeRef>, Error> {
-        let index = self
-            .u32()?
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let index = index
             .checked_sub(1)
             .ok_or(Error("node index is zero".into()))?;
 
@@ -205,7 +210,10 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
             .get(index as usize)
             .ok_or(Error("node index exceeds number of nodes".into()))?;
 
-        todo!();
+        match slot {
+            Some(NodeRef::External(node_ref)) => Ok(Some(node_ref.clone())),
+            _ => todo!(),
+        }
     }
 
     pub fn external_node_ref(&mut self) -> Result<ExternalNodeRef, Error> {

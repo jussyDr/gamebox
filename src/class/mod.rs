@@ -1,6 +1,7 @@
 //! Class
 
 pub mod challenge;
+pub mod dyna_object_model;
 pub mod dyna_object_model_instance_params;
 pub mod index_buffer;
 pub mod plug;

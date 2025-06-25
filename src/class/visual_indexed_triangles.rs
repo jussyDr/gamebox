@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use crate::{Class, class::visual_indexed::VisualIndexed};
 
 #[derive(Default)]
@@ -9,11 +11,25 @@ impl Class for VisualIndexedTriangles {
     const CLASS_ID: u32 = 0x0901e000;
 }
 
+impl Deref for VisualIndexedTriangles {
+    type Target = VisualIndexed;
+
+    fn deref(&self) -> &VisualIndexed {
+        &self.parent
+    }
+}
+
+impl DerefMut for VisualIndexedTriangles {
+    fn deref_mut(&mut self) -> &mut VisualIndexed {
+        &mut self.parent
+    }
+}
+
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::{visual_indexed::VisualIndexed, visual_indexed_triangles::VisualIndexedTriangles},
+        class::visual_indexed_triangles::VisualIndexedTriangles,
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -30,9 +46,7 @@ mod read {
     }
 
     impl BodyChunks for VisualIndexedTriangles {
-        type Parent = VisualIndexed;
-
-        fn parent(&mut self) -> Option<&mut Self::Parent> {
+        fn parent(&mut self) -> Option<&mut impl BodyChunks> {
             Some(&mut self.parent)
         }
 

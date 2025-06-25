@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use crate::{Class, class::visual::Visual};
 
 #[derive(Default)]
@@ -9,11 +11,25 @@ impl Class for Visual3D {
     const CLASS_ID: u32 = 0x0902C000;
 }
 
+impl Deref for Visual3D {
+    type Target = Visual;
+
+    fn deref(&self) -> &Visual {
+        &self.parent
+    }
+}
+
+impl DerefMut for Visual3D {
+    fn deref_mut(&mut self) -> &mut Visual {
+        &mut self.parent
+    }
+}
+
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::{visual::Visual, visual_3d::Visual3D},
+        class::visual_3d::Visual3D,
         read::{
             BodyChunk, BodyChunks, Error,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -21,9 +37,7 @@ mod read {
     };
 
     impl BodyChunks for Visual3D {
-        type Parent = Visual;
-
-        fn parent(&mut self) -> Option<&mut Self::Parent> {
+        fn parent(&mut self) -> Option<&mut impl BodyChunks> {
             Some(&mut self.parent)
         }
 

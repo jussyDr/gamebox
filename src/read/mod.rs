@@ -2,6 +2,10 @@
 
 pub mod reader;
 
+mod body;
+
+pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node};
+
 use std::{
     fmt::{self, Debug, Display, Formatter},
     fs::File,
@@ -11,15 +15,29 @@ use std::{
 };
 
 use crate::{
-    Class, END_OF_BODY_MARKER, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
-    SKIPPABLE_CHUNK_MARKER,
-    read::reader::{IdTable, IdTableRef, NodeTable, NodeTableRef, Reader},
+    Class, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
+    read::reader::{IdTable, NodeTable, Reader},
 };
+
+/// An error that occured while reading.
+#[derive(Debug)]
+pub struct Error(pub String);
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for Error {}
+
+pub trait Readable: Default + Class + ReadBody {}
 
 /// Read a node of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let mut r = Reader::new(reader, (), ());
 
+    // Read the header.
     if r.byte_array()? != FILE_SIGNATURE {
         return Err(Error("unknown file signature".into()));
     }
@@ -64,6 +82,8 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 
     if header_data_size > 0 {
         let header_data = r.bytes(header_data_size as usize)?;
+
+        todo!()
     }
 
     let num_nodes = r
@@ -71,6 +91,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         .checked_sub(1)
         .ok_or(Error("number of nodes is zero".into()))?;
 
+    // Read the reference table.
     let num_external_nodes = r.u32()?;
 
     let mut node_table = NodeTable::new(num_nodes as usize);
@@ -106,6 +127,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         }
     }
 
+    // Read the body.
     let mut r = Reader::new(r.into_inner(), IdTable::new(), node_table);
 
     if body_compressed {
@@ -116,7 +138,15 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         r.expect_eof()?;
     }
 
-    Ok(T::default())
+    Ok(node)
+}
+
+/// Read a node of type `T` from a file at the given `path`.
+pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
+    let file = File::open(path).map_err(|_| Error("".into()))?;
+    let reader = BufReader::new(file);
+
+    read(reader)
 }
 
 fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, Error> {
@@ -139,128 +169,6 @@ fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, E
     Ok(folders)
 }
 
-/// Read a node of type `T` from a file at the given `path`.
-pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
-    let file = File::open(path).map_err(|_| Error("".into()))?;
-    let reader = BufReader::new(file);
-
-    read(reader)
-}
-
-/// Error that occured while reading.
-#[derive(Debug)]
-pub struct Error(pub String);
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl std::error::Error for Error {}
-
-pub trait Readable: Default + Class + ReadBody {}
-
-pub trait ReadBody {
-    fn read_body(
-        &mut self,
-        r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-    ) -> Result<(), Error>;
-}
-
-pub fn read_body_chunks<T: BodyChunks>(
-    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-    node: &mut T,
-) -> Result<(), Error> {
-    let chunk_id = read_body_chunks_inner(r, node)?;
-
-    if let Some(chunk_id) = chunk_id {
-        return Err(Error(format!("unknown chunk: 0x{chunk_id:08x}")));
-    }
-
-    Ok(())
-}
-
-fn read_body_chunks_inner<T: BodyChunks>(
-    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-    node: &mut T,
-) -> Result<Option<u32>, Error> {
-    let mut chunk_id = match node.parent() {
-        None => r.u32()?,
-        Some(parent) => match read_body_chunks_inner(r, parent)? {
-            None => return Ok(None),
-            Some(chunk_id) => chunk_id,
-        },
-    };
-
-    let mut chunks = T::body_chunks().into_iter();
-
-    loop {
-        if chunk_id == END_OF_BODY_MARKER {
-            break;
-        }
-
-        let chunk = match chunks.find(|chunk| chunk.id == chunk_id) {
-            None => return Ok(Some(chunk_id)),
-            Some(chunk) => chunk,
-        };
-
-        if chunk.skippable {
-            if r.u32()? != SKIPPABLE_CHUNK_MARKER {
-                todo!()
-            }
-
-            let size = r.u32()?;
-        }
-
-        (chunk.read_fn)(node, r)?;
-
-        chunk_id = r.u32()?;
-    }
-
-    Ok(None)
-}
-
-pub trait BodyChunks {
-    type Parent: BodyChunks;
-
-    fn parent(&mut self) -> Option<&mut Self::Parent>;
-
-    fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-    -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>>;
-}
-
-pub struct BodyChunk<T: ?Sized, R, I, N> {
-    id: u32,
-    read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
-    skippable: bool,
-}
-
-impl<T, R, I, N> BodyChunk<T, R, I, N> {
-    pub fn new(id: u32, read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>) -> Self {
-        Self {
-            id,
-            read_fn,
-            skippable: false,
-        }
-    }
-
-    pub fn skippable(
-        id: u32,
-        read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
-    ) -> Self {
-        Self {
-            id,
-            read_fn,
-            skippable: true,
-        }
-    }
-}
-
-pub fn read_node<T: Default + Class + ReadBody>(
-    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-) -> Result<T, Error> {
-    let mut node = T::default();
-    node.read_body(r)?;
-    Ok(node)
+pub trait FromLe {
+    fn from_le(value: Self) -> Self;
 }
