@@ -2,9 +2,16 @@ use std::sync::Arc;
 
 use crate::class::vertex_stream::VertexStream;
 
+/// A visual.
 #[derive(Default)]
 pub struct Visual {
     vertex_streams: Vec<Arc<VertexStream>>,
+}
+
+impl Visual {
+    pub fn vertex_streams(&self) -> &Vec<Arc<VertexStream>> {
+        &self.vertex_streams
+    }
 }
 
 mod read {

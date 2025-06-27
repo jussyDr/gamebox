@@ -2,6 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{Class, class::visual_indexed::VisualIndexed};
 
+/// A visual indexed triangles.
 #[derive(Default)]
 pub struct VisualIndexedTriangles {
     parent: VisualIndexed,

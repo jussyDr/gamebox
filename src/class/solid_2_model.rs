@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::{Class, ExternalNodeRef, class::visual_indexed_triangles::VisualIndexedTriangles};
 
+/// A solid 2 model.
 #[derive(Default)]
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,

@@ -1,21 +1,22 @@
-use std::{io::Read, sync::Arc};
+use std::{any::Any, io::Read, iter, sync::Arc};
 
 use crate::{
-    Class, DynClass, ExternalNodeRef, NodeRef,
+    Class, ExternalNodeRef, NodeRef,
     read::{
         Error, ReadBody,
         reader::{IdTableRef, Reader},
     },
 };
 
+/// Node table.
 pub struct NodeTable {
-    nodes: Vec<Option<NodeRef>>,
+    nodes: Vec<Option<NodeRef<Arc<dyn Any + Send + Sync>>>>,
 }
 
 impl NodeTable {
     pub fn new(num_nodes: usize) -> Self {
         Self {
-            nodes: vec![Option::None; num_nodes],
+            nodes: iter::repeat_with(|| None).take(num_nodes).collect(),
         }
     }
 
@@ -50,10 +51,10 @@ pub trait NodeTableRef: AsMut<NodeTable> {}
 impl<T: AsMut<NodeTable>> NodeTableRef for T {}
 
 impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
-    pub fn node_ref_generic_or_null(
+    pub fn node_ref_generic_or_null<T: Clone + Downcast>(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn DynClass>, Error>,
-    ) -> Result<Option<NodeRef>, Error> {
+        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<Option<NodeRef<T>>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
@@ -84,16 +85,21 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
 
                 *slot = Some(NodeRef::Internal(Arc::clone(&node)));
 
-                Ok(Some(NodeRef::Internal(node)))
+                Ok(Some(NodeRef::Internal(T::downcast(node).unwrap())))
             }
-            Some(node_ref) => Ok(Some(NodeRef::clone(node_ref))),
+            Some(node_ref) => match node_ref {
+                NodeRef::Internal(x) => {
+                    Ok(Some(NodeRef::Internal(T::downcast(x.clone()).unwrap())))
+                }
+                NodeRef::External(x) => Ok(Some(NodeRef::External(x.clone()))),
+            },
         }
     }
 
-    pub fn internal_node_ref_generic_or_null(
+    pub fn internal_node_ref_generic_or_null<T: Clone + Downcast>(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn DynClass>, Error>,
-    ) -> Result<Option<Arc<dyn DynClass>>, Error> {
+        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<Option<T>, Error> {
         let node_ref = self.node_ref_generic_or_null(read_fn)?;
 
         match node_ref {
@@ -103,10 +109,10 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn node_ref_generic(
+    pub fn node_ref_generic<T: Clone + Downcast>(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn DynClass>, Error>,
-    ) -> Result<NodeRef, Error> {
+        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<NodeRef<T>, Error> {
         let node_ref = self.node_ref_generic_or_null(read_fn)?;
 
         match node_ref {
@@ -115,10 +121,10 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref_generic(
+    pub fn internal_node_ref_generic<T: Clone + Downcast>(
         &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn DynClass>, Error>,
-    ) -> Result<Arc<dyn DynClass>, Error> {
+        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
+    ) -> Result<T, Error> {
         let node_ref = self.node_ref_generic(read_fn)?;
 
         match node_ref {
@@ -127,16 +133,15 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn node_ref_or_null<T: Default + Class + ReadBody + 'static>(
+    pub fn node_ref_or_null<T: Default + Send + Sync + Class + ReadBody + 'static>(
         &mut self,
-    ) -> Result<Option<NodeRef>, Error> {
+    ) -> Result<Option<NodeRef<Arc<T>>>, Error> {
         let node_ref = self.node_ref_generic_or_null(|r, class_id| {
-            let mut node = T::default();
-
-            if class_id != node.class_id() {
+            if class_id != T::CLASS_ID {
                 todo!()
             }
 
+            let mut node = T::default();
             node.read_body(r)?;
 
             Ok(Arc::new(node))
@@ -148,7 +153,9 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn node_ref<T: Default + Class + ReadBody + 'static>(&mut self) -> Result<NodeRef, Error> {
+    pub fn node_ref<T: Default + Send + Sync + Class + ReadBody + 'static>(
+        &mut self,
+    ) -> Result<NodeRef<Arc<T>>, Error> {
         let node_ref = self.node_ref_or_null::<T>()?;
 
         match node_ref {
@@ -157,15 +164,15 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref_or_null<T: Default + Class + ReadBody + 'static>(
+    pub fn internal_node_ref_or_null<T: Default + Send + Sync + Class + ReadBody + 'static>(
         &mut self,
     ) -> Result<Option<Arc<T>>, Error> {
-        let node = self.internal_node_ref_generic_or_null(|r, class_id| {
-            let mut node = T::default();
-
-            if class_id != node.class_id() {
+        let node: Option<Arc<T>> = self.internal_node_ref_generic_or_null(|r, class_id| {
+            if class_id != T::CLASS_ID {
                 todo!()
             }
+
+            let mut node = T::default();
 
             node.read_body(r)?;
 
@@ -181,7 +188,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref<T: Default + Class + ReadBody + 'static>(
+    pub fn internal_node_ref<T: Default + Send + Sync + Class + ReadBody + 'static>(
         &mut self,
     ) -> Result<Arc<T>, Error> {
         let node = self.internal_node_ref_or_null::<T>()?;
@@ -217,42 +224,34 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
     }
 
     pub fn external_node_ref(&mut self) -> Result<ExternalNodeRef, Error> {
-        let index = self
-            .u32()?
-            .checked_sub(1)
-            .ok_or(Error("node index is zero".into()))?;
-
-        let slot = self
-            .node_state
-            .as_mut()
-            .nodes
-            .get(index as usize)
-            .ok_or(Error("node index exceeds number of nodes".into()))?;
-
-        match slot {
-            None => {
-                todo!()
-            }
-            Some(NodeRef::Internal(_)) => {
-                todo!()
-            }
-            Some(NodeRef::External(external_node_ref)) => Ok(external_node_ref.clone()),
+        match self.external_node_ref_or_null()? {
+            None => todo!(),
+            Some(node_ref) => Ok(node_ref),
         }
     }
 
     pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T, Error> {
         let node = self.node_generic(|r, class_id| {
-            let mut node = T::default();
-
-            if class_id != node.class_id() {
+            if class_id != T::CLASS_ID {
                 todo!("{:08X?}", class_id);
             }
 
+            let mut node = T::default();
             node.read_body(r)?;
 
             Ok(node)
         })?;
 
         Ok(node)
+    }
+}
+
+pub trait Downcast: Sized {
+    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self>;
+}
+
+impl<T: 'static + Send + Sync> Downcast for Arc<T> {
+    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self> {
+        value.downcast().ok()
     }
 }

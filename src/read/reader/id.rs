@@ -2,6 +2,7 @@ use std::{io::Read, sync::Arc};
 
 use crate::read::{Error, reader::Reader};
 
+/// Identifier table.
 pub struct IdTable {
     seen_id: bool,
     ids: Vec<Arc<str>>,

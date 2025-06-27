@@ -32,6 +32,11 @@ fn read_prefab_stade1536v2() {
 }
 
 #[test]
+fn read_prefab_straight_air() {
+    let _prefab: Prefab = read_file("tests/files/Straight_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_static_object_grass4096() {
     let _static_object: StaticObjectModel =
         read_file("tests/files/Grass4096.StaticObject.Gbx").unwrap();

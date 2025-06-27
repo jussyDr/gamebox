@@ -1,5 +1,6 @@
 use crate::{Class, Vec2, Vec3};
 
+/// A vertex stream.
 #[derive(Default)]
 pub struct VertexStream {
     positions: Vec<Vec3>,

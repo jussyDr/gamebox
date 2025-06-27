@@ -2,6 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{Class, class::visual::Visual};
 
+/// A visual 3D.
 #[derive(Default)]
 pub struct Visual3D {
     parent: Visual,

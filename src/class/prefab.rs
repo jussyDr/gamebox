@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-/// Prefab
+/// A prefab.
 #[derive(Default)]
 pub struct Prefab {
     file_write_time: u64,
@@ -38,14 +38,14 @@ impl Class for Prefab {
 
 /// Prefab entity.
 pub struct Entity {
-    model: NodeRef,
+    model: NodeRef<Arc<StaticObjectModel>>,
     rotation: Quat,
     position: Vec3,
     params: Option<EntityParams>,
 }
 
 impl Entity {
-    pub fn model(&self) -> &NodeRef {
+    pub fn model(&self) -> &NodeRef<Arc<StaticObjectModel>> {
         &self.model
     }
 

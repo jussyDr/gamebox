@@ -1,5 +1,6 @@
 use crate::Class;
 
+/// A dynamic object model.
 #[derive(Default)]
 pub struct DynaObjectModel;
 

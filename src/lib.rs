@@ -12,6 +12,7 @@
 pub mod class;
 pub mod read;
 
+use bytemuck::NoUninit;
 pub use read::{read, read_file};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
@@ -21,28 +22,18 @@ pub trait Class {
     const CLASS_ID: u32;
 }
 
-pub trait DynClass {
-    fn class_id(&self) -> u32;
-}
-
-impl<T: Class> DynClass for T {
-    fn class_id(&self) -> u32 {
-        Self::CLASS_ID
-    }
-}
-
-impl Debug for dyn DynClass {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
-    }
-}
-
 /// Reference to a node.
-#[derive(Clone, Debug)]
-pub enum NodeRef {
-    Internal(Arc<dyn DynClass>),
+#[derive(Debug, Clone)]
+pub enum NodeRef<T> {
+    Internal(T),
     /// Reference to a node in an external file.
     External(ExternalNodeRef),
+}
+
+impl<T: Default> Default for NodeRef<T> {
+    fn default() -> Self {
+        Self::Internal(T::default())
+    }
 }
 
 /// Reference to a node in an external file.
@@ -70,6 +61,8 @@ pub struct Vec2 {
 }
 
 /// A 3-dimensional vector.
+#[derive(Clone, Copy, NoUninit)]
+#[repr(C)]
 pub struct Vec3 {
     /// X component.
     pub x: f32,

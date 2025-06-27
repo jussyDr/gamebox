@@ -1,20 +1,25 @@
 //! Static object model.
 
-use crate::{Class, ExternalNodeRef};
+use std::sync::Arc;
 
-/// Static object model.
+use crate::{
+    Class, NodeRef,
+    class::{solid_2_model::Solid2Model, surface::Surface},
+};
+
+/// A static object model.
 #[derive(Default)]
 pub struct StaticObjectModel {
-    mesh: ExternalNodeRef,
-    hit_shape: Option<ExternalNodeRef>,
+    mesh: NodeRef<Arc<Solid2Model>>,
+    hit_shape: Option<NodeRef<Arc<Surface>>>,
 }
 
 impl StaticObjectModel {
-    pub fn mesh(&self) -> &ExternalNodeRef {
+    pub fn mesh(&self) -> &NodeRef<Arc<Solid2Model>> {
         &self.mesh
     }
 
-    pub fn hit_shape(&self) -> &Option<ExternalNodeRef> {
+    pub fn hit_shape(&self) -> &Option<NodeRef<Arc<Surface>>> {
         &self.hit_shape
     }
 }
@@ -47,11 +52,11 @@ mod read {
                 return Err(Error("unknown static object model version".into()));
             }
 
-            self.mesh = r.external_node_ref()?;
+            self.mesh = r.node_ref()?;
             self.hit_shape = if r.bool8()? {
                 None
             } else {
-                Some(r.external_node_ref()?)
+                Some(r.node_ref()?)
             };
 
             Ok(())

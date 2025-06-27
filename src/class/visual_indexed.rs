@@ -5,6 +5,7 @@ use crate::{
     class::{index_buffer::IndexBuffer, visual_3d::Visual3D},
 };
 
+/// A visual indexed.
 #[derive(Default)]
 pub struct VisualIndexed {
     parent: Visual3D,

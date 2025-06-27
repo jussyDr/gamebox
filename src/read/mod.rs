@@ -31,7 +31,7 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub trait Readable: Default + Class + ReadBody {}
+pub trait Readable: Default + Send + Sync + Class + ReadBody {}
 
 /// Read a node of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
