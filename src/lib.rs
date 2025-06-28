@@ -12,8 +12,8 @@
 pub mod class;
 pub mod read;
 
-use bytemuck::NoUninit;
 pub use read::{read, read_file};
+use zerocopy::{Immutable, IntoBytes};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
 
@@ -28,6 +28,22 @@ pub enum NodeRef<T> {
     Internal(T),
     /// Reference to a node in an external file.
     External(ExternalNodeRef),
+}
+
+impl<T> NodeRef<T> {
+    pub fn internal(&self) -> Option<&T> {
+        match self {
+            Self::Internal(value) => Some(value),
+            Self::External(_) => None,
+        }
+    }
+
+    pub fn external(&self) -> Option<&ExternalNodeRef> {
+        match self {
+            Self::Internal(value) => None,
+            Self::External(value) => Some(value),
+        }
+    }
 }
 
 impl<T: Default> Default for NodeRef<T> {
@@ -61,8 +77,7 @@ pub struct Vec2 {
 }
 
 /// A 3-dimensional vector.
-#[derive(Clone, Copy, NoUninit)]
-#[repr(C)]
+#[derive(Immutable, IntoBytes)]
 pub struct Vec3 {
     /// X component.
     pub x: f32,

@@ -1,7 +1,7 @@
 use gamebox::{
     class::{
-        dyna_object_model::DynaObjectModel, prefab::Prefab, solid_2_model::Solid2Model,
-        static_object_model::StaticObjectModel, surface::Surface,
+        dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
+        solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,
     },
     read::read_file,
 };
@@ -19,6 +19,11 @@ fn read_dyna_object_light_ray() {
 #[test]
 fn read_hit_shape_stade1536v2() {
     let _hit_shape: Surface = read_file("tests/files/Stade1536v2.HitShape.Gbx").unwrap();
+}
+
+#[test]
+fn read_material_road_tech() {
+    let _material: Material = read_file("tests/files/RoadTech.Material.gbx").unwrap();
 }
 
 #[test]

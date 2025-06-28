@@ -38,6 +38,16 @@ pub struct ShadedGeom {
     material_index: u32,
 }
 
+impl ShadedGeom {
+    pub fn visual_index(&self) -> u32 {
+        self.visual_index
+    }
+
+    pub fn material_index(&self) -> u32 {
+        self.material_index
+    }
+}
+
 pub struct Light {}
 
 mod read {

@@ -4,6 +4,8 @@ pub mod challenge;
 pub mod dyna_object_model;
 pub mod dyna_object_model_instance_params;
 pub mod index_buffer;
+pub mod material;
+pub mod material_custom;
 pub mod plug;
 pub mod prefab;
 pub mod solid_2_model;
