@@ -65,7 +65,14 @@ impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
                 Ok(Some(id))
             }
             Some(index) => {
-                todo!()
+                let id = self
+                    .id_table
+                    .as_mut()
+                    .ids
+                    .get(index as usize)
+                    .ok_or(Error("".into()))?;
+
+                Ok(Some(Arc::clone(id)))
             }
         }
     }

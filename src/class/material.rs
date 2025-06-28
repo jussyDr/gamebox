@@ -36,6 +36,14 @@ mod read {
             [
                 BodyChunk::new(0x09079001, Self::read_chunk_1),
                 BodyChunk::new(0x09079007, Self::read_chunk_7),
+                BodyChunk::new(0x09079010, Self::read_chunk_16),
+                BodyChunk::new(0x09079011, Self::read_chunk_17),
+                BodyChunk::skippable(0x09079012, Self::read_chunk_18),
+                BodyChunk::skippable(0x09079013, Self::read_chunk_19),
+                BodyChunk::new(0x09079015, Self::read_chunk_21),
+                BodyChunk::new(0x09079016, Self::read_chunk_22),
+                BodyChunk::new(0x09079017, Self::read_chunk_23),
+                BodyChunk::skippable(0x09079019, Self::read_chunk_25),
             ]
         }
     }
@@ -52,6 +60,79 @@ mod read {
             r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             let custom_material: Arc<MaterialCustom> = r.internal_node_ref()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_16<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.f32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_17<N>(
+            &mut self,
+            r: &mut Reader<impl Read, impl IdTableRef, N>,
+        ) -> Result<(), Error> {
+            r.list(|r| r.id())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_18<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.string()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_19<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_21<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_22<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_23<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.f32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_25<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         }
