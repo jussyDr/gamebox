@@ -35,7 +35,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::vertex_stream::{DataDecl, VertexStream},
+        class::plug::vertex_stream::{DataDecl, VertexStream},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -54,7 +54,7 @@ mod read {
     impl BodyChunks for VertexStream {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x09056000, Self::read_chunk_0)]
+            [BodyChunk::new(0, Self::read_chunk_0)]
         }
     }
 

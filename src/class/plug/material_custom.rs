@@ -12,7 +12,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::material_custom::MaterialCustom,
+        class::plug::{material_custom::MaterialCustom, texture::Texture},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -32,16 +32,16 @@ mod read {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(0x0903a004, Self::read_chunk_4),
-                BodyChunk::new(0x0903a00a, Self::read_chunk_10),
-                BodyChunk::new(0x0903a00c, Self::read_chunk_12),
-                BodyChunk::skippable(0x0903a00f, Self::read_chunk_15),
-                BodyChunk::skippable(0x0903a011, Self::read_chunk_17),
-                BodyChunk::new(0x0903a012, Self::read_chunk_18),
-                BodyChunk::new(0x0903a013, Self::read_chunk_19),
-                BodyChunk::new(0x0903a014, Self::read_chunk_20),
-                BodyChunk::new(0x0903a015, Self::read_chunk_21),
-                BodyChunk::new(0x0903a016, Self::read_chunk_22),
+                BodyChunk::new(4, Self::read_chunk_4),
+                BodyChunk::new(10, Self::read_chunk_10),
+                BodyChunk::new(12, Self::read_chunk_12),
+                BodyChunk::skippable(15, Self::read_chunk_15),
+                BodyChunk::skippable(17, Self::read_chunk_17),
+                BodyChunk::new(18, Self::read_chunk_18),
+                BodyChunk::new(19, Self::read_chunk_19),
+                BodyChunk::new(20, Self::read_chunk_20),
+                BodyChunk::new(21, Self::read_chunk_21),
+                BodyChunk::new(22, Self::read_chunk_22),
             ]
         }
     }
@@ -147,7 +147,7 @@ mod read {
             let textures = r.list(|r| {
                 let name = r.id()?;
                 r.u32()?;
-                let texture = r.external_node_ref()?;
+                let texture = r.external_node_ref::<Texture>()?;
                 r.u32()?;
                 r.u32()?;
 

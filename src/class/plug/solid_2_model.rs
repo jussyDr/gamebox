@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{Class, ExternalNodeRef, class::visual_indexed_triangles::VisualIndexedTriangles};
+use crate::{
+    Class, SubExtension, ExternalNodeRef,
+    class::plug::visual_indexed_triangles::VisualIndexedTriangles,
+};
 
 /// A solid 2 model.
 #[derive(Default)]
@@ -8,7 +11,7 @@ pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
     visuals: Vec<Arc<VisualIndexedTriangles>>,
     materials: Vec<ExternalNodeRef>,
-    lights: Vec<Light>,
+    lights: Vec<Solid2ModelLight>,
 }
 
 impl Solid2Model {
@@ -24,13 +27,17 @@ impl Solid2Model {
         &self.materials
     }
 
-    pub fn lights(&self) -> &Vec<Light> {
+    pub fn lights(&self) -> &Vec<Solid2ModelLight> {
         &self.lights
     }
 }
 
 impl Class for Solid2Model {
     const CLASS_ID: u32 = 0x090bb000;
+}
+
+impl SubExtension for Solid2Model {
+    const SUB_EXTENSION: &str = "Mesh";
 }
 
 pub struct ShadedGeom {
@@ -48,13 +55,17 @@ impl ShadedGeom {
     }
 }
 
-pub struct Light {}
+pub struct Solid2ModelLight {}
 
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::solid_2_model::{Light, ShadedGeom, Solid2Model},
+        class::plug::{
+            light::Light,
+            material::Material,
+            solid_2_model::{ShadedGeom, Solid2Model, Solid2ModelLight},
+        },
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -76,8 +87,8 @@ mod read {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(0x090bb000, Self::read_chunk_0),
-                BodyChunk::skippable(0x090bb002, Self::read_chunk_2),
+                BodyChunk::new(0, Self::read_chunk_0),
+                BodyChunk::skippable(2, Self::read_chunk_2),
             ]
         }
     }
@@ -110,7 +121,7 @@ mod read {
             let material_ids = r.list(|r| r.id())?;
             let material_count = r.u32()?;
             if material_count == 0 {
-                self.materials = r.list_with_version(|r| r.external_node_ref())?;
+                self.materials = r.list_with_version(|r| r.external_node_ref::<Material>())?;
             }
             let skel = r.u32()?;
             r.list(|r| r.f32())?;
@@ -154,7 +165,7 @@ mod read {
                 r.id()?;
 
                 if r.bool32()? {
-                    r.external_node_ref()?;
+                    r.external_node_ref::<Light>()?;
                 } else {
                     todo!()
                 }
@@ -173,7 +184,7 @@ mod read {
                     r.f32()?;
                 }
 
-                Ok(Light {})
+                Ok(Solid2ModelLight {})
             })?;
             let light_user_models: Vec<()> = r.list(|r| todo!())?;
             let light_insts: Vec<()> = r.list(|r| todo!())?;

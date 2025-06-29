@@ -1,11 +1,12 @@
-use std::{any::Any, io::Read, iter, sync::Arc};
+use std::{any::Any, io::Read, sync::Arc};
 
 use crate::{
-    Class, ExternalNodeRef, NodeRef,
+    Class, ExternalNodeRef, NodeRef, SubExtension,
     read::{
         Error, ReadBody,
-        reader::{IdTableRef, Reader},
+        reader::{IdTableRef, Reader, repeat_n_with},
     },
+    sub_extension,
 };
 
 /// Node table.
@@ -16,7 +17,7 @@ pub struct NodeTable {
 impl NodeTable {
     pub fn new(num_nodes: usize) -> Self {
         Self {
-            nodes: iter::repeat_with(|| None).take(num_nodes).collect(),
+            nodes: repeat_n_with(num_nodes, || None),
         }
     }
 
@@ -199,7 +200,9 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn external_node_ref_or_null(&mut self) -> Result<Option<ExternalNodeRef>, Error> {
+    pub fn external_node_ref_or_null<T: SubExtension>(
+        &mut self,
+    ) -> Result<Option<ExternalNodeRef>, Error> {
         let index = self.u32()?;
 
         if index == 0xffffffff {
@@ -218,13 +221,21 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
             .ok_or(Error("node index exceeds number of nodes".into()))?;
 
         match slot {
-            Some(NodeRef::External(node_ref)) => Ok(Some(node_ref.clone())),
+            Some(NodeRef::External(node_ref)) => {
+                let sub_extension = sub_extension(&node_ref.path).unwrap();
+
+                if sub_extension != T::SUB_EXTENSION {
+                    todo!("{}", sub_extension);
+                }
+
+                Ok(Some(node_ref.clone()))
+            }
             _ => todo!(),
         }
     }
 
-    pub fn external_node_ref(&mut self) -> Result<ExternalNodeRef, Error> {
-        match self.external_node_ref_or_null()? {
+    pub fn external_node_ref<T: SubExtension>(&mut self) -> Result<ExternalNodeRef, Error> {
+        match self.external_node_ref_or_null::<T>()? {
             None => todo!(),
             Some(node_ref) => Ok(node_ref),
         }

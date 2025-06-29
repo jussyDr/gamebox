@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{Class, class::visual::Visual};
+use crate::{Class, class::plug::visual::Visual};
 
 /// A visual 3D.
 #[derive(Default)]
@@ -30,7 +30,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::visual_3d::Visual3D,
+        class::plug::visual_3d::Visual3D,
         read::{
             BodyChunk, BodyChunks, Error,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -45,8 +45,8 @@ mod read {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(0x0902c002, Self::read_chunk_2),
-                BodyChunk::new(0x0902c004, Self::read_chunk_4),
+                BodyChunk::new(2, Self::read_chunk_2),
+                BodyChunk::new(4, Self::read_chunk_4),
             ]
         }
     }

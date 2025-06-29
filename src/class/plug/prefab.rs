@@ -3,10 +3,10 @@
 use std::{any::Any, sync::Arc};
 
 use crate::{
-    Class, NodeRef, Quat, Vec3,
+    Class, SubExtension, NodeRef, Quat, Vec3,
     class::{
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
-        static_object_model::StaticObjectModel,
+        plug::static_object_model::StaticObjectModel,
     },
 };
 
@@ -34,6 +34,10 @@ impl Prefab {
 
 impl Class for Prefab {
     const CLASS_ID: u32 = 0x09145000;
+}
+
+impl SubExtension for Prefab {
+    const SUB_EXTENSION: &str = "Prefab";
 }
 
 /// Prefab entity.
@@ -87,8 +91,8 @@ mod read {
     use crate::{
         class::{
             dyna_object_model_instance_params::DynaObjectModelInstanceParams,
-            prefab::{Entity, EntityParams, Prefab},
-            static_object_model::StaticObjectModel,
+            plug::prefab::{Entity, EntityParams, Prefab},
+            plug::static_object_model::StaticObjectModel,
         },
         read::{
             Error, ReadBody, Readable,

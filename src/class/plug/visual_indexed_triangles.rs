@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{Class, class::visual_indexed::VisualIndexed};
+use crate::{Class, class::plug::visual_indexed::VisualIndexed};
 
 /// A visual indexed triangles.
 #[derive(Default)]
@@ -30,7 +30,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::visual_indexed_triangles::VisualIndexedTriangles,
+        class::plug::visual_indexed_triangles::VisualIndexedTriangles,
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},

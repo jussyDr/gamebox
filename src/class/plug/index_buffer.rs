@@ -19,7 +19,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::index_buffer::IndexBuffer,
+        class::plug::index_buffer::IndexBuffer,
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -38,7 +38,7 @@ mod read {
     impl BodyChunks for IndexBuffer {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x09057001, Self::read_chunk_1)]
+            [BodyChunk::new(1, Self::read_chunk_1)]
         }
     }
 

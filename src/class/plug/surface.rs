@@ -1,10 +1,10 @@
-use crate::{Class, ExternalNodeRef};
+use crate::{Class, SubExtension, ExternalNodeRef};
 
 /// A surface.
 #[derive(Default)]
 pub struct Surface {
     kind: SurfaceKind,
-    materials: Vec<Material>,
+    materials: Vec<SurfaceMaterial>,
 }
 
 impl Surface {
@@ -12,13 +12,17 @@ impl Surface {
         &self.kind
     }
 
-    pub fn materials(&self) -> &Vec<Material> {
+    pub fn materials(&self) -> &Vec<SurfaceMaterial> {
         &self.materials
     }
 }
 
 impl Class for Surface {
     const CLASS_ID: u32 = 0x0900c000;
+}
+
+impl SubExtension for Surface {
+    const SUB_EXTENSION: &str = "HitShape";
 }
 
 #[derive(Default)]
@@ -28,7 +32,7 @@ pub enum SurfaceKind {
     Mesh,
 }
 
-pub enum Material {
+pub enum SurfaceMaterial {
     Internal(InternalMaterial),
     External(ExternalNodeRef),
 }
@@ -41,7 +45,10 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::surface::{InternalMaterial, Material, Surface, SurfaceKind},
+        class::plug::{
+            material::Material,
+            surface::{InternalMaterial, Surface, SurfaceKind, SurfaceMaterial},
+        },
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -62,7 +69,7 @@ mod read {
     impl BodyChunks for Surface {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x0900c003, Self::read_chunk_3)]
+            [BodyChunk::new(3, Self::read_chunk_3)]
         }
     }
 
@@ -116,10 +123,12 @@ mod read {
             r.vec3()?;
             self.materials = r.list(|r| {
                 if r.bool32()? {
-                    Ok(Material::External(r.external_node_ref()?))
+                    Ok(SurfaceMaterial::External(
+                        r.external_node_ref::<Material>()?,
+                    ))
                 } else {
                     match r.u16()? {
-                        4 => Ok(Material::Internal(InternalMaterial::Metal)),
+                        4 => Ok(SurfaceMaterial::Internal(InternalMaterial::Metal)),
                         xx => todo!("{xx}"),
                     }
                 }

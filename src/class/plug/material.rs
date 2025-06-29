@@ -1,18 +1,32 @@
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{Class, SubExtension, class::plug::material_custom::MaterialCustom};
 
 /// A material.
 #[derive(Default)]
-pub struct Material;
+pub struct Material {
+    custom_material: Arc<MaterialCustom>,
+}
+
+impl Material {
+    pub fn custom_material(&self) -> &Arc<MaterialCustom> {
+        &self.custom_material
+    }
+}
 
 impl Class for Material {
     const CLASS_ID: u32 = 0x09079000;
 }
 
+impl SubExtension for Material {
+    const SUB_EXTENSION: &str = "Material";
+}
+
 mod read {
-    use std::{io::Read, sync::Arc};
+    use std::io::Read;
 
     use crate::{
-        class::{material::Material, material_custom::MaterialCustom},
+        class::plug::material::Material,
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -34,16 +48,16 @@ mod read {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(0x09079001, Self::read_chunk_1),
-                BodyChunk::new(0x09079007, Self::read_chunk_7),
-                BodyChunk::new(0x09079010, Self::read_chunk_16),
-                BodyChunk::new(0x09079011, Self::read_chunk_17),
-                BodyChunk::skippable(0x09079012, Self::read_chunk_18),
-                BodyChunk::skippable(0x09079013, Self::read_chunk_19),
-                BodyChunk::new(0x09079015, Self::read_chunk_21),
-                BodyChunk::new(0x09079016, Self::read_chunk_22),
-                BodyChunk::new(0x09079017, Self::read_chunk_23),
-                BodyChunk::skippable(0x09079019, Self::read_chunk_25),
+                BodyChunk::new(1, Self::read_chunk_1),
+                BodyChunk::new(7, Self::read_chunk_7),
+                BodyChunk::new(16, Self::read_chunk_16),
+                BodyChunk::new(17, Self::read_chunk_17),
+                BodyChunk::skippable(18, Self::read_chunk_18),
+                BodyChunk::skippable(19, Self::read_chunk_19),
+                BodyChunk::new(21, Self::read_chunk_21),
+                BodyChunk::new(22, Self::read_chunk_22),
+                BodyChunk::new(23, Self::read_chunk_23),
+                BodyChunk::skippable(25, Self::read_chunk_25),
             ]
         }
     }
@@ -59,7 +73,7 @@ mod read {
             &mut self,
             r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
-            let custom_material: Arc<MaterialCustom> = r.internal_node_ref()?;
+            self.custom_material = r.internal_node_ref()?;
 
             Ok(())
         }

@@ -1,4 +1,4 @@
-use crate::Class;
+use crate::{Class, SubExtension};
 
 /// A dynamic object model.
 #[derive(Default)]
@@ -8,11 +8,19 @@ impl Class for DynaObjectModel {
     const CLASS_ID: u32 = 0x09144000;
 }
 
+impl SubExtension for DynaObjectModel {
+    const SUB_EXTENSION: &str = "DynaObject";
+}
+
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::{dyna_object_model::DynaObjectModel, surface::Surface},
+        Delme,
+        class::plug::{
+            anim_loc_simple::AnimLocSimple, dyna_object_model::DynaObjectModel,
+            solid_2_model::Solid2Model, surface::Surface,
+        },
         read::{
             Error, ReadBody, Readable,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -34,7 +42,7 @@ mod read {
 
             let is_static = r.bool32()?;
             let dynamize_on_spawn = r.bool32()?;
-            let mesh = r.external_node_ref()?;
+            let mesh = r.external_node_ref::<Solid2Model>()?;
             let dyna_shape = r.internal_node_ref_or_null::<Surface>()?;
             let static_shape = r.internal_node_ref_or_null::<Surface>()?;
             let break_speed_kmh = r.f32()?;
@@ -50,10 +58,10 @@ mod read {
             r.u8()?;
             r.u32()?;
             r.u32()?;
-            let loc_anim = r.external_node_ref_or_null()?;
+            let loc_anim = r.external_node_ref_or_null::<AnimLocSimple>()?;
             r.u32()?;
             let loc_anim_is_physical = r.bool32()?;
-            let water_model = r.external_node_ref_or_null()?;
+            let water_model = r.external_node_ref_or_null::<Delme>()?;
 
             Ok(())
         }

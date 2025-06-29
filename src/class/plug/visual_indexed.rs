@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{
     Class,
-    class::{index_buffer::IndexBuffer, visual_3d::Visual3D},
+    class::plug::{index_buffer::IndexBuffer, visual_3d::Visual3D},
 };
 
 /// A visual indexed.
@@ -40,7 +40,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
-        class::visual_indexed::VisualIndexed,
+        class::plug::visual_indexed::VisualIndexed,
         read::{
             BodyChunk, BodyChunks, Error, read_node,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -54,7 +54,7 @@ mod read {
 
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
-            [BodyChunk::new(0x0906a001, Self::read_chunk_1)]
+            [BodyChunk::new(1, Self::read_chunk_1)]
         }
     }
 

@@ -5,13 +5,21 @@ mod node;
 
 pub use id::{IdTable, IdTableRef};
 pub use node::{NodeTable, NodeTableRef};
+use zerocopy::FromBytes;
 
 use std::{
     io::{self, Read},
     iter,
 };
 
-use crate::{Iso4, Quat, Vec2, Vec3, read::Error};
+use crate::{
+    Iso4, Quat, Vec2, Vec3,
+    read::{Error, byte_order::FromLe},
+};
+
+fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -> U {
+    iter::repeat_with(repeater).take(n).collect()
+}
 
 /// Reader
 pub struct Reader<R, I, N> {
@@ -22,7 +30,7 @@ pub struct Reader<R, I, N> {
 
 impl<R, I, N> Reader<R, I, N> {
     /// New
-    pub const fn new(inner: R, id_table: I, node_state: N) -> Self {
+    pub fn new(inner: R, id_table: I, node_state: N) -> Self {
         Self {
             inner,
             id_table,
@@ -56,46 +64,44 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(buf)
     }
 
+    pub fn byte_buf(&mut self) -> Result<Vec<u8>, Error> {
+        let len = self.u32()?;
+        self.bytes(len as usize)
+    }
+
+    fn zerocopy<T: FromBytes + FromLe>(&mut self) -> Result<T, Error> {
+        let value_le = T::read_from_io(&mut self.inner).map_err(map_io_error)?;
+        Ok(T::from_le(value_le))
+    }
+
     /// Read an unsigned 8-bit integer.
     pub fn u8(&mut self) -> Result<u8, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u8::from_le_bytes(bytes))
+        self.zerocopy()
     }
 
     /// Read an unsigned 16-bit integer.
     pub fn u16(&mut self) -> Result<u16, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u16::from_le_bytes(bytes))
+        self.zerocopy()
     }
 
     /// Read an unsigned 32-bit integer.
     pub fn u32(&mut self) -> Result<u32, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u32::from_le_bytes(bytes))
+        self.zerocopy()
     }
 
     /// Read an unsigned 64-bit integer.
     pub fn u64(&mut self) -> Result<u64, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(u64::from_le_bytes(bytes))
+        self.zerocopy()
     }
 
     /// Read a signed 16-bit integer.
     pub fn i16(&mut self) -> Result<i16, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(i16::from_le_bytes(bytes))
+        self.zerocopy()
     }
 
     /// Read a 32-bit floating point number
     pub fn f32(&mut self) -> Result<f32, Error> {
-        let bytes = self.byte_array()?;
-
-        Ok(f32::from_le_bytes(bytes))
+        self.zerocopy()
     }
 
     /// Read an 8-bit boolean value.
@@ -118,29 +124,17 @@ impl<R: Read, I, N> Reader<R, I, N> {
 
     /// Read a 2-dimensional vector.
     pub fn vec2(&mut self) -> Result<Vec2, Error> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-
-        Ok(Vec2 { x, y })
+        self.zerocopy()
     }
 
     /// Read a 3-dimensional vector.
     pub fn vec3(&mut self) -> Result<Vec3, Error> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
-
-        Ok(Vec3 { x, y, z })
+        self.zerocopy()
     }
 
     /// Read a quaternion.
     pub fn quat(&mut self) -> Result<Quat, Error> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
-        let w = self.f32()?;
-
-        Ok(Quat { x, y, z, w })
+        self.zerocopy()
     }
 
     pub fn iso4(&mut self) -> Result<Iso4, Error> {
@@ -164,8 +158,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
 
     /// Read an UTF-8 encoded string.
     pub fn string(&mut self) -> Result<String, Error> {
-        let len = self.u32()?;
-        let bytes = self.bytes(len as usize)?;
+        let bytes = self.byte_buf()?;
 
         String::from_utf8(bytes).map_err(|_| Error("expected an UTF-8 encoded string".into()))
     }
@@ -175,7 +168,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         n: usize,
         mut read_elem: impl FnMut(&mut Self) -> Result<T, Error>,
     ) -> Result<Vec<T>, Error> {
-        iter::repeat_with(|| read_elem(self)).take(n).collect()
+        repeat_n_with(n, || read_elem(self))
     }
 
     pub fn list<T>(
@@ -247,12 +240,12 @@ impl<R: Read, I, N> Reader<R, I, N> {
     }
 
     pub fn box3d(&mut self) -> Result<(), Error> {
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
-        self.f32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
 
         Ok(())
     }

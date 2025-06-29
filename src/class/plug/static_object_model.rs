@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use crate::{
-    Class, NodeRef,
-    class::{solid_2_model::Solid2Model, surface::Surface},
+    Class, SubExtension, NodeRef,
+    class::plug::{solid_2_model::Solid2Model, surface::Surface},
 };
 
 /// A static object model.
@@ -28,11 +28,15 @@ impl Class for StaticObjectModel {
     const CLASS_ID: u32 = 0x09159000;
 }
 
+impl SubExtension for StaticObjectModel {
+    const SUB_EXTENSION: &str = "StaticObject";
+}
+
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::static_object_model::StaticObjectModel,
+        class::plug::static_object_model::StaticObjectModel,
         read::{
             Error, ReadBody, Readable,
             reader::{IdTableRef, NodeTableRef, Reader},

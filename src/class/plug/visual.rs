@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::class::vertex_stream::VertexStream;
+use crate::{Class, class::plug::vertex_stream::VertexStream};
 
 /// A visual.
 #[derive(Default)]
@@ -14,11 +14,15 @@ impl Visual {
     }
 }
 
+impl Class for Visual {
+    const CLASS_ID: u32 = 0x09006000;
+}
+
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::visual::Visual,
+        class::plug::visual::Visual,
         read::{
             BodyChunk, BodyChunks, Error,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -29,12 +33,12 @@ mod read {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             [
-                BodyChunk::new(0x09006001, Self::read_chunk_1),
-                BodyChunk::new(0x09006005, Self::read_chunk_5),
-                BodyChunk::new(0x09006009, Self::read_chunk_9),
-                BodyChunk::new(0x0900600b, Self::read_chunk_11),
-                BodyChunk::new(0x0900600f, Self::read_chunk_15),
-                BodyChunk::new(0x09006010, Self::read_chunk_16),
+                BodyChunk::new(1, Self::read_chunk_1),
+                BodyChunk::new(5, Self::read_chunk_5),
+                BodyChunk::new(9, Self::read_chunk_9),
+                BodyChunk::new(11, Self::read_chunk_11),
+                BodyChunk::new(15, Self::read_chunk_15),
+                BodyChunk::new(16, Self::read_chunk_16),
             ]
         }
     }

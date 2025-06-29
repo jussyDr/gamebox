@@ -15,7 +15,7 @@ pub trait ReadBody {
     ) -> Result<(), Error>;
 }
 
-pub trait BodyChunks {
+pub trait BodyChunks: Class {
     fn parent(&mut self) -> Option<&mut impl BodyChunks>
     where
         Self: Sized,
@@ -28,26 +28,26 @@ pub trait BodyChunks {
 }
 
 pub struct BodyChunk<T: ?Sized, R, I, N> {
-    id: u32,
+    num: u8,
     read_fn: BodyChunkReadFn<T, R, I, N>,
     skippable: bool,
 }
 
 impl<T, R, I, N> BodyChunk<T, R, I, N> {
-    pub fn new(id: u32, read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>) -> Self {
+    pub fn new(num: u8, read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>) -> Self {
         Self {
-            id,
+            num,
             read_fn,
             skippable: false,
         }
     }
 
     pub fn skippable(
-        id: u32,
+        num: u8,
         read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
     ) -> Self {
         Self {
-            id,
+            num,
             read_fn,
             skippable: true,
         }
@@ -73,7 +73,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
     node: &mut T,
 ) -> Result<Option<u32>, Error> {
-    // Read parent chunks if any.
+    // Read parent chunks, if any.
     let mut chunk_id = match node.parent() {
         None => r.u32()?,
         Some(parent) => match read_body_chunks_inner(r, parent)? {
@@ -90,8 +90,16 @@ fn read_body_chunks_inner<T: BodyChunks>(
             break;
         }
 
-        let chunk = match chunks.find(|chunk| chunk.id == chunk_id) {
-            None => return Ok(Some(chunk_id)),
+        let class_id = chunk_id & 0xffffff00;
+
+        if class_id != T::CLASS_ID {
+            return Ok(Some(chunk_id));
+        }
+
+        let chunk_num = (chunk_id & 0x000000ff) as u8;
+
+        let chunk = match chunks.find(|chunk| chunk.num == chunk_num) {
+            None => todo!(),
             Some(chunk) => chunk,
         };
 

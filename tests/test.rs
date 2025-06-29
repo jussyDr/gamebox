@@ -1,5 +1,5 @@
 use gamebox::{
-    class::{
+    class::plug::{
         dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
         solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,
     },

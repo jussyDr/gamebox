@@ -5,4 +5,4 @@ edition = "2024"
 
 [dependencies]
 lzo1x = "0.2.0"
-zerocopy = { version = "0.8.26", features = ["derive"] }
+zerocopy = { version = "0.8.26", features = ["derive", "std"] }

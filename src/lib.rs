@@ -13,13 +13,25 @@ pub mod class;
 pub mod read;
 
 pub use read::{read, read_file};
-use zerocopy::{Immutable, IntoBytes};
+use zerocopy::{FromBytes, Immutable, IntoBytes};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
+
+use crate::read::byte_order::FromLe;
 
 /// A GameBox class.
 pub trait Class {
     const CLASS_ID: u32;
+}
+
+pub trait SubExtension {
+    const SUB_EXTENSION: &str;
+}
+
+pub struct Delme;
+
+impl SubExtension for Delme {
+    const SUB_EXTENSION: &str = "AAA";
 }
 
 /// Reference to a node.
@@ -69,6 +81,7 @@ impl Default for ExternalNodeRef {
 }
 
 /// A 2-dimensional vector.
+#[derive(FromBytes)]
 pub struct Vec2 {
     /// X component.
     pub x: f32,
@@ -76,8 +89,16 @@ pub struct Vec2 {
     pub y: f32,
 }
 
+impl FromLe for Vec2 {
+    fn from_le(mut value: Self) -> Self {
+        value.x = f32::from_le(value.x);
+        value.y = f32::from_le(value.y);
+        value
+    }
+}
+
 /// A 3-dimensional vector.
-#[derive(Immutable, IntoBytes)]
+#[derive(Immutable, FromBytes, IntoBytes)]
 pub struct Vec3 {
     /// X component.
     pub x: f32,
@@ -87,7 +108,17 @@ pub struct Vec3 {
     pub z: f32,
 }
 
+impl FromLe for Vec3 {
+    fn from_le(mut value: Self) -> Self {
+        value.x = f32::from_le(value.x);
+        value.y = f32::from_le(value.y);
+        value.z = f32::from_le(value.z);
+        value
+    }
+}
+
 /// A quaterion.
+#[derive(FromBytes)]
 pub struct Quat {
     /// X component.
     pub x: f32,
@@ -99,6 +130,16 @@ pub struct Quat {
     pub w: f32,
 }
 
+impl FromLe for Quat {
+    fn from_le(mut value: Self) -> Self {
+        value.x = f32::from_le(value.x);
+        value.y = f32::from_le(value.y);
+        value.z = f32::from_le(value.z);
+        value.w = f32::from_le(value.w);
+        value
+    }
+}
+
 /// Matrix with 4 rows and 3 columns.
 pub struct Iso4([f32; 12]);
 
@@ -107,3 +148,18 @@ const FILE_VERSION: u16 = 6;
 
 const END_OF_BODY_MARKER: u32 = 0xfacade01;
 const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;
+
+fn sub_extension(path: &Path) -> Option<&str> {
+    let file_name = path.file_name().unwrap().to_str().unwrap();
+    let parts: Vec<_> = file_name.split('.').collect();
+
+    if parts.len() != 3 {
+        todo!()
+    }
+
+    if parts[2] != "Gbx" && parts[2] != "gbx" {
+        todo!()
+    }
+
+    Some(parts[1])
+}

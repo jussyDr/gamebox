@@ -1,5 +1,6 @@
 //! Reading GameBox files.
 
+pub mod byte_order;
 pub mod reader;
 
 mod body;
@@ -15,8 +16,9 @@ use std::{
 };
 
 use crate::{
-    Class, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION,
+    Class, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtension,
     read::reader::{IdTable, NodeTable, Reader},
+    sub_extension,
 };
 
 /// An error that occured while reading.
@@ -142,7 +144,13 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 }
 
 /// Read a node of type `T` from a file at the given `path`.
-pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
+pub fn read_file<T: Readable + SubExtension>(path: impl AsRef<Path>) -> Result<T, Error> {
+    let path = path.as_ref();
+
+    if sub_extension(path).unwrap() != T::SUB_EXTENSION {
+        todo!()
+    }
+
     let file = File::open(path).map_err(|_| Error("".into()))?;
     let reader = BufReader::new(file);
 
@@ -167,8 +175,4 @@ fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, E
     }
 
     Ok(folders)
-}
-
-pub trait FromLe {
-    fn from_le(value: Self) -> Self;
 }
