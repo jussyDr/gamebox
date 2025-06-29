@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use crate::{
-    Class, END_OF_BODY_MARKER, SKIPPABLE_CHUNK_MARKER,
+    ClassId, END_OF_BODY_MARKER, SKIPPABLE_CHUNK_MARKER,
     read::{
         Error,
         reader::{IdTableRef, NodeTableRef, Reader},
@@ -15,7 +15,7 @@ pub trait ReadBody {
     ) -> Result<(), Error>;
 }
 
-pub trait BodyChunks: Class {
+pub trait BodyChunks: ClassId {
     fn parent(&mut self) -> Option<&mut impl BodyChunks>
     where
         Self: Sized,
@@ -99,7 +99,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
         let chunk_num = (chunk_id & 0x000000ff) as u8;
 
         let chunk = match chunks.find(|chunk| chunk.num == chunk_num) {
-            None => todo!(),
+            None => todo!("{chunk_num}"),
             Some(chunk) => chunk,
         };
 
@@ -121,7 +121,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     Ok(None)
 }
 
-pub fn read_node<T: Default + Class + ReadBody>(
+pub fn read_node<T: Default + ClassId + ReadBody>(
     r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
 ) -> Result<T, Error> {
     let mut node = T::default();

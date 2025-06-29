@@ -1,7 +1,8 @@
-use crate::SubExtension;
+use crate::Extensions;
 
+/// A light.
 pub struct Light;
 
-impl SubExtension for Light {
-    const SUB_EXTENSION: &str = "Light";
+impl Extensions for Light {
+    const EXTENSIONS: &[&str] = &["Light.Gbx"];
 }

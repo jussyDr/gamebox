@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Class, SubExtension, class::plug::material_custom::MaterialCustom};
+use crate::{ClassId, Extensions, class::plug::material_custom::MaterialCustom};
 
 /// A material.
 #[derive(Default)]
@@ -14,12 +14,12 @@ impl Material {
     }
 }
 
-impl Class for Material {
+impl ClassId for Material {
     const CLASS_ID: u32 = 0x09079000;
 }
 
-impl SubExtension for Material {
-    const SUB_EXTENSION: &str = "Material";
+impl Extensions for Material {
+    const EXTENSIONS: &[&str] = &["Material.gbx", "Material.Gbx"];
 }
 
 mod read {

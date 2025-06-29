@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use crate::{
-    Class, SubExtension, NodeRef,
+    ClassId, Extensions, NodeRef,
     class::plug::{solid_2_model::Solid2Model, surface::Surface},
 };
 
@@ -24,12 +24,12 @@ impl StaticObjectModel {
     }
 }
 
-impl Class for StaticObjectModel {
+impl ClassId for StaticObjectModel {
     const CLASS_ID: u32 = 0x09159000;
 }
 
-impl SubExtension for StaticObjectModel {
-    const SUB_EXTENSION: &str = "StaticObject";
+impl Extensions for StaticObjectModel {
+    const EXTENSIONS: &[&str] = &["StaticObject.Gbx"];
 }
 
 mod read {

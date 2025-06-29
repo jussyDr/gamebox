@@ -1,15 +1,15 @@
-use crate::{Class, SubExtension};
+use crate::{ClassId, Extensions};
 
 /// A dynamic object model.
 #[derive(Default)]
 pub struct DynaObjectModel;
 
-impl Class for DynaObjectModel {
+impl ClassId for DynaObjectModel {
     const CLASS_ID: u32 = 0x09144000;
 }
 
-impl SubExtension for DynaObjectModel {
-    const SUB_EXTENSION: &str = "DynaObject";
+impl Extensions for DynaObjectModel {
+    const EXTENSIONS: &[&str] = &["DynaObject.Gbx"];
 }
 
 mod read {

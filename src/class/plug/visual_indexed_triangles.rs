@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{Class, class::plug::visual_indexed::VisualIndexed};
+use crate::{ClassId, class::plug::visual_indexed::VisualIndexed};
 
 /// A visual indexed triangles.
 #[derive(Default)]
@@ -8,7 +8,7 @@ pub struct VisualIndexedTriangles {
     parent: VisualIndexed,
 }
 
-impl Class for VisualIndexedTriangles {
+impl ClassId for VisualIndexedTriangles {
     const CLASS_ID: u32 = 0x0901e000;
 }
 

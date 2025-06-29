@@ -1,4 +1,4 @@
-use crate::{Class, Vec2, Vec3};
+use crate::{ClassId, Vec2, Vec3};
 
 /// A vertex stream.
 #[derive(Default)]
@@ -22,7 +22,7 @@ impl VertexStream {
     }
 }
 
-impl Class for VertexStream {
+impl ClassId for VertexStream {
     const CLASS_ID: u32 = 0x09056000;
 }
 

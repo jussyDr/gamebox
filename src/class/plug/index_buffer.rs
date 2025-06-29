@@ -1,11 +1,12 @@
-use crate::Class;
+use crate::ClassId;
 
+/// An index buffer.
 #[derive(Default)]
 pub struct IndexBuffer {
     indices: Vec<u32>,
 }
 
-impl Class for IndexBuffer {
+impl ClassId for IndexBuffer {
     const CLASS_ID: u32 = 0x09057000;
 }
 

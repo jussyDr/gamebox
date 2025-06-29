@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Class, class::plug::vertex_stream::VertexStream};
+use crate::{ClassId, class::plug::vertex_stream::VertexStream};
 
 /// A visual.
 #[derive(Default)]
@@ -14,7 +14,7 @@ impl Visual {
     }
 }
 
-impl Class for Visual {
+impl ClassId for Visual {
     const CLASS_ID: u32 = 0x09006000;
 }
 

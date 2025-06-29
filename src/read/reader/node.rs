@@ -1,12 +1,11 @@
 use std::{any::Any, io::Read, sync::Arc};
 
 use crate::{
-    Class, ExternalNodeRef, NodeRef, SubExtension,
+    ClassId, Extensions, ExternalNodeRef, NodeRef, full_extension,
     read::{
         Error, ReadBody,
         reader::{IdTableRef, Reader, repeat_n_with},
     },
-    sub_extension,
 };
 
 /// Node table.
@@ -134,7 +133,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn node_ref_or_null<T: Default + Send + Sync + Class + ReadBody + 'static>(
+    pub fn node_ref_or_null<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<Option<NodeRef<Arc<T>>>, Error> {
         let node_ref = self.node_ref_generic_or_null(|r, class_id| {
@@ -154,7 +153,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn node_ref<T: Default + Send + Sync + Class + ReadBody + 'static>(
+    pub fn node_ref<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<NodeRef<Arc<T>>, Error> {
         let node_ref = self.node_ref_or_null::<T>()?;
@@ -165,7 +164,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref_or_null<T: Default + Send + Sync + Class + ReadBody + 'static>(
+    pub fn internal_node_ref_or_null<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<Option<Arc<T>>, Error> {
         let node: Option<Arc<T>> = self.internal_node_ref_generic_or_null(|r, class_id| {
@@ -189,7 +188,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn internal_node_ref<T: Default + Send + Sync + Class + ReadBody + 'static>(
+    pub fn internal_node_ref<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<Arc<T>, Error> {
         let node = self.internal_node_ref_or_null::<T>()?;
@@ -200,7 +199,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn external_node_ref_or_null<T: SubExtension>(
+    pub fn external_node_ref_or_null<T: Extensions>(
         &mut self,
     ) -> Result<Option<ExternalNodeRef>, Error> {
         let index = self.u32()?;
@@ -222,10 +221,10 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
 
         match slot {
             Some(NodeRef::External(node_ref)) => {
-                let sub_extension = sub_extension(&node_ref.path).unwrap();
+                let file_extension = full_extension(&node_ref.path).unwrap();
 
-                if sub_extension != T::SUB_EXTENSION {
-                    todo!("{}", sub_extension);
+                if !T::EXTENSIONS.contains(&file_extension) {
+                    todo!("{}", file_extension);
                 }
 
                 Ok(Some(node_ref.clone()))
@@ -234,14 +233,14 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         }
     }
 
-    pub fn external_node_ref<T: SubExtension>(&mut self) -> Result<ExternalNodeRef, Error> {
+    pub fn external_node_ref<T: Extensions>(&mut self) -> Result<ExternalNodeRef, Error> {
         match self.external_node_ref_or_null::<T>()? {
             None => todo!(),
             Some(node_ref) => Ok(node_ref),
         }
     }
 
-    pub fn node<T: Default + Class + ReadBody>(&mut self) -> Result<T, Error> {
+    pub fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T, Error> {
         let node = self.node_generic(|r, class_id| {
             if class_id != T::CLASS_ID {
                 todo!("{:08X?}", class_id);

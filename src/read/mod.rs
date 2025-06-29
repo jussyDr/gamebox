@@ -16,9 +16,8 @@ use std::{
 };
 
 use crate::{
-    Class, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtension,
+    ClassId, Extensions, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, full_extension,
     read::reader::{IdTable, NodeTable, Reader},
-    sub_extension,
 };
 
 /// An error that occured while reading.
@@ -33,7 +32,8 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub trait Readable: Default + Send + Sync + Class + ReadBody {}
+/// Trait implemented by classes that are readable from a GameBox file.
+pub trait Readable: Default + Send + Sync + Extensions + ClassId + ReadBody {}
 
 /// Read a node of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
@@ -144,11 +144,12 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 }
 
 /// Read a node of type `T` from a file at the given `path`.
-pub fn read_file<T: Readable + SubExtension>(path: impl AsRef<Path>) -> Result<T, Error> {
+pub fn read_file<T: Readable + Extensions>(path: impl AsRef<Path>) -> Result<T, Error> {
     let path = path.as_ref();
+    let file_extension = full_extension(path).unwrap();
 
-    if sub_extension(path).unwrap() != T::SUB_EXTENSION {
-        todo!()
+    if !T::EXTENSIONS.contains(&file_extension) {
+        todo!("{}", file_extension)
     }
 
     let file = File::open(path).map_err(|_| Error("".into()))?;

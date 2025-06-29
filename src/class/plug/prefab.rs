@@ -3,7 +3,7 @@
 use std::{any::Any, sync::Arc};
 
 use crate::{
-    Class, SubExtension, NodeRef, Quat, Vec3,
+    ClassId, Extensions, NodeRef, Quat, Vec3,
     class::{
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         plug::static_object_model::StaticObjectModel,
@@ -32,12 +32,12 @@ impl Prefab {
     }
 }
 
-impl Class for Prefab {
+impl ClassId for Prefab {
     const CLASS_ID: u32 = 0x09145000;
 }
 
-impl SubExtension for Prefab {
-    const SUB_EXTENSION: &str = "Prefab";
+impl Extensions for Prefab {
+    const EXTENSIONS: &[&str] = &["Prefab.Gbx"];
 }
 
 /// Prefab entity.

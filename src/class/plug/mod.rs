@@ -1,5 +1,7 @@
 pub mod anim_loc_simple;
+pub mod bitmap;
 pub mod dyna_object_model;
+pub mod file_img;
 pub mod index_buffer;
 pub mod light;
 pub mod material;
@@ -8,7 +10,6 @@ pub mod prefab;
 pub mod solid_2_model;
 pub mod static_object_model;
 pub mod surface;
-pub mod texture;
 pub mod vertex_stream;
 pub mod visual;
 pub mod visual_3d;

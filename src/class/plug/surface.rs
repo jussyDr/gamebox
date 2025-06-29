@@ -1,4 +1,4 @@
-use crate::{Class, SubExtension, ExternalNodeRef};
+use crate::{ClassId, Extensions, ExternalNodeRef};
 
 /// A surface.
 #[derive(Default)]
@@ -17,12 +17,12 @@ impl Surface {
     }
 }
 
-impl Class for Surface {
+impl ClassId for Surface {
     const CLASS_ID: u32 = 0x0900c000;
 }
 
-impl SubExtension for Surface {
-    const SUB_EXTENSION: &str = "HitShape";
+impl Extensions for Surface {
+    const EXTENSIONS: &[&str] = &["HitShape.Gbx"];
 }
 
 #[derive(Default)]

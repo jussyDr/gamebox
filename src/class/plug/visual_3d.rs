@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{Class, class::plug::visual::Visual};
+use crate::{ClassId, class::plug::visual::Visual};
 
 /// A visual 3D.
 #[derive(Default)]
@@ -8,7 +8,7 @@ pub struct Visual3D {
     parent: Visual,
 }
 
-impl Class for Visual3D {
+impl ClassId for Visual3D {
     const CLASS_ID: u32 = 0x0902C000;
 }
 

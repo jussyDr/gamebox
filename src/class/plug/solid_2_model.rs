@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    Class, SubExtension, ExternalNodeRef,
+    ClassId, Extensions, ExternalNodeRef,
     class::plug::visual_indexed_triangles::VisualIndexedTriangles,
 };
 
@@ -32,12 +32,12 @@ impl Solid2Model {
     }
 }
 
-impl Class for Solid2Model {
+impl ClassId for Solid2Model {
     const CLASS_ID: u32 = 0x090bb000;
 }
 
-impl SubExtension for Solid2Model {
-    const SUB_EXTENSION: &str = "Mesh";
+impl Extensions for Solid2Model {
+    const EXTENSIONS: &[&str] = &["Mesh.Gbx"];
 }
 
 pub struct ShadedGeom {

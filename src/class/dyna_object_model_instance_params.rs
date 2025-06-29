@@ -1,4 +1,4 @@
-/// A dynamic object model instance params.
+/// Dynamic object model instance params.
 #[derive(Default)]
 pub struct DynaObjectModelInstanceParams {
     period_sc: f32,

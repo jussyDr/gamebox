@@ -1,6 +1,6 @@
 use gamebox::{
     class::plug::{
-        dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
+        bitmap::Bitmap, dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
         solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,
     },
     read::read_file,
@@ -45,4 +45,9 @@ fn read_prefab_straight_air() {
 fn read_static_object_grass4096() {
     let _static_object: StaticObjectModel =
         read_file("tests/files/Grass4096.StaticObject.Gbx").unwrap();
+}
+
+#[test]
+fn read_texture_road_tech_d() {
+    let _texture: Bitmap = read_file("tests/files/RoadTech_D.Texture.gbx").unwrap();
 }

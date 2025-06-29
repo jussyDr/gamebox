@@ -19,19 +19,19 @@ use std::{fmt::Debug, path::Path, sync::Arc};
 
 use crate::read::byte_order::FromLe;
 
-/// A GameBox class.
-pub trait Class {
+/// GameBox class ID.
+pub trait ClassId {
     const CLASS_ID: u32;
 }
 
-pub trait SubExtension {
-    const SUB_EXTENSION: &str;
+pub trait Extensions {
+    const EXTENSIONS: &[&str];
 }
 
 pub struct Delme;
 
-impl SubExtension for Delme {
-    const SUB_EXTENSION: &str = "AAA";
+impl Extensions for Delme {
+    const EXTENSIONS: &[&str] = &[];
 }
 
 /// Reference to a node.
@@ -149,17 +149,8 @@ const FILE_VERSION: u16 = 6;
 const END_OF_BODY_MARKER: u32 = 0xfacade01;
 const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;
 
-fn sub_extension(path: &Path) -> Option<&str> {
+fn full_extension(path: &Path) -> Option<&str> {
     let file_name = path.file_name().unwrap().to_str().unwrap();
-    let parts: Vec<_> = file_name.split('.').collect();
 
-    if parts.len() != 3 {
-        todo!()
-    }
-
-    if parts[2] != "Gbx" && parts[2] != "gbx" {
-        todo!()
-    }
-
-    Some(parts[1])
+    file_name.find('.').map(|index| &file_name[index + 1..])
 }

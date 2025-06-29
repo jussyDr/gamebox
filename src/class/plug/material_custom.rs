@@ -1,18 +1,47 @@
-use crate::Class;
+use std::sync::Arc;
+
+use crate::{ClassId, ExternalNodeRef};
 
 /// A custom material.
 #[derive(Default)]
-pub struct MaterialCustom;
+pub struct MaterialCustom {
+    textures: Vec<MaterialCustomTexture>,
+}
 
-impl Class for MaterialCustom {
+impl MaterialCustom {
+    pub fn textures(&self) -> &Vec<MaterialCustomTexture> {
+        &self.textures
+    }
+}
+
+impl ClassId for MaterialCustom {
     const CLASS_ID: u32 = 0x0903a000;
+}
+
+#[derive(Debug)]
+pub struct MaterialCustomTexture {
+    name: Arc<str>,
+    texture: ExternalNodeRef,
+}
+
+impl MaterialCustomTexture {
+    pub fn name(&self) -> &Arc<str> {
+        &self.name
+    }
+
+    pub fn texture(&self) -> &ExternalNodeRef {
+        &self.texture
+    }
 }
 
 mod read {
     use std::io::Read;
 
     use crate::{
-        class::plug::{material_custom::MaterialCustom, texture::Texture},
+        class::plug::{
+            bitmap::Bitmap,
+            material_custom::{MaterialCustom, MaterialCustomTexture},
+        },
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
@@ -144,14 +173,14 @@ mod read {
                 return Err(Error("unknown chunk version".into()));
             }
 
-            let textures = r.list(|r| {
+            self.textures = r.list(|r| {
                 let name = r.id()?;
-                r.u32()?;
-                let texture = r.external_node_ref::<Texture>()?;
-                r.u32()?;
-                r.u32()?;
+                r.u32()?; // 0
+                let texture = r.external_node_ref::<Bitmap>()?;
+                r.u32()?; // 4
+                r.u32()?; // 4
 
-                Ok(())
+                Ok(MaterialCustomTexture { name, texture })
             })?;
 
             Ok(())

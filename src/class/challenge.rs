@@ -1,13 +1,17 @@
 //! Challenge
 
-use crate::Class;
+use crate::{ClassId, Extensions};
 
-/// Challenge
+/// A challenge.
 #[derive(Default)]
 pub struct Challenge;
 
-impl Class for Challenge {
+impl ClassId for Challenge {
     const CLASS_ID: u32 = 0x03043000;
+}
+
+impl Extensions for Challenge {
+    const EXTENSIONS: &[&str] = &["Map.Gbx"];
 }
 
 mod read {

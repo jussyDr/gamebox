@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    Class,
+    ClassId,
     class::plug::{index_buffer::IndexBuffer, visual_3d::Visual3D},
 };
 
@@ -18,7 +18,7 @@ impl VisualIndexed {
     }
 }
 
-impl Class for VisualIndexed {
+impl ClassId for VisualIndexed {
     const CLASS_ID: u32 = 0x0906a000;
 }
 
