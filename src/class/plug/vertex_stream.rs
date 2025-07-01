@@ -84,39 +84,47 @@ mod read {
 
                 Ok(DataDecl { flags1, flags2 })
             })?;
-
             r.bool32()?;
 
             for decl in data_decls {
-                match (decl.flags1 >> 9) & 0x000001ff {
-                    1 => match decl.flags1 & 0x000001ff {
-                        10 => {
-                            self.texcoords_0 = r.repeat(count as usize, |r| r.vec2())?;
+                let format = (decl.flags1 >> 9) & 0x000001ff;
+                let target = decl.flags1 & 0x000001ff;
+
+                match format {
+                    1 => {
+                        let data = r.repeat(count as usize, |r| r.vec2())?;
+
+                        match target {
+                            10 => self.texcoords_0 = data,
+                            11 => self.texcoords_1 = data,
+                            _ => todo!("{target}"),
                         }
-                        11 => {
-                            self.texcoords_1 = r.repeat(count as usize, |r| r.vec2())?;
+                    }
+                    2 => {
+                        let data = r.repeat(count as usize, |r| r.vec3())?;
+
+                        match target {
+                            0 => self.positions = data,
+                            _ => todo!("{target}"),
                         }
-                        wc => todo!("{wc}"),
-                    },
-                    2 => match decl.flags1 & 0x000001ff {
-                        0 => {
-                            self.positions = r.repeat(count as usize, |r| r.vec3())?;
+                    }
+                    14 => {
+                        let data = r.repeat(count as usize, |r| r.u32())?;
+
+                        match target {
+                            5 => {
+                                let normals = data;
+                            }
+                            18 => {
+                                let tangentu = data;
+                            }
+                            20 => {
+                                let tangentv = data;
+                            }
+                            _ => todo!("{target}"),
                         }
-                        wc => todo!("{wc}"),
-                    },
-                    14 => match decl.flags1 & 0x000001ff {
-                        5 => {
-                            let normals = r.repeat(count as usize, |r| r.u32())?;
-                        }
-                        18 => {
-                            let tangentu = r.repeat(count as usize, |r| r.u32())?;
-                        }
-                        20 => {
-                            let tangentv = r.repeat(count as usize, |r| r.u32())?;
-                        }
-                        wc => todo!("{wc}"),
-                    },
-                    ty => todo!("{ty}"),
+                    }
+                    _ => todo!("{format}"),
                 }
             }
 

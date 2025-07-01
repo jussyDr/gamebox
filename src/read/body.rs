@@ -121,7 +121,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     Ok(None)
 }
 
-pub fn read_node<T: Default + ClassId + ReadBody>(
+pub fn read_node_body<T: Default + ReadBody>(
     r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
 ) -> Result<T, Error> {
     let mut node = T::default();

@@ -38,12 +38,18 @@ mod read {
     use crate::{
         class::plug::static_object_model::StaticObjectModel,
         read::{
-            Error, ReadBody, Readable,
+            Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for StaticObjectModel {}
+
+    impl HeaderChunks for StaticObjectModel {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for StaticObjectModel {
         fn read_body(

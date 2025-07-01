@@ -42,7 +42,7 @@ mod read {
     use crate::{
         class::plug::visual_indexed::VisualIndexed,
         read::{
-            BodyChunk, BodyChunks, Error, read_node,
+            BodyChunk, BodyChunks, Error, read_node_body,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -64,7 +64,7 @@ mod read {
             r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
         ) -> Result<(), Error> {
             if r.bool32()? {
-                self.index_buffer = read_node(r)?;
+                self.index_buffer = read_node_body(r)?;
             }
 
             Ok(())

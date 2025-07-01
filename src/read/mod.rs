@@ -4,8 +4,10 @@ pub mod byte_order;
 pub mod reader;
 
 mod body;
+mod header;
 
-pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node};
+pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node_body};
+pub use header::{HeaderChunk, HeaderChunks};
 
 use std::{
     fmt::{self, Debug, Display, Formatter},
@@ -17,7 +19,10 @@ use std::{
 
 use crate::{
     ClassId, Extensions, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, full_extension,
-    read::reader::{IdTable, NodeTable, Reader},
+    read::{
+        header::read_header_data,
+        reader::{IdTable, NodeTable, Reader},
+    },
 };
 
 /// An error that occured while reading.
@@ -33,7 +38,7 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 /// Trait implemented by classes that are readable from a GameBox file.
-pub trait Readable: Default + Send + Sync + Extensions + ClassId + ReadBody {}
+pub trait Readable: Default + Send + Sync + Extensions + ClassId + HeaderChunks + ReadBody {}
 
 /// Read a node of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
@@ -83,9 +88,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let mut node = T::default();
 
     if header_data_size > 0 {
-        let header_data = r.bytes(header_data_size as usize)?;
-
-        todo!()
+        read_header_data(&mut node, &mut r)?;
     }
 
     let num_nodes = r

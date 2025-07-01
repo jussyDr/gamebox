@@ -150,7 +150,7 @@ const END_OF_BODY_MARKER: u32 = 0xfacade01;
 const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;
 
 fn full_extension(path: &Path) -> Option<&str> {
-    let file_name = path.file_name().unwrap().to_str().unwrap();
+    let file_name = path.file_name()?.to_str()?;
 
     file_name.find('.').map(|index| &file_name[index + 1..])
 }

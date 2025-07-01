@@ -28,12 +28,19 @@ mod read {
     use crate::{
         class::plug::material::Material,
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
+            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
+            read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for Material {}
+
+    impl HeaderChunks for Material {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for Material {
         fn read_body(

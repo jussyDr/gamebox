@@ -22,12 +22,18 @@ mod read {
             solid_2_model::Solid2Model, surface::Surface,
         },
         read::{
-            Error, ReadBody, Readable,
+            Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for DynaObjectModel {}
+
+    impl HeaderChunks for DynaObjectModel {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for DynaObjectModel {
         fn read_body(

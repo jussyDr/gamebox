@@ -1,8 +1,16 @@
-use crate::{ClassId, Extensions};
+use crate::{ClassId, Extensions, ExternalNodeRef};
 
 /// A bitmap.
 #[derive(Default)]
-pub struct Bitmap;
+pub struct Bitmap {
+    image: ExternalNodeRef,
+}
+
+impl Bitmap {
+    pub fn image(&self) -> &ExternalNodeRef {
+        &self.image
+    }
+}
 
 impl Extensions for Bitmap {
     const EXTENSIONS: &[&str] = &["Texture.gbx"];
@@ -18,12 +26,19 @@ mod read {
     use crate::{
         class::plug::{bitmap::Bitmap, file_img::FileImg},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
+            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
+            read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for Bitmap {}
+
+    impl HeaderChunks for Bitmap {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for Bitmap {
         fn read_body(
@@ -126,7 +141,7 @@ mod read {
                 return Err(Error("unknown chunk version".into()));
             }
 
-            let image = r.external_node_ref::<FileImg>()?;
+            self.image = r.external_node_ref::<FileImg>()?;
             r.vec3()?;
             let mip_map_lower_alpha = r.f32()?;
             let bump_scale_factor = r.f32()?;

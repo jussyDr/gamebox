@@ -89,18 +89,23 @@ mod read {
     use std::{io::Read, sync::Arc};
 
     use crate::{
-        class::{
-            dyna_object_model_instance_params::DynaObjectModelInstanceParams,
-            plug::prefab::{Entity, EntityParams, Prefab},
-            plug::static_object_model::StaticObjectModel,
+        class::plug::{
+            prefab::{Entity, EntityParams, Prefab},
+            static_object_model::StaticObjectModel,
         },
         read::{
-            Error, ReadBody, Readable,
+            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, read_node_body,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for Prefab {}
+
+    impl HeaderChunks for Prefab {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for Prefab {
         fn read_body(
@@ -121,23 +126,17 @@ mod read {
             self.entities = r.repeat(num_entities as usize, |r| {
                 let model = r.node_ref_generic(|r, class_id| match class_id {
                     0x09159000 => {
-                        let mut node = StaticObjectModel::default();
-                        node.read_body(r)?;
-
+                        let node: StaticObjectModel = read_node_body(r)?;
                         Ok(Arc::new(node))
                     }
                     _ => todo!("{class_id:08X?}"),
                 })?;
-
                 let rotation = r.quat()?;
                 let position = r.vec3()?;
                 let params = r.node_or_null_generic(|r, class_id| match class_id {
-                    0x2f0b6000 => {
-                        let mut node = DynaObjectModelInstanceParams::default();
-                        node.read_body(r)?;
-
-                        Ok(EntityParams::DynaObjectModelInstanceParams(node))
-                    }
+                    0x2f0b6000 => Ok(EntityParams::DynaObjectModelInstanceParams(read_node_body(
+                        r,
+                    )?)),
                     _ => todo!("{class_id:08X?}"),
                 })?;
                 let u03 = r.string()?;

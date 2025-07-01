@@ -67,12 +67,19 @@ mod read {
             solid_2_model::{ShadedGeom, Solid2Model, Solid2ModelLight},
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
+            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
+            read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for Solid2Model {}
+
+    impl HeaderChunks for Solid2Model {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for Solid2Model {
         fn read_body(

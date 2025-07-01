@@ -50,12 +50,19 @@ mod read {
             surface::{InternalMaterial, Surface, SurfaceKind, SurfaceMaterial},
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, Readable, read_body_chunks,
+            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
+            read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
 
     impl Readable for Surface {}
+
+    impl HeaderChunks for Surface {
+        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            []
+        }
+    }
 
     impl ReadBody for Surface {
         fn read_body(
