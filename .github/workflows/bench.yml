@@ -22,6 +22,6 @@ jobs:
           --threshold-upper-boundary 0.99 \
           --thresholds-reset \
           --err \
-          --adapter json \
+          --adapter rust_bench \
           --github-actions '${{ secrets.GITHUB_TOKEN }}' \
           cargo +nightly bench
