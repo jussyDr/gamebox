@@ -22,7 +22,7 @@ mod read {
             solid_2_model::Solid2Model, surface::Surface,
         },
         read::{
-            Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
+            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -43,7 +43,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 13 {
-                return Err(Error("unknown dyna object model version".into()));
+                return Err(error_unknown_version("dynamic object model", version));
             }
 
             let is_static = r.bool32()?;

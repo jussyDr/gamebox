@@ -24,7 +24,7 @@ mod read {
     use crate::{
         class::plug::visual::Visual,
         read::{
-            BodyChunk, BodyChunks, Error,
+            BodyChunk, BodyChunks, Error, error_unknown_chunk_version,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -90,7 +90,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 6 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             let flags = r.u32()?;
@@ -117,7 +117,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 0 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             let morph_count = r.u32()?;

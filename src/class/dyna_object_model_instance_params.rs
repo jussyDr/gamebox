@@ -46,7 +46,7 @@ mod read {
     use crate::{
         class::dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         read::{
-            Error, ReadBody,
+            Error, ReadBody, error_unknown_version,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -59,8 +59,9 @@ mod read {
             let version = r.u32()?;
 
             if version != 2 {
-                return Err(Error(
-                    "unknown dyna object model instance params version".into(),
+                return Err(error_unknown_version(
+                    "dynamic object model instance params",
+                    version,
                 ));
             }
 

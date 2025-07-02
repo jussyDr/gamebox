@@ -51,7 +51,7 @@ mod read {
         },
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            read_body_chunks,
+            error_unknown_chunk_version, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -88,7 +88,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 4 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             let surface_version = if version >= 2 { Some(r.u32()?) } else { None };

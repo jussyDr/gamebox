@@ -94,7 +94,8 @@ mod read {
             static_object_model::StaticObjectModel,
         },
         read::{
-            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, read_node_body,
+            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
+            read_node_body,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -115,7 +116,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 11 {
-                return Err(Error("unknown prefab version".into()));
+                return Err(error_unknown_version("prefab", version));
             }
 
             self.file_write_time = r.u64()?;

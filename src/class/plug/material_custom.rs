@@ -43,7 +43,7 @@ mod read {
             material_custom::{MaterialCustom, MaterialCustomTexture},
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
+            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -135,7 +135,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 2 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             r.f32()?;
@@ -170,7 +170,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 0 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             self.textures = r.list(|r| {
@@ -190,7 +190,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 1 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             r.list(|r| {
@@ -208,7 +208,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 2 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             if r.u32()? == 0 {

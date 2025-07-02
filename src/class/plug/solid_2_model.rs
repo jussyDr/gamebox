@@ -68,7 +68,7 @@ mod read {
         },
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            read_body_chunks,
+            error_unknown_chunk_version, error_unknown_version, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -108,7 +108,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 34 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             let u01 = r.id_or_null()?;
@@ -137,7 +137,7 @@ mod read {
                 let version = r.u32()?;
 
                 if version != 1 {
-                    return Err(Error("unknown pre light generator version".into()));
+                    return Err(error_unknown_version("pre light generator", version));
                 }
 
                 r.u32()?;

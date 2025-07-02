@@ -38,7 +38,7 @@ mod read {
     use crate::{
         class::plug::static_object_model::StaticObjectModel,
         read::{
-            Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
+            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -59,7 +59,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 3 {
-                return Err(Error("unknown static object model version".into()));
+                return Err(error_unknown_version("static object model", version));
             }
 
             self.mesh = r.node_ref()?;

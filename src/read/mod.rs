@@ -180,3 +180,15 @@ fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, E
 
     Ok(folders)
 }
+
+pub fn error_unknown_version(name: &str, value: u32) -> Error {
+    Error(format!("unknown {name} version: {value}"))
+}
+
+pub fn error_unknown_chunk_version(value: u32) -> Error {
+    error_unknown_version("chunk", value)
+}
+
+pub fn error_unknown_enum_variant(name: &str, value: u32) -> Error {
+    Error(format!("unknown variant of enum `{name}`: {value}"))
+}

@@ -30,8 +30,8 @@ impl ClassId for VertexStream {
 }
 
 struct DataDecl {
-    flags1: u32,
-    flags2: u32,
+    target: VertexTarget,
+    format: VertexFormat,
 }
 
 enum VertexFormat {
@@ -40,6 +40,7 @@ enum VertexFormat {
     Dec3N = 14,
 }
 
+#[derive(Debug)]
 enum VertexTarget {
     Position = 0,
     Normal = 5,
@@ -54,9 +55,10 @@ mod read {
 
     use crate::{
         Vec3,
-        class::plug::vertex_stream::{DataDecl, VertexStream},
+        class::plug::vertex_stream::{DataDecl, VertexFormat, VertexStream, VertexTarget},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
+            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version,
+            error_unknown_enum_variant, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -85,7 +87,7 @@ mod read {
             let version = r.u32()?;
 
             if version != 1 {
-                return Err(Error("unknown chunk version".into()));
+                return Err(error_unknown_chunk_version(version));
             }
 
             let count = r.u32()?;
@@ -101,84 +103,101 @@ mod read {
                     let offset = r.u16()?;
                 }
 
-                Ok(DataDecl { flags1, flags2 })
+                let target = match flags1 & 0x000001ff {
+                    0 => VertexTarget::Position,
+                    5 => VertexTarget::Normal,
+                    10 => VertexTarget::Texcoord0,
+                    11 => VertexTarget::Texcoord1,
+                    18 => VertexTarget::TangentU,
+                    20 => VertexTarget::TangentV,
+                    value => return Err(error_unknown_enum_variant("vertex target", value)),
+                };
+
+                let format = match (flags1 >> 9) & 0x000001ff {
+                    1 => VertexFormat::Float32x2,
+                    2 => VertexFormat::Float32x3,
+                    14 => VertexFormat::Dec3N,
+                    value => return Err(error_unknown_enum_variant("vertex format", value)),
+                };
+
+                Ok(DataDecl { target, format })
             })?;
             r.bool32()?;
 
             for decl in data_decls {
-                let format = (decl.flags1 >> 9) & 0x000001ff;
-                let target = decl.flags1 & 0x000001ff;
-
-                match format {
-                    1 => {
+                match decl.format {
+                    VertexFormat::Float32x2 => {
                         let data = r.repeat_zerocopy(count as usize)?;
 
-                        match target {
-                            10 => self.texcoords_0 = data,
-                            11 => self.texcoords_1 = data,
-                            _ => todo!("{target}"),
+                        match decl.target {
+                            VertexTarget::Texcoord0 => self.texcoords_0 = data,
+                            VertexTarget::Texcoord1 => self.texcoords_1 = data,
+                            _ => todo!("{:?}", decl.target),
                         }
                     }
-                    2 => {
+                    VertexFormat::Float32x3 => {
                         let data = r.repeat_zerocopy(count as usize)?;
 
-                        match target {
-                            0 => self.positions = data,
-                            _ => todo!("{target}"),
+                        match decl.target {
+                            VertexTarget::Position => self.positions = data,
+                            _ => todo!("{:?}", decl.target),
                         }
                     }
-                    14 => {
+                    VertexFormat::Dec3N => {
                         let data_dec3n: Vec<u32> = r.repeat_zerocopy(count as usize)?;
                         let mut data = Vec::with_capacity(data_dec3n.len());
 
                         for value in data_dec3n {
-                            let x = value & 0x000003ff;
-                            let y = (value >> 10) & 0x000003ff;
-                            let z = (value >> 20) & 0x000003ff;
-
-                            let x = if (x & 0x00000200) != 0 {
-                                x - 0x00000400
-                            } else {
-                                x
-                            };
-
-                            let y = if (y & 0x00000200) != 0 {
-                                y - 0x00000400
-                            } else {
-                                y
-                            };
-
-                            let z = if (z & 0x00000200) != 0 {
-                                z - 0x00000400
-                            } else {
-                                z
-                            };
-
-                            data.push(Vec3::new(
-                                (x as f32) / 511.0,
-                                (y as f32) / 511.0,
-                                (z as f32) / 511.0,
-                            ));
+                            data.push(parse_dec3n(value));
                         }
 
-                        match target {
-                            5 => {
+                        match decl.target {
+                            VertexTarget::Normal => {
                                 self.normals = data;
                             }
-                            18 => {
+                            VertexTarget::TangentU => {
                                 self.tangent_u = data;
                             }
-                            20 => {
+                            VertexTarget::TangentV => {
                                 self.tangent_v = data;
                             }
-                            _ => todo!("{target}"),
+                            _ => todo!("{:?}", decl.target),
                         }
                     }
-                    _ => todo!("{format}"),
                 }
             }
 
             Ok(())
+        }
+    }
+
+    fn parse_dec3n(dec3n: u32) -> Vec3 {
+        // 0x000 -> 0x1ff =    0 -> 511
+        // 0x200 -> 0x3ff = -512 ->  -1
+
+        let x = ((dec3n << 22) as i32) >> 22;
+        let y = ((dec3n << 12) as i32) >> 22;
+        let z = ((dec3n << 2) as i32) >> 22;
+
+        Vec3::new((x as f32) / 511.0, (y as f32) / 511.0, (z as f32) / 511.0)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use crate::Vec3;
+
+        #[test]
+        fn parse_dec3n() {
+            for (dec3n, expected) in [
+                (0x00000000, Vec3::new(0.0, 0.0, 0.0)),
+                (0x000001ff, Vec3::new(1.0, 0.0, 0.0)),
+                (0x00000200, Vec3::new(-1.0019569, 0.0, 0.0)),
+                (0x00000201, Vec3::new(-1.0, 0.0, 0.0)),
+                (0x000003ff, Vec3::new(-0.0019569471, 0.0, 0.0)),
+            ] {
+                let parsed = super::parse_dec3n(dec3n);
+                assert_eq!(parsed, expected)
+            }
         }
     }
 }
