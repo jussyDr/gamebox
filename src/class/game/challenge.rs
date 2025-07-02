@@ -1,6 +1,6 @@
 //! Challenge
 
-use crate::{ClassId, Extensions};
+use crate::{ClassId, SubExtensions};
 
 /// A challenge.
 #[derive(Default)]
@@ -10,8 +10,8 @@ impl ClassId for Challenge {
     const CLASS_ID: u32 = 0x03043000;
 }
 
-impl Extensions for Challenge {
-    const EXTENSIONS: &[&str] = &["Map.Gbx"];
+impl SubExtensions for Challenge {
+    const SUB_EXTENSIONS: &[&str] = &["Map"];
 }
 
 mod read {
@@ -21,7 +21,7 @@ mod read {
         class::game::challenge::Challenge,
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            read_body_chunks,
+            error_unknown_chunk_version, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -29,8 +29,8 @@ mod read {
     impl Readable for Challenge {}
 
     impl HeaderChunks for Challenge {
-        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
-            []
+        fn header_chunks<R: Read, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+            [HeaderChunk::new(2, Self::read_chunk_2)]
         }
     }
 
@@ -47,6 +47,33 @@ mod read {
         fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
         -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
             []
+        }
+    }
+
+    impl Challenge {
+        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+            let version = r.u8()?;
+
+            if version != 13 {
+                return Err(error_unknown_chunk_version(version as u32));
+            }
+
+            let need_unlock = r.bool32()?;
+            let bronze_time = r.u32()?;
+            let silver_time = r.u32()?;
+            let gold_time = r.u32()?;
+            let author_time = r.u32()?;
+            let cost = r.u32()?;
+            let is_lap_race = r.bool32()?;
+            let mode = r.u32()?;
+            r.u32()?;
+            let author_score = r.u32()?;
+            let editor = r.u32()?;
+            r.u32()?;
+            let num_checkpoints = r.u32()?;
+            let num_laps = r.u32()?;
+
+            Ok(())
         }
     }
 }

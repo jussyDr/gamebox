@@ -7,14 +7,11 @@ pub use id::{IdTable, IdTableRef};
 pub use node::{NodeTable, NodeTableRef};
 use zerocopy::{FromBytes, FromZeros, IntoBytes};
 
-use std::{
-    io::{self, Read},
-    iter,
-};
+use std::{io::Read, iter};
 
 use crate::{
     Iso4, Quat, Vec2, Vec3,
-    read::{Error, byte_order::LeToNe},
+    read::{Error, byte_order::LeToNe, map_io_error},
 };
 
 fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -> U {
@@ -29,7 +26,7 @@ pub struct Reader<R, I, N> {
 }
 
 impl<R, I, N> Reader<R, I, N> {
-    /// New
+    /// Create a new reader.
     pub fn new(inner: R, id_table: I, node_state: N) -> Self {
         Self {
             inner,
@@ -41,10 +38,6 @@ impl<R, I, N> Reader<R, I, N> {
     pub fn into_inner(self) -> R {
         self.inner
     }
-}
-
-fn map_io_error(_io_error: io::Error) -> Error {
-    Error("IO error".into())
 }
 
 impl<R: Read, I, N> Reader<R, I, N> {
@@ -114,7 +107,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         match self.u8()? {
             0 => Ok(false),
             1 => Ok(true),
-            _ => Err(Error("expected an 8-bit boolean".into())),
+            _ => Err(Error::new("expected an 8-bit boolean")),
         }
     }
 
@@ -123,7 +116,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         match self.u32()? {
             0 => Ok(false),
             1 => Ok(true),
-            _ => Err(Error("expected a 32-bit boolean".into())),
+            _ => Err(Error::new("expected a 32-bit boolean")),
         }
     }
 
@@ -175,7 +168,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
     pub fn string(&mut self) -> Result<String, Error> {
         let bytes = self.byte_buf()?;
 
-        String::from_utf8(bytes).map_err(|_| Error("expected an UTF-8 encoded string".into()))
+        String::from_utf8(bytes).map_err(|_| Error::new("expected an UTF-8 encoded string"))
     }
 
     pub fn repeat<T>(
@@ -202,7 +195,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let version = self.u32()?;
 
         if version != 10 {
-            return Err(Error("unknown list version".into()));
+            return Err(Error::new("unknown list version"));
         }
 
         self.list(read_elem)
@@ -230,40 +223,13 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.repeat_zerocopy(len as usize)
     }
 
-    pub fn node_or_null_generic<T>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<Option<T>, Error> {
-        let class_id = self.u32()?;
-
-        if class_id == 0xffffffff {
-            return Ok(None);
-        }
-
-        let node = read_fn(self, class_id)?;
-
-        Ok(Some(node))
-    }
-
-    pub fn node_generic<T>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<T, Error>,
-    ) -> Result<T, Error> {
-        let node = self.node_or_null_generic(read_fn)?;
-
-        match node {
-            None => Err(Error("node is null".into())),
-            Some(node) => Ok(node),
-        }
-    }
-
     /// Returns an error if the reader is not at EOF.
     pub fn expect_eof(&mut self) -> Result<(), Error> {
         let mut buf = [0];
         let n = self.inner.read(&mut buf).map_err(map_io_error)?;
 
         if n != 0 {
-            return Err(Error("expected EOF".into()));
+            return Err(Error::new("expected EOF"));
         }
 
         Ok(())

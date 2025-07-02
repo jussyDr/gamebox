@@ -1,4 +1,4 @@
-use crate::{ClassId, Extensions, ExternalNodeRef};
+use crate::{ClassId, ExternalNodeRef, SubExtensions};
 
 /// A bitmap.
 #[derive(Default)]
@@ -12,8 +12,8 @@ impl Bitmap {
     }
 }
 
-impl Extensions for Bitmap {
-    const EXTENSIONS: &[&str] = &["Texture.gbx"];
+impl SubExtensions for Bitmap {
+    const SUB_EXTENSIONS: &[&str] = &["Texture"];
 }
 
 impl ClassId for Bitmap {

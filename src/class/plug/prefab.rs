@@ -1,16 +1,16 @@
-//! Prefab
+//! Prefab.
 
 use std::{any::Any, sync::Arc};
 
 use crate::{
-    ClassId, Extensions, NodeRef, Quat, Vec3,
+    ClassId, NodeRef, Quat, SubExtensions, Vec3,
     class::{
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         plug::static_object_model::StaticObjectModel,
     },
 };
 
-/// A prefab.
+/// A collection of entities.
 #[derive(Default)]
 pub struct Prefab {
     file_write_time: u64,
@@ -27,6 +27,7 @@ impl Prefab {
         &self.url
     }
 
+    /// Entities.
     pub fn entities(&self) -> &Vec<Entity> {
         &self.entities
     }
@@ -36,11 +37,11 @@ impl ClassId for Prefab {
     const CLASS_ID: u32 = 0x09145000;
 }
 
-impl Extensions for Prefab {
-    const EXTENSIONS: &[&str] = &["Prefab.Gbx"];
+impl SubExtensions for Prefab {
+    const SUB_EXTENSIONS: &[&str] = &["Prefab"];
 }
 
-/// Prefab entity.
+/// An entity stored in a prefab.
 pub struct Entity {
     model: NodeRef<Arc<StaticObjectModel>>,
     rotation: Quat,
@@ -49,18 +50,22 @@ pub struct Entity {
 }
 
 impl Entity {
+    /// Model of the entity.
     pub fn model(&self) -> &NodeRef<Arc<StaticObjectModel>> {
         &self.model
     }
 
+    /// Rotation of the entity.
     pub fn rotation(&self) -> &Quat {
         &self.rotation
     }
 
+    /// Position of the entity.
     pub fn position(&self) -> &Vec3 {
         &self.position
     }
 
+    /// Optional additional parameters.
     pub fn params(&self) -> &Option<EntityParams> {
         &self.params
     }
@@ -95,7 +100,7 @@ mod read {
         },
         read::{
             Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
-            read_node_body,
+            read_node_from_body,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -127,7 +132,7 @@ mod read {
             self.entities = r.repeat(num_entities as usize, |r| {
                 let model = r.node_ref_generic(|r, class_id| match class_id {
                     0x09159000 => {
-                        let node: StaticObjectModel = read_node_body(r)?;
+                        let node: StaticObjectModel = read_node_from_body(r)?;
                         Ok(Arc::new(node))
                     }
                     _ => todo!("{class_id:08X?}"),
@@ -135,9 +140,9 @@ mod read {
                 let rotation = r.quat()?;
                 let position = r.vec3()?;
                 let params = r.node_or_null_generic(|r, class_id| match class_id {
-                    0x2f0b6000 => Ok(EntityParams::DynaObjectModelInstanceParams(read_node_body(
-                        r,
-                    )?)),
+                    0x2f0b6000 => Ok(EntityParams::DynaObjectModelInstanceParams(
+                        read_node_from_body(r)?,
+                    )),
                     _ => todo!("{class_id:08X?}"),
                 })?;
                 let u03 = r.string()?;

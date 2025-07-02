@@ -6,7 +6,7 @@ use crate::{
 };
 
 pub trait HeaderChunks: ClassId {
-    fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>>;
+    fn header_chunks<R: Read, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>>;
 }
 
 pub struct HeaderChunk<T: ?Sized, R, I, N> {
@@ -46,7 +46,9 @@ pub fn read_header_data<T: HeaderChunks, I, N>(
 
         let chunk = header_chunks
             .find(|chunk| chunk.num == chunk_num)
-            .ok_or(Error(format!("unknown header chunk: 0x{chunk_id:08x}")))?;
+            .ok_or(Error::new(format!(
+                "unknown header chunk: 0x{chunk_id:08x}"
+            )))?;
 
         (chunk.read_fn)(node, r)?;
     }

@@ -1,11 +1,12 @@
 use std::{any::Any, io::Read, sync::Arc};
 
 use crate::{
-    ClassId, Extensions, ExternalNodeRef, NodeRef, full_extension,
+    ClassId, ExternalNodeRef, NodeRef, SubExtensions,
     read::{
         Error, ReadBody,
         reader::{IdTableRef, Reader, repeat_n_with},
     },
+    sub_extension,
 };
 
 /// Node table.
@@ -28,7 +29,7 @@ impl NodeTable {
         let slot = self
             .nodes
             .get_mut(index as usize)
-            .ok_or(Error("node index exceeds number of nodes".into()))?;
+            .ok_or(Error::new("node index exceeds number of nodes"))?;
 
         if slot.is_some() {
             todo!()
@@ -50,6 +51,78 @@ pub trait NodeTableRef: AsMut<NodeTable> {}
 
 impl<T: AsMut<NodeTable>> NodeTableRef for T {}
 
+impl<R: Read, I, N> Reader<R, I, N> {
+    pub fn node_or_null_generic<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T, Error>,
+    ) -> Result<Option<T>, Error> {
+        let class_id = self.u32()?;
+
+        if class_id == 0xffffffff {
+            return Ok(None);
+        }
+
+        let node = read_fn(self, class_id)?;
+
+        Ok(Some(node))
+    }
+
+    pub fn node_generic<T>(
+        &mut self,
+        read_fn: impl Fn(&mut Self, u32) -> Result<T, Error>,
+    ) -> Result<T, Error> {
+        let node = self.node_or_null_generic(read_fn)?;
+
+        match node {
+            None => Err(Error::new("node is null")),
+            Some(node) => Ok(node),
+        }
+    }
+}
+
+impl<R: Read, I, N: NodeTableRef> Reader<R, I, N> {
+    pub fn external_node_ref_or_null<T: SubExtensions>(
+        &mut self,
+    ) -> Result<Option<ExternalNodeRef>, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let index = index
+            .checked_sub(1)
+            .ok_or(Error::new("node index is zero"))?;
+
+        let slot = self
+            .node_state
+            .as_mut()
+            .nodes
+            .get(index as usize)
+            .ok_or(Error::new("node index exceeds number of nodes"))?;
+
+        match slot {
+            Some(NodeRef::External(node_ref)) => {
+                let sub_extension = sub_extension(&node_ref.path).unwrap();
+
+                if !T::has_sub_extension(sub_extension) {
+                    todo!("{}", sub_extension);
+                }
+
+                Ok(Some(node_ref.clone()))
+            }
+            _ => todo!(),
+        }
+    }
+
+    pub fn external_node_ref<T: SubExtensions>(&mut self) -> Result<ExternalNodeRef, Error> {
+        match self.external_node_ref_or_null::<T>()? {
+            None => todo!(),
+            Some(node_ref) => Ok(node_ref),
+        }
+    }
+}
+
 impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
     pub fn node_ref_generic_or_null<T: Clone + Downcast>(
         &mut self,
@@ -63,14 +136,14 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
 
         let index = index
             .checked_sub(1)
-            .ok_or(Error("node index is zero".into()))?;
+            .ok_or(Error::new("node index is zero"))?;
 
         let slot = self
             .node_state
             .as_mut()
             .nodes
             .get_mut(index as usize)
-            .ok_or(Error("node index exceeds number of nodes".into()))?;
+            .ok_or(Error::new("node index exceeds number of nodes"))?;
 
         match slot {
             None => {
@@ -105,7 +178,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         match node_ref {
             None => Ok(None),
             Some(NodeRef::Internal(node)) => Ok(Some(node)),
-            Some(NodeRef::External(_)) => Err(Error("expected an internal node reference".into())),
+            Some(NodeRef::External(_)) => Err(Error::new("expected an internal node reference")),
         }
     }
 
@@ -116,7 +189,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         let node_ref = self.node_ref_generic_or_null(read_fn)?;
 
         match node_ref {
-            None => Err(Error("node reference is null".into())),
+            None => Err(Error::new("node reference is null")),
             Some(node_ref) => Ok(node_ref),
         }
     }
@@ -129,7 +202,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
 
         match node_ref {
             NodeRef::Internal(node) => Ok(node),
-            NodeRef::External(_) => Err(Error("expected an internal node reference".into())),
+            NodeRef::External(_) => Err(Error::new("expected an internal node reference")),
         }
     }
 
@@ -159,7 +232,7 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         let node_ref = self.node_ref_or_null::<T>()?;
 
         match node_ref {
-            None => Err(Error("node reference is null".into())),
+            None => Err(Error::new("node reference is null")),
             Some(node_ref) => Ok(node_ref),
         }
     }
@@ -194,49 +267,8 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
         let node = self.internal_node_ref_or_null::<T>()?;
 
         match node {
-            None => Err(Error("node reference is null".into())),
+            None => Err(Error::new("node reference is null")),
             Some(node) => Ok(node),
-        }
-    }
-
-    pub fn external_node_ref_or_null<T: Extensions>(
-        &mut self,
-    ) -> Result<Option<ExternalNodeRef>, Error> {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return Ok(None);
-        }
-
-        let index = index
-            .checked_sub(1)
-            .ok_or(Error("node index is zero".into()))?;
-
-        let slot = self
-            .node_state
-            .as_mut()
-            .nodes
-            .get(index as usize)
-            .ok_or(Error("node index exceeds number of nodes".into()))?;
-
-        match slot {
-            Some(NodeRef::External(node_ref)) => {
-                let file_extension = full_extension(&node_ref.path).unwrap();
-
-                if !T::EXTENSIONS.contains(&file_extension) {
-                    todo!("{}", file_extension);
-                }
-
-                Ok(Some(node_ref.clone()))
-            }
-            _ => todo!(),
-        }
-    }
-
-    pub fn external_node_ref<T: Extensions>(&mut self) -> Result<ExternalNodeRef, Error> {
-        match self.external_node_ref_or_null::<T>()? {
-            None => todo!(),
-            Some(node_ref) => Ok(node_ref),
         }
     }
 

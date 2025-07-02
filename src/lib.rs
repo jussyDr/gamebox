@@ -4,7 +4,8 @@
     clippy::unwrap_used,
     clippy::print_stdout,
     clippy::undocumented_unsafe_blocks,
-    clippy::panic
+    clippy::panic,
+    clippy::arithmetic_side_effects
 )]
 
 //! Gamebox
@@ -12,7 +13,10 @@
 pub mod class;
 pub mod read;
 
+// Re-export common class types.
+pub use class::game::challenge::Challenge;
 pub use read::{read, read_file};
+
 use zerocopy::{FromBytes, IntoBytes};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
@@ -21,17 +25,28 @@ use crate::read::byte_order::LeToNe;
 
 /// GameBox class ID.
 pub trait ClassId {
+    /// GameBox class ID.
     const CLASS_ID: u32;
 }
 
-pub trait Extensions {
-    const EXTENSIONS: &[&str];
+pub trait SubExtensions {
+    /// GameBox sub-extensions supported for this type.
+    ///
+    /// Not case sensitive.
+    const SUB_EXTENSIONS: &[&str];
+
+    /// Returns `true` if the given `sub_extension` matches one of the `SUB_EXTENSIONS` associated with this type.
+    fn has_sub_extension(sub_extension: &str) -> bool {
+        Self::SUB_EXTENSIONS
+            .iter()
+            .any(|se| se.eq_ignore_ascii_case(sub_extension))
+    }
 }
 
 pub struct Delme;
 
-impl Extensions for Delme {
-    const EXTENSIONS: &[&str] = &[];
+impl SubExtensions for Delme {
+    const SUB_EXTENSIONS: &[&str] = &[];
 }
 
 /// Reference to a node.
@@ -152,8 +167,35 @@ const FILE_VERSION: u16 = 6;
 const END_OF_BODY_MARKER: u32 = 0xfacade01;
 const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;
 
-fn full_extension(path: &Path) -> Option<&str> {
-    let file_name = path.file_name()?.to_str()?;
+/// Returns the sub-extension for the given `path`.
+///
+/// - If the path has the form `file_name.sub_extension.gbx` this function returns `Some(sub_extension)`.
+/// - If the path has the form `file_name.extension` this function returns `Some(extension)`.
+/// - Else this function returns `None`
+fn sub_extension(path: &Path) -> Option<&str> {
+    let parts: Vec<_> = path.to_str()?.split('.').collect();
 
-    file_name.find('.').map(|index| &file_name[index + 1..])
+    match parts.as_slice() {
+        [_, extension] => Some(extension),
+        [_, sub_extension, extension] if extension.eq_ignore_ascii_case("gbx") => {
+            Some(sub_extension)
+        }
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    #[test]
+    fn sub_extension() {
+        for (path, expected) in [
+            (Path::new("image.dds"), "dds"),
+            (Path::new("challenge.map.gbx"), "map"),
+        ] {
+            let se = super::sub_extension(path).unwrap();
+            assert_eq!(se, expected);
+        }
+    }
 }

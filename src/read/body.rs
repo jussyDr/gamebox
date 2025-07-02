@@ -63,7 +63,7 @@ pub fn read_body_chunks<T: BodyChunks>(
     let chunk_id = read_body_chunks_inner(r, node)?;
 
     if let Some(chunk_id) = chunk_id {
-        return Err(Error(format!("unknown chunk: 0x{chunk_id:08x}")));
+        return Err(Error::new(format!("unknown chunk: 0x{chunk_id:08x}")));
     }
 
     Ok(())
@@ -99,7 +99,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
         let chunk_num = (chunk_id & 0x000000ff) as u8;
 
         let chunk = match chunks.find(|chunk| chunk.num == chunk_num) {
-            None => todo!("{chunk_num}"),
+            None => return Err(Error::new("unknown chunk number")),
             Some(chunk) => chunk,
         };
 
@@ -121,10 +121,11 @@ fn read_body_chunks_inner<T: BodyChunks>(
     Ok(None)
 }
 
-pub fn read_node_body<T: Default + ReadBody>(
+pub fn read_node_from_body<T: Default + ReadBody>(
     r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
 ) -> Result<T, Error> {
     let mut node = T::default();
     node.read_body(r)?;
+
     Ok(node)
 }

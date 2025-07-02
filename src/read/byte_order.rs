@@ -1,3 +1,6 @@
+//! Endianness conversions.
+
+/// Type which can be converted from little endian to the target's endianness.
 pub trait LeToNe {
     /// Converts `self` from little endian to the target's endianness.
     fn le_to_ne(&mut self);

@@ -1,27 +1,45 @@
 use crate::{ClassId, Vec2, Vec3};
 
-/// A vertex stream.
+/// A mesh.
 #[derive(Default)]
 pub struct VertexStream {
     positions: Vec<Vec3>,
     normals: Vec<Vec3>,
     texcoords_0: Vec<Vec2>,
     texcoords_1: Vec<Vec2>,
-    tangent_u: Vec<Vec3>,
-    tangent_v: Vec<Vec3>,
+    tangents_u: Vec<Vec3>,
+    tangents_v: Vec<Vec3>,
 }
 
 impl VertexStream {
+    /// Position data.
     pub fn positions(&self) -> &Vec<Vec3> {
         &self.positions
     }
 
+    /// Normal data.
+    pub fn normals(&self) -> &Vec<Vec3> {
+        &self.normals
+    }
+
+    /// Texcoord 0 data.
     pub fn texcoords_0(&self) -> &Vec<Vec2> {
         &self.texcoords_0
     }
 
+    /// Texcoord 1 data.
     pub fn texcoords_1(&self) -> &Vec<Vec2> {
         &self.texcoords_1
+    }
+
+    /// Tangent U data.
+    pub fn tangents_u(&self) -> &Vec<Vec3> {
+        &self.tangents_u
+    }
+
+    /// Tangent V data.
+    pub fn tangents_v(&self) -> &Vec<Vec3> {
+        &self.tangents_v
     }
 }
 
@@ -34,12 +52,6 @@ struct DataDecl {
     format: VertexFormat,
 }
 
-enum VertexFormat {
-    Float32x2 = 1,
-    Float32x3 = 2,
-    Dec3N = 14,
-}
-
 #[derive(Debug)]
 enum VertexTarget {
     Position = 0,
@@ -48,6 +60,12 @@ enum VertexTarget {
     Texcoord1 = 11,
     TangentU = 18,
     TangentV = 20,
+}
+
+enum VertexFormat {
+    Float32x2 = 1,
+    Float32x3 = 2,
+    Dec3N = 14,
 }
 
 mod read {
@@ -156,10 +174,10 @@ mod read {
                                 self.normals = data;
                             }
                             VertexTarget::TangentU => {
-                                self.tangent_u = data;
+                                self.tangents_u = data;
                             }
                             VertexTarget::TangentV => {
-                                self.tangent_v = data;
+                                self.tangents_v = data;
                             }
                             _ => todo!("{:?}", decl.target),
                         }

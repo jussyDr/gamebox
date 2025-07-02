@@ -3,22 +3,25 @@
 use std::sync::Arc;
 
 use crate::{
-    ClassId, Extensions, NodeRef,
+    ClassId, NodeRef, SubExtensions,
     class::plug::{solid_2_model::Solid2Model, surface::Surface},
 };
 
-/// A static object model.
+/// A model with a collidable hit shape.
 #[derive(Default)]
 pub struct StaticObjectModel {
-    mesh: NodeRef<Arc<Solid2Model>>,
+    model: NodeRef<Arc<Solid2Model>>,
     hit_shape: Option<NodeRef<Arc<Surface>>>,
 }
 
 impl StaticObjectModel {
-    pub fn mesh(&self) -> &NodeRef<Arc<Solid2Model>> {
-        &self.mesh
+    /// The model.
+    pub fn model(&self) -> &NodeRef<Arc<Solid2Model>> {
+        &self.model
     }
 
+    /// Optional custom hit shape.
+    /// If this returns `None` the hit shape is the same as the model.
     pub fn hit_shape(&self) -> &Option<NodeRef<Arc<Surface>>> {
         &self.hit_shape
     }
@@ -28,8 +31,8 @@ impl ClassId for StaticObjectModel {
     const CLASS_ID: u32 = 0x09159000;
 }
 
-impl Extensions for StaticObjectModel {
-    const EXTENSIONS: &[&str] = &["StaticObject.Gbx"];
+impl SubExtensions for StaticObjectModel {
+    const SUB_EXTENSIONS: &[&str] = &["StaticObject"];
 }
 
 mod read {
@@ -62,7 +65,7 @@ mod read {
                 return Err(error_unknown_version("static object model", version));
             }
 
-            self.mesh = r.node_ref()?;
+            self.model = r.node_ref()?;
             self.hit_shape = if r.bool8()? {
                 None
             } else {

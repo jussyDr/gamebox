@@ -1,8 +1,8 @@
-use crate::Extensions;
+use crate::SubExtensions;
 
 /// Anim loc simple.
 pub struct AnimLocSimple;
 
-impl Extensions for AnimLocSimple {
-    const EXTENSIONS: &[&str] = &["AnimLocSimple.Gbx"];
+impl SubExtensions for AnimLocSimple {
+    const SUB_EXTENSIONS: &[&str] = &["AnimLocSimple"];
 }

@@ -6,77 +6,95 @@ pub mod reader;
 mod body;
 mod header;
 
-pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node_body};
+pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node_from_body};
 pub use header::{HeaderChunk, HeaderChunks};
 
 use std::{
     fmt::{self, Debug, Display, Formatter},
     fs::File,
-    io::{BufReader, Read},
+    io::{self, BufReader, Read},
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 use crate::{
-    ClassId, Extensions, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, full_extension,
+    ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
     read::{
         header::read_header_data,
         reader::{IdTable, NodeTable, Reader},
     },
+    sub_extension,
 };
 
 /// An error that occured while reading.
 #[derive(Debug)]
-pub struct Error(pub String);
+pub struct Error {
+    message: String,
+}
+
+impl Error {
+    pub fn new(message: impl Into<String>) -> Error {
+        Error {
+            message: message.into(),
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
+        f.write_str(&self.message)
     }
 }
 
 impl std::error::Error for Error {}
 
-/// Trait implemented by classes that are readable from a GameBox file.
-pub trait Readable: Default + Send + Sync + Extensions + ClassId + HeaderChunks + ReadBody {}
+fn map_io_error(_io_error: io::Error) -> Error {
+    Error::new("IO error")
+}
 
-/// Read a node of type `T` from the given `reader`.
+/// Trait implemented by types that are readable from a GameBox file.
+pub trait Readable:
+    Default + Send + Sync + SubExtensions + ClassId + HeaderChunks + ReadBody
+{
+}
+
+/// Read an instance of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let mut r = Reader::new(reader, (), ());
 
     // Read the header.
     if r.byte_array()? != FILE_SIGNATURE {
-        return Err(Error("unknown file signature".into()));
+        return Err(Error::new("unknown file signature"));
     }
 
     if r.u16()? != FILE_VERSION {
-        return Err(Error("unknown file version".into()));
+        return Err(Error::new("unknown file version"));
     }
 
     if r.u8()? != b'B' {
-        return Err(Error("unknown file format".into()));
+        return Err(Error::new("unknown file format"));
     }
 
     if r.u8()? != b'U' {
-        return Err(Error(
-            "unknown external reference table compression format".into(),
+        return Err(Error::new(
+            "unknown external reference table compression format",
         ));
     }
 
     let body_compressed = match r.u8()? {
         b'C' => true,
         b'U' => false,
-        _ => return Err(Error("unknown body compression format".into())),
+        _ => return Err(Error::new("unknown body compression format")),
     };
 
     if r.u8()? != b'R' {
-        return Err(Error("unknown file format".into()));
+        return Err(Error::new("unknown file format"));
     }
 
     let class_id = r.u32()?;
 
     if class_id != T::CLASS_ID {
-        return Err(Error(format!(
+        return Err(Error::new(format!(
             "class id does not match: expected 0x{:08x} but was 0x{:08x}",
             T::CLASS_ID,
             class_id
@@ -94,7 +112,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let num_nodes = r
         .u32()?
         .checked_sub(1)
-        .ok_or(Error("number of nodes is zero".into()))?;
+        .ok_or(Error::new("number of nodes is zero"))?;
 
     // Read the reference table.
     let num_external_nodes = r.u32()?;
@@ -111,13 +129,13 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
             let node_index = r
                 .u32()?
                 .checked_sub(1)
-                .ok_or(Error("node index is zero".into()))?;
+                .ok_or(Error::new("node index is zero"))?;
             let use_file = r.bool32()?;
             let folder_index = r.u32()?;
 
             let mut path = folders
                 .get(folder_index as usize)
-                .ok_or(Error("folder index exceeds number of folders".into()))?
+                .ok_or(Error::new("folder index exceeds number of folders"))?
                 .clone();
 
             path.push(&file_name);
@@ -146,16 +164,16 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     Ok(node)
 }
 
-/// Read a node of type `T` from a file at the given `path`.
-pub fn read_file<T: Readable + Extensions>(path: impl AsRef<Path>) -> Result<T, Error> {
+/// Read an instance of type `T` from a file at the given `path`.
+pub fn read_file<T: Readable + SubExtensions>(path: impl AsRef<Path>) -> Result<T, Error> {
     let path = path.as_ref();
-    let file_extension = full_extension(path).unwrap();
+    let sub_extension = sub_extension(path).unwrap();
 
-    if !T::EXTENSIONS.contains(&file_extension) {
-        todo!("{}", file_extension)
+    if !T::has_sub_extension(sub_extension) {
+        todo!("{}", sub_extension)
     }
 
-    let file = File::open(path).map_err(|_| Error("".into()))?;
+    let file = File::open(path).map_err(map_io_error)?;
     let reader = BufReader::new(file);
 
     read(reader)
@@ -181,14 +199,14 @@ fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, E
     Ok(folders)
 }
 
-pub fn error_unknown_version(name: &str, value: u32) -> Error {
-    Error(format!("unknown {name} version: {value}"))
+pub(crate) fn error_unknown_version(name: &str, value: u32) -> Error {
+    Error::new(format!("unknown {name} version: {value}"))
 }
 
-pub fn error_unknown_chunk_version(value: u32) -> Error {
+pub(crate) fn error_unknown_chunk_version(value: u32) -> Error {
     error_unknown_version("chunk", value)
 }
 
-pub fn error_unknown_enum_variant(name: &str, value: u32) -> Error {
-    Error(format!("unknown variant of enum `{name}`: {value}"))
+pub(crate) fn error_unknown_enum_variant(name: &str, value: u32) -> Error {
+    Error::new(format!("unknown variant of enum `{name}`: {value}"))
 }

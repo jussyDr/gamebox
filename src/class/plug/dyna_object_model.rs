@@ -1,4 +1,4 @@
-use crate::{ClassId, Extensions};
+use crate::{ClassId, SubExtensions};
 
 /// A dynamic object model.
 #[derive(Default)]
@@ -8,8 +8,8 @@ impl ClassId for DynaObjectModel {
     const CLASS_ID: u32 = 0x09144000;
 }
 
-impl Extensions for DynaObjectModel {
-    const EXTENSIONS: &[&str] = &["DynaObject.Gbx"];
+impl SubExtensions for DynaObjectModel {
+    const SUB_EXTENSIONS: &[&str] = &["DynaObject"];
 }
 
 mod read {

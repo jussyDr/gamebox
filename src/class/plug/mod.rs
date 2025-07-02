@@ -1,3 +1,5 @@
+//! Plug engine.
+
 pub mod anim_loc_simple;
 pub mod bitmap;
 pub mod dyna_object_model;

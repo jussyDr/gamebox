@@ -1,4 +1,4 @@
-use crate::{ClassId, Extensions, ExternalNodeRef};
+use crate::{ClassId, ExternalNodeRef, SubExtensions};
 
 /// A surface.
 #[derive(Default)]
@@ -21,8 +21,8 @@ impl ClassId for Surface {
     const CLASS_ID: u32 = 0x0900c000;
 }
 
-impl Extensions for Surface {
-    const EXTENSIONS: &[&str] = &["HitShape.Gbx"];
+impl SubExtensions for Surface {
+    const SUB_EXTENSIONS: &[&str] = &["HitShape"];
 }
 
 #[derive(Default)]
@@ -51,7 +51,7 @@ mod read {
         },
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, read_body_chunks,
+            error_unknown_chunk_version, error_unknown_enum_variant, read_body_chunks,
             reader::{IdTableRef, NodeTableRef, Reader},
         },
     };
@@ -125,7 +125,7 @@ mod read {
 
                     SurfaceKind::Mesh
                 }
-                si => todo!("{si}"),
+                value => return Err(error_unknown_enum_variant("surface kind", value)),
             };
             r.vec3()?;
             self.materials = r.list(|r| {

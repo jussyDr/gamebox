@@ -1,6 +1,6 @@
 use std::{io::Read, sync::Arc};
 
-use crate::read::{Error, reader::Reader};
+use crate::read::{Error, error_unknown_version, reader::Reader};
 
 /// Identifier table.
 pub struct IdTable {
@@ -39,7 +39,7 @@ impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
             let version = self.u32()?;
 
             if version != 3 {
-                return Err(Error("unknown identifier version".into()));
+                return Err(error_unknown_version("identifier", version));
             }
 
             self.id_table.as_mut().seen_id = true;
@@ -52,7 +52,7 @@ impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
         }
 
         if index & 0x40000000 == 0 {
-            return Err(Error("expected an identifier".into()));
+            return Err(Error::new("expected an identifier"));
         }
 
         let index = index & 0x37ffffff;
@@ -70,7 +70,7 @@ impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
                     .as_mut()
                     .ids
                     .get(index as usize)
-                    .ok_or(Error("".into()))?;
+                    .ok_or(Error::new(""))?;
 
                 Ok(Some(Arc::clone(id)))
             }
@@ -79,7 +79,7 @@ impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
 
     pub fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
-            None => Err(Error("expected a non-null identifier".into())),
+            None => Err(Error::new("expected a non-null identifier")),
             Some(id) => Ok(id),
         }
     }
