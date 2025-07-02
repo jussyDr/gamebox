@@ -13,11 +13,11 @@ pub mod class;
 pub mod read;
 
 pub use read::{read, read_file};
-use zerocopy::{FromBytes, Immutable, IntoBytes};
+use zerocopy::{FromBytes, IntoBytes};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
 
-use crate::read::byte_order::FromLe;
+use crate::read::byte_order::LeToNe;
 
 /// GameBox class ID.
 pub trait ClassId {
@@ -81,7 +81,7 @@ impl Default for ExternalNodeRef {
 }
 
 /// A 2-dimensional vector.
-#[derive(FromBytes)]
+#[derive(FromBytes, IntoBytes)]
 pub struct Vec2 {
     /// X component.
     pub x: f32,
@@ -89,16 +89,15 @@ pub struct Vec2 {
     pub y: f32,
 }
 
-impl FromLe for Vec2 {
-    fn from_le(mut value: Self) -> Self {
-        value.x = f32::from_le(value.x);
-        value.y = f32::from_le(value.y);
-        value
+impl LeToNe for Vec2 {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
     }
 }
 
 /// A 3-dimensional vector.
-#[derive(Immutable, FromBytes, IntoBytes)]
+#[derive(FromBytes, IntoBytes)]
 pub struct Vec3 {
     /// X component.
     pub x: f32,
@@ -108,12 +107,11 @@ pub struct Vec3 {
     pub z: f32,
 }
 
-impl FromLe for Vec3 {
-    fn from_le(mut value: Self) -> Self {
-        value.x = f32::from_le(value.x);
-        value.y = f32::from_le(value.y);
-        value.z = f32::from_le(value.z);
-        value
+impl LeToNe for Vec3 {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+        self.z.le_to_ne();
     }
 }
 
@@ -130,13 +128,12 @@ pub struct Quat {
     pub w: f32,
 }
 
-impl FromLe for Quat {
-    fn from_le(mut value: Self) -> Self {
-        value.x = f32::from_le(value.x);
-        value.y = f32::from_le(value.y);
-        value.z = f32::from_le(value.z);
-        value.w = f32::from_le(value.w);
-        value
+impl LeToNe for Quat {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+        self.z.le_to_ne();
+        self.w.le_to_ne();
     }
 }
 

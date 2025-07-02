@@ -5,7 +5,7 @@ mod node;
 
 pub use id::{IdTable, IdTableRef};
 pub use node::{NodeTable, NodeTableRef};
-use zerocopy::FromBytes;
+use zerocopy::{FromBytes, FromZeros, IntoBytes};
 
 use std::{
     io::{self, Read},
@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     Iso4, Quat, Vec2, Vec3,
-    read::{Error, byte_order::FromLe},
+    read::{Error, byte_order::LeToNe},
 };
 
 fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -> U {
@@ -69,9 +69,14 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.bytes(len as usize)
     }
 
-    fn zerocopy<T: FromBytes + FromLe>(&mut self) -> Result<T, Error> {
-        let value_le = T::read_from_io(&mut self.inner).map_err(map_io_error)?;
-        Ok(T::from_le(value_le))
+    fn zerocopy<T: FromBytes + LeToNe>(&mut self) -> Result<T, Error> {
+        let mut value = T::read_from_io(&mut self.inner).map_err(map_io_error)?;
+
+        // GameBox files are serialized as little endian.
+        // Here we convert to the target's endianness.
+        value.le_to_ne();
+
+        Ok(value)
     }
 
     /// Read an unsigned 8-bit integer.
@@ -137,6 +142,17 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.zerocopy()
     }
 
+    pub fn box3d(&mut self) -> Result<(), Error> {
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+        self.u32()?;
+
+        Ok(())
+    }
+
     pub fn iso4(&mut self) -> Result<Iso4, Error> {
         let elements = [
             self.f32()?,
@@ -156,7 +172,6 @@ impl<R: Read, I, N> Reader<R, I, N> {
         Ok(Iso4(elements))
     }
 
-    /// Read an UTF-8 encoded string.
     pub fn string(&mut self) -> Result<String, Error> {
         let bytes = self.byte_buf()?;
 
@@ -193,23 +208,26 @@ impl<R: Read, I, N> Reader<R, I, N> {
         self.list(read_elem)
     }
 
-    pub fn expect_eof(&mut self) -> Result<(), Error> {
-        let mut buf = [0];
-        let n = self.inner.read(&mut buf).map_err(map_io_error)?;
+    pub fn repeat_zerocopy<T: FromZeros + FromBytes + IntoBytes + LeToNe>(
+        &mut self,
+        n: usize,
+    ) -> Result<Vec<T>, Error> {
+        let mut list = T::new_vec_zeroed(n).unwrap();
+        let bytes = list.as_mut_slice().as_mut_bytes();
+        self.inner.read_exact(bytes).map_err(map_io_error)?;
 
-        if n != 0 {
-            return Err(Error("expected EOF".into()));
-        }
+        // GameBox files are serialized as little endian.
+        // Here we convert to the target's endianness.
+        list.le_to_ne();
 
-        Ok(())
+        Ok(list)
     }
 
-    /// Read all bytes until EOF.
-    pub fn read_to_end(&mut self) -> Result<Vec<u8>, Error> {
-        let mut buf = vec![];
-        self.inner.read_to_end(&mut buf).map_err(map_io_error)?;
-
-        Ok(buf)
+    pub fn list_zerocopy<T: FromZeros + FromBytes + IntoBytes + LeToNe>(
+        &mut self,
+    ) -> Result<Vec<T>, Error> {
+        let len = self.u32()?;
+        self.repeat_zerocopy(len as usize)
     }
 
     pub fn node_or_null_generic<T>(
@@ -239,14 +257,23 @@ impl<R: Read, I, N> Reader<R, I, N> {
         }
     }
 
-    pub fn box3d(&mut self) -> Result<(), Error> {
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
+    /// Returns an error if the reader is not at EOF.
+    pub fn expect_eof(&mut self) -> Result<(), Error> {
+        let mut buf = [0];
+        let n = self.inner.read(&mut buf).map_err(map_io_error)?;
+
+        if n != 0 {
+            return Err(Error("expected EOF".into()));
+        }
 
         Ok(())
+    }
+
+    /// Read all bytes until EOF.
+    pub fn read_to_end(&mut self) -> Result<Vec<u8>, Error> {
+        let mut buf = vec![];
+        self.inner.read_to_end(&mut buf).map_err(map_io_error)?;
+
+        Ok(buf)
     }
 }

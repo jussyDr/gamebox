@@ -31,6 +31,21 @@ struct DataDecl {
     flags2: u32,
 }
 
+enum VertexFormat {
+    Float32x2 = 1,
+    Float32x3 = 2,
+    Dec10N = 14,
+}
+
+enum VertexTarget {
+    Position = 0,
+    Normal = 5,
+    Texcoord0 = 10,
+    Texcoord1 = 11,
+    TangentU = 18,
+    TangentV = 20,
+}
+
 mod read {
     use std::io::Read;
 
@@ -92,7 +107,7 @@ mod read {
 
                 match format {
                     1 => {
-                        let data = r.repeat(count as usize, |r| r.vec2())?;
+                        let data = r.repeat_zerocopy(count as usize)?;
 
                         match target {
                             10 => self.texcoords_0 = data,
@@ -101,7 +116,7 @@ mod read {
                         }
                     }
                     2 => {
-                        let data = r.repeat(count as usize, |r| r.vec3())?;
+                        let data = r.repeat_zerocopy(count as usize)?;
 
                         match target {
                             0 => self.positions = data,
