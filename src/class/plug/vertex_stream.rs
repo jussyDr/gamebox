@@ -4,8 +4,11 @@ use crate::{ClassId, Vec2, Vec3};
 #[derive(Default)]
 pub struct VertexStream {
     positions: Vec<Vec3>,
+    normals: Vec<Vec3>,
     texcoords_0: Vec<Vec2>,
     texcoords_1: Vec<Vec2>,
+    tangent_u: Vec<Vec3>,
+    tangent_v: Vec<Vec3>,
 }
 
 impl VertexStream {
@@ -34,7 +37,7 @@ struct DataDecl {
 enum VertexFormat {
     Float32x2 = 1,
     Float32x3 = 2,
-    Dec10N = 14,
+    Dec3N = 14,
 }
 
 enum VertexTarget {
@@ -50,6 +53,7 @@ mod read {
     use std::io::Read;
 
     use crate::{
+        Vec3,
         class::plug::vertex_stream::{DataDecl, VertexStream},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
@@ -124,17 +128,48 @@ mod read {
                         }
                     }
                     14 => {
-                        let data = r.repeat(count as usize, |r| r.u32())?;
+                        let data_dec3n: Vec<u32> = r.repeat_zerocopy(count as usize)?;
+                        let mut data = Vec::with_capacity(data_dec3n.len());
+
+                        for value in data_dec3n {
+                            let x = value & 0x000003ff;
+                            let y = (value >> 10) & 0x000003ff;
+                            let z = (value >> 20) & 0x000003ff;
+
+                            let x = if (x & 0x00000200) != 0 {
+                                x - 0x00000400
+                            } else {
+                                x
+                            };
+
+                            let y = if (y & 0x00000200) != 0 {
+                                y - 0x00000400
+                            } else {
+                                y
+                            };
+
+                            let z = if (z & 0x00000200) != 0 {
+                                z - 0x00000400
+                            } else {
+                                z
+                            };
+
+                            data.push(Vec3::new(
+                                (x as f32) / 511.0,
+                                (y as f32) / 511.0,
+                                (z as f32) / 511.0,
+                            ));
+                        }
 
                         match target {
                             5 => {
-                                let normals = data;
+                                self.normals = data;
                             }
                             18 => {
-                                let tangentu = data;
+                                self.tangent_u = data;
                             }
                             20 => {
-                                let tangentv = data;
+                                self.tangent_v = data;
                             }
                             _ => todo!("{target}"),
                         }

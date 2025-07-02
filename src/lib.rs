@@ -107,6 +107,12 @@ pub struct Vec3 {
     pub z: f32,
 }
 
+impl Vec3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
+        Self { x, y, z }
+    }
+}
+
 impl LeToNe for Vec3 {
     fn le_to_ne(&mut self) {
         self.x.le_to_ne();

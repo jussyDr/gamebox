@@ -46,13 +46,15 @@ mod read {
     impl IndexBuffer {
         fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
             let flags = r.u32()?;
-            let mut last_index = 0u32;
-            self.indices = r.list(|r| {
-                let offset = r.i16()?;
-                last_index = last_index.checked_add_signed(offset as i32).unwrap();
+            let offsets: Vec<i16> = r.list_zerocopy()?;
 
-                Ok(last_index)
-            })?;
+            self.indices = Vec::with_capacity(offsets.len());
+            let mut last_index = 0u32;
+
+            for offset in offsets {
+                last_index = last_index.checked_add_signed(offset as i32).unwrap();
+                self.indices.push(last_index);
+            }
 
             Ok(())
         }
