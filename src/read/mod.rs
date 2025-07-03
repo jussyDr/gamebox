@@ -30,19 +30,42 @@ use crate::{
 #[derive(Debug)]
 pub struct Error {
     message: String,
+    context: Option<Box<Error>>,
 }
 
 impl Error {
     pub fn new(message: impl Into<String>) -> Error {
         Error {
             message: message.into(),
+            context: None,
         }
+    }
+
+    pub fn with_context(mut self, message: impl Into<String>) -> Error {
+        let mut c = &mut self.context;
+
+        while let Some(cs) = c {
+            c = &mut cs.context;
+        }
+
+        *c = Some(Box::new(Error {
+            message: message.into(),
+            context: None,
+        }));
+
+        self
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.message)
+        f.write_str(&self.message)?;
+
+        if let Some(ref context) = self.context {
+            Display::fmt(context, f)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -129,13 +152,13 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
             let node_index = r
                 .u32()?
                 .checked_sub(1)
-                .ok_or(Error::new("node index is zero"))?;
+                .ok_or_else(|| Error::new("node index is zero"))?;
             let use_file = r.bool32()?;
             let folder_index = r.u32()?;
 
             let mut path = folders
                 .get(folder_index as usize)
-                .ok_or(Error::new("folder index exceeds number of folders"))?
+                .ok_or_else(|| Error::new("folder index exceeds number of folders"))?
                 .clone();
 
             path.push(&file_name);

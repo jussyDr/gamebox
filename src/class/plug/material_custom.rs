@@ -195,8 +195,7 @@ mod read {
 
             r.list(|r| {
                 r.u32()?;
-                let len = r.u32()?;
-                r.bytes(len as usize)?;
+                r.byte_buf()?;
 
                 Ok(())
             })?;

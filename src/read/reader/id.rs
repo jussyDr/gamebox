@@ -9,6 +9,7 @@ pub struct IdTable {
 }
 
 impl IdTable {
+    /// Create a new `IdTable`.
     pub fn new() -> Self {
         Self {
             seen_id: false,
@@ -29,11 +30,13 @@ impl Default for IdTable {
     }
 }
 
+/// Mutable reference to an `IdTable`.
 pub trait IdTableRef: AsMut<IdTable> {}
 
 impl<T: AsMut<IdTable>> IdTableRef for T {}
 
 impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
+    /// Read an identifier or null.
     pub fn id_or_null(&mut self) -> Result<Option<Arc<str>>, Error> {
         if !self.id_table.as_mut().seen_id {
             let version = self.u32()?;
@@ -70,13 +73,14 @@ impl<R: Read, I: IdTableRef, N> Reader<R, I, N> {
                     .as_mut()
                     .ids
                     .get(index as usize)
-                    .ok_or(Error::new(""))?;
+                    .ok_or_else(|| Error::new(""))?;
 
                 Ok(Some(Arc::clone(id)))
             }
         }
     }
 
+    /// Read an identifier.
     pub fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
             None => Err(Error::new("expected a non-null identifier")),

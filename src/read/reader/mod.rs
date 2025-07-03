@@ -5,13 +5,14 @@ mod node;
 
 pub use id::{IdTable, IdTableRef};
 pub use node::{NodeTable, NodeTableRef};
+
 use zerocopy::{FromBytes, FromZeros, IntoBytes};
 
 use std::{io::Read, iter};
 
 use crate::{
     Iso4, Quat, Vec2, Vec3,
-    read::{Error, byte_order::LeToNe, map_io_error},
+    read::{Error, byte_order::LeToNe, error_unknown_version, map_io_error},
 };
 
 fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -> U {
@@ -65,8 +66,8 @@ impl<R: Read, I, N> Reader<R, I, N> {
     fn zerocopy<T: FromBytes + LeToNe>(&mut self) -> Result<T, Error> {
         let mut value = T::read_from_io(&mut self.inner).map_err(map_io_error)?;
 
-        // GameBox files are serialized as little endian.
-        // Here we convert to the target's endianness.
+        // GameBox files are serialized as little endian,
+        // so it is necessary to convert to the target's endianness.
         value.le_to_ne();
 
         Ok(value)
@@ -195,7 +196,7 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let version = self.u32()?;
 
         if version != 10 {
-            return Err(Error::new("unknown list version"));
+            return Err(error_unknown_version("list", version));
         }
 
         self.list(read_elem)
@@ -209,8 +210,8 @@ impl<R: Read, I, N> Reader<R, I, N> {
         let bytes = list.as_mut_slice().as_mut_bytes();
         self.inner.read_exact(bytes).map_err(map_io_error)?;
 
-        // GameBox files are serialized as little endian.
-        // Here we convert to the target's endianness.
+        // GameBox files are serialized as little endian,
+        // so it is necessary to convert to the target's endianness.
         list.le_to_ne();
 
         Ok(list)

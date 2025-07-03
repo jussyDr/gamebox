@@ -71,6 +71,7 @@ impl Entity {
     }
 }
 
+/// Prefab entity model.
 pub enum EntityModel {
     StaticObjectModel(Arc<StaticObjectModel>),
 }
@@ -86,6 +87,7 @@ impl TryFrom<Arc<dyn Any + Send + Sync>> for EntityModel {
     }
 }
 
+/// Prefab entity parameters.
 pub enum EntityParams {
     DynaObjectModelInstanceParams(DynaObjectModelInstanceParams),
 }
@@ -126,9 +128,9 @@ mod read {
 
             self.file_write_time = r.u64()?;
             self.url = r.string()?;
-            let u01 = r.u32()?;
+            r.u32()?;
             let num_entities = r.u32()?;
-            let u02 = r.u32()?;
+            r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
                 let model = r.node_ref_generic(|r, class_id| match class_id {
                     0x09159000 => {

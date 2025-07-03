@@ -29,7 +29,7 @@ impl NodeTable {
         let slot = self
             .nodes
             .get_mut(index as usize)
-            .ok_or(Error::new("node index exceeds number of nodes"))?;
+            .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
 
         if slot.is_some() {
             todo!()
@@ -92,14 +92,14 @@ impl<R: Read, I, N: NodeTableRef> Reader<R, I, N> {
 
         let index = index
             .checked_sub(1)
-            .ok_or(Error::new("node index is zero"))?;
+            .ok_or_else(|| Error::new("node index is zero"))?;
 
         let slot = self
             .node_state
             .as_mut()
             .nodes
             .get(index as usize)
-            .ok_or(Error::new("node index exceeds number of nodes"))?;
+            .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
 
         match slot {
             Some(NodeRef::External(node_ref)) => {
@@ -136,14 +136,14 @@ impl<R: Read, I: IdTableRef, N: NodeTableRef> Reader<R, I, N> {
 
         let index = index
             .checked_sub(1)
-            .ok_or(Error::new("node index is zero"))?;
+            .ok_or_else(|| Error::new("node index is zero"))?;
 
         let slot = self
             .node_state
             .as_mut()
             .nodes
             .get_mut(index as usize)
-            .ok_or(Error::new("node index exceeds number of nodes"))?;
+            .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
 
         match slot {
             None => {

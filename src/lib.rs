@@ -5,10 +5,11 @@
     clippy::print_stdout,
     clippy::undocumented_unsafe_blocks,
     clippy::panic,
-    clippy::arithmetic_side_effects
+    clippy::arithmetic_side_effects,
+    clippy::or_fun_call // Remove if there is a valid or_fun_call.
 )]
 
-//! Gamebox
+//! Gamebox file reading and writing.
 
 pub mod class;
 pub mod read;
@@ -17,7 +18,7 @@ pub mod read;
 pub use class::game::challenge::Challenge;
 pub use read::{read, read_file};
 
-use zerocopy::{FromBytes, IntoBytes};
+use zerocopy::{FromBytes, Immutable, IntoBytes};
 
 use std::{fmt::Debug, path::Path, sync::Arc};
 
@@ -30,7 +31,7 @@ pub trait ClassId {
 }
 
 pub trait SubExtensions {
-    /// GameBox sub-extensions supported for this type.
+    /// GameBox sub-extensions that correspond to this type.
     ///
     /// Not case sensitive.
     const SUB_EXTENSIONS: &[&str];
@@ -112,7 +113,7 @@ impl LeToNe for Vec2 {
 }
 
 /// A 3-dimensional vector.
-#[derive(PartialEq, Debug, FromBytes, IntoBytes)]
+#[derive(PartialEq, Debug, Immutable, FromBytes, IntoBytes)]
 pub struct Vec3 {
     /// X component.
     pub x: f32,

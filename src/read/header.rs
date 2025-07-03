@@ -46,9 +46,7 @@ pub fn read_header_data<T: HeaderChunks, I, N>(
 
         let chunk = header_chunks
             .find(|chunk| chunk.num == chunk_num)
-            .ok_or(Error::new(format!(
-                "unknown header chunk: 0x{chunk_id:08x}"
-            )))?;
+            .ok_or_else(|| Error::new(format!("unknown header chunk: 0x{chunk_id:08x}")))?;
 
         (chunk.read_fn)(node, r)?;
     }

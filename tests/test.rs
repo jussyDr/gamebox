@@ -37,6 +37,11 @@ fn read_material_road_tech() {
 }
 
 #[test]
+fn read_material_track_borders() {
+    let _material: Material = read_file("tests/files/material/TrackBorders.Material.gbx").unwrap();
+}
+
+#[test]
 fn read_mesh_stade1536v2() {
     let _mesh: Solid2Model = read_file("tests/files/mesh/Stade1536v2.Mesh.Gbx").unwrap();
 }
