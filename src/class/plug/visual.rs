@@ -1,3 +1,5 @@
+//! Visual.
+
 use std::sync::Arc;
 
 use crate::{ClassId, class::plug::vertex_stream::VertexStream};
@@ -9,6 +11,7 @@ pub struct Visual {
 }
 
 impl Visual {
+    /// Vertex streams.
     pub fn vertex_streams(&self) -> &Vec<Arc<VertexStream>> {
         &self.vertex_streams
     }
@@ -46,7 +49,7 @@ mod read {
         }
 
         fn read_chunk_5(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let sub_visuals = r.list(|r| {
+            let _sub_visuals = r.list(|r| {
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
@@ -64,10 +67,10 @@ mod read {
         }
 
         fn read_chunk_11(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let splits = r.list(|r| {
+            let _splits = r.list(|r| {
                 r.u32()?;
                 r.u32()?;
-                let bounding_box = r.box3d()?;
+                let _bounding_box = r.box3d()?;
 
                 Ok(())
             })?;
@@ -82,13 +85,13 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let flags = r.u32()?;
+            let _flags = r.u32()?;
             let num_texcoord_sets = r.u32()?;
-            let count = r.u32()?;
+            let _count = r.u32()?;
             self.vertex_streams = r.list(|r| r.internal_node_ref())?;
-            let texcoord_sets: Vec<()> = r.repeat(num_texcoord_sets as usize, |r| todo!())?;
-            let bounding_box = r.box3d()?;
-            let bitmap_elem_to_packs: Vec<()> = r.list(|r| todo!())?;
+            let _texcoord_sets: Vec<()> = r.repeat(num_texcoord_sets as usize, |r| todo!())?;
+            let _bounding_box = r.box3d()?;
+            let _bitmap_elem_to_packs: Vec<()> = r.list(|r| todo!())?;
 
             if version >= 5 {
                 r.list(|r| r.u16())?;

@@ -1,3 +1,5 @@
+//! Block info variant air.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{ClassId, class::game::block_info_variant::BlockInfoVariant};

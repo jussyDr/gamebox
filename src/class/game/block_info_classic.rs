@@ -1,3 +1,5 @@
+//! Block info classic.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{ClassId, SubExtensions, class::game::block_info::BlockInfo};

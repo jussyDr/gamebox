@@ -7,16 +7,19 @@ use crate::{
 
 /// Node table.
 pub struct NodeTable {
+    /// Nodes.
     pub nodes: Vec<Option<NodeRef<Arc<dyn Any + Send + Sync>>>>,
 }
 
 impl NodeTable {
+    /// Create a new node table.
     pub fn new(num_nodes: usize) -> Self {
         Self {
             nodes: repeat_n_with(num_nodes, || None),
         }
     }
 
+    /// Set external.
     pub fn set_external(
         &mut self,
         index: u32,

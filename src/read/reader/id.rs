@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 /// Identifier table.
 pub struct IdTable {
+    /// Seend id.
     pub seen_id: bool,
+    /// Ids.
     pub ids: Vec<Arc<str>>,
 }
 

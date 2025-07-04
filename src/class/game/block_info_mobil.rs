@@ -1,3 +1,5 @@
+//! Block info mobil.
+
 use crate::{ClassId, ExternalNodeRef};
 
 /// Block info mobil.
@@ -7,6 +9,7 @@ pub struct BlockInfoMobil {
 }
 
 impl BlockInfoMobil {
+    /// Prefab.
     pub fn prefab(&self) -> &ExternalNodeRef {
         &self.prefab
     }
@@ -47,7 +50,7 @@ mod read {
 
     impl BlockInfoMobil {
         fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let solid_decals: Vec<()> = r.list_with_version(|r| todo!())?;
+            let _solid_decals: Vec<()> = r.list_with_version(|r| todo!())?;
             r.u32()?;
 
             Ok(())
@@ -60,26 +63,26 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let solid_frequency = r.u32()?;
+            let _solid_frequency = r.u32()?;
 
             if r.bool8()? {
-                let geom_translation = r.vec3()?;
-                let geom_rotation = r.vec3()?;
+                let _geom_translation = r.vec3()?;
+                let _geom_rotation = r.vec3()?;
             }
 
             let solid_fid = r.external_node_ref_or_null::<Delme>()?;
 
             if solid_fid.is_none() {
-                let old_mobil = r.u32()?;
+                let _old_mobil = r.u32()?;
             }
 
             self.prefab = r.external_node_ref::<Prefab>()?;
-            let old_solid_aggreg = r.external_node_ref_or_null::<Delme>()?;
-            let rail_path = r.external_node_ref_or_null::<Delme>()?;
+            let _old_solid_aggreg = r.external_node_ref_or_null::<Delme>()?;
+            let _rail_path = r.external_node_ref_or_null::<Delme>()?;
             r.u32()?;
-            let road_chunks: Vec<()> = r.list(|r| todo!())?;
+            let _road_chunks: Vec<()> = r.list(|r| todo!())?;
             r.list(|r| r.u32())?;
-            let vfxs = r.u32()?;
+            let _vfxs = r.u32()?;
 
             if matches!(r.u8()?, 0 | 1) {
                 r.f32()?;
@@ -101,7 +104,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let dyna_links: Vec<()> = r.list_with_version(|r| todo!())?;
+            let _dyna_links: Vec<()> = r.list_with_version(|r| todo!())?;
 
             Ok(())
         }

@@ -52,20 +52,20 @@ mod read {
                 return Err(error_unknown_chunk_version(version as u32));
             }
 
-            let need_unlock = r.bool32()?;
-            let bronze_time = r.u32()?;
-            let silver_time = r.u32()?;
-            let gold_time = r.u32()?;
-            let author_time = r.u32()?;
-            let cost = r.u32()?;
-            let is_lap_race = r.bool32()?;
-            let mode = r.u32()?;
+            let _need_unlock = r.bool32()?;
+            let _bronze_time = r.u32()?;
+            let _silver_time = r.u32()?;
+            let _gold_time = r.u32()?;
+            let _author_time = r.u32()?;
+            let _cost = r.u32()?;
+            let _is_lap_race = r.bool32()?;
+            let _mode = r.u32()?;
             r.u32()?;
-            let author_score = r.u32()?;
-            let editor = r.u32()?;
+            let _author_score = r.u32()?;
+            let _editor = r.u32()?;
             r.u32()?;
-            let num_checkpoints = r.u32()?;
-            let num_laps = r.u32()?;
+            let _num_checkpoints = r.u32()?;
+            let _num_laps = r.u32()?;
 
             Ok(())
         }

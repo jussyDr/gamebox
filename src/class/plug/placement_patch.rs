@@ -1,3 +1,5 @@
+//! Placement patch.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{ClassId, class::plug::road_chunk::RoadChunk};

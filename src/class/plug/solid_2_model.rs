@@ -1,3 +1,5 @@
+//! Solid 2 model.
+
 use std::sync::Arc;
 
 use crate::{

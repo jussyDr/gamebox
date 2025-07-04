@@ -1,11 +1,51 @@
-use std::ops::{Deref, DerefMut};
+//! Block info.
 
-use crate::{ClassId, class::game_data::collector::Collector};
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
+
+use crate::{
+    ClassId,
+    class::{
+        game::{
+            block_info_variant_air::BlockInfoVariantAir,
+            block_info_variant_ground::BlockInfoVariantGround,
+        },
+        game_data::collector::Collector,
+    },
+};
 
 /// Block info.
 #[derive(Default)]
 pub struct BlockInfo {
     parent: Collector,
+    variant_base_ground: BlockInfoVariantGround,
+    variant_base_air: BlockInfoVariantAir,
+    additional_variants_ground: Vec<Arc<BlockInfoVariantGround>>,
+    additional_variants_air: Vec<Arc<BlockInfoVariantAir>>,
+}
+
+impl BlockInfo {
+    /// Variant base ground.
+    pub fn variant_base_ground(&self) -> &BlockInfoVariantGround {
+        &self.variant_base_ground
+    }
+
+    /// Variant base air.
+    pub fn variant_base_air(&self) -> &BlockInfoVariantAir {
+        &self.variant_base_air
+    }
+
+    /// Additional variants ground.
+    pub fn additional_variants_ground(&self) -> &Vec<Arc<BlockInfoVariantGround>> {
+        &self.additional_variants_ground
+    }
+
+    /// Additional variants air.
+    pub fn additional_variants_air(&self) -> &Vec<Arc<BlockInfoVariantAir>> {
+        &self.additional_variants_air
+    }
 }
 
 impl ClassId for BlockInfo {
@@ -66,13 +106,13 @@ mod read {
 
     impl BlockInfo {
         fn read_chunk_15(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let no_respawn = r.bool32()?;
+            let _no_respawn = r.bool32()?;
 
             Ok(())
         }
 
         fn read_chunk_19(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let icon_use_auto_ground = r.bool32()?;
+            let _icon_use_auto_ground = r.bool32()?;
 
             Ok(())
         }
@@ -90,10 +130,10 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let char_phy_special_property = r.u32()?;
-            let podium_info = r.u32()?;
-            let intro_info = r.u32()?;
-            let char_phy_special_property_customizable = r.bool32()?;
+            let _char_phy_special_property = r.u32()?;
+            let _podium_info = r.u32()?;
+            let _intro_info = r.u32()?;
+            let _char_phy_special_property_customizable = r.bool32()?;
 
             if r.bool32()? {
                 todo!()
@@ -103,34 +143,34 @@ mod read {
         }
 
         fn read_chunk_35(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let variant_base_ground = read_node_from_body::<BlockInfoVariantGround>(r)?;
-            let variant_base_air = read_node_from_body::<BlockInfoVariantAir>(r)?;
+            self.variant_base_ground = read_node_from_body::<BlockInfoVariantGround>(r)?;
+            self.variant_base_air = read_node_from_body::<BlockInfoVariantAir>(r)?;
 
             Ok(())
         }
 
         fn read_chunk_38(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let waypoint_type = r.u32()?;
+            let _waypoint_type = r.u32()?;
 
             Ok(())
         }
 
         fn read_chunk_39(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let additional_variants_ground =
+            self.additional_variants_ground =
                 r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantGround>())?;
 
             Ok(())
         }
 
         fn read_chunk_40(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let symmetrical_block_info_id = r.id_or_null()?;
-            let dir = r.u32()?;
+            let _symmetrical_block_info_id = r.id_or_null()?;
+            let _dir = r.u32()?;
 
             Ok(())
         }
 
         fn read_chunk_41(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let fog_volume_box = r.external_node_ref_or_null::<Delme>()?;
+            let _fog_volume_box = r.external_node_ref_or_null::<Delme>()?;
 
             Ok(())
         }
@@ -146,11 +186,11 @@ mod read {
             let sound_2 = r.external_node_ref_or_null::<Delme>()?;
 
             if sound_1.is_some() {
-                let sound_1_loc = r.iso4()?;
+                let _sound_1_loc = r.iso4()?;
             }
 
             if sound_2.is_some() {
-                let sound_2_loc = r.iso4()?;
+                let _sound_2_loc = r.iso4()?;
             }
 
             Ok(())
@@ -163,13 +203,13 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let base_type = r.u32()?;
+            let _base_type = r.u32()?;
 
             Ok(())
         }
 
         fn read_chunk_44(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let additional_variants_air =
+            self.additional_variants_air =
                 r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantAir>())?;
 
             Ok(())
@@ -182,8 +222,8 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let is_pillar = r.bool8()?;
-            let pillar_shape_multi_dir = r.u8()?;
+            let _is_pillar = r.bool8()?;
+            let _pillar_shape_multi_dir = r.u8()?;
             r.u8()?;
 
             Ok(())
@@ -197,8 +237,8 @@ mod read {
             }
 
             r.u32()?;
-            let material_modifier = r.external_node_ref_or_null::<Delme>()?;
-            let material_modifier_2 = r.external_node_ref_or_null::<Delme>()?;
+            let _material_modifier = r.external_node_ref_or_null::<Delme>()?;
+            let _material_modifier_2 = r.external_node_ref_or_null::<Delme>()?;
 
             Ok(())
         }

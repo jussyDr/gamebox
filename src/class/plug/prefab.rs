@@ -19,10 +19,12 @@ pub struct Prefab {
 }
 
 impl Prefab {
+    /// File write time.
     pub fn file_write_time(&self) -> u64 {
         self.file_write_time
     }
 
+    /// URL.
     pub fn url(&self) -> &String {
         &self.url
     }
@@ -144,7 +146,7 @@ mod read {
                     )),
                     _ => todo!("{class_id:08X?}"),
                 })?;
-                let u03 = r.string()?;
+                r.string()?;
 
                 Ok(Entity {
                     model,

@@ -1,3 +1,5 @@
+//! Light.
+
 use crate::SubExtensions;
 
 /// A light.

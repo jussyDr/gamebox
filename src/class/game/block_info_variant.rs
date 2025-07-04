@@ -1,3 +1,5 @@
+//! Block info variant.
+
 use std::sync::Arc;
 
 use crate::{ClassId, class::game::block_info_mobil::BlockInfoMobil};
@@ -9,6 +11,7 @@ pub struct BlockInfoVariant {
 }
 
 impl BlockInfoVariant {
+    /// Mobils.
     pub fn mobils(&self) -> &Vec<Vec<Arc<BlockInfoMobil>>> {
         &self.mobils
     }
@@ -48,7 +51,7 @@ mod read {
 
     impl BlockInfoVariant {
         fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let multi_dir = r.u32()?;
+            let _multi_dir = r.u32()?;
 
             Ok(())
         }
@@ -60,10 +63,10 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let symmetrical_variant_index = r.u32()?;
-            let cardinal_dir = r.u8()?;
-            let variant_base_type = r.u8()?;
-            let no_pillar_below_index = r.u8()?;
+            let _symmetrical_variant_index = r.u32()?;
+            let _cardinal_dir = r.u8()?;
+            let _variant_base_type = r.u8()?;
+            let _no_pillar_below_index = r.u8()?;
 
             Ok(())
         }
@@ -96,22 +99,22 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let screen_interaction_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
-            let waypoint_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
-            let gate = r.external_node_ref_or_null::<Delme>()?;
-            let teleporter = r.u32()?;
+            let _screen_interaction_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
+            let _waypoint_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
+            let _gate = r.external_node_ref_or_null::<Delme>()?;
+            let _teleporter = r.u32()?;
             r.u32()?;
-            let turbine = r.external_node_ref_or_null::<Delme>()?;
+            let _turbine = r.external_node_ref_or_null::<Delme>()?;
             let flock_model = r.external_node_ref_or_null::<Delme>()?;
 
             if flock_model.is_some() {
                 todo!()
             }
 
-            let spawn_model = r.external_node_ref_or_null::<Delme>()?;
+            let _spawn_model = r.external_node_ref_or_null::<Delme>()?;
             r.u32()?;
             r.u32()?;
-            let entity_spawners: Vec<()> = r.list(|r| todo!())?;
+            let _entity_spawners: Vec<()> = r.list(|r| todo!())?;
 
             Ok(())
         }
@@ -123,7 +126,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let probe = r.external_node_ref_or_null::<Delme>()?;
+            let _probe = r.external_node_ref_or_null::<Delme>()?;
 
             Ok(())
         }
@@ -135,14 +138,14 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let block_unit_models = r.list(|r| r.internal_node_ref::<BlockUnitInfo>())?;
+            let _block_unit_models = r.list(|r| r.internal_node_ref::<BlockUnitInfo>())?;
             r.u32()?;
-            let has_manual_symmetry_h = r.bool32()?;
-            let has_manual_symmetry_v = r.bool32()?;
-            let has_manual_symmetry_d1 = r.bool32()?;
-            let has_manual_symmetry_d2 = r.bool32()?;
+            let _has_manual_symmetry_h = r.bool32()?;
+            let _has_manual_symmetry_v = r.bool32()?;
+            let _has_manual_symmetry_d1 = r.bool32()?;
+            let _has_manual_symmetry_d2 = r.bool32()?;
             r.box3d()?;
-            let name = r.string()?;
+            let _name = r.string()?;
 
             Ok(())
         }
@@ -184,7 +187,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let compound_model = r.u32()?;
+            let _compound_model = r.u32()?;
 
             Ok(())
         }
@@ -196,7 +199,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let water_volumes: Vec<()> = r.list(|r| todo!())?;
+            let _water_volumes: Vec<()> = r.list(|r| todo!())?;
 
             Ok(())
         }

@@ -1,8 +1,10 @@
+//! Visual 3D.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{ClassId, class::plug::visual::Visual};
 
-/// A visual 3D.
+/// A 3D visual.
 #[derive(Default)]
 pub struct Visual3D {
     parent: Visual,

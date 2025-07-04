@@ -1,3 +1,5 @@
+//! Material.
+
 use std::sync::Arc;
 
 use crate::{ClassId, SubExtensions, class::plug::material_custom::MaterialCustom};
@@ -9,6 +11,7 @@ pub struct Material {
 }
 
 impl Material {
+    /// Custom material.
     pub fn custom_material(&self) -> &Arc<MaterialCustom> {
         &self.custom_material
     }

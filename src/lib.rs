@@ -30,6 +30,7 @@ pub trait ClassId {
     const CLASS_ID: u32;
 }
 
+/// Sub extensions.
 pub trait SubExtensions {
     /// GameBox sub-extensions that correspond to this type.
     ///
@@ -53,6 +54,7 @@ impl SubExtensions for Delme {
 /// Reference to a node.
 #[derive(Debug, Clone)]
 pub enum NodeRef<T> {
+    /// Reference to a node in memory.
     Internal(T),
     /// Reference to a node in an external file.
     External(ExternalNodeRef),
@@ -183,7 +185,7 @@ impl LeToNe for Quat {
 }
 
 /// Matrix with 4 rows and 3 columns.
-pub struct Iso4([f32; 12]);
+pub struct Iso4(pub [f32; 12]);
 
 const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 const FILE_VERSION: u16 = 6;
@@ -218,8 +220,8 @@ mod tests {
             (Path::new("image.dds"), "dds"),
             (Path::new("challenge.map.gbx"), "map"),
         ] {
-            let se = super::sub_extension(path).unwrap();
-            assert_eq!(se, expected);
+            let se = super::sub_extension(path);
+            assert_eq!(se, Some(expected));
         }
     }
 }

@@ -1,3 +1,5 @@
+//! Entity spawner.
+
 use crate::ClassId;
 
 /// Entity spawner.

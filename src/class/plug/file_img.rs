@@ -1,3 +1,5 @@
+//! File image.
+
 use crate::SubExtensions;
 
 /// An image file.

@@ -1,3 +1,5 @@
+//! Bitmap.
+
 use crate::{ClassId, ExternalNodeRef, SubExtensions};
 
 /// A bitmap.
@@ -7,6 +9,7 @@ pub struct Bitmap {
 }
 
 impl Bitmap {
+    /// Image.
     pub fn image(&self) -> &ExternalNodeRef {
         &self.image
     }
@@ -68,13 +71,13 @@ mod read {
 
     impl Bitmap {
         fn read_chunk_25(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let bum_scale_mip_level = r.f32()?;
+            let _bum_scale_mip_level = r.f32()?;
 
             Ok(())
         }
 
         fn read_chunk_32(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let mip_map_fade_alphas = r.list(|r| r.f32())?;
+            let _mip_map_fade_alphas = r.list(|r| r.f32())?;
 
             Ok(())
         }
@@ -86,9 +89,9 @@ mod read {
         }
 
         fn read_chunk_37(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let default_texcoord_scale = r.vec2()?;
-            let default_texcoord_trans = r.vec2()?;
-            let default_texcoord_rotate = r.f32()?;
+            let _default_texcoord_scale = r.vec2()?;
+            let _default_texcoord_trans = r.vec2()?;
+            let _default_texcoord_rotate = r.f32()?;
             r.u32()?;
 
             Ok(())
@@ -102,13 +105,13 @@ mod read {
         }
 
         fn read_chunk_42(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let sprite_param = r.u32()?;
+            let _sprite_param = r.u32()?;
 
             Ok(())
         }
 
         fn read_chunk_44(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let decals = r.u32()?;
+            let _decals = r.u32()?;
 
             Ok(())
         }
@@ -134,10 +137,10 @@ mod read {
 
             self.image = r.external_node_ref::<FileImg>()?;
             r.vec3()?;
-            let mip_map_lower_alpha = r.f32()?;
-            let bump_scale_factor = r.f32()?;
-            let mip_map_lod_bias_default = r.f32()?;
-            let border_rgb = r.u32()?;
+            let _mip_map_lower_alpha = r.f32()?;
+            let _bump_scale_factor = r.f32()?;
+            let _mip_map_lod_bias_default = r.f32()?;
+            let _border_rgb = r.u32()?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
@@ -146,7 +149,7 @@ mod read {
         }
 
         fn read_chunk_51(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let height_in_meters = r.f32()?;
+            let _height_in_meters = r.f32()?;
 
             Ok(())
         }
@@ -158,11 +161,11 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let image_array = r.u32()?;
-            let image_array_suffix = r.string()?;
-            let image_array_fids = r.list(|r| r.string())?;
-            let bitmap_array = r.u32()?;
-            let bitmap_array_elem_name = r.string()?;
+            let _image_array = r.u32()?;
+            let _image_array_suffix = r.string()?;
+            let _image_array_fids = r.list(|r| r.string())?;
+            let _bitmap_array = r.u32()?;
+            let _bitmap_array_elem_name = r.string()?;
             r.u32()?;
 
             Ok(())

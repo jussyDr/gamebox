@@ -1,3 +1,5 @@
+//! Visual indexed.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{
@@ -13,6 +15,7 @@ pub struct VisualIndexed {
 }
 
 impl VisualIndexed {
+    /// Index buffer.
     pub fn index_buffer(&self) -> &IndexBuffer {
         &self.index_buffer
     }

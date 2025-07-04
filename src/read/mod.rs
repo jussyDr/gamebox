@@ -34,26 +34,11 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn new(message: impl Into<String>) -> Error {
+    pub(crate) fn new(message: impl Into<String>) -> Error {
         Error {
             message: message.into(),
             context: None,
         }
-    }
-
-    pub fn with_context(mut self, message: impl Into<String>) -> Error {
-        let mut c = &mut self.context;
-
-        while let Some(cs) = c {
-            c = &mut cs.context;
-        }
-
-        *c = Some(Box::new(Error {
-            message: message.into(),
-            context: None,
-        }));
-
-        self
     }
 }
 
@@ -135,7 +120,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     let num_nodes = r
         .u32()?
         .checked_sub(1)
-        .ok_or(Error::new("number of nodes is zero"))?;
+        .ok_or_else(|| Error::new("number of nodes is zero"))?;
 
     // Read the reference table.
     let num_external_nodes = r.u32()?;
@@ -147,13 +132,13 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         let folders = read_folders(&mut r)?;
 
         for _ in 0..num_external_nodes {
-            let flags = r.u32()?;
+            let _flags = r.u32()?;
             let file_name = r.string()?;
             let node_index = r
                 .u32()?
                 .checked_sub(1)
                 .ok_or_else(|| Error::new("node index is zero"))?;
-            let use_file = r.bool32()?;
+            let _use_file = r.bool32()?;
             let folder_index = r.u32()?;
 
             let mut path = folders
@@ -174,15 +159,30 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     }
 
     // Read the body.
-    let mut r = BR {
-        reader: r,
-        id_table: IdTable::new(),
-        node_table,
-    };
 
     if body_compressed {
-        todo!()
+        let size = r.u32()?;
+        let compressed_body = r.byte_buf()?;
+
+        let mut body = vec![0; size as usize];
+        lzo1x::decompress(&compressed_body, &mut body).unwrap();
+
+        let mut r = BR {
+            reader: body.as_slice(),
+            id_table: IdTable::new(),
+            node_table,
+        };
+
+        node.read_body(&mut r)?;
+
+        r.expect_eof()?;
     } else {
+        let mut r = BR {
+            reader: r,
+            id_table: IdTable::new(),
+            node_table,
+        };
+
         node.read_body(&mut r)?;
 
         r.expect_eof()?;

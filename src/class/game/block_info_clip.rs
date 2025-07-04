@@ -1,3 +1,5 @@
+//! Block info clip.
+
 use crate::SubExtensions;
 
 /// Block info clip.

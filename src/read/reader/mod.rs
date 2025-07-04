@@ -23,7 +23,9 @@ fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -
     iter::repeat_with(repeater).take(n).collect()
 }
 
+/// Reader.
 pub trait Reader: Read {
+    /// Read `n` bytes.
     fn bytes(&mut self, n: usize) -> Result<Vec<u8>, Error> {
         let mut buf = vec![0; n];
         self.read_exact(&mut buf).map_err(map_io_error)?;
@@ -31,6 +33,7 @@ pub trait Reader: Read {
         Ok(buf)
     }
 
+    /// Read `N` bytes into an array.
     fn byte_array<const N: usize>(&mut self) -> Result<[u8; N], Error> {
         let mut buf = [0; N];
         self.read_exact(&mut buf).map_err(map_io_error)?;
@@ -38,11 +41,13 @@ pub trait Reader: Read {
         Ok(buf)
     }
 
+    /// Read a byte buffer.
     fn byte_buf(&mut self) -> Result<Vec<u8>, Error> {
-        let len = self.u32()?;
-        Reader::bytes(self, len as usize)
+        let size = self.u32()?;
+        Reader::bytes(self, size as usize)
     }
 
+    /// Read a value using zerocopy.
     fn zerocopy<T: FromBytes + LeToNe>(&mut self) -> Result<T, Error> {
         let mut value = T::read_from_io(self).map_err(map_io_error)?;
 
@@ -53,42 +58,52 @@ pub trait Reader: Read {
         Ok(value)
     }
 
+    /// Read an unsigned 8 bit integer.
     fn u8(&mut self) -> Result<u8, Error> {
         self.zerocopy()
     }
 
+    /// Read an unsigned 16 bit integer.
     fn u16(&mut self) -> Result<u16, Error> {
         self.zerocopy()
     }
 
+    /// Read an unsigned 32 bit integer.
     fn u32(&mut self) -> Result<u32, Error> {
         self.zerocopy()
     }
 
+    /// Read an unsigned 64 bit integer.
     fn u64(&mut self) -> Result<u64, Error> {
         self.zerocopy()
     }
 
+    /// Read a signed 8 bit integer.
     fn i8(&mut self) -> Result<i8, Error> {
         self.zerocopy()
     }
 
+    /// Read a signed 16 bit integer.
     fn i16(&mut self) -> Result<i16, Error> {
         self.zerocopy()
     }
 
+    /// Read a signed 32 bit integer.
     fn i32(&mut self) -> Result<i32, Error> {
         self.zerocopy()
     }
 
+    /// Read a signed 64 bit integer.
     fn i64(&mut self) -> Result<i64, Error> {
         self.zerocopy()
     }
 
+    /// Read a 32 bit floating point number.
     fn f32(&mut self) -> Result<f32, Error> {
         self.zerocopy()
     }
 
+    /// Read an 8 bit boolean.
     fn bool8(&mut self) -> Result<bool, Error> {
         match self.u8()? {
             0 => Ok(false),
@@ -97,6 +112,7 @@ pub trait Reader: Read {
         }
     }
 
+    /// Read a 32 bit boolean.
     fn bool32(&mut self) -> Result<bool, Error> {
         match self.u32()? {
             0 => Ok(false),
@@ -105,18 +121,22 @@ pub trait Reader: Read {
         }
     }
 
+    /// Read a `Vec2`.
     fn vec2(&mut self) -> Result<Vec2, Error> {
         self.zerocopy()
     }
 
+    /// Read a `Vec3`.
     fn vec3(&mut self) -> Result<Vec3, Error> {
         self.zerocopy()
     }
 
+    /// Read a `Quat`.
     fn quat(&mut self) -> Result<Quat, Error> {
         self.zerocopy()
     }
 
+    /// Read a box.
     fn box3d(&mut self) -> Result<(), Error> {
         self.u32()?;
         self.u32()?;
@@ -128,6 +148,7 @@ pub trait Reader: Read {
         Ok(())
     }
 
+    /// Read an `Iso4`.
     fn iso4(&mut self) -> Result<Iso4, Error> {
         let elements = [
             self.f32()?,
@@ -147,12 +168,14 @@ pub trait Reader: Read {
         Ok(Iso4(elements))
     }
 
+    /// Read a string.
     fn string(&mut self) -> Result<String, Error> {
         let bytes = self.byte_buf()?;
 
         String::from_utf8(bytes).map_err(|_| Error::new("expected an UTF-8 encoded string"))
     }
 
+    /// Read a list of elements.
     fn list<T>(
         &mut self,
         read_fn: impl FnMut(&mut Self) -> Result<T, Error>,
@@ -162,6 +185,7 @@ pub trait Reader: Read {
         self.repeat(len as usize, read_fn)
     }
 
+    /// Read a list of elements using zerocopy.
     fn list_zerocopy<T: FromZeros + FromBytes + IntoBytes + LeToNe>(
         &mut self,
     ) -> Result<Vec<T>, Error> {
@@ -169,6 +193,7 @@ pub trait Reader: Read {
         self.repeat_zerocopy(len as usize)
     }
 
+    /// Read a list of elements.
     fn list_with_version<T>(
         &mut self,
         read_fn: impl FnMut(&mut Self) -> Result<T, Error>,
@@ -182,6 +207,7 @@ pub trait Reader: Read {
         self.list(read_fn)
     }
 
+    /// Repeat the given `read_fn` a total of `n` times.
     fn repeat<T>(
         &mut self,
         n: usize,
@@ -190,6 +216,7 @@ pub trait Reader: Read {
         repeat_n_with(n, || read_fn(self))
     }
 
+    /// Repeat the given `read_fn` a total of `n` times using zerocopy.
     fn repeat_zerocopy<T: FromZeros + FromBytes + IntoBytes + LeToNe>(
         &mut self,
         n: usize,
@@ -205,6 +232,7 @@ pub trait Reader: Read {
         Ok(list)
     }
 
+    /// Return an error if the reader is not at EOF.
     fn expect_eof(&mut self) -> Result<(), Error> {
         let mut buf = [0];
         let n = self.read(&mut buf).map_err(map_io_error)?;
@@ -219,9 +247,12 @@ pub trait Reader: Read {
 
 impl<T: Read> Reader for T {}
 
+/// Header reader.
 pub trait HeaderReader: Reader {
+    /// Id table.
     fn id_table(&mut self) -> &mut IdTable;
 
+    /// Read an identifier.
     fn id(&mut self) -> Result<Arc<str>, Error> {
         match self.id_or_null()? {
             None => Err(Error::new("expected a non-null identifier")),
@@ -229,6 +260,7 @@ pub trait HeaderReader: Reader {
         }
     }
 
+    /// Read an identifier.
     fn id_or_null(&mut self) -> Result<Option<Arc<str>>, Error> {
         if !self.id_table().seen_id {
             let version = self.u32()?;
@@ -277,8 +309,11 @@ pub trait HeaderReader: Reader {
     }
 }
 
+/// HR.
 pub struct HR<R, I> {
+    /// Reader.
     pub reader: R,
+    /// Id table.
     pub id_table: I,
 }
 
@@ -294,9 +329,12 @@ impl<R: Read, I: AsMut<IdTable>> HeaderReader for HR<R, I> {
     }
 }
 
+/// Body reader.
 pub trait BodyReader: HeaderReader {
+    /// Node table.
     fn node_table(&mut self) -> &mut NodeTable;
 
+    /// Read a node.
     fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T, Error>
     where
         Self: Sized,
@@ -315,6 +353,7 @@ pub trait BodyReader: HeaderReader {
         Ok(node)
     }
 
+    /// Read a reference to a node.
     fn node_ref<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<NodeRef<Arc<T>>, Error>
@@ -329,6 +368,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to a node.
     fn node_ref_or_null<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<Option<NodeRef<Arc<T>>>, Error>
@@ -352,6 +392,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to an internal node.
     fn internal_node_ref<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<Arc<T>, Error>
@@ -366,6 +407,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to an internal node.
     fn internal_node_ref_or_null<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
         &mut self,
     ) -> Result<Option<Arc<T>>, Error>
@@ -393,6 +435,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to an external node.
     fn external_node_ref<T: SubExtensions>(&mut self) -> Result<ExternalNodeRef, Error> {
         match self.external_node_ref_or_null::<T>()? {
             None => todo!(),
@@ -400,6 +443,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to an external node.
     fn external_node_ref_or_null<T: SubExtensions>(
         &mut self,
     ) -> Result<Option<ExternalNodeRef>, Error> {
@@ -433,6 +477,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a node.
     fn node_generic<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T, Error>,
@@ -445,6 +490,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a node.
     fn node_or_null_generic<T>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<T, Error>,
@@ -460,6 +506,7 @@ pub trait BodyReader: HeaderReader {
         Ok(Some(node))
     }
 
+    /// Read a reference to a node.
     fn node_ref_generic<T: Clone + Downcast>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
@@ -472,6 +519,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to a node.
     fn node_ref_generic_or_null<T: Clone + Downcast>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
@@ -511,6 +559,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to an internal node.
     fn internal_node_ref_generic<T: Clone + Downcast>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
@@ -523,6 +572,7 @@ pub trait BodyReader: HeaderReader {
         }
     }
 
+    /// Read a reference to an internal node.
     fn internal_node_ref_generic_or_null<T: Clone + Downcast>(
         &mut self,
         read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
@@ -537,9 +587,13 @@ pub trait BodyReader: HeaderReader {
     }
 }
 
+/// BR.
 pub struct BR<R, I, N> {
+    /// Reader.
     pub reader: R,
+    /// Id table.
     pub id_table: I,
+    /// Node table.
     pub node_table: N,
 }
 

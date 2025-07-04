@@ -1,3 +1,5 @@
+//! Block unit info
+
 use crate::ClassId;
 
 /// Block unit info.
@@ -41,46 +43,46 @@ mod read {
 
     impl BlockUnitInfo {
         fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let place_pylons = r.u32()?;
+            let _place_pylons = r.u32()?;
             r.bool32()?;
             r.bool32()?;
-            let relative_offset = r.repeat(3, |r| r.u32())?;
-            let clips = r.list(|r| r.external_node_ref::<BlockInfoClip>())?;
+            let _relative_offset = r.repeat(3, |r| r.u32())?;
+            let _clips = r.list(|r| r.external_node_ref::<BlockInfoClip>())?;
 
             Ok(())
         }
 
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let surface = r.id_or_null()?;
-            let frontier = r.u32()?;
-            let dir = r.u32()?;
+            let _surface = r.id_or_null()?;
+            let _frontier = r.u32()?;
+            let _dir = r.u32()?;
 
             Ok(())
         }
 
         fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let underground = r.bool32()?;
+            let _underground = r.bool32()?;
 
             Ok(())
         }
 
         fn read_chunk_4(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let accept_pylons = r.u32()?;
+            let _accept_pylons = r.u32()?;
 
             Ok(())
         }
 
         fn read_chunk_5(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let terrain_modifier_id = r.id_or_null()?;
+            let _terrain_modifier_id = r.id_or_null()?;
 
             Ok(())
         }
 
         fn read_chunk_7(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let pylon_north = r.external_node_ref_or_null::<Delme>()?;
-            let pylon_south = r.external_node_ref_or_null::<Delme>()?;
-            let pylon_east = r.external_node_ref_or_null::<Delme>()?;
-            let pylon_west = r.external_node_ref_or_null::<Delme>()?;
+            let _pylon_north = r.external_node_ref_or_null::<Delme>()?;
+            let _pylon_south = r.external_node_ref_or_null::<Delme>()?;
+            let _pylon_east = r.external_node_ref_or_null::<Delme>()?;
+            let _pylon_west = r.external_node_ref_or_null::<Delme>()?;
 
             Ok(())
         }
@@ -93,22 +95,22 @@ mod read {
             }
 
             let clip_count_bits = r.u32()?;
-            let clips_north = r.repeat((clip_count_bits & 0x00000007) as usize, |r| {
+            let _clips_north = r.repeat((clip_count_bits & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
-            let clips_east = r.repeat(((clip_count_bits >> 3) & 0x00000007) as usize, |r| {
+            let _clips_east = r.repeat(((clip_count_bits >> 3) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
-            let clips_south = r.repeat(((clip_count_bits >> 6) & 0x00000007) as usize, |r| {
+            let _clips_south = r.repeat(((clip_count_bits >> 6) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
-            let clips_west = r.repeat(((clip_count_bits >> 9) & 0x00000007) as usize, |r| {
+            let _clips_west = r.repeat(((clip_count_bits >> 9) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
-            let clips_top = r.repeat(((clip_count_bits >> 12) & 0x00000007) as usize, |r| {
+            let _clips_top = r.repeat(((clip_count_bits >> 12) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
-            let clips_bottom = r.repeat(((clip_count_bits >> 15) & 0x00000007) as usize, |r| {
+            let _clips_bottom = r.repeat(((clip_count_bits >> 15) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
             r.u16()?;

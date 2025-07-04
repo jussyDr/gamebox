@@ -1,3 +1,5 @@
+//! Collector.
+
 use crate::ClassId;
 
 /// A collector.
@@ -31,13 +33,13 @@ mod read {
 
     impl Collector {
         fn read_chunk_9(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let page_name = r.string()?;
+            let _page_name = r.string()?;
 
             if r.bool32()? {
                 todo!()
             }
 
-            let parent_collector_id = r.id_or_null()?;
+            let _parent_collector_id = r.id_or_null()?;
 
             Ok(())
         }
@@ -51,13 +53,13 @@ mod read {
         }
 
         fn read_chunk_12(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let name = r.string()?;
+            let _name = r.string()?;
 
             Ok(())
         }
 
         fn read_chunk_13(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let description = r.string()?;
+            let _description = r.string()?;
 
             Ok(())
         }
@@ -69,7 +71,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let default_skin = r.external_node_ref_or_null::<Delme>()?;
+            let _default_skin = r.external_node_ref_or_null::<Delme>()?;
             let skin_directory = r.string()?;
 
             if skin_directory.is_empty() {
@@ -86,10 +88,10 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let is_internal = r.bool32()?;
-            let is_advanced = r.bool32()?;
-            let catalog_position = r.u32()?;
-            let prod_state = r.u8()?;
+            let _is_internal = r.bool32()?;
+            let _is_advanced = r.bool32()?;
+            let _catalog_position = r.u32()?;
+            let _prod_state = r.u8()?;
 
             Ok(())
         }

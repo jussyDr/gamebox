@@ -1,5 +1,8 @@
+//! Zone genealogy.
+
 use crate::ClassId;
 
+/// Zone genealogy.
 #[derive(Default)]
 pub struct ZoneGenealogy;
 
@@ -27,10 +30,10 @@ mod read {
 
     impl ZoneGenealogy {
         fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let zone_ids = r.list(|r| r.id())?;
-            let current_index = r.u32()?;
-            let dir = r.u32()?;
-            let current_zone_id = r.id()?;
+            let _zone_ids = r.list(|r| r.id())?;
+            let _current_index = r.u32()?;
+            let _dir = r.u32()?;
+            let _current_zone_id = r.id()?;
 
             Ok(())
         }

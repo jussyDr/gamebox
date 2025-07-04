@@ -1,3 +1,5 @@
+//! Dyna object model instance params.
+
 /// Dynamic object model instance params.
 #[derive(Default)]
 pub struct DynaObjectModelInstanceParams {
@@ -8,36 +10,6 @@ pub struct DynaObjectModelInstanceParams {
     phase01: f32,
     phase01_max: f32,
     cast_static_shadow: bool,
-}
-
-impl DynaObjectModelInstanceParams {
-    pub fn period_sc(&self) -> f32 {
-        self.period_sc
-    }
-
-    pub fn texture_id(&self) -> u32 {
-        self.texture_id
-    }
-
-    pub fn is_kinematic(&self) -> bool {
-        self.is_kinematic
-    }
-
-    pub fn period_sc_max(&self) -> f32 {
-        self.period_sc_max
-    }
-
-    pub fn phase01(&self) -> f32 {
-        self.phase01
-    }
-
-    pub fn phase01_max(&self) -> f32 {
-        self.phase01_max
-    }
-
-    pub fn cast_static_shadow(&self) -> bool {
-        self.cast_static_shadow
-    }
 }
 
 mod read {

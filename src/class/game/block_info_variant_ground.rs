@@ -1,3 +1,5 @@
+//! Block info variant ground.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{ClassId, class::game::block_info_variant::BlockInfoVariant};
@@ -61,9 +63,9 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let auto_terrains = r.list_with_version(|r| r.internal_node_ref::<AutoTerrain>())?;
-            let auto_terrain_height_offset = r.u32()?;
-            let auto_terrain_place_type = r.u32()?;
+            let _auto_terrains = r.list_with_version(|r| r.internal_node_ref::<AutoTerrain>())?;
+            let _auto_terrain_height_offset = r.u32()?;
+            let _auto_terrain_place_type = r.u32()?;
 
             Ok(())
         }

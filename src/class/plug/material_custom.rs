@@ -1,3 +1,5 @@
+//! Material custom.
+
 use std::sync::Arc;
 
 use crate::{ClassId, ExternalNodeRef};
@@ -9,6 +11,7 @@ pub struct MaterialCustom {
 }
 
 impl MaterialCustom {
+    /// Textures.
     pub fn textures(&self) -> &Vec<MaterialCustomTexture> {
         &self.textures
     }
@@ -25,10 +28,12 @@ pub struct MaterialCustomTexture {
 }
 
 impl MaterialCustomTexture {
+    /// Name.
     pub fn name(&self) -> &Arc<str> {
         &self.name
     }
 
+    /// Texture.
     pub fn texture(&self) -> &ExternalNodeRef {
         &self.texture
     }

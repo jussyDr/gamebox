@@ -1,3 +1,5 @@
+//! Vertex stream.
+
 use crate::{ClassId, Vec2, Vec3};
 
 /// A mesh.
@@ -100,8 +102,8 @@ mod read {
             }
 
             let count = r.u32()?;
-            let flags = r.u32()?;
-            let stream_model = r.node_ref_or_null::<VertexStream>()?;
+            let _flags = r.u32()?;
+            let _stream_model = r.node_ref_or_null::<VertexStream>()?;
             let data_decls = r.list(|r| {
                 let flags1 = r.u32()?;
                 let flags2 = r.u32()?;
@@ -109,7 +111,7 @@ mod read {
                 if flags2 & 0x00000ffc == 0 {
                 } else {
                     r.u16()?;
-                    let offset = r.u16()?;
+                    let _offset = r.u16()?;
                 }
 
                 let target = match flags1 & 0x000001ff {

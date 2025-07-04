@@ -1,3 +1,5 @@
+//! Surface.
+
 use crate::{ClassId, ExternalNodeRef, SubExtensions};
 
 /// A surface.
@@ -8,10 +10,12 @@ pub struct Surface {
 }
 
 impl Surface {
+    /// Surface kind.
     pub fn kind(&self) -> &SurfaceKind {
         &self.kind
     }
 
+    /// Materials.
     pub fn materials(&self) -> &Vec<SurfaceMaterial> {
         &self.materials
     }
@@ -90,7 +94,7 @@ mod read {
 
             self.kind = match r.u32()? {
                 6 => {
-                    let transform = r.box3d()?;
+                    let _transform = r.box3d()?;
                     r.u16()?;
 
                     SurfaceKind::Box
@@ -98,8 +102,8 @@ mod read {
                 7 => {
                     match r.u32()? {
                         7 => {
-                            let vertices = r.list(|r| r.vec3())?;
-                            let triangles = r.list(|r| {
+                            let _vertices = r.list(|r| r.vec3())?;
+                            let _triangles = r.list(|r| {
                                 r.u32()?;
                                 r.u32()?;
                                 r.u32()?;
@@ -137,7 +141,7 @@ mod read {
             }
 
             r.list(|r| r.u16())?;
-            let skel = r.u32()?;
+            let _skel = r.u32()?;
 
             Ok(())
         }

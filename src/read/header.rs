@@ -6,16 +6,20 @@ use crate::{
     },
 };
 
+/// Header chunks.
 pub trait HeaderChunks: ClassId {
+    /// Header chunks.
     fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>>;
 }
 
+/// Header chunk.
 pub struct HeaderChunk<T: ?Sized, R> {
     num: u8,
     read_fn: HeaderChunkReadFn<T, R>,
 }
 
 impl<T, R> HeaderChunk<T, R> {
+    /// Create a new header chunk.
     pub fn new(num: u8, read_fn: HeaderChunkReadFn<T, R>) -> Self {
         Self { num, read_fn }
     }
@@ -38,7 +42,7 @@ pub fn read_header_data<T: HeaderChunks>(node: &mut T, r: &mut impl Reader) -> R
         id_table: IdTable::new(),
     };
 
-    for (chunk_id, chunk_size) in header_chunk_entries {
+    for (chunk_id, _chunk_size) in header_chunk_entries {
         let class_id = chunk_id & 0xffffff00;
 
         if class_id != T::CLASS_ID {

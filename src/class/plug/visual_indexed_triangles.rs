@@ -1,8 +1,10 @@
+//! Visual indexed triangles.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{ClassId, class::plug::visual_indexed::VisualIndexed};
 
-/// A visual indexed triangles.
+/// A visual which consists of indexed triangles.
 #[derive(Default)]
 pub struct VisualIndexedTriangles {
     parent: VisualIndexed,

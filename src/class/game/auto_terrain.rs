@@ -1,5 +1,8 @@
+//! Auto terrain.
+
 use crate::ClassId;
 
+/// Auto terrain.
 #[derive(Default)]
 pub struct AutoTerrain;
 
@@ -27,8 +30,8 @@ mod read {
 
     impl AutoTerrain {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let offset = r.repeat(3, |r| r.u32())?;
-            let genealogy = r.internal_node_ref::<ZoneGenealogy>()?;
+            let _offset = r.repeat(3, |r| r.u32())?;
+            let _genealogy = r.internal_node_ref::<ZoneGenealogy>()?;
 
             Ok(())
         }

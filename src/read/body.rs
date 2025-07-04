@@ -3,11 +3,15 @@ use crate::{
     read::{Error, reader::BodyReader},
 };
 
+/// Read body.
 pub trait ReadBody {
+    /// Read body.
     fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error>;
 }
 
+/// Body chunks.
 pub trait BodyChunks: ClassId {
+    /// Parent.
     fn parent(&mut self) -> Option<&mut impl BodyChunks>
     where
         Self: Sized,
@@ -15,9 +19,11 @@ pub trait BodyChunks: ClassId {
         None::<&mut Self>
     }
 
+    /// Body chunks.
     fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>>;
 }
 
+/// Body chunk.
 pub struct BodyChunk<T: ?Sized, R> {
     num: u8,
     read_fn: BodyChunkReadFn<T, R>,
@@ -25,6 +31,7 @@ pub struct BodyChunk<T: ?Sized, R> {
 }
 
 impl<T, R> BodyChunk<T, R> {
+    /// New.
     pub fn new(num: u8, read_fn: BodyChunkReadFn<T, R>) -> Self {
         Self {
             num,
@@ -33,6 +40,7 @@ impl<T, R> BodyChunk<T, R> {
         }
     }
 
+    /// Skippable.
     pub fn skippable(num: u8, read_fn: BodyChunkReadFn<T, R>) -> Self {
         Self {
             num,
@@ -44,6 +52,7 @@ impl<T, R> BodyChunk<T, R> {
 
 type BodyChunkReadFn<T, R> = fn(&mut T, &mut R) -> Result<(), Error>;
 
+/// Read body chunks.
 pub fn read_body_chunks<T: BodyChunks>(r: &mut impl BodyReader, node: &mut T) -> Result<(), Error> {
     let chunk_id = read_body_chunks_inner(r, node)?;
 
@@ -97,7 +106,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
                 todo!()
             }
 
-            let size = r.u32()?;
+            let _size = r.u32()?;
 
             (chunk.read_fn)(node, r)?;
         } else {
@@ -110,6 +119,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     Ok(None)
 }
 
+/// Read node from body.
 pub fn read_node_from_body<T: Default + ReadBody>(r: &mut impl BodyReader) -> Result<T, Error> {
     let mut node = T::default();
     node.read_body(r)?;

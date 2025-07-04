@@ -1,3 +1,5 @@
+//! Anim loc simple.
+
 use crate::SubExtensions;
 
 /// Anim loc simple.
