@@ -17,34 +17,25 @@ impl IndexBuffer {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::plug::index_buffer::IndexBuffer,
-        read::{
-            BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks,
-            reader::{IdTableRef, NodeTableRef, Reader},
-        },
+        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 
     impl ReadBody for IndexBuffer {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
     }
 
     impl BodyChunks for IndexBuffer {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [BodyChunk::new(1, Self::read_chunk_1)]
         }
     }
 
     impl IndexBuffer {
-        fn read_chunk_1<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let flags = r.u32()?;
             let offsets: Vec<i16> = r.list_zerocopy()?;
 

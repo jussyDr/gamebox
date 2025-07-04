@@ -42,8 +42,6 @@ pub enum InternalMaterial {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::plug::{
             material::Material,
@@ -52,39 +50,32 @@ mod read {
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, error_unknown_enum_variant, read_body_chunks,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            reader::{BodyReader, HeaderReader},
         },
     };
 
     impl Readable for Surface {}
 
     impl HeaderChunks for Surface {
-        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
             []
         }
     }
 
     impl ReadBody for Surface {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
     }
 
     impl BodyChunks for Surface {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [BodyChunk::new(3, Self::read_chunk_3)]
         }
     }
 
     impl Surface {
-        fn read_chunk_3(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_chunk_3(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 4 {

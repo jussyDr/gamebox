@@ -1,6 +1,6 @@
 use gamebox::{
     class::{
-        game::challenge::Challenge,
+        game::{block_info_classic::BlockInfoClassic, challenge::Challenge},
         plug::{
             bitmap::Bitmap, dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
             solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,
@@ -19,6 +19,12 @@ fn read_dyna_object_flag() {
 fn read_dyna_object_light_ray() {
     let _dyna_object: DynaObjectModel =
         read_file("tests/files/dyna_object/LightRay.DynaObject.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_road_tech_straight() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
 }
 
 #[test]

@@ -41,21 +41,13 @@ impl DynaObjectModelInstanceParams {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::dyna_object_model_instance_params::DynaObjectModelInstanceParams,
-        read::{
-            Error, ReadBody, error_unknown_version,
-            reader::{IdTableRef, NodeTableRef, Reader},
-        },
+        read::{Error, ReadBody, error_unknown_version, reader::BodyReader},
     };
 
     impl ReadBody for DynaObjectModelInstanceParams {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 2 {

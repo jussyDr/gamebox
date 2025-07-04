@@ -1,44 +1,44 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{ClassId, class::plug::visual_indexed::VisualIndexed};
+use crate::{ClassId, class::game::block_info_variant::BlockInfoVariant};
 
-/// A visual indexed triangles.
+/// Block info variant air.
 #[derive(Default)]
-pub struct VisualIndexedTriangles {
-    parent: VisualIndexed,
+pub struct BlockInfoVariantAir {
+    parent: BlockInfoVariant,
 }
 
-impl ClassId for VisualIndexedTriangles {
-    const CLASS_ID: u32 = 0x0901e000;
+impl ClassId for BlockInfoVariantAir {
+    const CLASS_ID: u32 = 0x0315d000;
 }
 
-impl Deref for VisualIndexedTriangles {
-    type Target = VisualIndexed;
+impl Deref for BlockInfoVariantAir {
+    type Target = BlockInfoVariant;
 
-    fn deref(&self) -> &VisualIndexed {
+    fn deref(&self) -> &BlockInfoVariant {
         &self.parent
     }
 }
 
-impl DerefMut for VisualIndexedTriangles {
-    fn deref_mut(&mut self) -> &mut VisualIndexed {
+impl DerefMut for BlockInfoVariantAir {
+    fn deref_mut(&mut self) -> &mut BlockInfoVariant {
         &mut self.parent
     }
 }
 
 mod read {
     use crate::{
-        class::plug::visual_indexed_triangles::VisualIndexedTriangles,
+        class::game::block_info_variant_air::BlockInfoVariantAir,
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 
-    impl ReadBody for VisualIndexedTriangles {
+    impl ReadBody for BlockInfoVariantAir {
         fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
     }
 
-    impl BodyChunks for VisualIndexedTriangles {
+    impl BodyChunks for BlockInfoVariantAir {
         fn parent(&mut self) -> Option<&mut impl BodyChunks> {
             Some(&mut self.parent)
         }

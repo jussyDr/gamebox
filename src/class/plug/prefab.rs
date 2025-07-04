@@ -93,7 +93,7 @@ pub enum EntityParams {
 }
 
 mod read {
-    use std::{io::Read, sync::Arc};
+    use std::sync::Arc;
 
     use crate::{
         class::plug::{
@@ -103,23 +103,20 @@ mod read {
         read::{
             Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
             read_node_from_body,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            reader::{BodyReader, HeaderReader},
         },
     };
 
     impl Readable for Prefab {}
 
     impl HeaderChunks for Prefab {
-        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
             []
         }
     }
 
     impl ReadBody for Prefab {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 11 {

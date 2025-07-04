@@ -19,19 +19,14 @@ impl ClassId for Visual {
 }
 
 mod read {
-    use std::io::Read;
 
     use crate::{
         class::plug::visual::Visual,
-        read::{
-            BodyChunk, BodyChunks, Error, error_unknown_chunk_version,
-            reader::{IdTableRef, NodeTableRef, Reader},
-        },
+        read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
     };
 
     impl BodyChunks for Visual {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [
                 BodyChunk::new(1, Self::read_chunk_1),
                 BodyChunk::new(5, Self::read_chunk_5),
@@ -44,16 +39,13 @@ mod read {
     }
 
     impl Visual {
-        fn read_chunk_1<N>(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, N>,
-        ) -> Result<(), Error> {
+        fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.id_or_null()?;
 
             Ok(())
         }
 
-        fn read_chunk_5<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_5(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let sub_visuals = r.list(|r| {
                 r.u32()?;
                 r.u32()?;
@@ -65,13 +57,13 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_9<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_9(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.f32()?;
 
             Ok(())
         }
 
-        fn read_chunk_11<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_11(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let splits = r.list(|r| {
                 r.u32()?;
                 r.u32()?;
@@ -83,10 +75,7 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_15(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_chunk_15(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 6 {
@@ -113,7 +102,7 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_16<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_16(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 0 {

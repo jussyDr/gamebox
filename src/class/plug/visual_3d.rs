@@ -27,14 +27,9 @@ impl DerefMut for Visual3D {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::plug::visual_3d::Visual3D,
-        read::{
-            BodyChunk, BodyChunks, Error,
-            reader::{IdTableRef, NodeTableRef, Reader},
-        },
+        read::{BodyChunk, BodyChunks, Error, reader::BodyReader},
     };
 
     impl BodyChunks for Visual3D {
@@ -42,8 +37,7 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [
                 BodyChunk::new(2, Self::read_chunk_2),
                 BodyChunk::new(4, Self::read_chunk_4),
@@ -52,13 +46,13 @@ mod read {
     }
 
     impl Visual3D {
-        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
 
             Ok(())
         }
 
-        fn read_chunk_4<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_4(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
 

@@ -69,39 +69,30 @@ enum VertexFormat {
 }
 
 mod read {
-    use std::io::Read;
 
     use crate::{
         Vec3,
         class::plug::vertex_stream::{DataDecl, VertexFormat, VertexStream, VertexTarget},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version,
-            error_unknown_enum_variant, read_body_chunks,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            error_unknown_enum_variant, read_body_chunks, reader::BodyReader,
         },
     };
 
     impl ReadBody for VertexStream {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
     }
 
     impl BodyChunks for VertexStream {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [BodyChunk::new(0, Self::read_chunk_0)]
         }
     }
 
     impl VertexStream {
-        fn read_chunk_0(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 1 {

@@ -1,18 +1,10 @@
-use std::io::Read;
-
 use crate::{
     ClassId, END_OF_BODY_MARKER, SKIPPABLE_CHUNK_MARKER,
-    read::{
-        Error,
-        reader::{IdTableRef, NodeTableRef, Reader},
-    },
+    read::{Error, reader::BodyReader},
 };
 
 pub trait ReadBody {
-    fn read_body(
-        &mut self,
-        r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-    ) -> Result<(), Error>;
+    fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error>;
 }
 
 pub trait BodyChunks: ClassId {
@@ -23,18 +15,17 @@ pub trait BodyChunks: ClassId {
         None::<&mut Self>
     }
 
-    fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-    -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>>;
+    fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>>;
 }
 
-pub struct BodyChunk<T: ?Sized, R, I, N> {
+pub struct BodyChunk<T: ?Sized, R> {
     num: u8,
-    read_fn: BodyChunkReadFn<T, R, I, N>,
+    read_fn: BodyChunkReadFn<T, R>,
     skippable: bool,
 }
 
-impl<T, R, I, N> BodyChunk<T, R, I, N> {
-    pub fn new(num: u8, read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>) -> Self {
+impl<T, R> BodyChunk<T, R> {
+    pub fn new(num: u8, read_fn: BodyChunkReadFn<T, R>) -> Self {
         Self {
             num,
             read_fn,
@@ -42,10 +33,7 @@ impl<T, R, I, N> BodyChunk<T, R, I, N> {
         }
     }
 
-    pub fn skippable(
-        num: u8,
-        read_fn: fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>,
-    ) -> Self {
+    pub fn skippable(num: u8, read_fn: BodyChunkReadFn<T, R>) -> Self {
         Self {
             num,
             read_fn,
@@ -54,12 +42,9 @@ impl<T, R, I, N> BodyChunk<T, R, I, N> {
     }
 }
 
-type BodyChunkReadFn<T, R, I, N> = fn(&mut T, &mut Reader<R, I, N>) -> Result<(), Error>;
+type BodyChunkReadFn<T, R> = fn(&mut T, &mut R) -> Result<(), Error>;
 
-pub fn read_body_chunks<T: BodyChunks>(
-    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-    node: &mut T,
-) -> Result<(), Error> {
+pub fn read_body_chunks<T: BodyChunks>(r: &mut impl BodyReader, node: &mut T) -> Result<(), Error> {
     let chunk_id = read_body_chunks_inner(r, node)?;
 
     if let Some(chunk_id) = chunk_id {
@@ -70,7 +55,7 @@ pub fn read_body_chunks<T: BodyChunks>(
 }
 
 fn read_body_chunks_inner<T: BodyChunks>(
-    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
+    r: &mut impl BodyReader,
     node: &mut T,
 ) -> Result<Option<u32>, Error> {
     // Read parent chunks, if any.
@@ -99,7 +84,11 @@ fn read_body_chunks_inner<T: BodyChunks>(
         let chunk_num = (chunk_id & 0x000000ff) as u8;
 
         let chunk = match chunks.find(|chunk| chunk.num == chunk_num) {
-            None => return Err(Error::new("unknown chunk number")),
+            None => {
+                return Err(Error::new(format!(
+                    "unknown chunk number: {chunk_num} of class 0x{class_id:08x}"
+                )));
+            }
             Some(chunk) => chunk,
         };
 
@@ -121,9 +110,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     Ok(None)
 }
 
-pub fn read_node_from_body<T: Default + ReadBody>(
-    r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-) -> Result<T, Error> {
+pub fn read_node_from_body<T: Default + ReadBody>(r: &mut impl BodyReader) -> Result<T, Error> {
     let mut node = T::default();
     node.read_body(r)?;
 

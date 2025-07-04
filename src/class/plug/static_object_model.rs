@@ -36,29 +36,24 @@ impl SubExtensions for StaticObjectModel {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::plug::static_object_model::StaticObjectModel,
         read::{
             Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            reader::{BodyReader, HeaderReader},
         },
     };
 
     impl Readable for StaticObjectModel {}
 
     impl HeaderChunks for StaticObjectModel {
-        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
             []
         }
     }
 
     impl ReadBody for StaticObjectModel {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 3 {

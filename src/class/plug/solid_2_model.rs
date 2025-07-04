@@ -58,8 +58,6 @@ impl ShadedGeom {
 pub struct Solid2ModelLight {}
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::plug::{
             light::Light,
@@ -69,30 +67,26 @@ mod read {
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, error_unknown_version, read_body_chunks,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            reader::{BodyReader, HeaderReader},
         },
     };
 
     impl Readable for Solid2Model {}
 
     impl HeaderChunks for Solid2Model {
-        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
             []
         }
     }
 
     impl ReadBody for Solid2Model {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
     }
 
     impl BodyChunks for Solid2Model {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [
                 BodyChunk::new(0, Self::read_chunk_0),
                 BodyChunk::skippable(2, Self::read_chunk_2),
@@ -101,10 +95,7 @@ mod read {
     }
 
     impl Solid2Model {
-        fn read_chunk_0(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 34 {
@@ -215,7 +206,7 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
 

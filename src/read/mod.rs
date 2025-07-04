@@ -21,7 +21,7 @@ use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
     read::{
         header::read_header_data,
-        reader::{IdTable, NodeTable, Reader},
+        reader::{BR, BasicReader, IdTable, NodeTable},
     },
     sub_extension,
 };
@@ -83,7 +83,7 @@ pub trait Readable:
 
 /// Read an instance of type `T` from the given `reader`.
 pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
-    let mut r = Reader::new(reader, (), ());
+    let mut r = reader;
 
     // Read the header.
     if r.byte_array()? != FILE_SIGNATURE {
@@ -174,7 +174,11 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     }
 
     // Read the body.
-    let mut r = Reader::new(r.into_inner(), IdTable::new(), node_table);
+    let mut r = BR {
+        reader: r,
+        id_table: IdTable::new(),
+        node_table,
+    };
 
     if body_compressed {
         todo!()
@@ -202,7 +206,7 @@ pub fn read_file<T: Readable + SubExtensions>(path: impl AsRef<Path>) -> Result<
     read(reader)
 }
 
-fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, Error> {
+fn read_folders(r: &mut impl BasicReader) -> Result<Vec<PathBuf>, Error> {
     let mut folders = vec![];
     folders.push(PathBuf::new());
 
@@ -222,12 +226,12 @@ fn read_folders<I, N>(r: &mut Reader<impl Read, I, N>) -> Result<Vec<PathBuf>, E
     Ok(folders)
 }
 
-pub(crate) fn error_unknown_version(name: &str, value: u32) -> Error {
-    Error::new(format!("unknown {name} version: {value}"))
+pub(crate) fn error_unknown_version(name: &str, version: u32) -> Error {
+    Error::new(format!("unknown {name} version: {version}"))
 }
 
-pub(crate) fn error_unknown_chunk_version(value: u32) -> Error {
-    error_unknown_version("chunk", value)
+pub(crate) fn error_unknown_chunk_version(version: u32) -> Error {
+    error_unknown_version("chunk", version)
 }
 
 pub(crate) fn error_unknown_enum_variant(name: &str, value: u32) -> Error {

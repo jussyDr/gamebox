@@ -37,14 +37,10 @@ impl DerefMut for VisualIndexed {
 }
 
 mod read {
-    use std::io::Read;
 
     use crate::{
         class::plug::visual_indexed::VisualIndexed,
-        read::{
-            BodyChunk, BodyChunks, Error, read_node_from_body,
-            reader::{IdTableRef, NodeTableRef, Reader},
-        },
+        read::{BodyChunk, BodyChunks, Error, read_node_from_body, reader::BodyReader},
     };
 
     impl BodyChunks for VisualIndexed {
@@ -52,17 +48,13 @@ mod read {
             Some(&mut self.parent)
         }
 
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [BodyChunk::new(1, Self::read_chunk_1)]
         }
     }
 
     impl VisualIndexed {
-        fn read_chunk_1(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             if r.bool32()? {
                 self.index_buffer = read_node_from_body(r)?;
             }

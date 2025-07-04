@@ -98,11 +98,19 @@ impl Default for ExternalNodeRef {
 
 /// A 2-dimensional vector.
 #[derive(FromBytes, IntoBytes)]
+#[repr(C)]
 pub struct Vec2 {
     /// X component.
     pub x: f32,
     /// Y component.
     pub y: f32,
+}
+
+impl Vec2 {
+    /// Convert to an array `[x, y]`.
+    pub fn to_array(&self) -> [f32; 2] {
+        [self.x, self.y]
+    }
 }
 
 impl LeToNe for Vec2 {
@@ -114,6 +122,7 @@ impl LeToNe for Vec2 {
 
 /// A 3-dimensional vector.
 #[derive(PartialEq, Debug, Immutable, FromBytes, IntoBytes)]
+#[repr(C)]
 pub struct Vec3 {
     /// X component.
     pub x: f32,
@@ -124,8 +133,14 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    /// Create a new `Vec3`.
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Self { x, y, z }
+    }
+
+    /// Convert to an array `[x, y, z]`.
+    pub fn to_array(&self) -> [f32; 3] {
+        [self.x, self.y, self.z]
     }
 }
 
@@ -138,7 +153,8 @@ impl LeToNe for Vec3 {
 }
 
 /// A quaterion.
-#[derive(FromBytes)]
+#[derive(FromBytes, Debug)]
+#[repr(C)]
 pub struct Quat {
     /// X component.
     pub x: f32,
@@ -148,6 +164,13 @@ pub struct Quat {
     pub z: f32,
     /// W component.
     pub w: f32,
+}
+
+impl Quat {
+    /// Convert to an array `[x, y, z, w]`.
+    pub fn to_array(&self) -> [f32; 4] {
+        [self.x, self.y, self.z, self.w]
+    }
 }
 
 impl LeToNe for Quat {

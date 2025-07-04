@@ -21,37 +21,31 @@ impl ClassId for Bitmap {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::plug::{bitmap::Bitmap, file_img::FileImg},
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, read_body_chunks,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            reader::{BodyReader, HeaderReader},
         },
     };
 
     impl Readable for Bitmap {}
 
     impl HeaderChunks for Bitmap {
-        fn header_chunks<R, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
             []
         }
     }
 
     impl ReadBody for Bitmap {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), crate::read::Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), crate::read::Error> {
             read_body_chunks(r, self)
         }
     }
 
     impl BodyChunks for Bitmap {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             [
                 BodyChunk::new(25, Self::read_chunk_25),
                 BodyChunk::new(32, Self::read_chunk_32),
@@ -73,25 +67,25 @@ mod read {
     }
 
     impl Bitmap {
-        fn read_chunk_25<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_25(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let bum_scale_mip_level = r.f32()?;
 
             Ok(())
         }
 
-        fn read_chunk_32<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_32(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let mip_map_fade_alphas = r.list(|r| r.f32())?;
 
             Ok(())
         }
 
-        fn read_chunk_35<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_35(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
 
             Ok(())
         }
 
-        fn read_chunk_37<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_37(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let default_texcoord_scale = r.vec2()?;
             let default_texcoord_trans = r.vec2()?;
             let default_texcoord_rotate = r.f32()?;
@@ -100,26 +94,26 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_40<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_40(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
 
             Ok(())
         }
 
-        fn read_chunk_42<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_42(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let sprite_param = r.u32()?;
 
             Ok(())
         }
 
-        fn read_chunk_44<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_44(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let decals = r.u32()?;
 
             Ok(())
         }
 
-        fn read_chunk_45<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_45(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 0 {
@@ -131,10 +125,7 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_48(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_chunk_48(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 5 {
@@ -154,13 +145,13 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_51<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_51(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let height_in_meters = r.f32()?;
 
             Ok(())
         }
 
-        fn read_chunk_52<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_52(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
             if version != 4 {
@@ -177,17 +168,14 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_53<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_53(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u16()?;
 
             Ok(())
         }
 
-        fn read_chunk_54<N>(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, N>,
-        ) -> Result<(), Error> {
+        fn read_chunk_54(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
             r.id_or_null()?;
@@ -196,7 +184,7 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_55<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_55(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
             r.u32()?;
@@ -210,7 +198,7 @@ mod read {
             Ok(())
         }
 
-        fn read_chunk_56<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_56(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
             r.u32()?;

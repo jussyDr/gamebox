@@ -15,43 +15,37 @@ impl SubExtensions for Challenge {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::game::challenge::Challenge,
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, read_body_chunks,
-            reader::{IdTableRef, NodeTableRef, Reader},
+            reader::{BodyReader, HeaderReader},
         },
     };
 
     impl Readable for Challenge {}
 
     impl HeaderChunks for Challenge {
-        fn header_chunks<R: Read, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>> {
+        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
             [HeaderChunk::new(2, Self::read_chunk_2)]
         }
     }
 
     impl ReadBody for Challenge {
-        fn read_body(
-            &mut self,
-            r: &mut Reader<impl Read, impl IdTableRef, impl NodeTableRef>,
-        ) -> Result<(), Error> {
+        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             read_body_chunks(r, self)
         }
     }
 
     impl BodyChunks for Challenge {
-        fn body_chunks<R: Read, I: IdTableRef, N: NodeTableRef>()
-        -> impl IntoIterator<Item = BodyChunk<Self, R, I, N>> {
+        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
             []
         }
     }
 
     impl Challenge {
-        fn read_chunk_2<I, N>(&mut self, r: &mut Reader<impl Read, I, N>) -> Result<(), Error> {
+        fn read_chunk_2(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
             let version = r.u8()?;
 
             if version != 13 {

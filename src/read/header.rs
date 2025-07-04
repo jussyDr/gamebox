@@ -1,30 +1,31 @@
-use std::io::Read;
-
 use crate::{
     ClassId,
-    read::{Error, reader::Reader},
+    read::{
+        Error,
+        reader::{BasicReader, HR, HeaderReader, IdTable},
+    },
 };
 
 pub trait HeaderChunks: ClassId {
-    fn header_chunks<R: Read, I, N>() -> impl IntoIterator<Item = HeaderChunk<Self, R, I, N>>;
+    fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>>;
 }
 
-pub struct HeaderChunk<T: ?Sized, R, I, N> {
+pub struct HeaderChunk<T: ?Sized, R> {
     num: u8,
-    read_fn: HeaderChunkReadFn<T, R, I, N>,
+    read_fn: HeaderChunkReadFn<T, R>,
 }
 
-impl<T, R, I, N> HeaderChunk<T, R, I, N> {
-    pub fn new(num: u8, read_fn: HeaderChunkReadFn<T, R, I, N>) -> Self {
+impl<T, R> HeaderChunk<T, R> {
+    pub fn new(num: u8, read_fn: HeaderChunkReadFn<T, R>) -> Self {
         Self { num, read_fn }
     }
 }
 
-type HeaderChunkReadFn<T, R, I, N> = fn(&mut T, r: &mut Reader<R, I, N>) -> Result<(), Error>;
+type HeaderChunkReadFn<T, R> = fn(&mut T, r: &mut R) -> Result<(), Error>;
 
-pub fn read_header_data<T: HeaderChunks, I, N>(
+pub fn read_header_data<T: HeaderChunks>(
     node: &mut T,
-    r: &mut Reader<impl Read, I, N>,
+    r: &mut impl BasicReader,
 ) -> Result<(), Error> {
     let header_chunk_entries = r.list(|r| {
         let chunk_id = r.u32()?;
@@ -34,6 +35,11 @@ pub fn read_header_data<T: HeaderChunks, I, N>(
     })?;
 
     let mut header_chunks = T::header_chunks().into_iter();
+
+    let mut r = HR {
+        reader: r,
+        id_table: IdTable::new(),
+    };
 
     for (chunk_id, chunk_size) in header_chunk_entries {
         let class_id = chunk_id & 0xffffff00;
@@ -48,7 +54,7 @@ pub fn read_header_data<T: HeaderChunks, I, N>(
             .find(|chunk| chunk.num == chunk_num)
             .ok_or_else(|| Error::new(format!("unknown header chunk: 0x{chunk_id:08x}")))?;
 
-        (chunk.read_fn)(node, r)?;
+        (chunk.read_fn)(node, &mut r)?;
     }
 
     Ok(())
