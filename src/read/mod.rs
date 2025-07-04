@@ -21,7 +21,7 @@ use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
     read::{
         header::read_header_data,
-        reader::{BR, BasicReader, IdTable, NodeTable},
+        reader::{BR, IdTable, NodeTable, Reader},
     },
     sub_extension,
 };
@@ -206,7 +206,7 @@ pub fn read_file<T: Readable + SubExtensions>(path: impl AsRef<Path>) -> Result<
     read(reader)
 }
 
-fn read_folders(r: &mut impl BasicReader) -> Result<Vec<PathBuf>, Error> {
+fn read_folders(r: &mut impl Reader) -> Result<Vec<PathBuf>, Error> {
     let mut folders = vec![];
     folders.push(PathBuf::new());
 

@@ -2,7 +2,7 @@ use crate::{
     ClassId,
     read::{
         Error,
-        reader::{BasicReader, HR, HeaderReader, IdTable},
+        reader::{HR, HeaderReader, IdTable, Reader},
     },
 };
 
@@ -23,10 +23,7 @@ impl<T, R> HeaderChunk<T, R> {
 
 type HeaderChunkReadFn<T, R> = fn(&mut T, r: &mut R) -> Result<(), Error>;
 
-pub fn read_header_data<T: HeaderChunks>(
-    node: &mut T,
-    r: &mut impl BasicReader,
-) -> Result<(), Error> {
+pub fn read_header_data<T: HeaderChunks>(node: &mut T, r: &mut impl Reader) -> Result<(), Error> {
     let header_chunk_entries = r.list(|r| {
         let chunk_id = r.u32()?;
         let chunk_size = r.u32()?;

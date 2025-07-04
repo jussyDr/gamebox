@@ -28,6 +28,7 @@ impl DerefMut for BlockInfo {
 
 mod read {
     use crate::{
+        Delme,
         class::game::{
             block_info::BlockInfo, block_info_variant_air::BlockInfoVariantAir,
             block_info_variant_ground::BlockInfoVariantGround,
@@ -50,6 +51,15 @@ mod read {
                 BodyChunk::new(23, Self::read_chunk_23),
                 BodyChunk::new(32, Self::read_chunk_32),
                 BodyChunk::new(35, Self::read_chunk_35),
+                BodyChunk::new(38, Self::read_chunk_38),
+                BodyChunk::new(39, Self::read_chunk_39),
+                BodyChunk::new(40, Self::read_chunk_40),
+                BodyChunk::new(41, Self::read_chunk_41),
+                BodyChunk::new(42, Self::read_chunk_42),
+                BodyChunk::new(43, Self::read_chunk_43),
+                BodyChunk::new(44, Self::read_chunk_44),
+                BodyChunk::new(47, Self::read_chunk_47),
+                BodyChunk::new(49, Self::read_chunk_49),
             ]
         }
     }
@@ -95,6 +105,100 @@ mod read {
         fn read_chunk_35(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let variant_base_ground = read_node_from_body::<BlockInfoVariantGround>(r)?;
             let variant_base_air = read_node_from_body::<BlockInfoVariantAir>(r)?;
+
+            Ok(())
+        }
+
+        fn read_chunk_38(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let waypoint_type = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_39(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let additional_variants_ground =
+                r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantGround>())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_40(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let symmetrical_block_info_id = r.id_or_null()?;
+            let dir = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_41(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let fog_volume_box = r.external_node_ref_or_null::<Delme>()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_42(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let sound_1 = r.external_node_ref_or_null::<Delme>()?;
+            let sound_2 = r.external_node_ref_or_null::<Delme>()?;
+
+            if sound_1.is_some() {
+                let sound_1_loc = r.iso4()?;
+            }
+
+            if sound_2.is_some() {
+                let sound_2_loc = r.iso4()?;
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_43(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let base_type = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_44(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let additional_variants_air =
+                r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantAir>())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_47(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let is_pillar = r.bool8()?;
+            let pillar_shape_multi_dir = r.u8()?;
+            r.u8()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_49(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            r.u32()?;
+            let material_modifier = r.external_node_ref_or_null::<Delme>()?;
+            let material_modifier_2 = r.external_node_ref_or_null::<Delme>()?;
 
             Ok(())
         }

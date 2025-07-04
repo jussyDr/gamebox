@@ -28,8 +28,13 @@ impl DerefMut for BlockInfoVariantGround {
 
 mod read {
     use crate::{
-        class::game::block_info_variant_ground::BlockInfoVariantGround,
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        class::game::{
+            auto_terrain::AutoTerrain, block_info_variant_ground::BlockInfoVariantGround,
+        },
+        read::{
+            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
+            reader::BodyReader,
+        },
     };
 
     impl ReadBody for BlockInfoVariantGround {
@@ -44,7 +49,23 @@ mod read {
         }
 
         fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            []
+            [BodyChunk::new(1, Self::read_chunk_1)]
+        }
+    }
+
+    impl BlockInfoVariantGround {
+        fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 2 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let auto_terrains = r.list_with_version(|r| r.internal_node_ref::<AutoTerrain>())?;
+            let auto_terrain_height_offset = r.u32()?;
+            let auto_terrain_place_type = r.u32()?;
+
+            Ok(())
         }
     }
 }

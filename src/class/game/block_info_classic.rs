@@ -31,8 +31,6 @@ impl SubExtensions for BlockInfoClassic {
 }
 
 mod read {
-    use std::io::Read;
-
     use crate::{
         class::game::block_info_classic::BlockInfoClassic,
         read::{

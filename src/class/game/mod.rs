@@ -1,5 +1,6 @@
 //! Game engine.
 
+pub mod auto_terrain;
 pub mod block_info;
 pub mod block_info_classic;
 pub mod block_info_clip;
@@ -9,3 +10,4 @@ pub mod block_info_variant_air;
 pub mod block_info_variant_ground;
 pub mod block_unit_info;
 pub mod challenge;
+pub mod zone_genealogy;

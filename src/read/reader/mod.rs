@@ -23,7 +23,7 @@ fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -
     iter::repeat_with(repeater).take(n).collect()
 }
 
-pub trait BasicReader: Read {
+pub trait Reader: Read {
     fn bytes(&mut self, n: usize) -> Result<Vec<u8>, Error> {
         let mut buf = vec![0; n];
         self.read_exact(&mut buf).map_err(map_io_error)?;
@@ -40,7 +40,7 @@ pub trait BasicReader: Read {
 
     fn byte_buf(&mut self) -> Result<Vec<u8>, Error> {
         let len = self.u32()?;
-        BasicReader::bytes(self, len as usize)
+        Reader::bytes(self, len as usize)
     }
 
     fn zerocopy<T: FromBytes + LeToNe>(&mut self) -> Result<T, Error> {
@@ -217,9 +217,9 @@ pub trait BasicReader: Read {
     }
 }
 
-impl<T: Read> BasicReader for T {}
+impl<T: Read> Reader for T {}
 
-pub trait HeaderReader: BasicReader {
+pub trait HeaderReader: Reader {
     fn id_table(&mut self) -> &mut IdTable;
 
     fn id(&mut self) -> Result<Arc<str>, Error> {

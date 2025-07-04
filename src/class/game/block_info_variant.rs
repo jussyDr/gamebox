@@ -22,8 +22,8 @@ mod read {
     use crate::{
         Delme,
         class::game::{
-            block_info_mobil::BlockInfoMobil, block_info_variant::BlockInfoVariant,
-            block_unit_info::BlockUnitInfo,
+            block_info_classic::BlockInfoClassic, block_info_mobil::BlockInfoMobil,
+            block_info_variant::BlockInfoVariant, block_unit_info::BlockUnitInfo,
         },
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
     };
@@ -40,6 +40,8 @@ mod read {
                 BodyChunk::new(8, Self::read_chunk_8),
                 BodyChunk::new(9, Self::read_chunk_9),
                 BodyChunk::new(10, Self::read_chunk_10),
+                BodyChunk::new(11, Self::read_chunk_11),
+                BodyChunk::new(13, Self::read_chunk_13),
             ]
         }
     }
@@ -153,7 +155,7 @@ mod read {
             }
 
             r.list(|r| {
-                r.external_node_ref_or_null::<Delme>()?;
+                r.external_node_ref_or_null::<BlockInfoClassic>()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
@@ -183,6 +185,25 @@ mod read {
             }
 
             let compound_model = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_11(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let water_volumes: Vec<()> = r.list(|r| todo!())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_13(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         }
