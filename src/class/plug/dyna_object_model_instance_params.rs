@@ -14,7 +14,7 @@ pub struct DynaObjectModelInstanceParams {
 
 mod read {
     use crate::{
-        class::dyna_object_model_instance_params::DynaObjectModelInstanceParams,
+        class::plug::dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         read::{Error, ReadBody, error_unknown_version, reader::BodyReader},
     };
 

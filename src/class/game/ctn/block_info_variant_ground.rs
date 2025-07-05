@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{ClassId, class::game::block_info_variant::BlockInfoVariant};
+use crate::{ClassId, class::game::ctn::block_info_variant::BlockInfoVariant};
 
 /// Block info variant ground.
 #[derive(Default)]
@@ -30,7 +30,7 @@ impl DerefMut for BlockInfoVariantGround {
 
 mod read {
     use crate::{
-        class::game::{
+        class::game::ctn::{
             auto_terrain::AutoTerrain, block_info_variant_ground::BlockInfoVariantGround,
         },
         read::{

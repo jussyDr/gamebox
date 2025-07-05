@@ -15,7 +15,7 @@ pub mod class;
 pub mod read;
 
 // Re-export common class types.
-pub use class::game::challenge::Challenge;
+pub use class::game::ctn::challenge::Challenge;
 pub use read::{read, read_file};
 
 use zerocopy::{FromBytes, Immutable, IntoBytes};

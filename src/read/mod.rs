@@ -4,10 +4,10 @@ pub mod byte_order;
 pub mod reader;
 
 mod body;
-mod header;
+mod header_data;
 
 pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node_from_body};
-pub use header::{HeaderChunk, HeaderChunks};
+pub use header_data::{HeaderChunk, HeaderChunks};
 
 use std::{
     fmt::{self, Debug, Display, Formatter},
@@ -20,7 +20,7 @@ use std::{
 use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
     read::{
-        header::read_header_data,
+        header_data::read_header_data,
         reader::{BR, IdTable, NodeTable, Reader},
     },
     sub_extension,

@@ -8,7 +8,7 @@ use std::{
 use crate::{
     ClassId,
     class::{
-        game::{
+        game::ctn::{
             block_info_variant_air::BlockInfoVariantAir,
             block_info_variant_ground::BlockInfoVariantGround,
         },
@@ -69,7 +69,7 @@ impl DerefMut for BlockInfo {
 mod read {
     use crate::{
         Delme,
-        class::game::{
+        class::game::ctn::{
             block_info::BlockInfo, block_info_variant_air::BlockInfoVariantAir,
             block_info_variant_ground::BlockInfoVariantGround,
         },

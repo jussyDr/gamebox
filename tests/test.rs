@@ -1,6 +1,6 @@
 use gamebox::{
     class::{
-        game::{block_info_classic::BlockInfoClassic, challenge::Challenge},
+        game::ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge},
         plug::{
             bitmap::Bitmap, dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
             solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,

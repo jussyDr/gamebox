@@ -12,7 +12,7 @@ impl ClassId for ZoneGenealogy {
 
 mod read {
     use crate::{
-        class::game::zone_genealogy::ZoneGenealogy,
+        class::game::ctn::zone_genealogy::ZoneGenealogy,
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 

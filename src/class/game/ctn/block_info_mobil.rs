@@ -23,7 +23,7 @@ mod read {
     use crate::{
         Delme,
         class::{
-            game::block_info_mobil::BlockInfoMobil,
+            game::ctn::block_info_mobil::BlockInfoMobil,
             plug::{placement_patch::PlacementPatch, prefab::Prefab},
         },
         read::{

@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{ClassId, class::game::block_info_variant::BlockInfoVariant};
+use crate::{ClassId, class::game::ctn::block_info_variant::BlockInfoVariant};
 
 /// Block info variant air.
 #[derive(Default)]
@@ -30,7 +30,7 @@ impl DerefMut for BlockInfoVariantAir {
 
 mod read {
     use crate::{
-        class::game::block_info_variant_air::BlockInfoVariantAir,
+        class::game::ctn::block_info_variant_air::BlockInfoVariantAir,
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 

@@ -76,7 +76,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
         },
     };
 
-    // Read chunks until either an end marker is reached, or an unknown chunk ID is encountered.
+    // Read chunks until either an end marker is reached, or a chunk ID of a different class encountered.
     let mut chunks = T::body_chunks().into_iter();
 
     loop {
@@ -103,7 +103,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
 
         if chunk.skippable {
             if r.u32()? != SKIPPABLE_CHUNK_MARKER {
-                todo!()
+                return Err(Error::new("expected a skippable chunk"));
             }
 
             let _size = r.u32()?;

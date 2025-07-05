@@ -12,7 +12,7 @@ impl ClassId for AutoTerrain {
 
 mod read {
     use crate::{
-        class::game::{auto_terrain::AutoTerrain, zone_genealogy::ZoneGenealogy},
+        class::game::ctn::{auto_terrain::AutoTerrain, zone_genealogy::ZoneGenealogy},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 

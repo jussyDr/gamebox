@@ -13,7 +13,7 @@ impl ClassId for BlockUnitInfo {
 mod read {
     use crate::{
         Delme,
-        class::game::{block_info_clip::BlockInfoClip, block_unit_info::BlockUnitInfo},
+        class::game::ctn::{block_info_clip::BlockInfoClip, block_unit_info::BlockUnitInfo},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
             reader::BodyReader,

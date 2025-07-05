@@ -4,9 +4,9 @@ use std::{any::Any, sync::Arc};
 
 use crate::{
     ClassId, NodeRef, Quat, SubExtensions, Vec3,
-    class::{
+    class::plug::{
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
-        plug::static_object_model::StaticObjectModel,
+        static_object_model::StaticObjectModel,
     },
 };
 

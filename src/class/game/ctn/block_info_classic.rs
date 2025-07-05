@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{ClassId, SubExtensions, class::game::block_info::BlockInfo};
+use crate::{ClassId, SubExtensions, class::game::ctn::block_info::BlockInfo};
 
 /// Block info classic.
 #[derive(Default)]
@@ -34,7 +34,7 @@ impl SubExtensions for BlockInfoClassic {
 
 mod read {
     use crate::{
-        class::game::block_info_classic::BlockInfoClassic,
+        class::game::ctn::block_info_classic::BlockInfoClassic,
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             read_body_chunks,

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{ClassId, class::game::block_info_mobil::BlockInfoMobil};
+use crate::{ClassId, class::game::ctn::block_info_mobil::BlockInfoMobil};
 
 /// Block info variant.
 #[derive(Default)]
@@ -24,7 +24,7 @@ impl ClassId for BlockInfoVariant {
 mod read {
     use crate::{
         Delme,
-        class::game::{
+        class::game::ctn::{
             block_info_classic::BlockInfoClassic, block_info_mobil::BlockInfoMobil,
             block_info_variant::BlockInfoVariant, block_unit_info::BlockUnitInfo,
         },

@@ -16,7 +16,10 @@ impl SubExtensions for Challenge {
 
 mod read {
     use crate::{
-        class::game::challenge::Challenge,
+        class::game::ctn::{
+            challenge::Challenge, challenge_parameters::ChallengeParameters,
+            collector_list::CollectorList,
+        },
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, error_unknown_version, read_body_chunks,
@@ -47,7 +50,10 @@ mod read {
 
     impl BodyChunks for Challenge {
         fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            []
+            [
+                BodyChunk::new(13, Self::read_chunk_13),
+                BodyChunk::new(17, Self::read_chunk_17),
+            ]
         }
     }
 
@@ -167,6 +173,20 @@ mod read {
             let _author_nickname = r.string()?;
             let _author_zone = r.string()?;
             let _author_extra_info = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_13(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let _player_model = r.repeat(3, |r| r.id_or_null())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_17(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let _block_stock = r.internal_node_ref::<CollectorList>()?;
+            let _challenge_parameters = r.internal_node_ref::<ChallengeParameters>()?;
+            let _kind = r.u32()?;
 
             Ok(())
         }
