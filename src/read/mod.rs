@@ -165,7 +165,8 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         let compressed_body = r.byte_buf()?;
 
         let mut body = vec![0; size as usize];
-        lzo1x::decompress(&compressed_body, &mut body).unwrap();
+        lzo1x::decompress(&compressed_body, &mut body)
+            .map_err(|_| Error::new("failed to decompress body"))?;
 
         let mut r = BR {
             reader: body.as_slice(),

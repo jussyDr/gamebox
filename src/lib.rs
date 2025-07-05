@@ -45,6 +45,7 @@ pub trait SubExtensions {
     }
 }
 
+/// Delme.
 pub struct Delme;
 
 impl SubExtensions for Delme {
@@ -61,6 +62,7 @@ pub enum NodeRef<T> {
 }
 
 impl<T> NodeRef<T> {
+    /// Internal.
     pub fn internal(&self) -> Option<&T> {
         match self {
             Self::Internal(value) => Some(value),
@@ -68,9 +70,10 @@ impl<T> NodeRef<T> {
         }
     }
 
+    /// External.
     pub fn external(&self) -> Option<&ExternalNodeRef> {
         match self {
-            Self::Internal(value) => None,
+            Self::Internal(_) => None,
             Self::External(value) => Some(value),
         }
     }
@@ -85,7 +88,9 @@ impl<T: Default> Default for NodeRef<T> {
 /// Reference to a node in an external file.
 #[derive(Clone, Debug)]
 pub struct ExternalNodeRef {
+    /// Path.
     pub path: Arc<Path>,
+    /// Ancestor level.
     pub ancestor_level: u32,
 }
 

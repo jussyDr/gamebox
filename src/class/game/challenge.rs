@@ -19,7 +19,7 @@ mod read {
         class::game::challenge::Challenge,
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, read_body_chunks,
+            error_unknown_chunk_version, error_unknown_version, read_body_chunks,
             reader::{BodyReader, HeaderReader},
         },
     };
@@ -28,7 +28,14 @@ mod read {
 
     impl HeaderChunks for Challenge {
         fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
-            [HeaderChunk::new(2, Self::read_chunk_2)]
+            [
+                HeaderChunk::new(2, Self::read_chunk_2),
+                HeaderChunk::new(3, Self::read_chunk_3),
+                HeaderChunk::new(4, Self::read_chunk_4),
+                HeaderChunk::new(5, Self::read_chunk_5),
+                HeaderChunk::new(7, Self::read_chunk_7),
+                HeaderChunk::new(8, Self::read_chunk_8),
+            ]
         }
     }
 
@@ -66,6 +73,100 @@ mod read {
             r.u32()?;
             let _num_checkpoints = r.u32()?;
             let _num_laps = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_3(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let version = r.u8()?;
+
+            if version != 11 {
+                return Err(error_unknown_chunk_version(version as u32));
+            }
+
+            let _map_info = r.repeat(3, |r| r.id())?;
+            let _map_name = r.string()?;
+            let _kind_in_header = r.u8()?;
+            r.u32()?;
+            let _password = r.string()?;
+            let _decoration = r.repeat(3, |r| r.id())?;
+            let _map_coord_origin = r.vec2()?;
+            let _map_coord_target = r.vec2()?;
+            let _pack_mask = r.u128()?;
+            let _map_type = r.string()?;
+            let _map_style = r.string()?;
+            let _lightmap_cache_uid = r.u64()?;
+            let _lightmap_version = r.u8()?;
+            let _title_id = r.id()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_4(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 6 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_5(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let _xml = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_7(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let thumbnail_size = r.u32()?;
+
+            if &r.byte_array()? != b"<Thumbnail.jpg>" {
+                todo!()
+            }
+
+            let _thumbnail = r.bytes(thumbnail_size as usize)?;
+
+            if &r.byte_array()? != b"</Thumbnail.jpg>" {
+                todo!()
+            }
+
+            if &r.byte_array()? != b"<Comments>" {
+                todo!()
+            }
+
+            let _comments = r.string()?;
+
+            if &r.byte_array()? != b"</Comments>" {
+                todo!()
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_8(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let author_version = r.u32()?;
+
+            if author_version != 0 {
+                return Err(error_unknown_version("author", author_version));
+            }
+
+            let _author_login = r.string()?;
+            let _author_nickname = r.string()?;
+            let _author_zone = r.string()?;
+            let _author_extra_info = r.string()?;
 
             Ok(())
         }

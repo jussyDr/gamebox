@@ -30,7 +30,7 @@ impl LeToNe for u64 {
     }
 }
 
-impl LeToNe for i8 {
+impl LeToNe for u128 {
     fn le_to_ne(&mut self) {
         *self = Self::from_le(*self);
     }
@@ -42,27 +42,9 @@ impl LeToNe for i16 {
     }
 }
 
-impl LeToNe for i32 {
-    fn le_to_ne(&mut self) {
-        *self = Self::from_le(*self);
-    }
-}
-
-impl LeToNe for i64 {
-    fn le_to_ne(&mut self) {
-        *self = Self::from_le(*self);
-    }
-}
-
 impl LeToNe for f32 {
     fn le_to_ne(&mut self) {
         *self = Self::from_bits(u32::from_le(self.to_bits()));
-    }
-}
-
-impl LeToNe for f64 {
-    fn le_to_ne(&mut self) {
-        *self = Self::from_bits(u64::from_le(self.to_bits()));
     }
 }
 

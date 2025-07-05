@@ -78,23 +78,8 @@ pub trait Reader: Read {
         self.zerocopy()
     }
 
-    /// Read a signed 8 bit integer.
-    fn i8(&mut self) -> Result<i8, Error> {
-        self.zerocopy()
-    }
-
-    /// Read a signed 16 bit integer.
-    fn i16(&mut self) -> Result<i16, Error> {
-        self.zerocopy()
-    }
-
-    /// Read a signed 32 bit integer.
-    fn i32(&mut self) -> Result<i32, Error> {
-        self.zerocopy()
-    }
-
-    /// Read a signed 64 bit integer.
-    fn i64(&mut self) -> Result<i64, Error> {
+    /// Read an unsigned 128 bit integer.
+    fn u128(&mut self) -> Result<u128, Error> {
         self.zerocopy()
     }
 
@@ -221,7 +206,7 @@ pub trait Reader: Read {
         &mut self,
         n: usize,
     ) -> Result<Vec<T>, Error> {
-        let mut list = T::new_vec_zeroed(n).unwrap();
+        let mut list = T::new_vec_zeroed(n).expect("memory allocation failed");
         let bytes = list.as_mut_slice().as_mut_bytes();
         self.read_exact(bytes).map_err(map_io_error)?;
 
