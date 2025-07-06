@@ -1,10 +1,13 @@
 //! Challenge
 
-use crate::{ClassId, SubExtensions};
+use crate::{ClassId, SubExtensions, class::game::ctn::block::Block};
 
 /// A challenge.
 #[derive(Default)]
-pub struct Challenge;
+pub struct Challenge {
+    blocks: Vec<Block>,
+    baked_blocks: Vec<Block>,
+}
 
 impl ClassId for Challenge {
     const CLASS_ID: u32 = 0x03043000;
@@ -79,6 +82,25 @@ mod read {
                 BodyChunk::skippable(68, Self::read_chunk_68),
                 BodyChunk::skippable(72, Self::read_chunk_72),
                 BodyChunk::new(73, Self::read_chunk_73),
+                BodyChunk::skippable(75, Self::read_chunk_75),
+                BodyChunk::skippable(79, Self::read_chunk_79),
+                BodyChunk::skippable(80, Self::read_chunk_80),
+                BodyChunk::skippable(81, Self::read_chunk_81),
+                BodyChunk::skippable(82, Self::read_chunk_82),
+                BodyChunk::skippable(83, Self::read_chunk_83),
+                BodyChunk::skippable(84, Self::read_chunk_84),
+                BodyChunk::skippable(85, Self::read_chunk_85),
+                BodyChunk::skippable(86, Self::read_chunk_86),
+                BodyChunk::skippable(87, Self::read_chunk_87),
+                BodyChunk::skippable(88, Self::read_chunk_88),
+                BodyChunk::skippable(89, Self::read_chunk_89),
+                BodyChunk::skippable(90, Self::read_chunk_90),
+                BodyChunk::skippable(91, Self::read_chunk_91),
+                BodyChunk::skippable(92, Self::read_chunk_92),
+                BodyChunk::skippable(93, Self::read_chunk_93),
+                BodyChunk::skippable(94, Self::read_chunk_94),
+                BodyChunk::skippable(95, Self::read_chunk_95),
+                BodyChunk::skippable(96, Self::read_chunk_96),
             ]
         }
     }
@@ -242,7 +264,7 @@ mod read {
                 return Err(error_unknown_version("blocks", blocks_version));
             }
 
-            let _blocks = r.list(|r| read_node_from_body::<Block>(r))?;
+            self.blocks = r.list(|r| read_node_from_body::<Block>(r))?;
 
             Ok(())
         }
@@ -421,7 +443,7 @@ mod read {
                 return Err(error_unknown_version("blocks", blocks_version));
             }
 
-            let _baked_blocks = r.list(|r| read_node_from_body::<Block>(r))?;
+            self.baked_blocks = r.list(|r| read_node_from_body::<Block>(r))?;
             r.u32()?;
             let _baked_clips_additional_data = r.u32()?;
 
@@ -441,6 +463,259 @@ mod read {
             let _end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             let _ambiance_clip = r.internal_node_ref::<MediaClip>()?;
             let _clip_trigger_size = r.uvec3()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_75(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let _objective_text_author = r.string()?;
+            let _objective_text_gold = r.string()?;
+            let _objective_text_silver = r.string()?;
+            let _objective_text_bronze = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_79(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            r.u8()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_80(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let _offzone_trigger_size = r.uvec3()?;
+            let _offzones = r.list(|r| r.box3d())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_81(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let _title_id = r.id()?;
+            let _build_version = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_82(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let _deco_base_height_offset = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_83(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let _bot_paths: Vec<()> = r.list(|r| todo!())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_84(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            r.u32()?;
+            let _size = r.u32()?;
+
+            let mut r = BR {
+                reader: r,
+                id_table: IdTable::new(),
+                node_table: NodeTable::new(0),
+            };
+
+            let _embedded_item_models = r.list(|r| r.repeat(3, |r| r.id()))?;
+            let _embedded_zip_data = r.byte_buf()?;
+            let _textures = r.list(|r| r.string())?;
+
+            Ok(())
+        }
+
+        fn read_chunk_85(&mut self, _: &mut impl BodyReader) -> Result<(), Error> {
+            Ok(())
+        }
+
+        fn read_chunk_86(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            r.u32()?;
+            let _day_time = r.u32()?;
+            r.u32()?;
+            let _dynamic_daylight = r.f32()?;
+            let _day_duration = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_87(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_88(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 1 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_89(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 3 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let _world_distortion = r.vec3()?;
+
+            if r.bool32()? {
+                todo!()
+            }
+
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_90(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_91(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let has_lightmaps = r.bool32()?;
+            r.bool32()?;
+            r.bool32()?;
+
+            if has_lightmaps {
+                let lightmap_version = r.u32()?;
+
+                if lightmap_version != 8 {
+                    return Err(error_unknown_version("lightmap", lightmap_version));
+                }
+
+                let _lightmap_frames: Vec<()> = r.list(|r| {
+                    r.byte_buf()?;
+                    r.byte_buf()?;
+                    r.byte_buf()?;
+
+                    Ok(())
+                })?;
+
+                let _size = r.u32()?;
+                r.byte_buf()?;
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_92(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_93(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_94(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_95(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            for block in &mut self.blocks {
+                if block.is_free {
+                    let _absolute_position_in_map = r.vec3()?;
+                    let _yaw_pitch_roll = r.vec3()?;
+                }
+            }
+
+            for block in &mut self.baked_blocks {
+                if block.is_free {
+                    let _absolute_position_in_map = r.vec3()?;
+                    let _yaw_pitch_roll = r.vec3()?;
+                }
+            }
+
+            Ok(())
+        }
+
+        fn read_chunk_96(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            r.u32()?;
 
             Ok(())
         }

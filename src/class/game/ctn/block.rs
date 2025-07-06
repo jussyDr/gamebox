@@ -2,7 +2,9 @@
 
 /// A block.
 #[derive(Default)]
-pub struct Block;
+pub struct Block {
+    pub(crate) is_free: bool,
+}
 
 mod read {
     use crate::{
@@ -43,6 +45,8 @@ mod read {
                 let _decal_intensity = r.u32()?;
                 let _decal_variant = r.u32()?;
             }
+
+            self.is_free = (flags & 0x20000000) != 0;
 
             Ok(())
         }
