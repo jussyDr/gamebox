@@ -4,7 +4,7 @@ mod id;
 mod node;
 
 pub use id::IdTable;
-pub use node::NodeTable;
+pub use node::{Downcast, NodeTable};
 
 use zerocopy::{FromBytes, FromZeros, IntoBytes};
 
@@ -12,10 +12,7 @@ use std::{any::Any, io::Read, iter, sync::Arc};
 
 use crate::{
     Box3D, ClassId, ExternalNodeRef, Iso4, NodeRef, Quat, SubExtensions, UVec3, Vec2, Vec3,
-    read::{
-        Error, ReadBody, byte_order::LeToNe, error_unknown_version, map_io_error,
-        reader::node::Downcast,
-    },
+    read::{Error, ReadBody, byte_order::LeToNe, error_unknown_version, map_io_error},
     sub_extension,
 };
 

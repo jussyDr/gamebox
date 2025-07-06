@@ -20,7 +20,8 @@ mod read {
             game::ctn::{
                 anchored_object::AnchoredObject, block::Block, challenge::Challenge,
                 challenge_parameters::ChallengeParameters, collector_list::CollectorList,
-                read_file_ref, zone_genealogy::ZoneGenealogy,
+                media_clip::MediaClip, media_clip_group::MediaClipGroup, read_file_ref,
+                zone_genealogy::ZoneGenealogy,
             },
             script::traits_metadata::TraitsMetadata,
         },
@@ -28,7 +29,7 @@ mod read {
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, error_unknown_version, read_body_chunks,
             read_node_from_body,
-            reader::{BR, BodyReader, HR, HeaderReader, IdTable, NodeTable, Reader},
+            reader::{BR, BodyReader, HeaderReader, IdTable, NodeTable, Reader},
         },
     };
 
@@ -76,6 +77,8 @@ mod read {
                 BodyChunk::skippable(66, Self::read_chunk_66),
                 BodyChunk::skippable(67, Self::read_chunk_67),
                 BodyChunk::skippable(68, Self::read_chunk_68),
+                BodyChunk::skippable(72, Self::read_chunk_72),
+                BodyChunk::new(73, Self::read_chunk_73),
             ]
         }
     }
@@ -233,10 +236,10 @@ mod read {
             let _decoration = r.repeat(3, |r| r.id())?;
             let _size = r.uvec3()?;
             let _need_unlock = r.bool32()?;
-            let version = r.u32()?;
+            let blocks_version = r.u32()?;
 
-            if version != 6 {
-                return Err(error_unknown_version("blocks", version));
+            if blocks_version != 6 {
+                return Err(error_unknown_version("blocks", blocks_version));
             }
 
             let _blocks = r.list(|r| read_node_from_body::<Block>(r))?;
@@ -400,7 +403,44 @@ mod read {
                 node_table: NodeTable::new(0),
             };
 
-            let _script_metadata = r.node::<TraitsMetadata>()?;
+            let _script_metadata = read_node_from_body::<TraitsMetadata>(&mut r)?;
+
+            Ok(())
+        }
+
+        fn read_chunk_72(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 0 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let blocks_version = r.u32()?;
+
+            if blocks_version != 6 {
+                return Err(error_unknown_version("blocks", blocks_version));
+            }
+
+            let _baked_blocks = r.list(|r| read_node_from_body::<Block>(r))?;
+            r.u32()?;
+            let _baked_clips_additional_data = r.u32()?;
+
+            Ok(())
+        }
+
+        fn read_chunk_73(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let version = r.u32()?;
+
+            if version != 2 {
+                return Err(error_unknown_chunk_version(version));
+            }
+
+            let _intro_clip = r.internal_node_ref::<MediaClip>()?;
+            let _podium_clip = r.internal_node_ref::<MediaClip>()?;
+            let _in_game_clips = r.internal_node_ref::<MediaClipGroup>()?;
+            let _end_race_clips = r.internal_node_ref::<MediaClipGroup>()?;
+            let _ambiance_clip = r.internal_node_ref::<MediaClip>()?;
+            let _clip_trigger_size = r.uvec3()?;
 
             Ok(())
         }

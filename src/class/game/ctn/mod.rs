@@ -17,6 +17,12 @@ pub mod challenge_parameters;
 pub mod collector;
 pub mod collector_list;
 pub mod ghost;
+pub mod media_block_camera_custom;
+pub mod media_block_fog;
+pub mod media_block_image;
+pub mod media_clip;
+pub mod media_clip_group;
+pub mod media_track;
 pub mod zone_genealogy;
 
 use crate::read::{Error, error_unknown_version, reader::Reader};
