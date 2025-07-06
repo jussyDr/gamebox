@@ -56,8 +56,8 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-fn map_io_error(_io_error: io::Error) -> Error {
-    Error::new("IO error")
+fn map_io_error(io_error: io::Error) -> Error {
+    Error::new(format!("IO error: {io_error}"))
 }
 
 /// Trait implemented by types that are readable from a GameBox file.

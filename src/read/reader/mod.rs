@@ -11,7 +11,7 @@ use zerocopy::{FromBytes, FromZeros, IntoBytes};
 use std::{any::Any, io::Read, iter, sync::Arc};
 
 use crate::{
-    ClassId, ExternalNodeRef, Iso4, NodeRef, Quat, SubExtensions, Vec2, Vec3,
+    Box3D, ClassId, ExternalNodeRef, Iso4, NodeRef, Quat, SubExtensions, UVec3, Vec2, Vec3,
     read::{
         Error, ReadBody, byte_order::LeToNe, error_unknown_version, map_io_error,
         reader::node::Downcast,
@@ -58,37 +58,37 @@ pub trait Reader: Read {
         Ok(value)
     }
 
-    /// Read an unsigned 8 bit integer.
+    /// Read an unsigned 8-bit integer.
     fn u8(&mut self) -> Result<u8, Error> {
         self.zerocopy()
     }
 
-    /// Read an unsigned 16 bit integer.
+    /// Read an unsigned 16-bit integer.
     fn u16(&mut self) -> Result<u16, Error> {
         self.zerocopy()
     }
 
-    /// Read an unsigned 32 bit integer.
+    /// Read an unsigned 32-bit integer.
     fn u32(&mut self) -> Result<u32, Error> {
         self.zerocopy()
     }
 
-    /// Read an unsigned 64 bit integer.
+    /// Read an unsigned 64-bit integer.
     fn u64(&mut self) -> Result<u64, Error> {
         self.zerocopy()
     }
 
-    /// Read an unsigned 128 bit integer.
+    /// Read an unsigned 128-bit integer.
     fn u128(&mut self) -> Result<u128, Error> {
         self.zerocopy()
     }
 
-    /// Read a 32 bit floating point number.
+    /// Read a 32-bit floating point number.
     fn f32(&mut self) -> Result<f32, Error> {
         self.zerocopy()
     }
 
-    /// Read an 8 bit boolean.
+    /// Read an 8-bit boolean.
     fn bool8(&mut self) -> Result<bool, Error> {
         match self.u8()? {
             0 => Ok(false),
@@ -97,7 +97,7 @@ pub trait Reader: Read {
         }
     }
 
-    /// Read a 32 bit boolean.
+    /// Read a 32-bit boolean.
     fn bool32(&mut self) -> Result<bool, Error> {
         match self.u32()? {
             0 => Ok(false),
@@ -116,41 +116,24 @@ pub trait Reader: Read {
         self.zerocopy()
     }
 
+    /// Read a `UVec3`.
+    fn uvec3(&mut self) -> Result<UVec3, Error> {
+        self.zerocopy()
+    }
+
     /// Read a `Quat`.
     fn quat(&mut self) -> Result<Quat, Error> {
         self.zerocopy()
     }
 
     /// Read a box.
-    fn box3d(&mut self) -> Result<(), Error> {
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-        self.u32()?;
-
-        Ok(())
+    fn box3d(&mut self) -> Result<Box3D, Error> {
+        self.zerocopy()
     }
 
     /// Read an `Iso4`.
     fn iso4(&mut self) -> Result<Iso4, Error> {
-        let elements = [
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-            self.f32()?,
-        ];
-
-        Ok(Iso4(elements))
+        self.zerocopy()
     }
 
     /// Read a string.
@@ -232,10 +215,25 @@ pub trait Reader: Read {
 
 impl<T: Read> Reader for T {}
 
+/// Try from id.
+pub trait TryFromId {
+    /// Try from id.
+    fn try_from_id(id: Option<Arc<str>>) -> Result<Self, Error>
+    where
+        Self: Sized;
+}
+
 /// Header reader.
 pub trait HeaderReader: Reader {
     /// Id table.
     fn id_table(&mut self) -> &mut IdTable;
+
+    /// WIP.
+    fn id_v2<T: TryFromId>(&mut self) -> Result<T, Error> {
+        let id = self.id_or_null()?;
+
+        T::try_from_id(id)
+    }
 
     /// Read an identifier.
     fn id(&mut self) -> Result<Arc<str>, Error> {
@@ -314,10 +312,23 @@ impl<R: Read, I: AsMut<IdTable>> HeaderReader for HR<R, I> {
     }
 }
 
+/// Try from node ref.
+pub trait TryFromNodeRef {
+    /// Try from node ref.
+    fn try_from_node_ref(node_ref: Option<NodeRef<()>>) -> Result<Self, Error>
+    where
+        Self: Sized;
+}
+
 /// Body reader.
 pub trait BodyReader: HeaderReader {
     /// Node table.
     fn node_table(&mut self) -> &mut NodeTable;
+
+    /// WIP.
+    fn node_ref_v2<T: TryFromNodeRef>(&mut self) -> Result<T, Error> {
+        todo!()
+    }
 
     /// Read a node.
     fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T, Error>

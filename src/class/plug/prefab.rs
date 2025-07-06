@@ -75,6 +75,7 @@ impl Entity {
 
 /// Prefab entity model.
 pub enum EntityModel {
+    /// Static object model.
     StaticObjectModel(Arc<StaticObjectModel>),
 }
 
@@ -91,6 +92,7 @@ impl TryFrom<Arc<dyn Any + Send + Sync>> for EntityModel {
 
 /// Prefab entity parameters.
 pub enum EntityParams {
+    /// Dyna object model instance params.
     DynaObjectModelInstanceParams(DynaObjectModelInstanceParams),
 }
 
@@ -133,7 +135,7 @@ mod read {
             self.entities = r.repeat(num_entities as usize, |r| {
                 let model = r.node_ref_generic(|r, class_id| match class_id {
                     0x09159000 => {
-                        let node: StaticObjectModel = read_node_from_body(r)?;
+                        let node = read_node_from_body::<StaticObjectModel>(r)?;
                         Ok(Arc::new(node))
                     }
                     _ => todo!("{class_id:08X?}"),

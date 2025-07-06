@@ -159,8 +159,51 @@ impl LeToNe for Vec3 {
     }
 }
 
+/// A 3-dimensional vector.
+#[derive(Default, FromBytes)]
+#[repr(C)]
+pub struct UVec3 {
+    /// X component.
+    pub x: u32,
+    /// Y component.
+    pub y: u32,
+    /// Z component.
+    pub z: u32,
+}
+
+impl LeToNe for UVec3 {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+        self.z.le_to_ne();
+    }
+}
+
+/// A 4-dimensional vector.
+#[derive(FromBytes)]
+#[repr(C)]
+pub struct Vec4 {
+    /// X component.
+    pub x: f32,
+    /// Y component.
+    pub y: f32,
+    /// Z component.
+    pub z: f32,
+    /// W component,
+    pub w: f32,
+}
+
+impl LeToNe for Vec4 {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+        self.z.le_to_ne();
+        self.w.le_to_ne();
+    }
+}
+
 /// A quaterion.
-#[derive(FromBytes, Debug)]
+#[derive(Debug, FromBytes)]
 #[repr(C)]
 pub struct Quat {
     /// X component.
@@ -189,8 +232,42 @@ impl LeToNe for Quat {
     }
 }
 
+/// A 3D box.
+#[derive(FromBytes)]
+#[repr(C)]
+pub struct Box3D {
+    /// X.
+    pub x: Vec3,
+    /// Y.
+    pub y: Vec3,
+}
+
+impl LeToNe for Box3D {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+    }
+}
+
 /// Matrix with 4 rows and 3 columns.
-pub struct Iso4(pub [f32; 12]);
+#[derive(FromBytes)]
+#[repr(C)]
+pub struct Iso4 {
+    /// First column.
+    pub x: Vec4,
+    /// Second column.
+    pub y: Vec4,
+    /// Third column.
+    pub z: Vec4,
+}
+
+impl LeToNe for Iso4 {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+        self.z.le_to_ne();
+    }
+}
 
 const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 const FILE_VERSION: u16 = 6;

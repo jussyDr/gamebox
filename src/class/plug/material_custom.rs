@@ -21,6 +21,7 @@ impl ClassId for MaterialCustom {
     const CLASS_ID: u32 = 0x0903a000;
 }
 
+/// Texture.
 #[derive(Debug)]
 pub struct MaterialCustomTexture {
     name: Arc<str>,
@@ -82,7 +83,7 @@ mod read {
         }
 
         fn read_chunk_10(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let gpu_fxs1 = r.list(|r| {
+            let _gpu_fxs1 = r.list(|r| {
                 r.id()?;
                 let count1 = r.u32()?;
                 let count2 = r.u32()?;
@@ -94,7 +95,7 @@ mod read {
 
                 Ok(())
             })?;
-            let gpu_fxs2 = r.list(|r| {
+            let _gpu_fxs2 = r.list(|r| {
                 r.id()?;
                 let count1 = r.u32()?;
                 let count2 = r.u32()?;
@@ -111,8 +112,8 @@ mod read {
         }
 
         fn read_chunk_12(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let skip_samplers = r.list(|r| {
-                let name = r.id()?;
+            let _skip_samplers = r.list(|r| {
+                let _name = r.id()?;
                 r.bool32()?;
 
                 Ok(())

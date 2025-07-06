@@ -53,7 +53,8 @@ mod read {
         },
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, error_unknown_enum_variant, read_body_chunks,
+            error_unknown_chunk_version, error_unknown_enum_variant, error_unknown_version,
+            read_body_chunks,
             reader::{BodyReader, HeaderReader},
         },
     };
@@ -86,10 +87,10 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let surface_version = if version >= 2 { Some(r.u32()?) } else { None };
+            let surface_version = r.u32()?;
 
-            if surface_version != Some(2) {
-                panic!()
+            if surface_version != 2 {
+                return Err(error_unknown_version("surface", surface_version));
             }
 
             self.kind = match r.u32()? {

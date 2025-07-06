@@ -1,10 +1,27 @@
 //! Auto terrain.
 
-use crate::ClassId;
+use std::sync::Arc;
+
+use crate::{ClassId, UVec3, class::game::ctn::zone_genealogy::ZoneGenealogy};
 
 /// Auto terrain.
 #[derive(Default)]
-pub struct AutoTerrain;
+pub struct AutoTerrain {
+    offset: UVec3,
+    genealogy: Arc<ZoneGenealogy>,
+}
+
+impl AutoTerrain {
+    /// Offset.
+    pub fn offset(&self) -> &UVec3 {
+        &self.offset
+    }
+
+    /// Genealogy.
+    pub fn genealogy(&self) -> &Arc<ZoneGenealogy> {
+        &self.genealogy
+    }
+}
 
 impl ClassId for AutoTerrain {
     const CLASS_ID: u32 = 0x03120000;
@@ -12,7 +29,7 @@ impl ClassId for AutoTerrain {
 
 mod read {
     use crate::{
-        class::game::ctn::{auto_terrain::AutoTerrain, zone_genealogy::ZoneGenealogy},
+        class::game::ctn::auto_terrain::AutoTerrain,
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 
@@ -30,8 +47,8 @@ mod read {
 
     impl AutoTerrain {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _offset = r.repeat(3, |r| r.u32())?;
-            let _genealogy = r.internal_node_ref::<ZoneGenealogy>()?;
+            self.offset = r.uvec3()?;
+            self.genealogy = r.internal_node_ref()?;
 
             Ok(())
         }

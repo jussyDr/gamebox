@@ -13,7 +13,7 @@ impl ClassId for Collector {
 mod read {
     use crate::{
         Delme,
-        class::game_data::collector::Collector,
+        class::game::ctn::collector::Collector,
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
     };
 

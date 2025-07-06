@@ -7,12 +7,9 @@ use std::{
 
 use crate::{
     ClassId,
-    class::{
-        game::ctn::{
-            block_info_variant_air::BlockInfoVariantAir,
-            block_info_variant_ground::BlockInfoVariantGround,
-        },
-        game_data::collector::Collector,
+    class::game::ctn::{
+        block_info_variant_air::BlockInfoVariantAir,
+        block_info_variant_ground::BlockInfoVariantGround, collector::Collector,
     },
 };
 

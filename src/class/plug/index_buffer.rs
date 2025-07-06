@@ -39,7 +39,7 @@ mod read {
 
     impl IndexBuffer {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let flags = r.u32()?;
+            let _flags = r.u32()?;
             let offsets: Vec<i16> = r.list_zerocopy()?;
 
             self.indices = Vec::with_capacity(offsets.len());
