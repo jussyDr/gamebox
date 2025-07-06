@@ -4,6 +4,7 @@ pub mod anim_loc_simple;
 pub mod bitmap;
 pub mod dyna_object_model;
 pub mod dyna_object_model_instance_params;
+pub mod ent_record_data;
 pub mod entity_spawner;
 pub mod file_img;
 pub mod index_buffer;

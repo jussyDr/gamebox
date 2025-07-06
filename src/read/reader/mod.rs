@@ -263,6 +263,11 @@ pub trait HeaderReader: Reader {
             return Ok(Some(Arc::from("")));
         }
 
+        if index == 0x00002713 {
+            // Not sure what this is yet.
+            return Ok(Some(Arc::from("")));
+        }
+
         if index & 0x40000000 == 0 {
             return Err(Error::new("expected an identifier"));
         }

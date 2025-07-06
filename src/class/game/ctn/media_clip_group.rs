@@ -12,7 +12,7 @@ impl ClassId for MediaClipGroup {
 
 mod read {
     use crate::{
-        class::game::ctn::media_clip_group::MediaClipGroup,
+        class::game::ctn::{media_clip::MediaClip, media_clip_group::MediaClipGroup},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
 
@@ -24,7 +24,26 @@ mod read {
 
     impl BodyChunks for MediaClipGroup {
         fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            []
+            [BodyChunk::new(3, Self::read_chunk_3)]
+        }
+    }
+
+    impl MediaClipGroup {
+        fn read_chunk_3(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
+            let _clips = r.list_with_version(|r| r.internal_node_ref::<MediaClip>())?;
+            let _triggers = r.list(|r| {
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+                let _condition = r.u32()?;
+                let _condition_value = r.f32()?;
+                let _coords = r.list(|r| r.uvec3())?;
+
+                Ok(())
+            })?;
+
+            Ok(())
         }
     }
 }

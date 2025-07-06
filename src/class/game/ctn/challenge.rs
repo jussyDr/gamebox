@@ -436,9 +436,9 @@ mod read {
             }
 
             let _intro_clip = r.internal_node_ref::<MediaClip>()?;
-            let _podium_clip = r.internal_node_ref::<MediaClip>()?;
+            let _podium_clip = r.internal_node_ref_or_null::<MediaClip>()?;
             let _in_game_clips = r.internal_node_ref::<MediaClipGroup>()?;
-            let _end_race_clips = r.internal_node_ref::<MediaClipGroup>()?;
+            let _end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
             let _ambiance_clip = r.internal_node_ref::<MediaClip>()?;
             let _clip_trigger_size = r.uvec3()?;
 
