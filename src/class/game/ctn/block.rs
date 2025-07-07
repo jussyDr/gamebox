@@ -1,12 +1,29 @@
 //! Block.
 
+use std::sync::Arc;
+
 /// A block.
 #[derive(Default)]
 pub struct Block {
+    id: Arc<str>,
     pub(crate) is_free: bool,
 }
 
+impl Block {
+    /// Identifier.
+    pub fn id(&self) -> &Arc<str> {
+        &self.id
+    }
+
+    /// Is free.
+    pub fn is_free(&self) -> bool {
+        self.is_free
+    }
+}
+
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::game::{
             ctn::{block::Block, block_skin::BlockSkin},
@@ -17,13 +34,13 @@ mod read {
 
     impl ReadBody for Block {
         fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _name = r.id()?;
+            self.id = r.id()?;
             let _direction = r.u8()?;
             let _coord = r.repeat(3, |r| r.u8())?;
             let flags = r.u32()?;
 
             if flags & 0x00008000 != 0 {
-                let _author = r.id()?;
+                let _author: Arc<str> = r.id()?;
                 let _skin = r.internal_node_ref::<BlockSkin>()?;
             }
 
@@ -41,7 +58,7 @@ mod read {
             }
 
             if flags & 0x00020000 != 0 {
-                let _decal_id = r.id()?;
+                let _decal_id: Arc<str> = r.id()?;
                 let _decal_intensity = r.u32()?;
                 let _decal_variant = r.u32()?;
             }

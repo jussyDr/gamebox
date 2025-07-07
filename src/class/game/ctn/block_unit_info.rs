@@ -11,6 +11,8 @@ impl ClassId for BlockUnitInfo {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         Delme,
         class::game::ctn::{block_info_clip::BlockInfoClip, block_unit_info::BlockUnitInfo},
@@ -53,7 +55,7 @@ mod read {
         }
 
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _surface = r.id_or_null()?;
+            let _surface: Option<Arc<str>> = r.id()?;
             let _frontier = r.u32()?;
             let _dir = r.u32()?;
 
@@ -73,7 +75,7 @@ mod read {
         }
 
         fn read_chunk_5(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _terrain_modifier_id = r.id_or_null()?;
+            let _terrain_modifier_id: Option<Arc<str>> = r.id()?;
 
             Ok(())
         }

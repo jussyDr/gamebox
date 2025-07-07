@@ -11,6 +11,8 @@ impl ClassId for ZoneGenealogy {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::game::ctn::zone_genealogy::ZoneGenealogy,
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
@@ -30,10 +32,10 @@ mod read {
 
     impl ZoneGenealogy {
         fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _zone_ids = r.list(|r| r.id())?;
+            let _zone_ids: Vec<Arc<str>> = r.list(|r| r.id())?;
             let _current_index = r.u32()?;
             let _dir = r.u32()?;
-            let _current_zone_id = r.id()?;
+            let _current_zone_id: Arc<str> = r.id()?;
 
             Ok(())
         }

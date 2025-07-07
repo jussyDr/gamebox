@@ -41,6 +41,8 @@ impl MaterialCustomTexture {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::{
             bitmap::Bitmap,
@@ -84,7 +86,7 @@ mod read {
 
         fn read_chunk_10(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let _gpu_fxs1 = r.list(|r| {
-                r.id()?;
+                let _: Arc<str> = r.id()?;
                 let count1 = r.u32()?;
                 let count2 = r.u32()?;
                 r.bool32()?;
@@ -96,7 +98,7 @@ mod read {
                 Ok(())
             })?;
             let _gpu_fxs2 = r.list(|r| {
-                r.id()?;
+                let _: Arc<str> = r.id()?;
                 let count1 = r.u32()?;
                 let count2 = r.u32()?;
                 r.bool32()?;
@@ -113,7 +115,7 @@ mod read {
 
         fn read_chunk_12(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let _skip_samplers = r.list(|r| {
-                let _name = r.id()?;
+                let _name: Arc<str> = r.id()?;
                 r.bool32()?;
 
                 Ok(())
@@ -133,7 +135,7 @@ mod read {
             r.f32()?;
             r.f32()?;
             r.list(|r| {
-                r.id()?;
+                let _: Arc<str> = r.id()?;
                 r.u32()?;
 
                 Ok(())

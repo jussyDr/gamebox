@@ -9,6 +9,18 @@ pub struct Challenge {
     baked_blocks: Vec<Block>,
 }
 
+impl Challenge {
+    /// Blocks.
+    pub fn blocks(&self) -> &Vec<Block> {
+        &self.blocks
+    }
+
+    /// Baked blocks.
+    pub fn baked_blocks(&self) -> &Vec<Block> {
+        &self.baked_blocks
+    }
+}
+
 impl ClassId for Challenge {
     const CLASS_ID: u32 = 0x03043000;
 }
@@ -18,6 +30,8 @@ impl SubExtensions for Challenge {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::{
             game::ctn::{
@@ -32,7 +46,7 @@ mod read {
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, error_unknown_version, read_body_chunks,
             read_node_from_body,
-            reader::{BR, BodyReader, HeaderReader, IdTable, NodeTable, Reader},
+            reader::{BodyReader, BodyReaderImpl, HeaderReader, IdTable, NodeTable, Reader},
         },
     };
 
@@ -138,20 +152,19 @@ mod read {
                 return Err(error_unknown_chunk_version(version as u32));
             }
 
-            let _map_info = r.repeat(3, |r| r.id())?;
+            let _map_info: Vec<Arc<str>> = r.repeat(3, |r| r.id())?;
             let _map_name = r.string()?;
             let _kind_in_header = r.u8()?;
             r.u32()?;
             let _password = r.string()?;
-            let _decoration = r.repeat(3, |r| r.id())?;
-            let _map_coord_origin = r.vec2()?;
-            let _map_coord_target = r.vec2()?;
+            let _decoration: Vec<Arc<str>> = r.repeat(3, |r| r.id())?;
+            self.read_map_coord(r)?;
             let _pack_mask = r.u128()?;
             let _map_type = r.string()?;
             let _map_style = r.string()?;
             let _lightmap_cache_uid = r.u64()?;
             let _lightmap_version = r.u8()?;
-            let _title_id = r.id()?;
+            let _title_id: Arc<str> = r.id()?;
 
             Ok(())
         }
@@ -211,22 +224,13 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let author_version = r.u32()?;
-
-            if author_version != 0 {
-                return Err(error_unknown_version("author", author_version));
-            }
-
-            let _author_login = r.string()?;
-            let _author_nickname = r.string()?;
-            let _author_zone = r.string()?;
-            let _author_extra_info = r.string()?;
+            self.read_author(r)?;
 
             Ok(())
         }
 
         fn read_chunk_13(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _player_model = r.repeat(3, |r| r.id_or_null())?;
+            let _player_model: Vec<Option<Arc<str>>> = r.repeat(3, |r| r.id())?;
 
             Ok(())
         }
@@ -253,18 +257,12 @@ mod read {
         }
 
         fn read_chunk_31(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _map_info = r.repeat(3, |r| r.id())?;
+            let _map_info: Vec<Arc<str>> = r.repeat(3, |r| r.id())?;
             let _map_name = r.string()?;
-            let _decoration = r.repeat(3, |r| r.id())?;
+            let _decoration: Vec<Arc<str>> = r.repeat(3, |r| r.id())?;
             let _size = r.uvec3()?;
             let _need_unlock = r.bool32()?;
-            let blocks_version = r.u32()?;
-
-            if blocks_version != 6 {
-                return Err(error_unknown_version("blocks", blocks_version));
-            }
-
-            self.blocks = r.list(|r| read_node_from_body::<Block>(r))?;
+            self.blocks = read_blocks(r)?;
 
             Ok(())
         }
@@ -282,8 +280,7 @@ mod read {
         }
 
         fn read_chunk_37(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _map_coord_origin = r.vec2()?;
-            let _map_coord_target = r.vec2()?;
+            self.read_map_coord(r)?;
 
             Ok(())
         }
@@ -361,20 +358,15 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            r.u32()?;
-            let _size = r.u32()?;
+            read_encapsulation(r, |r| {
+                let _anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+                let _block_indices = r.list(|r| r.u32())?;
+                let _snap_item_groups = r.list(|r| r.u32())?;
+                r.list(|r| r.u32())?;
+                let _snapped_indices = r.list(|r| r.u32())?;
 
-            let mut r = BR {
-                reader: r,
-                id_table: IdTable::new(),
-                node_table: NodeTable::new(0),
-            };
-
-            let _anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
-            let _block_indices = r.list(|r| r.u32())?;
-            let _snap_item_groups = r.list(|r| r.u32())?;
-            r.list(|r| r.u32())?;
-            let _snapped_indices = r.list(|r| r.u32())?;
+                Ok(())
+            })?;
 
             Ok(())
         }
@@ -386,46 +378,27 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let author_version = r.u32()?;
-
-            if author_version != 0 {
-                return Err(error_unknown_version("author", author_version));
-            }
-
-            let _author_login = r.string()?;
-            let _author_nickname = r.string()?;
-            let _author_zone = r.string()?;
-            let _author_extra_info = r.string()?;
+            self.read_author(r)?;
 
             Ok(())
         }
 
         fn read_chunk_67(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            r.u32()?;
-            let _size = r.u32()?;
+            read_encapsulation(r, |r| {
+                let _zone_genealogy = r.list(|r| r.node::<ZoneGenealogy>())?;
 
-            let mut r = BR {
-                reader: r,
-                id_table: IdTable::new(),
-                node_table: NodeTable::new(0),
-            };
-
-            let _zone_genealogy = r.list(|r| r.node::<ZoneGenealogy>())?;
+                Ok(())
+            })?;
 
             Ok(())
         }
 
         fn read_chunk_68(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            r.u32()?;
-            let _size = r.u32()?;
+            read_encapsulation(r, |r| {
+                let _script_metadata = read_node_from_body::<TraitsMetadata>(r)?;
 
-            let mut r = BR {
-                reader: r,
-                id_table: IdTable::new(),
-                node_table: NodeTable::new(0),
-            };
-
-            let _script_metadata = read_node_from_body::<TraitsMetadata>(&mut r)?;
+                Ok(())
+            })?;
 
             Ok(())
         }
@@ -437,13 +410,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let blocks_version = r.u32()?;
-
-            if blocks_version != 6 {
-                return Err(error_unknown_version("blocks", blocks_version));
-            }
-
-            self.baked_blocks = r.list(|r| read_node_from_body::<Block>(r))?;
+            self.baked_blocks = read_blocks(r)?;
             r.u32()?;
             let _baked_clips_additional_data = r.u32()?;
 
@@ -508,7 +475,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _title_id = r.id()?;
+            let _title_id: Arc<str> = r.id()?;
             let _build_version = r.string()?;
 
             Ok(())
@@ -545,18 +512,14 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            r.u32()?;
-            let _size = r.u32()?;
+            read_encapsulation(r, |r| {
+                let _embedded_item_models: Vec<Vec<Arc<str>>> =
+                    r.list(|r| r.repeat(3, |r| r.id()))?;
+                let _embedded_zip_data = r.byte_buf()?;
+                let _textures = r.list(|r| r.string())?;
 
-            let mut r = BR {
-                reader: r,
-                id_table: IdTable::new(),
-                node_table: NodeTable::new(0),
-            };
-
-            let _embedded_item_models = r.list(|r| r.repeat(3, |r| r.id()))?;
-            let _embedded_zip_data = r.byte_buf()?;
-            let _textures = r.list(|r| r.string())?;
+                Ok(())
+            })?;
 
             Ok(())
         }
@@ -719,5 +682,58 @@ mod read {
 
             Ok(())
         }
+
+        fn read_author(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let author_version = r.u32()?;
+
+            if author_version != 0 {
+                return Err(error_unknown_version("author", author_version));
+            }
+
+            let _author_login = r.string()?;
+            let _author_nickname = r.string()?;
+            let _author_zone = r.string()?;
+            let _author_extra_info = r.string()?;
+
+            Ok(())
+        }
+
+        fn read_map_coord(&mut self, r: &mut impl HeaderReader) -> Result<(), Error> {
+            let _map_coord_origin = r.vec2()?;
+            let _map_coord_target = r.vec2()?;
+
+            Ok(())
+        }
+    }
+
+    fn read_encapsulation<R: BodyReader>(
+        r: &mut R,
+        mut read_fn: impl FnMut(&mut BodyReaderImpl<&mut R, IdTable, NodeTable>) -> Result<(), Error>,
+    ) -> Result<(), Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(error_unknown_version("encapsulation", version));
+        }
+
+        let _size = r.u32()?;
+
+        let mut r = BodyReaderImpl {
+            reader: r,
+            id_table: IdTable::new(),
+            node_table: NodeTable::new(0),
+        };
+
+        read_fn(&mut r)
+    }
+
+    fn read_blocks(r: &mut impl BodyReader) -> Result<Vec<Block>, Error> {
+        let blocks_version = r.u32()?;
+
+        if blocks_version != 6 {
+            return Err(error_unknown_version("blocks", blocks_version));
+        }
+
+        r.list(|r| read_node_from_body::<Block>(r))
     }
 }

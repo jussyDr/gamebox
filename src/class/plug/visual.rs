@@ -23,6 +23,8 @@ impl ClassId for Visual {
 
 mod read {
 
+    use std::sync::Arc;
+
     use crate::{
         class::plug::visual::Visual,
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
@@ -43,7 +45,7 @@ mod read {
 
     impl Visual {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            r.id_or_null()?;
+            let _: Option<Arc<str>> = r.id()?;
 
             Ok(())
         }

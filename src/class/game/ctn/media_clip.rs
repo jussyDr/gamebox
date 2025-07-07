@@ -1,10 +1,27 @@
 //! Media clip.
 
-use crate::ClassId;
+use std::sync::Arc;
+
+use crate::{ClassId, class::game::ctn::media_track::MediaTrack};
 
 /// Media clip.
 #[derive(Default)]
-pub struct MediaClip;
+pub struct MediaClip {
+    tracks: Vec<Arc<MediaTrack>>,
+    name: String,
+}
+
+impl MediaClip {
+    /// Tracks.
+    pub fn tracks(&self) -> &Vec<Arc<MediaTrack>> {
+        &self.tracks
+    }
+
+    /// Name.
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+}
 
 impl ClassId for MediaClip {
     const CLASS_ID: u32 = 0x03079000;
@@ -39,8 +56,8 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
-            let _name = r.string()?;
+            self.tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
+            self.name = r.string()?;
             let _stop_when_leave = r.bool32()?;
             r.bool32()?;
             let _step_when_respawn = r.bool32()?;

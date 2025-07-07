@@ -11,6 +11,8 @@ impl ClassId for CollectorList {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::game::ctn::collector_list::CollectorList,
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
@@ -31,7 +33,7 @@ mod read {
     impl CollectorList {
         fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let _collector_stock = r.list(|r| {
-                let _block_model = r.repeat(3, |r| r.id_or_null())?;
+                let _block_model: Vec<Option<Arc<str>>> = r.repeat(3, |r| r.id())?;
                 let _count = r.u32()?;
 
                 Ok(())

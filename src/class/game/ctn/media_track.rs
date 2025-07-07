@@ -17,7 +17,22 @@ use crate::{
 
 /// Media track.
 #[derive(Default)]
-pub struct MediaTrack;
+pub struct MediaTrack {
+    name: String,
+    blocks: Vec<MediaBlock>,
+}
+
+impl MediaTrack {
+    /// Name.
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+
+    /// Blocks.
+    pub fn blocks(&self) -> &Vec<MediaBlock> {
+        &self.blocks
+    }
+}
 
 impl ClassId for MediaTrack {
     const CLASS_ID: u32 = 0x03078000;
@@ -73,15 +88,11 @@ mod read {
         class::game::ctn::{
             media_block_camera_custom::MediaBlockCameraCustom,
             media_block_camera_game::MediaBlockCameraGame,
-            media_block_color_grading::MediaBlockColorGrading,
-            media_block_dof::MediaBlockDOF,
-            media_block_entity::MediaBlockEntity,
-            media_block_fog::MediaBlockFog,
-            media_block_image::MediaBlockImage,
-            media_block_text::MediaBlockText,
+            media_block_color_grading::MediaBlockColorGrading, media_block_dof::MediaBlockDOF,
+            media_block_entity::MediaBlockEntity, media_block_fog::MediaBlockFog,
+            media_block_image::MediaBlockImage, media_block_text::MediaBlockText,
             media_block_time::MediaBlockTime,
-            media_block_transition_fade::MediaBlockTransitionFade,
-            media_track::{MediaBlock, MediaTrack},
+            media_block_transition_fade::MediaBlockTransitionFade, media_track::MediaTrack,
         },
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
@@ -106,8 +117,8 @@ mod read {
 
     impl MediaTrack {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _name = r.string()?;
-            let _blocks: Vec<MediaBlock> = r.list_with_version(|r| {
+            self.name = r.string()?;
+            self.blocks = r.list_with_version(|r| {
                 r.internal_node_ref_generic(|r, class_id| match class_id {
                     0x03084000 => {
                         let node = read_node_from_body::<MediaBlockCameraGame>(r)?;

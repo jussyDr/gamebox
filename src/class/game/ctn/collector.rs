@@ -11,6 +11,8 @@ impl ClassId for Collector {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         Delme,
         class::game::ctn::collector::Collector,
@@ -39,15 +41,15 @@ mod read {
                 todo!()
             }
 
-            let _parent_collector_id = r.id_or_null()?;
+            let _parent_collector_id: Option<Arc<str>> = r.id()?;
 
             Ok(())
         }
 
         fn read_chunk_11(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            r.id()?;
-            r.id()?;
-            r.id()?;
+            let _: Arc<str> = r.id()?;
+            let _: Arc<str> = r.id()?;
+            let _: Arc<str> = r.id()?;
 
             Ok(())
         }

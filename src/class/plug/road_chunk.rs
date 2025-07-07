@@ -11,6 +11,8 @@ impl ClassId for RoadChunk {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::road_chunk::RoadChunk,
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
@@ -43,10 +45,10 @@ mod read {
             r.f32()?;
             r.f32()?;
             r.u8()?;
-            r.id_or_null()?;
+            let _: Option<Arc<str>> = r.id()?;
             r.list(|r| r.u32())?;
             r.u8()?;
-            r.id_or_null()?;
+            let _: Option<Arc<str>> = r.id()?;
             r.vec3()?;
             r.f32()?;
 

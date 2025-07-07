@@ -45,13 +45,3 @@ impl AsMut<NodeTable> for NodeTable {
         self
     }
 }
-
-pub trait Downcast: Sized {
-    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self>;
-}
-
-impl<T: 'static + Send + Sync> Downcast for Arc<T> {
-    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self> {
-        value.downcast().ok()
-    }
-}

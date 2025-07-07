@@ -64,6 +64,8 @@ impl DerefMut for BlockInfo {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         Delme,
         class::game::ctn::{
@@ -160,7 +162,7 @@ mod read {
         }
 
         fn read_chunk_40(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _symmetrical_block_info_id = r.id_or_null()?;
+            let _symmetrical_block_info_id: Option<Arc<str>> = r.id()?;
             let _dir = r.u32()?;
 
             Ok(())

@@ -2,7 +2,7 @@
 
 use crate::ClassId;
 
-/// Anchored object.
+/// An anchored object.
 #[derive(Default)]
 pub struct AnchoredObject;
 
@@ -11,6 +11,8 @@ impl ClassId for AnchoredObject {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::game::ctn::anchored_object::AnchoredObject,
         read::{
@@ -43,10 +45,10 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _item_model = r.repeat(3, |r| r.id_or_null())?;
+            let _item_model: Vec<Option<Arc<str>>> = r.repeat(3, |r| r.id())?;
             let _yaw_pitch_roll = r.vec3()?;
             let _block_unit_coord = r.repeat(3, |r| r.u8())?;
-            let _anchor_tree_id = r.id_or_null()?;
+            let _anchor_tree_id: Option<Arc<str>> = r.id()?;
             let _absolute_position_in_map = r.vec3()?;
             let _waypoint_special_property = r.u32()?;
             let flags = r.u16()?;

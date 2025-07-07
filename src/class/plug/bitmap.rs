@@ -24,6 +24,8 @@ impl ClassId for Bitmap {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::{bitmap::Bitmap, file_img::FileImg},
         read::{
@@ -181,7 +183,7 @@ mod read {
         fn read_chunk_54(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
             r.u32()?;
-            r.id_or_null()?;
+            let _: Option<Arc<str>> = r.id()?;
             r.u32()?;
 
             Ok(())

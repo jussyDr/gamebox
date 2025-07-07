@@ -60,6 +60,8 @@ impl ShadedGeom {
 pub struct Solid2ModelLight {}
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::{
             light::Light,
@@ -104,7 +106,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let u01 = r.id_or_null()?;
+            let _: Option<Arc<str>> = r.id()?;
             self.shaded_geoms = r.list(|r| {
                 let visual_index = r.u32()?;
                 let material_index = r.u32()?;
@@ -118,7 +120,7 @@ mod read {
                 })
             })?;
             self.visuals = r.list_with_version(|r| r.internal_node_ref())?;
-            let material_ids = r.list(|r| r.id())?;
+            let material_ids: Vec<Arc<str>> = r.list(|r| r.id())?;
             let material_count = r.u32()?;
             if material_count == 0 {
                 self.materials = r.list_with_version(|r| r.external_node_ref::<Material>())?;
@@ -162,7 +164,7 @@ mod read {
             let materials_folder_name = r.string()?;
             r.string()?;
             self.lights = r.list(|r| {
-                r.id()?;
+                let _: Arc<str> = r.id()?;
 
                 if r.bool32()? {
                     r.external_node_ref::<Light>()?;
@@ -194,14 +196,14 @@ mod read {
             r.string()?;
             r.u32()?;
             let custom_materials: Vec<()> = r.list(|r| todo!())?;
-            r.list(|r| r.id())?;
+            let _: Vec<Arc<str>> = r.list(|r| r.id())?;
             r.list(|r| r.u32())?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
             r.f32()?;
             r.f32()?;
-            r.id_or_null()?;
+            let _: Option<Arc<str>> = r.id()?;
             r.u32()?;
             r.list(|r| r.u32())?;
 

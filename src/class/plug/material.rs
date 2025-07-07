@@ -26,6 +26,8 @@ impl SubExtensions for Material {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::material::Material,
         read::{
@@ -86,7 +88,7 @@ mod read {
         }
 
         fn read_chunk_17(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            r.list(|r| r.id())?;
+            let _: Vec<Arc<str>> = r.list(|r| r.id())?;
 
             Ok(())
         }

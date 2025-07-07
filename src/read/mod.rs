@@ -21,7 +21,7 @@ use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
     read::{
         header_data::read_header_data,
-        reader::{BR, IdTable, NodeTable, Reader},
+        reader::{BodyReaderImpl, IdTable, NodeTable, Reader},
     },
     sub_extension,
 };
@@ -168,7 +168,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         lzo1x::decompress(&compressed_body, &mut body)
             .map_err(|_| Error::new("failed to decompress body"))?;
 
-        let mut r = BR {
+        let mut r = BodyReaderImpl {
             reader: body.as_slice(),
             id_table: IdTable::new(),
             node_table,
@@ -178,7 +178,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 
         r.expect_eof()?;
     } else {
-        let mut r = BR {
+        let mut r = BodyReaderImpl {
             reader: r,
             id_table: IdTable::new(),
             node_table,

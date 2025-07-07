@@ -2,7 +2,7 @@ use crate::{
     ClassId,
     read::{
         Error,
-        reader::{HR, HeaderReader, IdTable, Reader},
+        reader::{HeaderReader, HeaderReaderImpl, IdTable, Reader},
     },
 };
 
@@ -37,7 +37,7 @@ pub fn read_header_data<T: HeaderChunks>(node: &mut T, r: &mut impl Reader) -> R
 
     let mut header_chunks = T::header_chunks().into_iter();
 
-    let mut r = HR {
+    let mut r = HeaderReaderImpl {
         reader: r,
         id_table: IdTable::new(),
     };

@@ -11,6 +11,8 @@ impl ClassId for MediaBlockEntity {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::{
             game::ctn::{media_block_entity::MediaBlockEntity, read_file_ref},
@@ -49,7 +51,7 @@ mod read {
             r.bool32()?;
             let _force_light = r.u32()?;
             let _force_hue = r.bool32()?;
-            let _player_model = r.repeat(3, |r| r.id_or_null())?;
+            let _player_model: Vec<Option<Arc<str>>> = r.repeat(3, |r| r.id())?;
             r.vec3()?;
             let _skin_names = r.list(|r| read_file_ref(r))?;
 
