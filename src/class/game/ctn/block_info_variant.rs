@@ -25,8 +25,8 @@ mod read {
     use crate::{
         Delme,
         class::game::ctn::{
-            block_info_classic::BlockInfoClassic, block_info_mobil::BlockInfoMobil,
-            block_info_variant::BlockInfoVariant, block_unit_info::BlockUnitInfo,
+            block_info_classic::BlockInfoClassic, block_info_variant::BlockInfoVariant,
+            block_unit_info::BlockUnitInfo,
         },
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
     };
@@ -84,7 +84,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            self.mobils = r.list(|r| r.list(|r| r.internal_node_ref::<BlockInfoMobil>()))?;
+            self.mobils = r.list(|r| r.list(|r| r.internal_node_ref()))?;
             r.u32()?;
             r.u32()?;
             r.u32()?;

@@ -128,7 +128,7 @@ impl LeToNe for Vec2 {
 }
 
 /// A 3-dimensional vector.
-#[derive(PartialEq, Debug, Immutable, FromBytes, IntoBytes)]
+#[derive(PartialEq, Default, Debug, Immutable, FromBytes, IntoBytes)]
 #[repr(C)]
 pub struct Vec3 {
     /// X component.

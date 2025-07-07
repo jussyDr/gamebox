@@ -45,7 +45,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _item_model: Vec<Option<Arc<str>>> = r.repeat(3, |r| r.id())?;
+            let _item_model: Vec<Arc<str>> = r.repeat(3, |r| r.id())?;
             let _yaw_pitch_roll = r.vec3()?;
             let _block_unit_coord = r.repeat(3, |r| r.u8())?;
             let _anchor_tree_id: Option<Arc<str>> = r.id()?;

@@ -17,7 +17,7 @@ impl TryFromId for Arc<str> {
     fn try_from_id(id: Option<Arc<str>>) -> Result<Self, Error> {
         match id {
             Some(id) => Ok(id),
-            None => Err(Error::new("expected non-null identifier")),
+            None => Err(Error::new("expected a non-null identifier")),
         }
     }
 }
@@ -33,7 +33,7 @@ pub trait HeaderReader: Reader {
     /// Id table.
     fn id_table(&mut self) -> &mut IdTable;
 
-    /// WIP.
+    /// Read an identifier.
     fn id<T: TryFromId>(&mut self) -> Result<T, Error>
     where
         Self: Sized,

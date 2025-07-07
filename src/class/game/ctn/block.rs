@@ -2,11 +2,13 @@
 
 use std::sync::Arc;
 
+use crate::Vec3;
+
 /// A block.
 #[derive(Default)]
 pub struct Block {
     id: Arc<str>,
-    pub(crate) is_free: bool,
+    pub(crate) kind: BlockKind,
 }
 
 impl Block {
@@ -15,9 +17,28 @@ impl Block {
         &self.id
     }
 
-    /// Is free.
-    pub fn is_free(&self) -> bool {
-        self.is_free
+    /// Kind.
+    pub fn kind(&self) -> &BlockKind {
+        &self.kind
+    }
+}
+
+/// Block kind.
+pub enum BlockKind {
+    /// Normal block.
+    Normal,
+    /// Free block.
+    Free {
+        /// Position.
+        position: Vec3,
+        /// Rotation.
+        yaw_pitch_roll: Vec3,
+    },
+}
+
+impl Default for BlockKind {
+    fn default() -> Self {
+        Self::Normal
     }
 }
 
@@ -25,8 +46,12 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
+        Vec3,
         class::game::{
-            ctn::{block::Block, block_skin::BlockSkin},
+            ctn::{
+                block::{Block, BlockKind},
+                block_skin::BlockSkin,
+            },
             waypoint_special_property::WaypointSpecialProperty,
         },
         read::{Error, ReadBody, reader::BodyReader},
@@ -63,7 +88,14 @@ mod read {
                 let _decal_variant = r.u32()?;
             }
 
-            self.is_free = (flags & 0x20000000) != 0;
+            if (flags & 0x20000000) != 0 {
+                self.kind = BlockKind::Free {
+                    position: Vec3::default(),
+                    yaw_pitch_roll: Vec3::default(),
+                };
+            } else {
+                self.kind = BlockKind::Normal;
+            }
 
             Ok(())
         }

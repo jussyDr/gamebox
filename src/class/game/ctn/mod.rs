@@ -77,3 +77,15 @@ fn read_file_ref(r: &mut impl Reader) -> Result<Option<FileRef>, Error> {
         locator_url,
     }))
 }
+
+/// Cardinal direction.
+pub enum Direction {
+    /// North.
+    North,
+    /// East.
+    East,
+    /// South.
+    South,
+    /// West.
+    West,
+}

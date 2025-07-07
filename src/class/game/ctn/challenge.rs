@@ -1,11 +1,15 @@
 //! Challenge
 
-use crate::{ClassId, SubExtensions, class::game::ctn::block::Block};
+use crate::{
+    ClassId, SubExtensions,
+    class::game::ctn::{anchored_object::AnchoredObject, block::Block},
+};
 
 /// A challenge.
 #[derive(Default)]
 pub struct Challenge {
     blocks: Vec<Block>,
+    anchored_objects: Vec<AnchoredObject>,
     baked_blocks: Vec<Block>,
 }
 
@@ -13,6 +17,11 @@ impl Challenge {
     /// Blocks.
     pub fn blocks(&self) -> &Vec<Block> {
         &self.blocks
+    }
+
+    /// Anchored objects.
+    pub fn anchored_objects(&self) -> &Vec<AnchoredObject> {
+        &self.anchored_objects
     }
 
     /// Baked blocks.
@@ -35,9 +44,14 @@ mod read {
     use crate::{
         class::{
             game::ctn::{
-                anchored_object::AnchoredObject, block::Block, challenge::Challenge,
-                challenge_parameters::ChallengeParameters, collector_list::CollectorList,
-                media_clip::MediaClip, media_clip_group::MediaClipGroup, read_file_ref,
+                anchored_object::AnchoredObject,
+                block::{Block, BlockKind},
+                challenge::Challenge,
+                challenge_parameters::ChallengeParameters,
+                collector_list::CollectorList,
+                media_clip::MediaClip,
+                media_clip_group::MediaClipGroup,
+                read_file_ref,
                 zone_genealogy::ZoneGenealogy,
             },
             script::traits_metadata::TraitsMetadata,
@@ -359,7 +373,7 @@ mod read {
             }
 
             read_encapsulation(r, |r| {
-                let _anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+                self.anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
                 let _block_indices = r.list(|r| r.u32())?;
                 let _snap_item_groups = r.list(|r| r.u32())?;
                 r.list(|r| r.u32())?;
@@ -655,16 +669,24 @@ mod read {
             }
 
             for block in &mut self.blocks {
-                if block.is_free {
-                    let _absolute_position_in_map = r.vec3()?;
-                    let _yaw_pitch_roll = r.vec3()?;
+                if let BlockKind::Free {
+                    position,
+                    yaw_pitch_roll,
+                } = &mut block.kind
+                {
+                    *position = r.vec3()?;
+                    *yaw_pitch_roll = r.vec3()?;
                 }
             }
 
             for block in &mut self.baked_blocks {
-                if block.is_free {
-                    let _absolute_position_in_map = r.vec3()?;
-                    let _yaw_pitch_roll = r.vec3()?;
+                if let BlockKind::Free {
+                    position,
+                    yaw_pitch_roll,
+                } = &mut block.kind
+                {
+                    *position = r.vec3()?;
+                    *yaw_pitch_roll = r.vec3()?;
                 }
             }
 

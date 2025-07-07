@@ -214,3 +214,17 @@ impl<T: Read> Reader for T {}
 fn repeat_n_with<T, U: FromIterator<T>>(n: usize, repeater: impl FnMut() -> T) -> U {
     iter::repeat_with(repeater).take(n).collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{Vec3, read::reader::Reader};
+
+    #[cfg(target_endian = "little")]
+    #[test]
+    fn read_vec3() {
+        let mut r: &[u8] = &[0, 0, 0, 0, 0, 0, 0x80, 0x3f, 0, 0, 0x80, 0xbf];
+        let vec = r.vec3().expect("failed to read Vec3");
+        r.expect_eof().expect("expected EOF");
+        assert_eq!(vec, Vec3::new(0.0, 1.0, -1.0))
+    }
+}

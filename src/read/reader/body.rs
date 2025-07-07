@@ -22,7 +22,7 @@ impl<T: 'static + Send + Sync> Downcast for Arc<T> {
 /// Try from node ref.
 pub trait TryFromNodeRef {
     /// Try from node ref.
-    fn try_from_node_ref(node_ref: Option<NodeRef<()>>) -> Result<Self, Error>
+    fn try_from_node_ref<T>(node_ref: Option<NodeRef<T>>) -> Result<Self, Error>
     where
         Self: Sized;
 }

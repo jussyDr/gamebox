@@ -183,9 +183,6 @@ mod read {
     }
 
     fn parse_dec3n(dec3n: u32) -> Vec3 {
-        // 0x000 -> 0x1ff =    0 -> 511
-        // 0x200 -> 0x3ff = -512 ->  -1
-
         let x = ((dec3n << 22) as i32) >> 22;
         let y = ((dec3n << 12) as i32) >> 22;
         let z = ((dec3n << 2) as i32) >> 22;

@@ -84,9 +84,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     }
 
     if r.u8()? != b'U' {
-        return Err(Error::new(
-            "unknown external reference table compression format",
-        ));
+        return Err(Error::new("unknown reference table compression format"));
     }
 
     let body_compressed = match r.u8()? {
