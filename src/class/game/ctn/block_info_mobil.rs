@@ -5,12 +5,12 @@ use crate::{ClassId, ExternalNodeRef};
 /// Block info mobil.
 #[derive(Default)]
 pub struct BlockInfoMobil {
-    prefab: ExternalNodeRef,
+    prefab: Option<ExternalNodeRef>,
 }
 
 impl BlockInfoMobil {
     /// Prefab.
-    pub fn prefab(&self) -> &ExternalNodeRef {
+    pub fn prefab(&self) -> &Option<ExternalNodeRef> {
         &self.prefab
     }
 }
@@ -75,8 +75,7 @@ mod read {
             if solid_fid.is_none() {
                 let _old_mobil = r.u32()?;
             }
-
-            self.prefab = r.external_node_ref::<Prefab>()?;
+            self.prefab = r.external_node_ref_or_null::<Prefab>()?;
             let _old_solid_aggreg = r.external_node_ref_or_null::<Delme>()?;
             let _rail_path = r.external_node_ref_or_null::<Delme>()?;
             r.u32()?;
@@ -87,7 +86,6 @@ mod read {
             if matches!(r.u8()?, 0 | 1) {
                 r.f32()?;
             }
-
             r.vec3()?;
             r.vec3()?;
             r.f32()?;

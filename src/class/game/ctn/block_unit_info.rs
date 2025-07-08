@@ -109,12 +109,14 @@ mod read {
             let _clips_west = r.repeat(((clip_count_bits >> 9) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
+
             let _clips_top = r.repeat(((clip_count_bits >> 12) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
             let _clips_bottom = r.repeat(((clip_count_bits >> 15) & 0x00000007) as usize, |r| {
                 r.external_node_ref::<BlockInfoClip>()
             })?;
+
             r.u16()?;
             r.u16()?;
 
@@ -128,7 +130,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            r.u32()?;
+            r.byte_buf()?;
 
             Ok(())
         }

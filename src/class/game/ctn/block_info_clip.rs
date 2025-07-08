@@ -6,5 +6,5 @@ use crate::SubExtensions;
 pub struct BlockInfoClip;
 
 impl SubExtensions for BlockInfoClip {
-    const SUB_EXTENSIONS: &[&str] = &["EDClip"];
+    const SUB_EXTENSIONS: &[&str] = &["EDClip", "EDHorizontalClip", "EDVerticalClip"];
 }

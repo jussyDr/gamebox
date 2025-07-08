@@ -22,11 +22,16 @@ impl ClassId for BlockInfoVariant {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         Delme,
-        class::game::ctn::{
-            block_info_classic::BlockInfoClassic, block_info_variant::BlockInfoVariant,
-            block_unit_info::BlockUnitInfo,
+        class::{
+            game::ctn::{
+                block_info_classic::BlockInfoClassic, block_info_variant::BlockInfoVariant,
+                block_unit_info::BlockUnitInfo,
+            },
+            plug::solid::Solid,
         },
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
     };
@@ -100,7 +105,7 @@ mod read {
             }
 
             let _screen_interaction_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
-            let _waypoint_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
+            let _waypoint_trigger_solid = r.internal_node_ref_or_null::<Solid>()?;
             let _gate = r.external_node_ref_or_null::<Delme>()?;
             let _teleporter = r.u32()?;
             r.u32()?;
@@ -167,7 +172,7 @@ mod read {
                 Ok(())
             })?;
             r.list(|r| {
-                r.external_node_ref_or_null::<Delme>()?;
+                r.external_node_ref_or_null::<BlockInfoClassic>()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
@@ -199,7 +204,19 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _water_volumes: Vec<()> = r.list(|r| todo!())?;
+            let _water_volumes = r.list(|r| {
+                r.list(|r| r.box3d())?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                r.f32()?;
+                let _: Arc<str> = r.id()?;
+
+                Ok(())
+            })?;
 
             Ok(())
         }

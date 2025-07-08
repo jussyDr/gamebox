@@ -68,9 +68,12 @@ mod read {
 
     use crate::{
         Delme,
-        class::game::ctn::{
-            block_info::BlockInfo, block_info_variant_air::BlockInfoVariantAir,
-            block_info_variant_ground::BlockInfoVariantGround,
+        class::{
+            game::ctn::{
+                block_info::BlockInfo, block_info_variant_air::BlockInfoVariantAir,
+                block_info_variant_ground::BlockInfoVariantGround,
+            },
+            plug::game_skin_and_folder::GameSkinAndFolder,
         },
         read::{
             BodyChunk, BodyChunks, Error, error_unknown_chunk_version, read_node_from_body,
@@ -135,7 +138,8 @@ mod read {
             let _char_phy_special_property_customizable = r.bool32()?;
 
             if r.bool32()? {
-                todo!()
+                r.string()?;
+                r.string()?;
             }
 
             Ok(())
@@ -236,8 +240,8 @@ mod read {
             }
 
             r.u32()?;
-            let _material_modifier = r.external_node_ref_or_null::<Delme>()?;
-            let _material_modifier_2 = r.external_node_ref_or_null::<Delme>()?;
+            let _material_modifier = r.external_node_ref_or_null::<GameSkinAndFolder>()?;
+            let _material_modifier_2 = r.external_node_ref_or_null::<GameSkinAndFolder>()?;
 
             Ok(())
         }

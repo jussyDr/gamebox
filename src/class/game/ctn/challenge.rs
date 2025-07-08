@@ -11,6 +11,7 @@ pub struct Challenge {
     blocks: Vec<Block>,
     anchored_objects: Vec<AnchoredObject>,
     baked_blocks: Vec<Block>,
+    embedded_models: Option<EmbeddedModels>,
 }
 
 impl Challenge {
@@ -28,6 +29,11 @@ impl Challenge {
     pub fn baked_blocks(&self) -> &Vec<Block> {
         &self.baked_blocks
     }
+
+    /// Embedded models.
+    pub fn embedded_models(&self) -> &Option<EmbeddedModels> {
+        &self.embedded_models
+    }
 }
 
 impl ClassId for Challenge {
@@ -38,6 +44,11 @@ impl SubExtensions for Challenge {
     const SUB_EXTENSIONS: &[&str] = &["Map"];
 }
 
+/// Embedded block and item models.
+pub struct EmbeddedModels {
+    zip: Vec<u8>,
+}
+
 mod read {
     use std::sync::Arc;
 
@@ -46,7 +57,7 @@ mod read {
             game::ctn::{
                 anchored_object::AnchoredObject,
                 block::{Block, BlockKind},
-                challenge::Challenge,
+                challenge::{Challenge, EmbeddedModels},
                 challenge_parameters::ChallengeParameters,
                 collector_list::CollectorList,
                 media_clip::MediaClip,
@@ -527,10 +538,15 @@ mod read {
             }
 
             read_encapsulation(r, |r| {
-                let _embedded_item_models: Vec<Vec<Arc<str>>> =
-                    r.list(|r| r.repeat(3, |r| r.id()))?;
-                let _embedded_zip_data = r.byte_buf()?;
+                let embedded_model_ids: Vec<Vec<Arc<str>>> = r.list(|r| r.repeat(3, |r| r.id()))?;
+                let zip = r.byte_buf()?;
                 let _textures = r.list(|r| r.string())?;
+
+                if embedded_model_ids.is_empty() || zip.is_empty() {
+                    self.embedded_models = None;
+                } else {
+                    self.embedded_models = Some(EmbeddedModels { zip });
+                }
 
                 Ok(())
             })?;

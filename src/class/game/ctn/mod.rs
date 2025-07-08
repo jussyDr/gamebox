@@ -6,6 +6,7 @@ pub mod block;
 pub mod block_info;
 pub mod block_info_classic;
 pub mod block_info_clip;
+pub mod block_info_clip_horizontal;
 pub mod block_info_mobil;
 pub mod block_info_variant;
 pub mod block_info_variant_air;

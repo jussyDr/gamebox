@@ -171,7 +171,7 @@ pub trait BodyReader: HeaderReader {
                 let sub_extension = sub_extension(&node_ref.path).unwrap();
 
                 if !T::has_sub_extension(sub_extension) {
-                    todo!("{}", sub_extension);
+                    todo!("{}, {}", node_ref.path.display(), sub_extension);
                 }
 
                 Ok(Some(node_ref.clone()))

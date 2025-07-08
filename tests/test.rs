@@ -22,6 +22,48 @@ fn read_dyna_object_light_ray() {
 }
 
 #[test]
+fn read_ed_classic_canopy_center_flat_base() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/CanopyCenterFlatBase.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_deco_cliff_10_corner_in() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/DecoCliff10CornerIn.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_deco_cliff_10_dirt_corner_in() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/DecoCliff10DirtCornerIn.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_deco_cliff_dirt_mid_corner_in() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/DecoCliffDirtMidCornerIn.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_deco_wall_arch_slope_2_end() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/DecoWallArchSlope2End.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_deco_wall_water_base() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/DecoWallWaterBase.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_gate_special_boost() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/GateSpecialBoost.EDClassic.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     let _ed_classic: BlockInfoClassic =
         read_file("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();
