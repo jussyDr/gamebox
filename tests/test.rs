@@ -64,6 +64,24 @@ fn read_ed_classic_gate_special_boost() {
 }
 
 #[test]
+fn read_ed_classic_open_dirt_road_checkpoint() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/OpenDirtRoadCheckpoint.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_platform_dirt_finish() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/PlatformDirtFinish.EDClassic.Gbx").unwrap();
+}
+
+#[test]
+fn read_ed_classic_platform_dirt_loop_out_start() {
+    let _ed_classic: BlockInfoClassic =
+        read_file("tests/files/ed_classic/PlatformDirtLoopOutStart.EDClassic.Gbx").unwrap();
+}
+
+#[test]
 fn read_ed_classic_road_tech_straight() {
     let _ed_classic: BlockInfoClassic =
         read_file("tests/files/ed_classic/RoadTechStraight.EDClassic.Gbx").unwrap();

@@ -46,7 +46,7 @@ mod read {
             r.f32()?;
             r.u8()?;
             let _: Option<Arc<str>> = r.id()?;
-            r.list(|r| r.u32())?;
+            r.list(|r| r.list(|r| r.vec3()))?;
             r.u8()?;
             let _: Option<Arc<str>> = r.id()?;
             r.vec3()?;

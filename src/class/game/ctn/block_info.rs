@@ -69,11 +69,17 @@ mod read {
     use crate::{
         Delme,
         class::{
-            game::ctn::{
-                block_info::BlockInfo, block_info_variant_air::BlockInfoVariantAir,
-                block_info_variant_ground::BlockInfoVariantGround,
+            game::{
+                ctn::{
+                    block_info::BlockInfo, block_info_variant_air::BlockInfoVariantAir,
+                    block_info_variant_ground::BlockInfoVariantGround,
+                },
+                podium_info::PodiumInfo,
             },
-            plug::game_skin_and_folder::GameSkinAndFolder,
+            plug::{
+                game_skin_and_folder::GameSkinAndFolder, media_clip_list::MediaClipList,
+                sound::Sound,
+            },
         },
         read::{
             BodyChunk, BodyChunks, Error, error_unknown_chunk_version, read_node_from_body,
@@ -131,10 +137,9 @@ mod read {
             if version != 8 {
                 return Err(error_unknown_chunk_version(version));
             }
-
             let _char_phy_special_property = r.u32()?;
             let _podium_info = r.u32()?;
-            let _intro_info = r.u32()?;
+            let _intro_info = r.internal_node_ref_or_null::<MediaClipList>()?;
             let _char_phy_special_property_customizable = r.bool32()?;
 
             if r.bool32()? {
@@ -185,8 +190,8 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let sound_1 = r.external_node_ref_or_null::<Delme>()?;
-            let sound_2 = r.external_node_ref_or_null::<Delme>()?;
+            let sound_1 = r.external_node_ref_or_null::<Sound>()?;
+            let sound_2 = r.external_node_ref_or_null::<Sound>()?;
 
             if sound_1.is_some() {
                 let _sound_1_loc = r.iso4()?;

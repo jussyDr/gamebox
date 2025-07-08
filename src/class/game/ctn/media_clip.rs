@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{ClassId, class::game::ctn::media_track::MediaTrack};
+use crate::{ClassId, SubExtensions, class::game::ctn::media_track::MediaTrack};
 
 /// Media clip.
 #[derive(Default)]
@@ -25,6 +25,10 @@ impl MediaClip {
 
 impl ClassId for MediaClip {
     const CLASS_ID: u32 = 0x03079000;
+}
+
+impl SubExtensions for MediaClip {
+    const SUB_EXTENSIONS: &[&str] = &["Clip"];
 }
 
 mod read {
