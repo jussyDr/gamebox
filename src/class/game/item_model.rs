@@ -38,7 +38,10 @@ mod read {
     use crate::{
         class::{
             game::{item_model::ItemModel, item_placement_param::ItemPlacementParam},
-            plug::item_variant_list::ItemVariantList,
+            plug::{
+                game_skin_and_folder::GameSkinAndFolder, item_variant_list::ItemVariantList,
+                media_clip_list::MediaClipList,
+            },
         },
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
@@ -134,9 +137,9 @@ mod read {
             let _actions: Vec<()> = r.list(|r| todo!())?;
             let _default_cam = r.u32()?;
             let _entity_model_edition = r.u32()?;
-            let _entity_model = r.internal_node_ref::<ItemVariantList>()?;
+            let _entity_model = r.node_ref::<ItemVariantList>()?;
             r.u32()?;
-            r.u32()?;
+            r.node_ref_or_null::<GameSkinAndFolder>()?;
 
             Ok(())
         }
@@ -154,7 +157,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _default_placement = r.external_node_ref::<ItemPlacementParam>()?;
+            let _default_placement = r.node_ref::<ItemPlacementParam>()?;
 
             Ok(())
         }
@@ -189,7 +192,7 @@ mod read {
             let _disable_lightmap = r.bool32()?;
             r.u32()?;
             r.u8()?;
-            r.u32()?;
+            r.internal_node_ref_or_null::<MediaClipList>()?;
             r.u32()?;
 
             Ok(())

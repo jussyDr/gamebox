@@ -101,6 +101,41 @@ fn read_item_cactus_medium() {
 }
 
 #[test]
+fn read_item_cherry_tree_medium() {
+    let _item: ItemModel = read_file("tests/files/item/CherryTreeMedium.Item.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_desert_gate_gameplay() {
+    let _item: ItemModel = read_file("tests/files/item/DesertGateGameplay.Item.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_fall() {
+    let _item: ItemModel = read_file("tests/files/item/Fall.Item.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_gate_checkpoint_center_16m() {
+    let _item: ItemModel = read_file("tests/files/item/GateCheckpointCenter16m.Item.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_gate_gameplay_desert_16m() {
+    let _item: ItemModel = read_file("tests/files/item/GateGameplayDesert16m.Item.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_light_tube_big_16m() {
+    let _item: ItemModel = read_file("tests/files/item/LightTubeBig16m.Item.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_podium() {
+    let _item: ItemModel = read_file("tests/files/item/Podium.Item.Gbx").unwrap();
+}
+
+#[test]
 fn read_map_alive() {
     let _map: Challenge = read_file("tests/files/map/Alive.Map.Gbx").unwrap();
 }

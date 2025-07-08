@@ -1,12 +1,24 @@
 //! Item variant.
 
+use crate::{ExternalNodeRef, SubExtensions};
+
 /// Item variant.
 #[derive(Default)]
 pub struct ItemVariant;
 
+enum ItemVariantModel {
+    Prefab(ExternalNodeRef),
+    StaticObject(ExternalNodeRef),
+    VegetTree(ExternalNodeRef),
+}
+
+impl SubExtensions for ItemVariantModel {
+    const SUB_EXTENSIONS: &[&str] = &["Prefab", "StaticObject", "VegetTreeModel"];
+}
+
 mod read {
     use crate::{
-        class::plug::{item_variant::ItemVariant, static_object_model::StaticObjectModel},
+        class::plug::item_variant::{ItemVariant, ItemVariantModel},
         read::{Error, ReadBody, reader::BodyReader},
     };
 
@@ -19,7 +31,7 @@ mod read {
                 Ok(())
             })?;
 
-            let _entity_model = r.external_node_ref::<StaticObjectModel>()?;
+            let _entity_model = r.external_node_ref::<ItemVariantModel>()?;
             let _hidden_in_manual_cycle = r.bool32()?;
 
             Ok(())
