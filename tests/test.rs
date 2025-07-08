@@ -1,6 +1,9 @@
 use gamebox::{
     class::{
-        game::ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge},
+        game::{
+            ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge},
+            item_model::ItemModel,
+        },
         plug::{
             bitmap::Bitmap, dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
             solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,
@@ -90,6 +93,11 @@ fn read_ed_classic_road_tech_straight() {
 #[test]
 fn read_hit_shape_stade1536v2() {
     let _hit_shape: Surface = read_file("tests/files/hit_shape/Stade1536v2.HitShape.Gbx").unwrap();
+}
+
+#[test]
+fn read_item_cactus_medium() {
+    let _item: ItemModel = read_file("tests/files/item/CactusMedium.Item.Gbx").unwrap();
 }
 
 #[test]

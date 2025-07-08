@@ -12,6 +12,8 @@ pub mod index_buffer;
 pub mod item_placement_placement;
 pub mod item_placement_placement_group;
 pub mod item_placement_placement_option;
+pub mod item_variant;
+pub mod item_variant_list;
 pub mod light;
 pub mod material;
 pub mod material_custom;
