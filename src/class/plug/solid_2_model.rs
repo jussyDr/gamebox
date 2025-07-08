@@ -66,6 +66,7 @@ mod read {
         class::plug::{
             light::Light,
             material::Material,
+            skel::Skel,
             solid_2_model::{ShadedGeom, Solid2Model, Solid2ModelLight},
         },
         read::{
@@ -111,7 +112,7 @@ mod read {
                 let visual_index = r.u32()?;
                 let material_index = r.u32()?;
                 r.u32()?;
-                let lod = r.u32()?;
+                let _lod = r.u32()?;
                 r.u32()?;
 
                 Ok(ShadedGeom {
@@ -120,14 +121,16 @@ mod read {
                 })
             })?;
             self.visuals = r.list_with_version(|r| r.internal_node_ref())?;
-            let material_ids: Vec<Arc<str>> = r.list(|r| r.id())?;
+            let _material_ids: Vec<Arc<str>> = r.list(|r| r.id())?;
             let material_count = r.u32()?;
+
             if material_count == 0 {
                 self.materials = r.list_with_version(|r| r.external_node_ref::<Material>())?;
             }
-            let skel = r.u32()?;
+
+            let _skel = r.internal_node_ref_or_null::<Skel>()?;
             r.list(|r| r.f32())?;
-            let vis_cst_type = r.u32()?;
+            let _vis_cst_type = r.u32()?;
             if r.bool32()? {
                 let version = r.u32()?;
 
@@ -149,7 +152,7 @@ mod read {
                 r.u32()?;
                 r.u32()?;
                 r.list(|r| r.box3d())?;
-                let uv_groups = r.list(|r| {
+                let _uv_groups = r.list(|r| {
                     r.u32()?;
                     r.u32()?;
                     r.u32()?;
@@ -159,9 +162,9 @@ mod read {
                     Ok(())
                 })?;
             }
-            let file_write_time = r.u64()?;
+            let _file_write_time = r.u64()?;
             r.string()?;
-            let materials_folder_name = r.string()?;
+            let _materials_folder_name = r.string()?;
             r.string()?;
             self.lights = r.list(|r| {
                 let _: Arc<str> = r.id()?;
@@ -188,19 +191,20 @@ mod read {
 
                 Ok(Solid2ModelLight {})
             })?;
-            let light_user_models: Vec<()> = r.list(|r| todo!())?;
-            let light_insts: Vec<()> = r.list(|r| todo!())?;
-            let damage_zone = r.u32()?;
-            let flags = r.u32()?;
-            r.u32()?;
-            r.string()?;
-            r.u32()?;
-            let custom_materials: Vec<()> = r.list(|r| todo!())?;
+            let _light_user_models: Vec<()> = r.list(|r| todo!())?;
+            let _light_insts: Vec<()> = r.list(|r| todo!())?;
+            let _damage_zone = r.u32()?;
+            let _flags = r.u32()?;
+            r.u32()?; // 1
+            r.u32()?; // ""
+            r.u32()?; // 0xffffffff
+            let _custom_materials: Vec<()> = r.repeat(material_count as usize, |r| todo!())?;
             let _: Vec<Arc<str>> = r.list(|r| r.id())?;
             r.list(|r| r.u32())?;
             r.u32()?;
+            r.list(|r| r.u32())?;
             r.u32()?;
-            r.u32()?;
+            r.u32()?; // 0xffffffff
             r.f32()?;
             r.f32()?;
             let _: Option<Arc<str>> = r.id()?;

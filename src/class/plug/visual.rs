@@ -87,22 +87,38 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _flags = r.u32()?;
+            let flags = r.u32()?;
             let num_texcoord_sets = r.u32()?;
             let _count = r.u32()?;
             self.vertex_streams = r.list(|r| r.internal_node_ref())?;
             let _texcoord_sets: Vec<()> = r.repeat(num_texcoord_sets as usize, |r| todo!())?;
+
+            if flags & 0x00000007 != 0 {
+                r.bool32()?;
+                r.u32()?;
+
+                if r.bool32()? {
+                    todo!()
+                }
+
+                r.bool32()?;
+                let _bones: Vec<Arc<str>> = r.list(|r| r.id())?;
+                r.list(|r| r.u32())?;
+            }
+
             let _bounding_box = r.box3d()?;
-            let _bitmap_elem_to_packs: Vec<()> = r.list(|r| todo!())?;
-
-            if version >= 5 {
-                r.list(|r| r.u16())?;
-            }
-
-            if version >= 6 {
+            let _bitmap_elem_to_packs = r.list(|r| {
                 r.u32()?;
                 r.u32()?;
-            }
+                r.u32()?;
+                r.u32()?;
+                r.u32()?;
+
+                Ok(())
+            })?;
+            r.list(|r| r.u16())?;
+            r.u32()?;
+            r.u32()?;
 
             Ok(())
         }

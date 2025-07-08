@@ -113,6 +113,16 @@ fn read_mesh_stade1536v2() {
 }
 
 #[test]
+fn read_prefab_corner_in_air() {
+    let _prefab: Prefab = read_file("tests/files/prefab/CornerIn_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_special_ground() {
+    let _prefab: Prefab = read_file("tests/files/prefab/Special_Ground.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_stade1536v2() {
     let _prefab: Prefab = read_file("tests/files/prefab/Stade1536v2.Prefab.Gbx").unwrap();
 }

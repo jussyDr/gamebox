@@ -6,7 +6,9 @@ use crate::{ClassId, Vec2, Vec3};
 #[derive(Default)]
 pub struct VertexStream {
     positions: Vec<Vec3>,
+    blend_indices: Option<Vec<u32>>,
     normals: Vec<Vec3>,
+    colors_0: Option<Vec<u32>>,
     texcoords_0: Vec<Vec2>,
     texcoords_1: Vec<Vec2>,
     tangents_u: Vec<Vec3>,
@@ -19,9 +21,19 @@ impl VertexStream {
         &self.positions
     }
 
+    /// Blend index data.
+    pub fn blend_indices(&self) -> &Option<Vec<u32>> {
+        &self.blend_indices
+    }
+
     /// Normal data.
     pub fn normals(&self) -> &Vec<Vec3> {
         &self.normals
+    }
+
+    /// Color 0 data.
+    pub fn colors_0(&self) -> &Option<Vec<u32>> {
+        &self.colors_0
     }
 
     /// Texcoord 0 data.
@@ -56,18 +68,22 @@ struct DataDecl {
 
 #[derive(Debug)]
 enum VertexTarget {
-    Position = 0,
-    Normal = 5,
-    Texcoord0 = 10,
-    Texcoord1 = 11,
-    TangentU = 18,
-    TangentV = 20,
+    Position,
+    BlendIndices,
+    Normal,
+    Color0,
+    Texcoord0,
+    Texcoord1,
+    TangentU,
+    TangentV,
 }
 
 enum VertexFormat {
-    Float32x2 = 1,
-    Float32x3 = 2,
-    Dec3N = 14,
+    Float32x2,
+    Float32x3,
+    Rgba,
+    U32,
+    Dec3N,
 }
 
 mod read {
@@ -116,7 +132,9 @@ mod read {
 
                 let target = match flags1 & 0x000001ff {
                     0 => VertexTarget::Position,
+                    4 => VertexTarget::BlendIndices,
                     5 => VertexTarget::Normal,
+                    8 => VertexTarget::Color0,
                     10 => VertexTarget::Texcoord0,
                     11 => VertexTarget::Texcoord1,
                     18 => VertexTarget::TangentU,
@@ -127,6 +145,8 @@ mod read {
                 let format = match (flags1 >> 9) & 0x000001ff {
                     1 => VertexFormat::Float32x2,
                     2 => VertexFormat::Float32x3,
+                    4 => VertexFormat::Rgba,
+                    5 => VertexFormat::U32,
                     14 => VertexFormat::Dec3N,
                     value => return Err(error_unknown_enum_variant("vertex format", value)),
                 };
@@ -151,6 +171,22 @@ mod read {
 
                         match decl.target {
                             VertexTarget::Position => self.positions = data,
+                            _ => todo!("{:?}", decl.target),
+                        }
+                    }
+                    VertexFormat::Rgba => {
+                        let data: Vec<u32> = r.repeat_zerocopy(count as usize)?;
+
+                        match decl.target {
+                            VertexTarget::Color0 => self.colors_0 = Some(data),
+                            _ => todo!("{:?}", decl.target),
+                        }
+                    }
+                    VertexFormat::U32 => {
+                        let data: Vec<u32> = r.repeat_zerocopy(count as usize)?;
+
+                        match decl.target {
+                            VertexTarget::BlendIndices => self.blend_indices = Some(data),
                             _ => todo!("{:?}", decl.target),
                         }
                     }
