@@ -38,7 +38,7 @@ pub enum SurfaceKind {
 
 pub enum SurfaceMaterial {
     Internal(InternalMaterial),
-    External(ExternalNodeRef),
+    External(Option<ExternalNodeRef>),
 }
 
 pub enum InternalMaterial {
@@ -127,7 +127,7 @@ mod read {
             self.materials = r.list(|r| {
                 if r.bool32()? {
                     Ok(SurfaceMaterial::External(
-                        r.external_node_ref::<Material>()?,
+                        r.external_node_ref_or_null::<Material>()?,
                     ))
                 } else {
                     match r.u16()? {
@@ -137,7 +137,11 @@ mod read {
                 }
             })?;
 
-            if !self.materials.is_empty() {
+            if !self
+                .materials
+                .iter()
+                .any(|material| matches!(material, SurfaceMaterial::External(None)))
+            {
                 r.u32()?;
             }
 

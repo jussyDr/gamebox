@@ -7,12 +7,13 @@ use crate::{ClassId, Vec2, Vec3};
 pub struct VertexStream {
     positions: Vec<Vec3>,
     blend_indices: Option<Vec<u32>>,
-    normals: Vec<Vec3>,
+    normals: Option<Vec<Vec3>>,
     colors_0: Option<Vec<u32>>,
     texcoords_0: Vec<Vec2>,
-    texcoords_1: Vec<Vec2>,
-    tangents_u: Vec<Vec3>,
-    tangents_v: Vec<Vec3>,
+    texcoords_1: Option<Vec<Vec2>>,
+    texcoords_2: Option<Vec<Vec2>>,
+    tangents_u: Option<Vec<Vec3>>,
+    tangents_v: Option<Vec<Vec3>>,
 }
 
 impl VertexStream {
@@ -27,7 +28,7 @@ impl VertexStream {
     }
 
     /// Normal data.
-    pub fn normals(&self) -> &Vec<Vec3> {
+    pub fn normals(&self) -> &Option<Vec<Vec3>> {
         &self.normals
     }
 
@@ -42,17 +43,22 @@ impl VertexStream {
     }
 
     /// Texcoord 1 data.
-    pub fn texcoords_1(&self) -> &Vec<Vec2> {
+    pub fn texcoords_1(&self) -> &Option<Vec<Vec2>> {
         &self.texcoords_1
     }
 
+    /// Texcoord 2 data.
+    pub fn texcoords_2(&self) -> &Option<Vec<Vec2>> {
+        &self.texcoords_2
+    }
+
     /// Tangent U data.
-    pub fn tangents_u(&self) -> &Vec<Vec3> {
+    pub fn tangents_u(&self) -> &Option<Vec<Vec3>> {
         &self.tangents_u
     }
 
     /// Tangent V data.
-    pub fn tangents_v(&self) -> &Vec<Vec3> {
+    pub fn tangents_v(&self) -> &Option<Vec<Vec3>> {
         &self.tangents_v
     }
 }
@@ -74,6 +80,7 @@ enum VertexTarget {
     Color0,
     Texcoord0,
     Texcoord1,
+    Texcoord2,
     TangentU,
     TangentV,
 }
@@ -137,6 +144,7 @@ mod read {
                     8 => VertexTarget::Color0,
                     10 => VertexTarget::Texcoord0,
                     11 => VertexTarget::Texcoord1,
+                    12 => VertexTarget::Texcoord2,
                     18 => VertexTarget::TangentU,
                     20 => VertexTarget::TangentV,
                     value => return Err(error_unknown_enum_variant("vertex target", value)),
@@ -162,7 +170,8 @@ mod read {
 
                         match decl.target {
                             VertexTarget::Texcoord0 => self.texcoords_0 = data,
-                            VertexTarget::Texcoord1 => self.texcoords_1 = data,
+                            VertexTarget::Texcoord1 => self.texcoords_1 = Some(data),
+                            VertexTarget::Texcoord2 => self.texcoords_2 = Some(data),
                             _ => todo!("{:?}", decl.target),
                         }
                     }
@@ -200,13 +209,13 @@ mod read {
 
                         match decl.target {
                             VertexTarget::Normal => {
-                                self.normals = data;
+                                self.normals = Some(data);
                             }
                             VertexTarget::TangentU => {
-                                self.tangents_u = data;
+                                self.tangents_u = Some(data);
                             }
                             VertexTarget::TangentV => {
-                                self.tangents_v = data;
+                                self.tangents_v = Some(data);
                             }
                             _ => todo!("{:?}", decl.target),
                         }

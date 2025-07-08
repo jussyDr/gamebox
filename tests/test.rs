@@ -113,8 +113,44 @@ fn read_mesh_stade1536v2() {
 }
 
 #[test]
+fn read_prefab_checkpoint_air() {
+    let _prefab: Prefab = read_file("tests/files/prefab/Checkpoint_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_checkpoint_air_nbp() {
+    let _prefab: Prefab = read_file("tests/files/prefab/Checkpoint_AirNPB.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_corner_in() {
+    let _prefab: Prefab = read_file("tests/files/prefab/CornerIn.Prefab.Gbx").unwrap();
+}
+
+#[test]
 fn read_prefab_corner_in_air() {
     let _prefab: Prefab = read_file("tests/files/prefab/CornerIn_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_diag_in() {
+    let _prefab: Prefab = read_file("tests/files/prefab/DiagIn.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_expandable_finish_air() {
+    let _prefab: Prefab = read_file("tests/files/prefab/ExpandableFinish_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_expandable_gameplay_ground() {
+    let _prefab: Prefab =
+        read_file("tests/files/prefab/ExpandableGameplay_Ground.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_finish_air() {
+    let _prefab: Prefab = read_file("tests/files/prefab/Finish_Air.Prefab.Gbx").unwrap();
 }
 
 #[test]
@@ -130,6 +166,12 @@ fn read_prefab_stade1536v2() {
 #[test]
 fn read_prefab_straight_air() {
     let _prefab: Prefab = read_file("tests/files/prefab/Straight_Air.Prefab.Gbx").unwrap();
+}
+
+#[test]
+fn read_prefab_zone_end_large_left_air_v2() {
+    let _prefab: Prefab =
+        read_file("tests/files/prefab/ZoneEndLargeLeft_AirV2.Prefab.Gbx").unwrap();
 }
 
 #[test]

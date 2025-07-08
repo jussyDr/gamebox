@@ -6,8 +6,13 @@ use crate::{
     ClassId, NodeRef, Quat, SubExtensions, Vec3,
     class::plug::{
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
-        item_placement_placement::ItemPlacementPlacement, static_object_model::StaticObjectModel,
+        item_placement_placement::ItemPlacementPlacement,
+        item_placement_placement_group::ItemPlacementPlacementGroup, path::Path,
+        static_object_model::StaticObjectModel,
+        static_object_model_instance_params::StaticObjectModelInstanceParams,
+        trigger_special::TriggerSpecial,
     },
+    read::reader::Downcast,
 };
 
 /// A collection of entities.
@@ -45,7 +50,7 @@ impl SubExtensions for Prefab {
 
 /// An entity stored in a prefab.
 pub struct Entity {
-    model: Option<NodeRef<Arc<StaticObjectModel>>>,
+    model: Option<NodeRef<EntityModel>>,
     rotation: Quat,
     position: Vec3,
     params: Option<EntityParams>,
@@ -53,7 +58,7 @@ pub struct Entity {
 
 impl Entity {
     /// Model of the entity.
-    pub fn model(&self) -> &Option<NodeRef<Arc<StaticObjectModel>>> {
+    pub fn model(&self) -> &Option<NodeRef<EntityModel>> {
         &self.model
     }
 
@@ -74,19 +79,24 @@ impl Entity {
 }
 
 /// Prefab entity model.
+#[derive(Clone)]
 pub enum EntityModel {
+    /// Path.
+    Path(Arc<Path>),
     /// Static object model.
     StaticObjectModel(Arc<StaticObjectModel>),
+    /// Trigger special.
+    TriggerSpecial(Arc<TriggerSpecial>),
 }
 
-impl TryFrom<Arc<dyn Any + Send + Sync>> for EntityModel {
-    type Error = ();
-
-    fn try_from(value: Arc<dyn Any + Send + Sync>) -> Result<Self, ()> {
+impl Downcast for EntityModel {
+    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self> {
         value
             .downcast()
-            .map(Self::StaticObjectModel)
-            .map_err(|_| ())
+            .map(Self::Path)
+            .or_else(|value| value.downcast().map(Self::StaticObjectModel))
+            .or_else(|value| value.downcast().map(Self::TriggerSpecial))
+            .ok()
     }
 }
 
@@ -96,6 +106,10 @@ pub enum EntityParams {
     DynaObject(DynaObjectModelInstanceParams),
     /// Item placement.
     ItemPlacement(ItemPlacementPlacement),
+    /// Placement group.
+    ItemPlacementPlacementGroup(ItemPlacementPlacementGroup),
+    /// Static object.
+    StaticObject(StaticObjectModelInstanceParams),
 }
 
 mod read {
@@ -103,8 +117,10 @@ mod read {
 
     use crate::{
         class::plug::{
+            path::Path,
             prefab::{Entity, EntityParams, Prefab},
             static_object_model::StaticObjectModel,
+            trigger_special::TriggerSpecial,
         },
         read::{
             Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
@@ -136,17 +152,29 @@ mod read {
             r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
                 let model = r.node_ref_generic_or_null(|r, class_id| match class_id {
+                    0x09119000 => {
+                        let node = read_node_from_body::<Path>(r)?;
+                        Ok(Arc::new(node))
+                    }
                     0x09159000 => {
                         let node = read_node_from_body::<StaticObjectModel>(r)?;
                         Ok(Arc::new(node))
                     }
-                    _ => todo!("{class_id:08X?}"),
+                    0x09179000 => {
+                        let node = read_node_from_body::<TriggerSpecial>(r)?;
+                        Ok(Arc::new(node))
+                    }
+                    _ => todo!("0x{class_id:08x?}"),
                 })?;
                 let rotation = r.quat()?;
                 let position = r.vec3()?;
                 let params = r.node_or_null_generic(|r, class_id| match class_id {
                     0x2f0a9000 => Ok(EntityParams::ItemPlacement(read_node_from_body(r)?)),
                     0x2f0b6000 => Ok(EntityParams::DynaObject(read_node_from_body(r)?)),
+                    0x2f0d8000 => Ok(EntityParams::ItemPlacementPlacementGroup(
+                        read_node_from_body(r)?,
+                    )),
+                    0x2f0d9000 => Ok(EntityParams::StaticObject(read_node_from_body(r)?)),
                     _ => todo!("0x{class_id:08x?}"),
                 })?;
                 r.string()?;

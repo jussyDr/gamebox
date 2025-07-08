@@ -64,7 +64,7 @@ mod read {
             self.hit_shape = if r.bool8()? {
                 None
             } else {
-                Some(r.node_ref()?)
+                r.node_ref_or_null()? // Might be that there is no hit shape alltogether if this is `None`?
             };
 
             Ok(())
