@@ -170,7 +170,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
 
         let mut r = BodyReaderImpl {
             reader: &mut body.as_slice(),
-            id_table: &mut IdTable::new(),
+            id_table: IdTable::new(),
             node_table: &node_table,
         };
 
@@ -180,7 +180,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     } else {
         let mut r = BodyReaderImpl {
             reader: &mut r,
-            id_table: &mut IdTable::new(),
+            id_table: IdTable::new(),
             node_table: &node_table,
         };
 

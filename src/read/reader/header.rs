@@ -37,20 +37,20 @@ pub trait HeaderReader: Reader {
 }
 
 /// Header reader.
-pub struct HeaderReaderImpl<'r, R> {
+pub struct HeaderReaderImpl<R> {
     /// Reader.
-    pub reader: &'r mut R,
+    pub reader: R,
     /// Id table.
     pub id_table: IdTable,
 }
 
-impl<'r, R: Read> Read for HeaderReaderImpl<'r, R> {
+impl<R: Read> Read for HeaderReaderImpl<R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<'r, R: Read> HeaderReader for HeaderReaderImpl<'r, R> {
+impl<R: Read> HeaderReader for HeaderReaderImpl<R> {
     /// Read an identifier.
     fn id<T: TryFromId>(&mut self) -> Result<T, Error> {
         let id = id_or_null(self)?;
@@ -59,7 +59,7 @@ impl<'r, R: Read> HeaderReader for HeaderReaderImpl<'r, R> {
     }
 }
 
-pub fn id_or_null<'r, R: Read>(r: &mut HeaderReaderImpl<'r, R>) -> Result<Option<Arc<str>>, Error> {
+pub fn id_or_null<R: Read>(r: &mut HeaderReaderImpl<R>) -> Result<Option<Arc<str>>, Error> {
     if !r.id_table.seen_id {
         let version = r.u32()?;
 

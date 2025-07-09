@@ -758,7 +758,7 @@ mod read {
 
         let mut r = BodyReaderImpl {
             reader: r,
-            id_table: &mut IdTable::new(),
+            id_table: IdTable::new(),
             node_table: &NodeTable::new(0),
         };
 

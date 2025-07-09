@@ -236,22 +236,22 @@ pub trait BodyReader: HeaderReader {
 }
 
 /// Implementation of the `BodyReader` trait.
-pub struct BodyReaderImpl<'r, 'i, 'n, R> {
+pub struct BodyReaderImpl<'r, 'n, R> {
     /// Reader.
     pub reader: &'r mut R,
     /// Identifier table.
-    pub id_table: &'i mut IdTable,
+    pub id_table: IdTable,
     /// Node table.
     pub node_table: &'n NodeTable,
 }
 
-impl<'r, 'i, 'n, R: Read> Read for BodyReaderImpl<'r, 'i, 'n, R> {
+impl<'r, 'n, R: Read> Read for BodyReaderImpl<'r, 'n, R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<'r, 'i, 'n, R: Read> HeaderReader for BodyReaderImpl<'r, 'i, 'n, R> {
+impl<'r, 'n, R: Read> HeaderReader for BodyReaderImpl<'r, 'n, R> {
     fn id<T: TryFromId>(&mut self) -> Result<T, Error> {
         let id = id_or_null(self)?;
 
@@ -259,8 +259,8 @@ impl<'r, 'i, 'n, R: Read> HeaderReader for BodyReaderImpl<'r, 'i, 'n, R> {
     }
 }
 
-fn id_or_null<'r, 'i, 'n, R: Read>(
-    r: &mut BodyReaderImpl<'r, 'i, 'n, R>,
+fn id_or_null<'r, 'n, R: Read>(
+    r: &mut BodyReaderImpl<'r, 'n, R>,
 ) -> Result<Option<Arc<str>>, Error> {
     if !r.id_table.seen_id {
         let version = r.u32()?;
@@ -313,7 +313,7 @@ fn id_or_null<'r, 'i, 'n, R: Read>(
     }
 }
 
-impl<'r, 'i, 'n, R: Read> BodyReader for BodyReaderImpl<'r, 'i, 'n, R> {
+impl<'r, 'n, R: Read> BodyReader for BodyReaderImpl<'r, 'n, R> {
     fn node_ref<T: ReadNodeRef>(&mut self) -> Result<T, Error> {
         let index = self.u32()?;
 
@@ -331,14 +331,20 @@ impl<'r, 'i, 'n, R: Read> BodyReader for BodyReaderImpl<'r, 'i, 'n, R> {
             .get(index as usize)
             .ok_or_else(|| Error::new("node reference index exceeds number of nodes"))?;
 
-        let node_ref = slot.get_or_try_init(|| {
-            let class_id = self.u32()?;
+        let node_ref = match slot.get() {
+            None => {
+                let class_id = self.u32()?;
 
-            let node_ref = T::read_node_ref_internal(self, class_id)?;
+                let node_ref = NodeRef::Internal(T::read_node_ref_internal(self, class_id)?);
 
-            Ok(NodeRef::Internal(node_ref))
-        })?;
+                slot.set(NodeRef::clone(&node_ref))
+                    .map_err(|_| Error::new("reentrant init"))?;
 
-        T::from_node_ref_any(NodeRef::clone(node_ref))
+                node_ref
+            }
+            Some(node_ref) => NodeRef::clone(&node_ref),
+        };
+
+        T::from_node_ref_any(node_ref)
     }
 }

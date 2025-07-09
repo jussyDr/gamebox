@@ -1,6 +1,4 @@
-use std::{any::Any, marker::PhantomData};
-
-use once_cell::unsync::OnceCell;
+use std::{any::Any, cell::OnceCell, marker::PhantomData};
 
 use crate::{ExternalNodeRef, NodeRef, read::Error};
 
@@ -20,13 +18,13 @@ impl NodeTable {
 
     /// Set external.
     pub fn set_external<T>(
-        &mut self,
+        &self,
         index: u32,
         external_node_ref: ExternalNodeRef<T>,
     ) -> Result<(), Error> {
         let slot = self
             .nodes
-            .get_mut(index as usize)
+            .get(index as usize)
             .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
 
         slot.set(NodeRef::External(ExternalNodeRef {
