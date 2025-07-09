@@ -37,9 +37,11 @@ pub fn read_header_data<T: HeaderChunks>(node: &mut T, r: &mut impl Reader) -> R
 
     let mut header_chunks = T::header_chunks().into_iter();
 
+    let mut id_table = IdTable::new();
+
     let mut r = HeaderReaderImpl {
         reader: r,
-        id_table: IdTable::new(),
+        id_table,
     };
 
     for (chunk_id, _chunk_size) in header_chunk_entries {

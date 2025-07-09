@@ -66,7 +66,7 @@ mod read {
     use std::{any::Any, sync::Arc};
 
     use crate::{
-        NodeRef,
+        ClassId, NodeRef,
         class::game::ctn::{
             media_block_camera_custom::MediaBlockCameraCustom,
             media_block_camera_game::MediaBlockCameraGame,
@@ -83,7 +83,7 @@ mod read {
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
             read_node_from_body,
-            reader::{BodyReader, ClassIdOrSubExtension, ReadNodeRef},
+            reader::{BodyReader, ReadNodeRef},
         },
     };
 
@@ -129,9 +129,9 @@ mod read {
     }
 
     impl ReadNodeRef for MediaBlock {
-        fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
             match node_ref {
-                Some(NodeRef::Internal(node_ref)) => node_ref
+                NodeRef::Internal(node_ref) => node_ref
                     .downcast()
                     .map(Self::CameraGame)
                     .or_else(|value| value.downcast().map(Self::Time))
@@ -148,55 +148,34 @@ mod read {
             }
         }
 
-        fn read_node_ref(
+        fn read_node_ref_internal(
             r: &mut impl BodyReader,
-            class_id: Option<ClassIdOrSubExtension>,
-        ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+            class_id: u32,
+        ) -> Result<Arc<dyn Any + Send + Sync>, Error> {
             match class_id {
-                Some(ClassIdOrSubExtension::ClassId(class_id)) => match class_id {
-                    0x03084000 => {
-                        let node = read_node_from_body::<MediaBlockCameraGame>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x03085000 => {
-                        let node = read_node_from_body::<MediaBlockTime>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x030a2000 => {
-                        let node = read_node_from_body::<MediaBlockCameraCustom>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x030a5000 => {
-                        let node = read_node_from_body::<MediaBlockImage>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x030a8000 => {
-                        let node = read_node_from_body::<MediaBlockText>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x030ab000 => {
-                        let node = read_node_from_body::<MediaBlockTransitionFade>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x03126000 => {
-                        let node = read_node_from_body::<MediaBlockDOF>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x03186000 => {
-                        let node = read_node_from_body::<MediaBlockColorGrading>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x03199000 => {
-                        let node = read_node_from_body::<MediaBlockFog>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x0329f000 => {
-                        let node = read_node_from_body::<MediaBlockEntity>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    _ => todo!("0x{class_id:08x?}"),
-                },
-                _ => todo!(),
+                MediaBlockCameraGame::CLASS_ID => {
+                    Ok(Arc::new(read_node_from_body::<MediaBlockCameraGame>(r)?))
+                }
+                MediaBlockTime::CLASS_ID => Ok(Arc::new(read_node_from_body::<MediaBlockTime>(r)?)),
+                MediaBlockCameraCustom::CLASS_ID => {
+                    Ok(Arc::new(read_node_from_body::<MediaBlockCameraCustom>(r)?))
+                }
+                MediaBlockImage::CLASS_ID => {
+                    Ok(Arc::new(read_node_from_body::<MediaBlockImage>(r)?))
+                }
+                MediaBlockText::CLASS_ID => Ok(Arc::new(read_node_from_body::<MediaBlockText>(r)?)),
+                MediaBlockTransitionFade::CLASS_ID => Ok(Arc::new(read_node_from_body::<
+                    MediaBlockTransitionFade,
+                >(r)?)),
+                MediaBlockDOF::CLASS_ID => Ok(Arc::new(read_node_from_body::<MediaBlockDOF>(r)?)),
+                MediaBlockColorGrading::CLASS_ID => {
+                    Ok(Arc::new(read_node_from_body::<MediaBlockColorGrading>(r)?))
+                }
+                MediaBlockFog::CLASS_ID => Ok(Arc::new(read_node_from_body::<MediaBlockFog>(r)?)),
+                MediaBlockEntity::CLASS_ID => {
+                    Ok(Arc::new(read_node_from_body::<MediaBlockEntity>(r)?))
+                }
+                _ => todo!("0x{class_id:08x?}"),
             }
         }
     }

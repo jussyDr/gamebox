@@ -1,21 +1,20 @@
 use std::{any::Any, marker::PhantomData};
 
-use crate::{
-    ExternalNodeRef, NodeRef,
-    read::{Error, reader::repeat_n_with},
-};
+use once_cell::unsync::OnceCell;
+
+use crate::{ExternalNodeRef, NodeRef, read::Error};
 
 /// Node table.
 pub struct NodeTable {
     /// Nodes.
-    pub nodes: Vec<Option<NodeRef<dyn Any + Send + Sync>>>,
+    pub nodes: Vec<OnceCell<NodeRef<dyn Any + Send + Sync>>>,
 }
 
 impl NodeTable {
     /// Create a new node table.
     pub fn new(num_nodes: usize) -> Self {
         Self {
-            nodes: repeat_n_with(num_nodes, || None),
+            nodes: vec![OnceCell::new(); num_nodes],
         }
     }
 
@@ -30,15 +29,12 @@ impl NodeTable {
             .get_mut(index as usize)
             .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
 
-        if slot.is_some() {
-            todo!()
-        }
-
-        *slot = Some(NodeRef::External(ExternalNodeRef {
+        slot.set(NodeRef::External(ExternalNodeRef {
             path: external_node_ref.path,
             ancestor_level: external_node_ref.ancestor_level,
             marker: PhantomData,
-        }));
+        }))
+        .map_err(|_| Error::new(""))?;
 
         Ok(())
     }

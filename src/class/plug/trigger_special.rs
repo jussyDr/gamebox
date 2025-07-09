@@ -1,8 +1,14 @@
 //! Trigger special.
 
+use crate::ClassId;
+
 /// Trigger special.
 #[derive(Default)]
 pub struct TriggerSpecial;
+
+impl ClassId for TriggerSpecial {
+    const CLASS_ID: u32 = 0x09179000;
+}
 
 mod read {
     use crate::{

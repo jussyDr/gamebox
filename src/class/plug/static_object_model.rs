@@ -1,7 +1,5 @@
 //! Static object model.
 
-use std::sync::Arc;
-
 use crate::{
     ClassId, NodeRef, SubExtensions,
     class::plug::{solid_2_model::Solid2Model, surface::Surface},

@@ -746,7 +746,7 @@ mod read {
 
     fn read_encapsulation<R: BodyReader>(
         r: &mut R,
-        mut read_fn: impl FnMut(&mut BodyReaderImpl<&mut R, IdTable, NodeTable>) -> Result<(), Error>,
+        mut read_fn: impl FnMut(&mut BodyReaderImpl<R>) -> Result<(), Error>,
     ) -> Result<(), Error> {
         let version = r.u32()?;
 
@@ -758,8 +758,8 @@ mod read {
 
         let mut r = BodyReaderImpl {
             reader: r,
-            id_table: IdTable::new(),
-            node_table: NodeTable::new(0),
+            id_table: &mut IdTable::new(),
+            node_table: &NodeTable::new(0),
         };
 
         read_fn(&mut r)

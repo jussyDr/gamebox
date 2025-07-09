@@ -169,9 +169,9 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
             .map_err(|_| Error::new("failed to decompress body"))?;
 
         let mut r = BodyReaderImpl {
-            reader: body.as_slice(),
-            id_table: IdTable::new(),
-            node_table,
+            reader: &mut body.as_slice(),
+            id_table: &mut IdTable::new(),
+            node_table: &node_table,
         };
 
         node.read_body(&mut r)?;
@@ -179,9 +179,9 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         r.expect_eof()?;
     } else {
         let mut r = BodyReaderImpl {
-            reader: r,
-            id_table: IdTable::new(),
-            node_table,
+            reader: &mut r,
+            id_table: &mut IdTable::new(),
+            node_table: &node_table,
         };
 
         node.read_body(&mut r)?;

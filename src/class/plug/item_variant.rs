@@ -30,7 +30,7 @@ mod read {
         },
         read::{
             Error, ReadBody,
-            reader::{BodyReader, ClassIdOrSubExtension, ReadNodeRef},
+            reader::{BodyReader, ReadNodeRef},
         },
         sub_extension,
     };
@@ -52,9 +52,9 @@ mod read {
     }
 
     impl ReadNodeRef for ItemVariantModel {
-        fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
             match node_ref {
-                Some(NodeRef::External(node_ref)) => {
+                NodeRef::External(node_ref) => {
                     let sub_extension = sub_extension(&node_ref.path).unwrap();
 
                     if Prefab::has_sub_extension(sub_extension) {
@@ -81,13 +81,6 @@ mod read {
                 }
                 _ => todo!(),
             }
-        }
-
-        fn read_node_ref(
-            r: &mut impl BodyReader,
-            class_id: Option<ClassIdOrSubExtension>,
-        ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-            todo!()
         }
     }
 }

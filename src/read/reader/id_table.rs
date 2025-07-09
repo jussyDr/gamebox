@@ -18,6 +18,12 @@ impl IdTable {
     }
 }
 
+impl AsRef<IdTable> for IdTable {
+    fn as_ref(&self) -> &IdTable {
+        self
+    }
+}
+
 impl AsMut<IdTable> for IdTable {
     fn as_mut(&mut self) -> &mut IdTable {
         self

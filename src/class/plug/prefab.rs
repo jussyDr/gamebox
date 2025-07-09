@@ -109,7 +109,7 @@ mod read {
     use std::{any::Any, marker::PhantomData, sync::Arc};
 
     use crate::{
-        ExternalNodeRef, NodeRef, SubExtensions,
+        ClassId, ExternalNodeRef, NodeRef, SubExtensions,
         class::plug::{
             dyna_object_model::DynaObjectModel,
             path::Path,
@@ -120,7 +120,7 @@ mod read {
         read::{
             Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
             read_node_from_body,
-            reader::{BodyReader, ClassIdOrSubExtension, HeaderReader, ReadNodeRef},
+            reader::{BodyReader, HeaderReader, ReadNodeRef},
         },
         sub_extension,
     };
@@ -174,9 +174,9 @@ mod read {
     }
 
     impl ReadNodeRef for Option<EntityModel> {
-        fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
             match node_ref {
-                Some(NodeRef::Internal(node_ref)) => {
+                NodeRef::Internal(node_ref) => {
                     let node_ref = node_ref
                         .downcast()
                         .map(EntityModel::Path)
@@ -190,7 +190,7 @@ mod read {
 
                     Ok(Some(node_ref))
                 }
-                Some(NodeRef::External(node_ref)) => {
+                NodeRef::External(node_ref) => {
                     let sub_extension = sub_extension(&node_ref.path).unwrap();
 
                     if DynaObjectModel::has_sub_extension(sub_extension) {
@@ -217,33 +217,25 @@ mod read {
                         todo!("{node_ref:?}")
                     }
                 }
-                None => Ok(None),
             }
         }
 
-        fn read_node_ref(
+        fn read_node_ref_internal(
             r: &mut impl BodyReader,
-            class_id: Option<ClassIdOrSubExtension>,
-        ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+            class_id: u32,
+        ) -> Result<Arc<dyn Any + Send + Sync>, Error> {
             match class_id {
-                Some(ClassIdOrSubExtension::ClassId(class_id)) => match class_id {
-                    0x09119000 => {
-                        let node = read_node_from_body::<Path>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x09159000 => {
-                        let node = read_node_from_body::<StaticObjectModel>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    0x09179000 => {
-                        let node = read_node_from_body::<TriggerSpecial>(r)?;
-                        Ok(Some(NodeRef::Internal(Arc::new(node))))
-                    }
-                    _ => todo!("0x{class_id:08x?}"),
-                },
-                None => Ok(None),
-                _ => todo!(),
+                Path::CLASS_ID => Ok(Arc::new(read_node_from_body::<Path>(r)?)),
+                StaticObjectModel::CLASS_ID => {
+                    Ok(Arc::new(read_node_from_body::<StaticObjectModel>(r)?))
+                }
+                TriggerSpecial::CLASS_ID => Ok(Arc::new(read_node_from_body::<TriggerSpecial>(r)?)),
+                _ => todo!("0x{class_id:08x?}"),
             }
+        }
+
+        fn none() -> Result<Self, Error> {
+            Ok(None)
         }
     }
 }

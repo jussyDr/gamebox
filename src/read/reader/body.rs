@@ -1,35 +1,41 @@
-use std::{
-    any::{Any, type_name, type_name_of_val},
-    io::Read,
-    marker::PhantomData,
-    sync::Arc,
-};
+use std::{any::Any, io::Read, marker::PhantomData, sync::Arc};
 
 use crate::{
     ClassId, ExternalNodeRef, NodeRef,
     read::{
-        Error, ReadBody, read_node_from_body,
-        reader::{HeaderReader, IdTable, NodeTable},
+        Error, ReadBody, error_unknown_version, read_node_from_body,
+        reader::{HeaderReader, IdTable, NodeTable, Reader, header::TryFromId},
     },
 };
 
+/// Trait implemented by types that are readable from a node reference.
 pub trait ReadNodeRef {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error>
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error>
     where
         Self: Sized;
 
-    fn read_node_ref(
+    fn read_node_ref_internal(
         r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error>
+        class_id: u32,
+    ) -> Result<Arc<dyn Any + Send + Sync>, Error>
     where
-        Self: Sized;
+        Self: Sized,
+    {
+        Err(Error::new("expected external node reference"))
+    }
+
+    fn none() -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        Err(Error::new("expected non-null node reference"))
+    }
 }
 
 impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Arc<T> {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
         match node_ref {
-            Some(NodeRef::Internal(node_ref)) => {
+            NodeRef::Internal(node_ref) => {
                 let node_ref = node_ref
                     .downcast()
                     .map_err(|_| Error::new("node reference type does not match"))?;
@@ -40,64 +46,44 @@ impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Ar
         }
     }
 
-    fn read_node_ref(
+    fn read_node_ref_internal(
         r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-        match class_id {
-            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
-                if class_id != T::CLASS_ID {
-                    todo!()
-                }
-
-                let node = read_node_from_body::<T>(r)?;
-
-                Ok(Some(NodeRef::Internal(Arc::new(node))))
-            }
-            _ => todo!(),
-        }
+        class_id: u32,
+    ) -> Result<Arc<dyn Any + Send + Sync>, Error> {
+        read_node_ref_internal_impl::<T>(r, class_id)
     }
 }
 
 impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Option<Arc<T>> {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
         match node_ref {
-            Some(NodeRef::Internal(node_ref)) => {
+            NodeRef::Internal(node_ref) => {
                 let node_ref = node_ref
                     .downcast()
                     .map_err(|_| Error::new("node reference type does not match"))?;
 
                 Ok(Some(node_ref))
             }
-            None => Ok(None),
             _ => todo!(),
         }
     }
 
-    fn read_node_ref(
+    fn read_node_ref_internal(
         r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-        match class_id {
-            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
-                if class_id != T::CLASS_ID {
-                    todo!()
-                }
+        class_id: u32,
+    ) -> Result<Arc<dyn Any + Send + Sync>, Error> {
+        read_node_ref_internal_impl::<T>(r, class_id)
+    }
 
-                let node = read_node_from_body::<T>(r)?;
-
-                Ok(Some(NodeRef::Internal(Arc::new(node))))
-            }
-            None => Ok(None),
-            _ => todo!(),
-        }
+    fn none() -> Result<Self, Error> {
+        Ok(None)
     }
 }
 
 impl<T> ReadNodeRef for ExternalNodeRef<T> {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
         match node_ref {
-            Some(NodeRef::External(node_ref)) => Ok(ExternalNodeRef {
+            NodeRef::External(node_ref) => Ok(ExternalNodeRef {
                 path: Arc::clone(&node_ref.path),
                 ancestor_level: node_ref.ancestor_level,
                 marker: PhantomData,
@@ -105,167 +91,100 @@ impl<T> ReadNodeRef for ExternalNodeRef<T> {
             _ => todo!(),
         }
     }
-
-    fn read_node_ref(
-        r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-        todo!()
-    }
 }
 
 impl<T> ReadNodeRef for Option<ExternalNodeRef<T>> {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
         match node_ref {
-            Some(NodeRef::External(node_ref)) => Ok(Some(ExternalNodeRef {
+            NodeRef::External(node_ref) => Ok(Some(ExternalNodeRef {
                 path: Arc::clone(&node_ref.path),
                 ancestor_level: node_ref.ancestor_level,
                 marker: PhantomData,
             })),
-            None => Ok(None),
             _ => todo!(),
         }
     }
 
-    fn read_node_ref(
-        r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-        match class_id {
-            None => Ok(None),
-            _ => todo!(),
-        }
+    fn none() -> Result<Self, Error> {
+        Ok(None)
     }
 }
 
 impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for NodeRef<T> {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
         match node_ref {
-            Some(NodeRef::Internal(node_ref)) => {
+            NodeRef::Internal(node_ref) => {
                 let node_ref = node_ref
                     .downcast()
                     .map_err(|_| Error::new("node reference type does not match"))?;
 
                 Ok(NodeRef::Internal(node_ref))
             }
-            Some(NodeRef::External(node_ref)) => Ok(NodeRef::External(ExternalNodeRef {
+            NodeRef::External(node_ref) => Ok(NodeRef::External(ExternalNodeRef {
                 path: Arc::clone(&node_ref.path),
                 ancestor_level: node_ref.ancestor_level,
                 marker: PhantomData,
             })),
-            _ => todo!(),
         }
     }
 
-    fn read_node_ref(
+    fn read_node_ref_internal(
         r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-        match class_id {
-            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
-                if class_id != T::CLASS_ID {
-                    todo!()
-                }
-
-                let node = read_node_from_body::<T>(r)?;
-
-                Ok(Some(NodeRef::Internal(Arc::new(node))))
-            }
-            _ => todo!(),
-        }
+        class_id: u32,
+    ) -> Result<Arc<dyn Any + Send + Sync>, Error> {
+        read_node_ref_internal_impl::<T>(r, class_id)
     }
 }
 
 impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Option<NodeRef<T>> {
-    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+    fn from_node_ref_any(node_ref: NodeRef<dyn Any + Send + Sync>) -> Result<Self, Error> {
         match node_ref {
-            Some(NodeRef::Internal(node_ref)) => {
+            NodeRef::Internal(node_ref) => {
                 let node_ref = node_ref
                     .downcast()
                     .map_err(|_| Error::new("node reference type does not match"))?;
 
                 Ok(Some(NodeRef::Internal(node_ref)))
             }
-            Some(NodeRef::External(node_ref)) => Ok(Some(NodeRef::External(ExternalNodeRef {
+            NodeRef::External(node_ref) => Ok(Some(NodeRef::External(ExternalNodeRef {
                 path: Arc::clone(&node_ref.path),
                 ancestor_level: node_ref.ancestor_level,
                 marker: PhantomData,
             }))),
-            None => Ok(None),
         }
     }
 
-    fn read_node_ref(
+    fn read_node_ref_internal(
         r: &mut impl BodyReader,
-        class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
-        match class_id {
-            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
-                if class_id != T::CLASS_ID {
-                    todo!()
-                }
+        class_id: u32,
+    ) -> Result<Arc<dyn Any + Send + Sync>, Error> {
+        read_node_ref_internal_impl::<T>(r, class_id)
+    }
 
-                let node = read_node_from_body::<T>(r)?;
-
-                Ok(Some(NodeRef::Internal(Arc::new(node))))
-            }
-            None => Ok(None),
-            _ => todo!(),
-        }
+    fn none() -> Result<Self, Error> {
+        Ok(None)
     }
 }
 
-pub enum ClassIdOrSubExtension {
-    ClassId(u32),
-    SubExtension(String),
+fn read_node_ref_internal_impl<T: 'static + ClassId + Default + ReadBody + Send + Sync>(
+    r: &mut impl BodyReader,
+    class_id: u32,
+) -> Result<Arc<dyn Any + Send + Sync>, Error> {
+    if class_id != T::CLASS_ID {
+        return Err(Error::new("class id does not match"));
+    }
+
+    let node = read_node_from_body::<T>(r)?;
+
+    Ok(Arc::new(node))
 }
 
 /// Body reader.
 pub trait BodyReader: HeaderReader {
-    /// Node table.
-    fn node_table(&mut self) -> &mut NodeTable;
-
-    /// WIP.
+    /// Read a node reference.
     fn node_ref<T: ReadNodeRef>(&mut self) -> Result<T, Error>
     where
-        Self: Sized,
-    {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return T::from_any(T::read_node_ref(self, None)?);
-        }
-
-        let index = index
-            .checked_sub(1)
-            .ok_or_else(|| Error::new("node reference index is zero"))?;
-
-        let slot = self
-            .node_table()
-            .nodes
-            .get(index as usize)
-            .ok_or_else(|| Error::new("node reference index exceeds number of nodes"))?;
-
-        match slot {
-            None => {
-                let class_id = self.u32()?;
-
-                let node_ref =
-                    T::read_node_ref(self, Some(ClassIdOrSubExtension::ClassId(class_id)))?;
-
-                match node_ref {
-                    Some(NodeRef::Internal(node_ref)) => {
-                        *self.node_table().nodes.get_mut(index as usize).unwrap() =
-                            Some(NodeRef::Internal(Arc::clone(&node_ref)));
-
-                        T::from_any(Some(NodeRef::Internal(node_ref)))
-                    }
-                    _ => todo!(),
-                }
-            }
-            Some(node_ref) => T::from_any(Some(NodeRef::clone(node_ref))),
-        }
-    }
+        Self: Sized;
 
     /// Read a node.
     fn node<T: Default + ClassId + ReadBody>(&mut self) -> Result<T, Error>
@@ -316,30 +235,110 @@ pub trait BodyReader: HeaderReader {
     }
 }
 
-/// Body reader.
-pub struct BodyReaderImpl<R, I, N> {
+/// Implementation of the `BodyReader` trait.
+pub struct BodyReaderImpl<'r, 'i, 'n, R> {
     /// Reader.
-    pub reader: R,
+    pub reader: &'r mut R,
     /// Identifier table.
-    pub id_table: I,
+    pub id_table: &'i mut IdTable,
     /// Node table.
-    pub node_table: N,
+    pub node_table: &'n NodeTable,
 }
 
-impl<R: Read, I, N> Read for BodyReaderImpl<R, I, N> {
+impl<'r, 'i, 'n, R: Read> Read for BodyReaderImpl<'r, 'i, 'n, R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<R: Read, I: AsMut<IdTable>, N> HeaderReader for BodyReaderImpl<R, I, N> {
-    fn id_table(&mut self) -> &mut IdTable {
-        self.id_table.as_mut()
+impl<'r, 'i, 'n, R: Read> HeaderReader for BodyReaderImpl<'r, 'i, 'n, R> {
+    fn id<T: TryFromId>(&mut self) -> Result<T, Error> {
+        let id = id_or_null(self)?;
+
+        T::try_from_id(id)
     }
 }
 
-impl<R: Read, I: AsMut<IdTable>, N: AsMut<NodeTable>> BodyReader for BodyReaderImpl<R, I, N> {
-    fn node_table(&mut self) -> &mut NodeTable {
-        self.node_table.as_mut()
+fn id_or_null<'r, 'i, 'n, R: Read>(
+    r: &mut BodyReaderImpl<'r, 'i, 'n, R>,
+) -> Result<Option<Arc<str>>, Error> {
+    if !r.id_table.seen_id {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(error_unknown_version("identifier", version));
+        }
+
+        r.id_table.seen_id = true;
+    }
+
+    let index = r.u32()?;
+
+    if index == 0xffffffff {
+        return Ok(None);
+    }
+
+    if index == 0x0000001a {
+        // Not sure what this is yet.
+        return Ok(Some(Arc::from("")));
+    }
+
+    if index == 0x00002713 {
+        // Not sure what this is yet.
+        return Ok(Some(Arc::from("")));
+    }
+
+    if index & 0x40000000 == 0 {
+        return Err(Error::new("expected an identifier"));
+    }
+
+    let index = index & 0x37ffffff;
+
+    match index.checked_sub(1) {
+        None => {
+            let id = Arc::from(r.string()?);
+            r.id_table.ids.push(Arc::clone(&id));
+
+            Ok(Some(id))
+        }
+        Some(index) => {
+            let id = r
+                .id_table
+                .ids
+                .get(index as usize)
+                .ok_or_else(|| Error::new(""))?;
+
+            Ok(Some(Arc::clone(id)))
+        }
+    }
+}
+
+impl<'r, 'i, 'n, R: Read> BodyReader for BodyReaderImpl<'r, 'i, 'n, R> {
+    fn node_ref<T: ReadNodeRef>(&mut self) -> Result<T, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return T::none();
+        }
+
+        let index = index
+            .checked_sub(1)
+            .ok_or_else(|| Error::new("node reference index is zero"))?;
+
+        let slot = self
+            .node_table
+            .nodes
+            .get(index as usize)
+            .ok_or_else(|| Error::new("node reference index exceeds number of nodes"))?;
+
+        let node_ref = slot.get_or_try_init(|| {
+            let class_id = self.u32()?;
+
+            let node_ref = T::read_node_ref_internal(self, class_id)?;
+
+            Ok(NodeRef::Internal(node_ref))
+        })?;
+
+        T::from_node_ref_any(NodeRef::clone(node_ref))
     }
 }
