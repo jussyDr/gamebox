@@ -8,8 +8,11 @@ mod header_data;
 mod id;
 mod node_ref;
 
-pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node_from_body};
-pub use header_data::{HeaderChunk, HeaderChunks};
+pub use body::{
+    BodyChunk, BodyChunks, BodyReader, BodyReaderImpl, ReadBody, read_body_chunks,
+    read_node_from_body,
+};
+pub use header_data::{HeaderChunk, HeaderChunks, HeaderReader};
 pub use id::IdTable;
 pub use node_ref::{NodeRefTable, ReadNodeRef};
 
@@ -24,10 +27,7 @@ use std::{
 
 use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
-    read::{
-        header_data::read_header_data,
-        reader::{BodyReaderImpl, Reader},
-    },
+    read::{header_data::read_header_data, reader::Reader},
     sub_extension,
 };
 

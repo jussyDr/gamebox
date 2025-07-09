@@ -14,7 +14,7 @@ mod read {
     use crate::{
         ExternalNodeRef,
         class::{game::ctn::media_clip::MediaClip, plug::media_clip_list::MediaClipList},
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for MediaClipList {

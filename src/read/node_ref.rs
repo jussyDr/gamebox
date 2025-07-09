@@ -2,10 +2,7 @@ use std::{any::Any, cell::OnceCell, io::Read, marker::PhantomData, sync::Arc};
 
 use crate::{
     ClassId, ExternalNodeRef, NodeRef,
-    read::{
-        Error, ReadBody, read_node_from_body,
-        reader::{BodyReader, BodyReaderImpl, Reader},
-    },
+    read::{BodyReader, BodyReaderImpl, Error, ReadBody, read_node_from_body, reader::Reader},
 };
 
 /// Node reference table.
@@ -14,7 +11,7 @@ pub struct NodeRefTable {
 }
 
 impl NodeRefTable {
-    /// Create a new node table.
+    /// Create a new `NodeRefTable`.
     pub fn new(num_nodes: usize) -> Self {
         Self {
             node_refs: vec![OnceCell::new(); num_nodes],

@@ -16,8 +16,8 @@ mod read {
     use crate::{
         class::plug::skel::Skel,
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 

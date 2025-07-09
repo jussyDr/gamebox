@@ -10,7 +10,7 @@ mod read {
             item_placement_placement::ItemPlacementPlacement,
             item_placement_placement_option::ItemPlacementPlacementOption,
         },
-        read::{Error, ReadBody, error_unknown_version, read_node_from_body, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody, error_unknown_version, read_node_from_body},
     };
 
     impl ReadBody for ItemPlacementPlacement {

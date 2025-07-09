@@ -1,11 +1,5 @@
 //! Reader
 
-mod body;
-mod header;
-
-pub use body::{BodyReader, BodyReaderImpl};
-pub use header::{HeaderReader, HeaderReaderImpl};
-
 use zerocopy::{FromBytes, FromZeros, IntoBytes};
 
 use std::{io::Read, iter};

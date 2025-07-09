@@ -68,10 +68,9 @@ mod read {
             script::traits_metadata::TraitsMetadata,
         },
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, IdTable, NodeRefTable,
-            ReadBody, Readable, error_unknown_chunk_version, error_unknown_version,
-            read_body_chunks, read_node_from_body,
-            reader::{BodyReader, BodyReaderImpl, HeaderReader, Reader},
+            BodyChunk, BodyChunks, BodyReader, BodyReaderImpl, Error, HeaderChunk, HeaderChunks,
+            HeaderReader, IdTable, NodeRefTable, ReadBody, Readable, error_unknown_chunk_version,
+            error_unknown_version, read_body_chunks, read_node_from_body, reader::Reader,
         },
     };
 

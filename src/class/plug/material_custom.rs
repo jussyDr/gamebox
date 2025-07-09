@@ -44,13 +44,10 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
-        class::plug::{
-            bitmap::Bitmap,
-            material_custom::{MaterialCustom, MaterialCustomTexture},
-        },
+        class::plug::material_custom::{MaterialCustom, MaterialCustomTexture},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 

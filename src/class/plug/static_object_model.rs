@@ -37,8 +37,8 @@ mod read {
     use crate::{
         class::plug::static_object_model::StaticObjectModel,
         read::{
-            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
-            reader::{BodyReader, HeaderReader},
+            BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader, ReadBody, Readable,
+            error_unknown_version,
         },
     };
 

@@ -16,8 +16,8 @@ mod read {
     use crate::{
         class::plug::{solid::Solid, tree::Tree},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version,
-            error_unknown_version, read_body_chunks, reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            error_unknown_version, read_body_chunks,
         },
     };
 

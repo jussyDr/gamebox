@@ -66,14 +66,13 @@ mod read {
         ExternalNodeRef,
         class::plug::{
             light::Light,
-            material::Material,
             skel::Skel,
             solid_2_model::{ShadedGeom, Solid2Model, Solid2ModelLight},
         },
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, error_unknown_version, read_body_chunks,
-            reader::{BodyReader, HeaderReader},
+            BodyChunk, BodyChunks, BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader,
+            ReadBody, Readable, error_unknown_chunk_version, error_unknown_version,
+            read_body_chunks,
         },
     };
 

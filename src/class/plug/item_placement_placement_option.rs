@@ -7,7 +7,7 @@ pub struct ItemPlacementPlacementOption;
 mod read {
     use crate::{
         class::plug::item_placement_placement_option::ItemPlacementPlacementOption,
-        read::{Error, ReadBody, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody},
     };
 
     impl ReadBody for ItemPlacementPlacementOption {

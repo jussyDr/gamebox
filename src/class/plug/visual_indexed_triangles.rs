@@ -31,7 +31,7 @@ impl DerefMut for VisualIndexedTriangles {
 mod read {
     use crate::{
         class::plug::visual_indexed_triangles::VisualIndexedTriangles,
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for VisualIndexedTriangles {

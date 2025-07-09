@@ -54,7 +54,7 @@ mod read {
             },
             waypoint_special_property::WaypointSpecialProperty,
         },
-        read::{Error, ReadBody, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody},
     };
 
     impl ReadBody for Block {

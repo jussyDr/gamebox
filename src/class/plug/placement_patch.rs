@@ -31,7 +31,7 @@ impl DerefMut for PlacementPatch {
 mod read {
     use crate::{
         class::plug::placement_patch::PlacementPatch,
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for PlacementPatch {

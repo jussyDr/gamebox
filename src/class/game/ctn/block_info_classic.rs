@@ -36,9 +36,8 @@ mod read {
     use crate::{
         class::game::ctn::block_info_classic::BlockInfoClassic,
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            read_body_chunks,
-            reader::{BodyReader, HeaderReader},
+            BodyChunk, BodyChunks, BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader,
+            ReadBody, Readable, read_body_chunks,
         },
     };
 

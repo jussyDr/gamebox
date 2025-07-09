@@ -29,9 +29,8 @@ mod read {
     use crate::{
         class::plug::bitmap::Bitmap,
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, read_body_chunks,
-            reader::{BodyReader, HeaderReader},
+            BodyChunk, BodyChunks, BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader,
+            ReadBody, Readable, error_unknown_chunk_version, read_body_chunks,
         },
     };
 

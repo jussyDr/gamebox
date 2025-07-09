@@ -13,7 +13,7 @@ impl ClassId for TriggerSpecial {
 mod read {
     use crate::{
         class::plug::trigger_special::TriggerSpecial,
-        read::{Error, ReadBody, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody},
     };
 
     impl ReadBody for TriggerSpecial {

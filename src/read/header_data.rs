@@ -1,10 +1,21 @@
+use std::io::Read;
+
 use crate::{
     ClassId,
     read::{
         Error, IdTable,
-        reader::{HeaderReader, HeaderReaderImpl, Reader},
+        id::{TryFromId, read_id},
+        reader::Reader,
     },
 };
+
+/// Header data reader.
+pub trait HeaderReader: Reader {
+    /// Read an identifier.
+    fn id<T: TryFromId>(&mut self) -> Result<T, Error>
+    where
+        Self: Sized;
+}
 
 /// Header chunks.
 pub trait HeaderChunks: ClassId {
@@ -59,4 +70,22 @@ pub fn read_header_data<T: HeaderChunks>(node: &mut T, r: &mut impl Reader) -> R
     }
 
     Ok(())
+}
+
+struct HeaderReaderImpl<R> {
+    reader: R,
+    id_table: IdTable,
+}
+
+impl<R: Read> Read for HeaderReaderImpl<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        self.reader.read(buf)
+    }
+}
+
+impl<R: Read> HeaderReader for HeaderReaderImpl<R> {
+    /// Read an identifier.
+    fn id<T: TryFromId>(&mut self) -> Result<T, Error> {
+        read_id(&mut self.reader, &mut self.id_table)
+    }
 }

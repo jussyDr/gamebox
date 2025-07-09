@@ -31,9 +31,8 @@ mod read {
     use crate::{
         class::plug::material::Material,
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            read_body_chunks,
-            reader::{BodyReader, HeaderReader},
+            BodyChunk, BodyChunks, BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader,
+            ReadBody, Readable, read_body_chunks,
         },
     };
 

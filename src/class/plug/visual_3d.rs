@@ -31,7 +31,7 @@ impl DerefMut for Visual3D {
 mod read {
     use crate::{
         class::plug::visual_3d::Visual3D,
-        read::{BodyChunk, BodyChunks, Error, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error},
     };
 
     impl BodyChunks for Visual3D {

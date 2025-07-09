@@ -47,15 +47,11 @@ pub enum InternalMaterial {
 
 mod read {
     use crate::{
-        class::plug::{
-            material::Material,
-            surface::{InternalMaterial, Surface, SurfaceKind, SurfaceMaterial},
-        },
+        class::plug::surface::{InternalMaterial, Surface, SurfaceKind, SurfaceMaterial},
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, error_unknown_enum_variant, error_unknown_version,
-            read_body_chunks,
-            reader::{BodyReader, HeaderReader},
+            BodyChunk, BodyChunks, BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader,
+            ReadBody, Readable, error_unknown_chunk_version, error_unknown_enum_variant,
+            error_unknown_version, read_body_chunks,
         },
     };
 

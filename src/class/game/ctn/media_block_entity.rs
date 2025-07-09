@@ -19,8 +19,8 @@ mod read {
             plug::ent_record_data::EntRecordData,
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 

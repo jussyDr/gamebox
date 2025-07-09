@@ -13,7 +13,7 @@ impl ClassId for Ghost {
 mod read {
     use crate::{
         class::game::ctn::ghost::Ghost,
-        read::{Error, ReadBody, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody},
     };
 
     impl ReadBody for Ghost {

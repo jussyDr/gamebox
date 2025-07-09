@@ -36,8 +36,8 @@ mod read {
             auto_terrain::AutoTerrain, block_info_variant_ground::BlockInfoVariantGround,
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 

@@ -30,7 +30,7 @@ impl ClassId for AutoTerrain {
 mod read {
     use crate::{
         class::game::ctn::auto_terrain::AutoTerrain,
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for AutoTerrain {

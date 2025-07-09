@@ -28,8 +28,8 @@ mod read {
             game::ctn::block_info_mobil::BlockInfoMobil, plug::placement_patch::PlacementPatch,
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 

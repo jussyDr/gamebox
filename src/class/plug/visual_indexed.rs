@@ -43,7 +43,7 @@ mod read {
 
     use crate::{
         class::plug::visual_indexed::VisualIndexed,
-        read::{BodyChunk, BodyChunks, Error, read_node_from_body, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, read_node_from_body},
     };
 
     impl BodyChunks for VisualIndexed {

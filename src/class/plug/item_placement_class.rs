@@ -15,7 +15,7 @@ mod read {
 
     use crate::{
         class::plug::item_placement_class::ItemPlacementClass,
-        read::{Error, ReadBody, error_unknown_chunk_version, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody, error_unknown_chunk_version},
     };
 
     impl ReadBody for ItemPlacementClass {

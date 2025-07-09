@@ -13,7 +13,7 @@ impl ClassId for ItemVariantList {
 mod read {
     use crate::{
         class::plug::{item_variant::ItemVariant, item_variant_list::ItemVariantList},
-        read::{Error, ReadBody, error_unknown_version, read_node_from_body, reader::BodyReader},
+        read::{BodyReader, Error, ReadBody, error_unknown_version, read_node_from_body},
     };
 
     impl ReadBody for ItemVariantList {

@@ -27,7 +27,7 @@ mod read {
 
     use crate::{
         class::plug::visual::Visual,
-        read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, error_unknown_chunk_version},
     };
 
     impl BodyChunks for Visual {

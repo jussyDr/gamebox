@@ -15,7 +15,7 @@ mod read {
 
     use crate::{
         class::plug::road_chunk::RoadChunk,
-        read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, error_unknown_chunk_version},
     };
 
     impl BodyChunks for RoadChunk {

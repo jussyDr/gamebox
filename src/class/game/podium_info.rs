@@ -13,7 +13,7 @@ impl ClassId for PodiumInfo {
 mod read {
     use crate::{
         class::game::podium_info::PodiumInfo,
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for PodiumInfo {

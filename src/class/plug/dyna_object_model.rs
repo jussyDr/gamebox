@@ -24,8 +24,8 @@ mod read {
             solid_2_model::Solid2Model, surface::Surface,
         },
         read::{
-            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
-            reader::{BodyReader, HeaderReader},
+            BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader, ReadBody, Readable,
+            error_unknown_version,
         },
     };
 

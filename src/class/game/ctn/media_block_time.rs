@@ -13,7 +13,7 @@ impl ClassId for MediaBlockTime {
 mod read {
     use crate::{
         class::game::ctn::media_block_time::MediaBlockTime,
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for MediaBlockTime {

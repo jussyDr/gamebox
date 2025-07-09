@@ -81,8 +81,8 @@ mod read {
             media_track::{MediaBlock, MediaTrack},
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, ReadNodeRef, error_unknown_chunk_version,
-            read_body_chunks, read_node_from_body, reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, ReadNodeRef,
+            error_unknown_chunk_version, read_body_chunks, read_node_from_body,
         },
     };
 

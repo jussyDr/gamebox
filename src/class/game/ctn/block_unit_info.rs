@@ -17,8 +17,8 @@ mod read {
         Delme, ExternalNodeRef,
         class::game::ctn::{block_info_clip::BlockInfoClip, block_unit_info::BlockUnitInfo},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 

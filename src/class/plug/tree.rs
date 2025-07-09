@@ -15,7 +15,7 @@ mod read {
 
     use crate::{
         class::plug::{surface::Surface, tree::Tree},
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for Tree {

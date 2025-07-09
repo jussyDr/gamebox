@@ -101,8 +101,8 @@ mod read {
         Vec3,
         class::plug::vertex_stream::{DataDecl, VertexFormat, VertexStream, VertexTarget},
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version,
-            error_unknown_enum_variant, read_body_chunks, reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            error_unknown_enum_variant, read_body_chunks,
         },
     };
 

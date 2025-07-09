@@ -15,7 +15,7 @@ mod read {
 
     use crate::{
         class::game::ctn::{challenge_parameters::ChallengeParameters, ghost::Ghost},
-        read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
+        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
     };
 
     impl ReadBody for ChallengeParameters {

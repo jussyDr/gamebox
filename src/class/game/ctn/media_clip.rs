@@ -33,10 +33,10 @@ impl SubExtensions for MediaClip {
 
 mod read {
     use crate::{
-        class::game::ctn::{media_clip::MediaClip, media_track::MediaTrack},
+        class::game::ctn::media_clip::MediaClip,
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            reader::BodyReader,
+            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
+            read_body_chunks,
         },
     };
 
