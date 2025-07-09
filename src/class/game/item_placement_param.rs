@@ -16,6 +16,7 @@ impl SubExtensions for ItemPlacementParam {
 
 mod read {
     use crate::{
+        NodeRef,
         class::{
             game::item_placement_param::ItemPlacementParam,
             plug::item_placement_class::ItemPlacementClass,
@@ -89,7 +90,7 @@ mod read {
         }
 
         fn read_chunk_5(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _placement_class = r.node_ref::<ItemPlacementClass>()?;
+            let _placement_class: NodeRef<ItemPlacementClass> = r.node_ref()?;
 
             Ok(())
         }

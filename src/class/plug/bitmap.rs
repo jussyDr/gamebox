@@ -1,16 +1,16 @@
 //! Bitmap.
 
-use crate::{ClassId, ExternalNodeRef, SubExtensions};
+use crate::{ClassId, ExternalNodeRef, SubExtensions, class::plug::file_img::FileImg};
 
 /// A bitmap.
 #[derive(Default)]
 pub struct Bitmap {
-    image: ExternalNodeRef,
+    image: ExternalNodeRef<FileImg>,
 }
 
 impl Bitmap {
     /// Image.
-    pub fn image(&self) -> &ExternalNodeRef {
+    pub fn image(&self) -> &ExternalNodeRef<FileImg> {
         &self.image
     }
 }
@@ -27,7 +27,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
-        class::plug::{bitmap::Bitmap, file_img::FileImg},
+        class::plug::bitmap::Bitmap,
         read::{
             BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
             error_unknown_chunk_version, read_body_chunks,
@@ -137,7 +137,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            self.image = r.external_node_ref::<FileImg>()?;
+            self.image = r.node_ref()?;
             r.vec3()?;
             let _mip_map_lower_alpha = r.f32()?;
             let _bump_scale_factor = r.f32()?;

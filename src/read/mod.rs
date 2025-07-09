@@ -13,6 +13,7 @@ use std::{
     fmt::{self, Debug, Display, Formatter},
     fs::File,
     io::{self, BufReader, Read},
+    marker::PhantomData,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -151,6 +152,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
                 ExternalNodeRef {
                     path: Arc::from(path),
                     ancestor_level,
+                    marker: PhantomData::<()>,
                 },
             )?;
         }

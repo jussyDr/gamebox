@@ -11,6 +11,8 @@ impl ClassId for MediaBlockText {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::{control::effect_simi::EffectSimi, game::ctn::media_block_text::MediaBlockText},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
@@ -34,7 +36,7 @@ mod read {
     impl MediaBlockText {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let _text = r.string()?;
-            let _effect = r.internal_node_ref::<EffectSimi>()?;
+            let _effect: Arc<EffectSimi> = r.node_ref()?;
 
             Ok(())
         }

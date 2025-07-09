@@ -1,4 +1,4 @@
-use std::{any::Any, sync::Arc};
+use std::{any::Any, marker::PhantomData};
 
 use crate::{
     ExternalNodeRef, NodeRef,
@@ -8,7 +8,7 @@ use crate::{
 /// Node table.
 pub struct NodeTable {
     /// Nodes.
-    pub nodes: Vec<Option<NodeRef<Arc<dyn Any + Send + Sync>>>>,
+    pub nodes: Vec<Option<NodeRef<dyn Any + Send + Sync>>>,
 }
 
 impl NodeTable {
@@ -20,10 +20,10 @@ impl NodeTable {
     }
 
     /// Set external.
-    pub fn set_external(
+    pub fn set_external<T>(
         &mut self,
         index: u32,
-        external_node_ref: ExternalNodeRef,
+        external_node_ref: ExternalNodeRef<T>,
     ) -> Result<(), Error> {
         let slot = self
             .nodes
@@ -34,7 +34,11 @@ impl NodeTable {
             todo!()
         }
 
-        *slot = Some(NodeRef::External(external_node_ref));
+        *slot = Some(NodeRef::External(ExternalNodeRef {
+            path: external_node_ref.path,
+            ancestor_level: external_node_ref.ancestor_level,
+            marker: PhantomData,
+        }));
 
         Ok(())
     }

@@ -48,7 +48,7 @@ mod read {
     impl AutoTerrain {
         fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             self.offset = r.uvec3()?;
-            self.genealogy = r.internal_node_ref()?;
+            self.genealogy = r.node_ref()?;
 
             Ok(())
         }

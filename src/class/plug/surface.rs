@@ -1,6 +1,6 @@
 //! Surface.
 
-use crate::{ClassId, ExternalNodeRef, SubExtensions};
+use crate::{ClassId, ExternalNodeRef, SubExtensions, class::plug::material::Material};
 
 /// A surface.
 #[derive(Default)]
@@ -38,7 +38,7 @@ pub enum SurfaceKind {
 
 pub enum SurfaceMaterial {
     Internal(InternalMaterial),
-    External(Option<ExternalNodeRef>),
+    External(Option<ExternalNodeRef<Material>>),
 }
 
 pub enum InternalMaterial {
@@ -126,9 +126,7 @@ mod read {
             r.vec3()?;
             self.materials = r.list(|r| {
                 if r.bool32()? {
-                    Ok(SurfaceMaterial::External(
-                        r.external_node_ref_or_null::<Material>()?,
-                    ))
+                    Ok(SurfaceMaterial::External(r.node_ref()?))
                 } else {
                     match r.u16()? {
                         4 => Ok(SurfaceMaterial::Internal(InternalMaterial::Metal)),

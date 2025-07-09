@@ -36,6 +36,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
+        NodeRef,
         class::{
             game::{item_model::ItemModel, item_placement_param::ItemPlacementParam},
             plug::{
@@ -137,9 +138,9 @@ mod read {
             let _actions: Vec<()> = r.list(|r| todo!())?;
             let _default_cam = r.u32()?;
             let _entity_model_edition = r.u32()?;
-            let _entity_model = r.node_ref::<ItemVariantList>()?;
+            let _entity_model: NodeRef<ItemVariantList> = r.node_ref()?;
             r.u32()?;
-            r.node_ref_or_null::<GameSkinAndFolder>()?;
+            let _: Option<NodeRef<GameSkinAndFolder>> = r.node_ref()?;
 
             Ok(())
         }
@@ -157,7 +158,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _default_placement = r.node_ref::<ItemPlacementParam>()?;
+            let _default_placement: NodeRef<ItemPlacementParam> = r.node_ref()?;
 
             Ok(())
         }
@@ -192,7 +193,7 @@ mod read {
             let _disable_lightmap = r.bool32()?;
             r.u32()?;
             r.u8()?;
-            r.internal_node_ref_or_null::<MediaClipList>()?;
+            let _: Option<Arc<MediaClipList>> = r.node_ref()?;
             r.u32()?;
 
             Ok(())

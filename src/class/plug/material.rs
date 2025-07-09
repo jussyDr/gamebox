@@ -76,7 +76,7 @@ mod read {
         }
 
         fn read_chunk_7(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            self.custom_material = r.internal_node_ref()?;
+            self.custom_material = r.node_ref()?;
 
             Ok(())
         }

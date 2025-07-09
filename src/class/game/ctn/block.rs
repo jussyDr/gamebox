@@ -66,7 +66,7 @@ mod read {
 
             if flags & 0x00008000 != 0 {
                 let _author: Arc<str> = r.id()?;
-                let _skin = r.internal_node_ref::<BlockSkin>()?;
+                let _skin: Arc<BlockSkin> = r.node_ref()?;
             }
 
             if flags & 0x00080000 != 0 {
@@ -74,8 +74,7 @@ mod read {
             }
 
             if flags & 0x00100000 != 0 {
-                let _waypoint_special_property =
-                    r.internal_node_ref::<WaypointSpecialProperty>()?;
+                let _waypoint_special_property: Arc<WaypointSpecialProperty> = r.node_ref()?;
             }
 
             if flags & 0x00040000 != 0 {

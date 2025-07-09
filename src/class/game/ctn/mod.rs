@@ -25,6 +25,7 @@ pub mod media_block_dof;
 pub mod media_block_entity;
 pub mod media_block_fog;
 pub mod media_block_image;
+pub mod block_info_clip_vertical;
 pub mod media_block_text;
 pub mod media_block_time;
 pub mod media_block_transition_fade;

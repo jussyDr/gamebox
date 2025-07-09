@@ -11,6 +11,8 @@ impl ClassId for MediaBlockImage {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::{
             control::effect_simi::EffectSimi,
@@ -33,7 +35,7 @@ mod read {
 
     impl MediaBlockImage {
         fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _effect = r.internal_node_ref::<EffectSimi>()?;
+            let _effect: Arc<EffectSimi> = r.node_ref()?;
             let _image = read_file_ref(r)?;
 
             Ok(())

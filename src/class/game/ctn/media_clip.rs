@@ -60,7 +60,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            self.tracks = r.list_with_version(|r| r.internal_node_ref::<MediaTrack>())?;
+            self.tracks = r.list_with_version(|r| r.node_ref())?;
             self.name = r.string()?;
             let _stop_when_leave = r.bool32()?;
             r.bool32()?;

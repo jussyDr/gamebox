@@ -60,7 +60,7 @@ mod read {
                 r.bool32()?;
             }
 
-            let _tree = r.internal_node_ref::<Tree>()?;
+            let _tree: Arc<Tree> = r.node_ref()?;
 
             Ok(())
         }

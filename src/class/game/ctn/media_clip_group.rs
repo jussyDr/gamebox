@@ -11,6 +11,8 @@ impl ClassId for MediaClipGroup {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::game::ctn::{media_clip::MediaClip, media_clip_group::MediaClipGroup},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
@@ -30,7 +32,7 @@ mod read {
 
     impl MediaClipGroup {
         fn read_chunk_3(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _clips = r.list_with_version(|r| r.internal_node_ref::<MediaClip>())?;
+            let _clips: Vec<Arc<MediaClip>> = r.list_with_version(|r| r.node_ref())?;
             let _triggers = r.list(|r| {
                 r.u32()?;
                 r.u32()?;

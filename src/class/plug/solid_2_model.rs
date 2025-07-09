@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::{
     ClassId, ExternalNodeRef, SubExtensions,
-    class::plug::visual_indexed_triangles::VisualIndexedTriangles,
+    class::plug::{material::Material, visual_indexed_triangles::VisualIndexedTriangles},
 };
 
 /// A 3D model.
@@ -12,7 +12,7 @@ use crate::{
 pub struct Solid2Model {
     shaded_geoms: Vec<ShadedGeom>,
     visuals: Vec<Arc<VisualIndexedTriangles>>,
-    materials: Vec<ExternalNodeRef>,
+    materials: Vec<ExternalNodeRef<Material>>,
     lights: Vec<Solid2ModelLight>,
 }
 
@@ -25,7 +25,7 @@ impl Solid2Model {
         &self.visuals
     }
 
-    pub fn materials(&self) -> &Vec<ExternalNodeRef> {
+    pub fn materials(&self) -> &Vec<ExternalNodeRef<Material>> {
         &self.materials
     }
 
@@ -63,6 +63,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
+        ExternalNodeRef,
         class::plug::{
             light::Light,
             material::Material,
@@ -120,15 +121,15 @@ mod read {
                     material_index,
                 })
             })?;
-            self.visuals = r.list_with_version(|r| r.internal_node_ref())?;
+            self.visuals = r.list_with_version(|r| r.node_ref())?;
             let _material_ids: Vec<Arc<str>> = r.list(|r| r.id())?;
             let material_count = r.u32()?;
 
             if material_count == 0 {
-                self.materials = r.list_with_version(|r| r.external_node_ref::<Material>())?;
+                self.materials = r.list_with_version(|r| r.node_ref())?;
             }
 
-            let _skel = r.internal_node_ref_or_null::<Skel>()?;
+            let _skel: Option<Arc<Skel>> = r.node_ref()?;
             r.list(|r| r.f32())?;
             let _vis_cst_type = r.u32()?;
             if r.bool32()? {
@@ -170,7 +171,7 @@ mod read {
                 let _: Arc<str> = r.id()?;
 
                 if r.bool32()? {
-                    r.external_node_ref::<Light>()?;
+                    let _: ExternalNodeRef<Light> = r.node_ref()?;
                 } else {
                     todo!()
                 }

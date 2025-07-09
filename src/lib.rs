@@ -20,7 +20,7 @@ pub use read::{read, read_file};
 
 use zerocopy::{FromBytes, Immutable, IntoBytes};
 
-use std::{fmt::Debug, path::Path, sync::Arc};
+use std::{fmt::Debug, marker::PhantomData, path::Path, sync::Arc};
 
 use crate::read::byte_order::LeToNe;
 
@@ -54,16 +54,16 @@ impl SubExtensions for Delme {
 
 /// Reference to a node.
 #[derive(Debug, Clone)]
-pub enum NodeRef<T> {
+pub enum NodeRef<T: ?Sized> {
     /// Reference to a node in memory.
-    Internal(T),
+    Internal(Arc<T>),
     /// Reference to a node in an external file.
-    External(ExternalNodeRef),
+    External(ExternalNodeRef<T>),
 }
 
 impl<T> NodeRef<T> {
     /// Internal.
-    pub fn internal(&self) -> Option<&T> {
+    pub fn internal(&self) -> Option<&Arc<T>> {
         match self {
             Self::Internal(value) => Some(value),
             Self::External(_) => None,
@@ -71,7 +71,7 @@ impl<T> NodeRef<T> {
     }
 
     /// External.
-    pub fn external(&self) -> Option<&ExternalNodeRef> {
+    pub fn external(&self) -> Option<&ExternalNodeRef<T>> {
         match self {
             Self::Internal(_) => None,
             Self::External(value) => Some(value),
@@ -81,24 +81,37 @@ impl<T> NodeRef<T> {
 
 impl<T: Default> Default for NodeRef<T> {
     fn default() -> Self {
-        Self::Internal(T::default())
+        Self::Internal(Default::default())
     }
 }
 
 /// Reference to a node in an external file.
-#[derive(Clone, Debug)]
-pub struct ExternalNodeRef {
+pub struct ExternalNodeRef<T: ?Sized> {
     /// Path.
     pub path: Arc<Path>,
     /// Ancestor level.
     pub ancestor_level: u32,
+    marker: PhantomData<T>,
 }
 
-impl Default for ExternalNodeRef {
+impl<T> Clone for ExternalNodeRef<T> {
+    fn clone(&self) -> Self {
+        todo!()
+    }
+}
+
+impl<T: ?Sized> Debug for ExternalNodeRef<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
+    }
+}
+
+impl<T> Default for ExternalNodeRef<T> {
     fn default() -> Self {
         Self {
             path: Arc::from(Path::new("")),
             ancestor_level: 0,
+            marker: PhantomData,
         }
     }
 }

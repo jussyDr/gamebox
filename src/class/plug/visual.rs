@@ -90,7 +90,7 @@ mod read {
             let flags = r.u32()?;
             let num_texcoord_sets = r.u32()?;
             let _count = r.u32()?;
-            self.vertex_streams = r.list(|r| r.internal_node_ref())?;
+            self.vertex_streams = r.list(|r| r.node_ref())?;
             let _texcoord_sets: Vec<()> = r.repeat(num_texcoord_sets as usize, |r| todo!())?;
 
             if flags & 0x00000007 != 0 {

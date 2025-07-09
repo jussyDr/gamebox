@@ -14,7 +14,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
-        Delme,
+        Delme, ExternalNodeRef,
         class::game::ctn::collector::Collector,
         read::{BodyChunk, BodyChunks, Error, error_unknown_chunk_version, reader::BodyReader},
     };
@@ -73,7 +73,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _default_skin = r.external_node_ref_or_null::<Delme>()?;
+            let _default_skin: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
             let skin_directory = r.string()?;
 
             if skin_directory.is_empty() {

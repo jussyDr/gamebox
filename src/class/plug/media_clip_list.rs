@@ -12,6 +12,7 @@ impl ClassId for MediaClipList {
 
 mod read {
     use crate::{
+        ExternalNodeRef,
         class::{game::ctn::media_clip::MediaClip, plug::media_clip_list::MediaClipList},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
     };
@@ -31,7 +32,7 @@ mod read {
     impl MediaClipList {
         fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             r.u32()?;
-            r.list(|r| r.external_node_ref::<MediaClip>())?;
+            let _: Vec<ExternalNodeRef<MediaClip>> = r.list(|r| r.node_ref())?;
 
             Ok(())
         }

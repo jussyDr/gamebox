@@ -38,7 +38,7 @@ mod read {
 
     impl Tree {
         fn read_chunk_6(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _children = r.list_with_version(|r| r.internal_node_ref::<Tree>())?;
+            let _children: Vec<Arc<Tree>> = r.list_with_version(|r| r.node_ref())?;
 
             Ok(())
         }
@@ -59,7 +59,7 @@ mod read {
         fn read_chunk_22(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let _visual = r.u32()?;
             let _shader = r.u32()?;
-            let _surface = r.internal_node_ref::<Surface>()?;
+            let _surface: Arc<Surface> = r.node_ref()?;
             let _generator = r.u32()?;
 
             Ok(())

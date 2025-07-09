@@ -95,6 +95,8 @@ enum VertexFormat {
 
 mod read {
 
+    use std::sync::Arc;
+
     use crate::{
         Vec3,
         class::plug::vertex_stream::{DataDecl, VertexFormat, VertexStream, VertexTarget},
@@ -126,7 +128,7 @@ mod read {
 
             let count = r.u32()?;
             let _flags = r.u32()?;
-            let _stream_model = r.node_ref_or_null::<VertexStream>()?;
+            let _stream_model: Option<Arc<VertexStream>> = r.node_ref()?;
             let data_decls = r.list(|r| {
                 let flags1 = r.u32()?;
                 let flags2 = r.u32()?;

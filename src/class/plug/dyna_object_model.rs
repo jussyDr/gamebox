@@ -15,8 +15,10 @@ impl SubExtensions for DynaObjectModel {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
-        Delme,
+        Delme, ExternalNodeRef,
         class::plug::{
             anim_loc_simple::AnimLocSimple, dyna_object_model::DynaObjectModel,
             solid_2_model::Solid2Model, surface::Surface,
@@ -45,9 +47,9 @@ mod read {
 
             let _is_static = r.bool32()?;
             let _dynamize_on_spawn = r.bool32()?;
-            let _mesh = r.external_node_ref::<Solid2Model>()?;
-            let _dyna_shape = r.internal_node_ref_or_null::<Surface>()?;
-            let _static_shape = r.internal_node_ref_or_null::<Surface>()?;
+            let _mesh: ExternalNodeRef<Solid2Model> = r.node_ref()?;
+            let _dyna_shape: Option<Arc<Surface>> = r.node_ref()?;
+            let _static_shape: Option<Arc<Surface>> = r.node_ref()?;
             let _break_speed_kmh = r.f32()?;
             let _mass = r.f32()?;
             let _light_alive_duration_sc_min = r.f32()?;
@@ -61,10 +63,10 @@ mod read {
             r.u8()?;
             r.u32()?;
             r.u32()?;
-            let _loc_anim = r.external_node_ref_or_null::<AnimLocSimple>()?;
+            let _loc_anim: Option<ExternalNodeRef<AnimLocSimple>> = r.node_ref()?;
             r.u32()?;
             let _loc_anim_is_physical = r.bool32()?;
-            let _water_model = r.external_node_ref_or_null::<Delme>()?;
+            let _water_model: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
 
             Ok(())
         }

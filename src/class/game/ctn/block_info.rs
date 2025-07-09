@@ -67,7 +67,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
-        Delme,
+        Delme, ExternalNodeRef,
         class::{
             game::{
                 ctn::{
@@ -139,7 +139,7 @@ mod read {
             }
             let _char_phy_special_property = r.u32()?;
             let _podium_info = r.u32()?;
-            let _intro_info = r.internal_node_ref_or_null::<MediaClipList>()?;
+            let _intro_info: Option<Arc<MediaClipList>> = r.node_ref()?;
             let _char_phy_special_property_customizable = r.bool32()?;
 
             if r.bool32()? {
@@ -164,8 +164,7 @@ mod read {
         }
 
         fn read_chunk_39(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            self.additional_variants_ground =
-                r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantGround>())?;
+            self.additional_variants_ground = r.list_with_version(|r| r.node_ref())?;
 
             Ok(())
         }
@@ -178,7 +177,7 @@ mod read {
         }
 
         fn read_chunk_41(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _fog_volume_box = r.external_node_ref_or_null::<Delme>()?;
+            let _fog_volume_box: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
 
             Ok(())
         }
@@ -190,8 +189,8 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let sound_1 = r.external_node_ref_or_null::<Sound>()?;
-            let sound_2 = r.external_node_ref_or_null::<Sound>()?;
+            let sound_1: Option<ExternalNodeRef<Sound>> = r.node_ref()?;
+            let sound_2: Option<ExternalNodeRef<Sound>> = r.node_ref()?;
 
             if sound_1.is_some() {
                 let _sound_1_loc = r.iso4()?;
@@ -217,8 +216,7 @@ mod read {
         }
 
         fn read_chunk_44(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            self.additional_variants_air =
-                r.list_with_version(|r| r.internal_node_ref::<BlockInfoVariantAir>())?;
+            self.additional_variants_air = r.list_with_version(|r| r.node_ref())?;
 
             Ok(())
         }
@@ -245,8 +243,8 @@ mod read {
             }
 
             r.u32()?;
-            let _material_modifier = r.external_node_ref_or_null::<GameSkinAndFolder>()?;
-            let _material_modifier_2 = r.external_node_ref_or_null::<GameSkinAndFolder>()?;
+            let _material_modifier: Option<ExternalNodeRef<GameSkinAndFolder>> = r.node_ref()?;
+            let _material_modifier: Option<ExternalNodeRef<GameSkinAndFolder>> = r.node_ref()?;
 
             Ok(())
         }

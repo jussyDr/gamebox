@@ -25,7 +25,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
-        Delme,
+        Delme, ExternalNodeRef,
         class::{
             game::ctn::{
                 block_info_classic::BlockInfoClassic, block_info_variant::BlockInfoVariant,
@@ -89,7 +89,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            self.mobils = r.list(|r| r.list(|r| r.internal_node_ref()))?;
+            self.mobils = r.list(|r| r.list(|r| r.node_ref()))?;
             r.u32()?;
             r.u32()?;
             r.u32()?;
@@ -104,19 +104,19 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _screen_interaction_trigger_solid = r.external_node_ref_or_null::<Delme>()?;
-            let _waypoint_trigger_solid = r.internal_node_ref_or_null::<Solid>()?;
-            let _gate = r.external_node_ref_or_null::<Delme>()?;
+            let _screen_interaction_trigger_solid: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
+            let _waypoint_trigger_solid: Option<Arc<Solid>> = r.node_ref()?;
+            let _gate: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
             let _teleporter = r.u32()?;
             r.u32()?;
-            let _turbine = r.external_node_ref_or_null::<Delme>()?;
-            let flock_model = r.external_node_ref_or_null::<Delme>()?;
+            let _turbine: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
+            let flock_model: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
 
             if flock_model.is_some() {
                 todo!()
             }
 
-            let _spawn_model = r.external_node_ref_or_null::<Delme>()?;
+            let _spawn_model: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
             r.u32()?;
             r.u32()?;
             let _entity_spawners: Vec<()> = r.list(|r| todo!())?;
@@ -131,7 +131,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _probe = r.external_node_ref_or_null::<Delme>()?;
+            let _probe: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
 
             Ok(())
         }
@@ -143,7 +143,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _block_unit_models = r.list(|r| r.internal_node_ref::<BlockUnitInfo>())?;
+            let _block_unit_models: Vec<Arc<BlockUnitInfo>> = r.list(|r| r.node_ref())?;
             r.u32()?;
             let _has_manual_symmetry_h = r.bool32()?;
             let _has_manual_symmetry_v = r.bool32()?;
@@ -163,7 +163,7 @@ mod read {
             }
 
             r.list(|r| {
-                r.external_node_ref_or_null::<BlockInfoClassic>()?;
+                let _: Option<ExternalNodeRef<BlockInfoClassic>> = r.node_ref()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;
@@ -172,7 +172,7 @@ mod read {
                 Ok(())
             })?;
             r.list(|r| {
-                r.external_node_ref_or_null::<BlockInfoClassic>()?;
+                let _: Option<ExternalNodeRef<BlockInfoClassic>> = r.node_ref()?;
                 r.u32()?;
                 r.u32()?;
                 r.u32()?;

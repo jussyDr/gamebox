@@ -261,8 +261,8 @@ mod read {
         }
 
         fn read_chunk_17(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _block_stock = r.internal_node_ref::<CollectorList>()?;
-            let _challenge_parameters = r.internal_node_ref::<ChallengeParameters>()?;
+            let _block_stock: Arc<CollectorList> = r.node_ref()?;
+            let _challenge_parameters: Arc<ChallengeParameters> = r.node_ref()?;
             let _kind = r.u32()?;
 
             Ok(())
@@ -449,11 +449,11 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _intro_clip = r.internal_node_ref::<MediaClip>()?;
-            let _podium_clip = r.internal_node_ref_or_null::<MediaClip>()?;
-            let _in_game_clips = r.internal_node_ref::<MediaClipGroup>()?;
-            let _end_race_clips = r.internal_node_ref_or_null::<MediaClipGroup>()?;
-            let _ambiance_clip = r.internal_node_ref::<MediaClip>()?;
+            let _intro_clip: Arc<MediaClip> = r.node_ref()?;
+            let _podium_clip: Option<Arc<MediaClip>> = r.node_ref()?;
+            let _in_game_clips: Arc<MediaClipGroup> = r.node_ref()?;
+            let _end_race_clips: Option<Arc<MediaClipGroup>> = r.node_ref()?;
+            let _ambiance_clip: Arc<MediaClip> = r.node_ref()?;
             let _clip_trigger_size = r.uvec3()?;
 
             Ok(())

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{ClassId, ExternalNodeRef};
+use crate::{ClassId, ExternalNodeRef, class::plug::bitmap::Bitmap};
 
 /// A custom material.
 #[derive(Default)]
@@ -25,7 +25,7 @@ impl ClassId for MaterialCustom {
 #[derive(Debug)]
 pub struct MaterialCustomTexture {
     name: Arc<str>,
-    texture: ExternalNodeRef,
+    texture: ExternalNodeRef<Bitmap>,
 }
 
 impl MaterialCustomTexture {
@@ -35,7 +35,7 @@ impl MaterialCustomTexture {
     }
 
     /// Texture.
-    pub fn texture(&self) -> &ExternalNodeRef {
+    pub fn texture(&self) -> &ExternalNodeRef<Bitmap> {
         &self.texture
     }
 }
@@ -166,7 +166,7 @@ mod read {
             self.textures = r.list(|r| {
                 let name = r.id()?;
                 r.u32()?; // 0
-                let texture = r.external_node_ref::<Bitmap>()?;
+                let texture = r.node_ref()?;
                 r.u32()?; // 4
                 r.u32()?; // 4
 

@@ -1,6 +1,6 @@
 //! Prefab.
 
-use std::{any::Any, sync::Arc};
+use std::sync::Arc;
 
 use crate::{
     ClassId, NodeRef, Quat, SubExtensions, Vec3,
@@ -12,7 +12,6 @@ use crate::{
         static_object_model_instance_params::StaticObjectModelInstanceParams,
         trigger_special::TriggerSpecial,
     },
-    read::reader::Downcast,
 };
 
 /// A collection of entities.
@@ -84,20 +83,9 @@ pub enum EntityModel {
     /// Path.
     Path(Arc<Path>),
     /// Static object model.
-    StaticObjectModel(Arc<StaticObjectModel>),
+    StaticObject(Arc<StaticObjectModel>),
     /// Trigger special.
     TriggerSpecial(Arc<TriggerSpecial>),
-}
-
-impl Downcast for EntityModel {
-    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self> {
-        value
-            .downcast()
-            .map(Self::Path)
-            .or_else(|value| value.downcast().map(Self::StaticObjectModel))
-            .or_else(|value| value.downcast().map(Self::TriggerSpecial))
-            .ok()
-    }
 }
 
 /// Prefab entity parameters.
@@ -118,14 +106,14 @@ mod read {
     use crate::{
         class::plug::{
             path::Path,
-            prefab::{Entity, EntityParams, Prefab},
+            prefab::{Entity, EntityModel, EntityParams, Prefab},
             static_object_model::StaticObjectModel,
             trigger_special::TriggerSpecial,
         },
         read::{
             Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
             read_node_from_body,
-            reader::{BodyReader, HeaderReader},
+            reader::{BodyReader, ClassIdOrSubExtension, HeaderReader, ReadNodeRef},
         },
     };
 
@@ -151,21 +139,7 @@ mod read {
             let num_entities = r.u32()?;
             r.u32()?;
             self.entities = r.repeat(num_entities as usize, |r| {
-                let model = r.node_ref_generic_or_null(|r, class_id| match class_id {
-                    0x09119000 => {
-                        let node = read_node_from_body::<Path>(r)?;
-                        Ok(Arc::new(node))
-                    }
-                    0x09159000 => {
-                        let node = read_node_from_body::<StaticObjectModel>(r)?;
-                        Ok(Arc::new(node))
-                    }
-                    0x09179000 => {
-                        let node = read_node_from_body::<TriggerSpecial>(r)?;
-                        Ok(Arc::new(node))
-                    }
-                    _ => todo!("0x{class_id:08x?}"),
-                })?;
+                let model = r.node_ref()?;
                 let rotation = r.quat()?;
                 let position = r.vec3()?;
                 let params = r.node_or_null_generic(|r, class_id| match class_id {
@@ -188,6 +162,32 @@ mod read {
             })?;
 
             Ok(())
+        }
+    }
+
+    impl ReadNodeRef for EntityModel {
+        fn read_node_ref(
+            r: &mut impl BodyReader,
+            class_id: Option<ClassIdOrSubExtension>,
+        ) -> Result<Self, Error> {
+            match class_id {
+                Some(ClassIdOrSubExtension::ClassId(class_id)) => match class_id {
+                    0x09119000 => {
+                        let node = read_node_from_body::<Path>(r)?;
+                        Ok(EntityModel::Path(Arc::new(node)))
+                    }
+                    0x09159000 => {
+                        let node = read_node_from_body::<StaticObjectModel>(r)?;
+                        Ok(EntityModel::StaticObject(Arc::new(node)))
+                    }
+                    0x09179000 => {
+                        let node = read_node_from_body::<TriggerSpecial>(r)?;
+                        Ok(EntityModel::TriggerSpecial(Arc::new(node)))
+                    }
+                    _ => todo!("0x{class_id:08x?}"),
+                },
+                _ => todo!(),
+            }
         }
     }
 }

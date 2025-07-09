@@ -44,7 +44,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _record_data = r.internal_node_ref::<EntRecordData>()?;
+            let _record_data: Arc<EntRecordData> = r.node_ref()?;
             let _start_offset = r.f32()?;
             let _notice_records = r.list(|r| r.u32())?;
             let _no_damage = r.bool32()?;

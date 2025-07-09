@@ -11,6 +11,8 @@ impl ClassId for Path {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::{path::Path, poly_line3::PolyLine3},
         read::{
@@ -39,7 +41,7 @@ mod read {
                 return Err(error_unknown_chunk_version(version));
             }
 
-            let _poly_lines = r.list(|r| r.internal_node_ref::<PolyLine3>())?;
+            let _poly_lines: Vec<Arc<PolyLine3>> = r.list(|r| r.node_ref())?;
             r.bool32()?;
             r.u8()?;
             let _line_groups = r.byte_buf()?;

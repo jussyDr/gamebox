@@ -34,6 +34,7 @@ pub mod static_object_model_instance_params;
 pub mod surface;
 pub mod tree;
 pub mod trigger_special;
+pub mod veget_tree_model;
 pub mod vertex_stream;
 pub mod visual;
 pub mod visual_3d;

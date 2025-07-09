@@ -1,16 +1,16 @@
 //! Block info mobil.
 
-use crate::{ClassId, ExternalNodeRef};
+use crate::{ClassId, ExternalNodeRef, class::plug::prefab::Prefab};
 
 /// Block info mobil.
 #[derive(Default)]
 pub struct BlockInfoMobil {
-    prefab: Option<ExternalNodeRef>,
+    prefab: Option<ExternalNodeRef<Prefab>>,
 }
 
 impl BlockInfoMobil {
     /// Prefab.
-    pub fn prefab(&self) -> &Option<ExternalNodeRef> {
+    pub fn prefab(&self) -> &Option<ExternalNodeRef<Prefab>> {
         &self.prefab
     }
 }
@@ -20,11 +20,12 @@ impl ClassId for BlockInfoMobil {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
-        Delme,
+        Delme, ExternalNodeRef,
         class::{
-            game::ctn::block_info_mobil::BlockInfoMobil,
-            plug::{placement_patch::PlacementPatch, prefab::Prefab},
+            game::ctn::block_info_mobil::BlockInfoMobil, plug::placement_patch::PlacementPatch,
         },
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
@@ -70,14 +71,15 @@ mod read {
                 let _geom_rotation = r.vec3()?;
             }
 
-            let solid_fid = r.external_node_ref_or_null::<Delme>()?;
+            let solid_fid: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
 
             if solid_fid.is_none() {
                 let _old_mobil = r.u32()?;
             }
-            self.prefab = r.external_node_ref_or_null::<Prefab>()?;
-            let _old_solid_aggreg = r.external_node_ref_or_null::<Delme>()?;
-            let _rail_path = r.external_node_ref_or_null::<Delme>()?;
+
+            self.prefab = r.node_ref()?;
+            let _old_solid_aggreg: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
+            let _rail_path: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
             r.u32()?;
             let _road_chunks: Vec<()> = r.list(|r| todo!())?;
             r.list(|r| r.u32())?;
@@ -89,7 +91,7 @@ mod read {
             r.vec3()?;
             r.vec3()?;
             r.f32()?;
-            r.list(|r| r.internal_node_ref::<PlacementPatch>())?;
+            let _: Vec<Arc<PlacementPatch>> = r.list(|r| r.node_ref())?;
             r.u32()?;
 
             Ok(())

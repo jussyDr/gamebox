@@ -1,30 +1,79 @@
-use std::{any::Any, io::Read, sync::Arc};
+use std::{io::Read, sync::Arc};
 
 use crate::{
-    ClassId, ExternalNodeRef, NodeRef, SubExtensions,
+    ClassId, ExternalNodeRef, NodeRef,
     read::{
         Error, ReadBody,
         reader::{HeaderReader, IdTable, NodeTable},
     },
-    sub_extension,
 };
 
-pub trait Downcast: Sized {
-    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self>;
+pub trait ReadNodeRef {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error>
+    where
+        Self: Sized;
 }
 
-impl<T: 'static + Send + Sync> Downcast for Arc<T> {
-    fn downcast(value: Arc<dyn Any + Send + Sync>) -> Option<Self> {
-        value.downcast().ok()
+impl<T> ReadNodeRef for Arc<T> {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error> {
+        todo!()
     }
 }
 
-/// Try from node ref.
-pub trait TryFromNodeRef {
-    /// Try from node ref.
-    fn try_from_node_ref<T>(node_ref: Option<NodeRef<T>>) -> Result<Self, Error>
-    where
-        Self: Sized;
+impl<T> ReadNodeRef for Option<Arc<T>> {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error> {
+        todo!()
+    }
+}
+
+impl<T> ReadNodeRef for ExternalNodeRef<T> {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error> {
+        todo!()
+    }
+}
+
+impl<T> ReadNodeRef for Option<ExternalNodeRef<T>> {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error> {
+        todo!()
+    }
+}
+
+impl<T> ReadNodeRef for NodeRef<T> {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error> {
+        todo!()
+    }
+}
+
+impl<T> ReadNodeRef for Option<NodeRef<T>> {
+    fn read_node_ref(
+        r: &mut impl BodyReader,
+        class_id: Option<ClassIdOrSubExtension>,
+    ) -> Result<Self, Error> {
+        todo!()
+    }
+}
+
+pub enum ClassIdOrSubExtension {
+    ClassId(u32),
+    SubExtension(String),
 }
 
 /// Body reader.
@@ -33,8 +82,45 @@ pub trait BodyReader: HeaderReader {
     fn node_table(&mut self) -> &mut NodeTable;
 
     /// WIP.
-    fn node_ref_v2<T: TryFromNodeRef>(&mut self) -> Result<T, Error> {
-        todo!()
+    fn node_ref<T: ReadNodeRef>(&mut self) -> Result<T, Error>
+    where
+        Self: Sized,
+    {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return T::read_node_ref(self, None);
+        }
+
+        let index = index
+            .checked_sub(1)
+            .ok_or_else(|| Error::new("node reference index is zero"))?;
+
+        let slot = self
+            .node_table()
+            .nodes
+            .get(index as usize)
+            .ok_or_else(|| Error::new("node reference index exceeds number of nodes"))?;
+
+        match slot {
+            None => {
+                let class_id = self.u32()?;
+
+                let node_ref =
+                    T::read_node_ref(self, Some(ClassIdOrSubExtension::ClassId(class_id)))?;
+
+                *self.node_table().nodes.get_mut(index as usize).unwrap() =
+                    Some(NodeRef::Internal(node_ref));
+
+                Ok(node_ref)
+            }
+            Some(NodeRef::Internal(node_ref)) => {
+                todo!()
+            }
+            Some(NodeRef::External(node_ref)) => {
+                todo!()
+            }
+        }
     }
 
     /// Read a node.
@@ -54,130 +140,6 @@ pub trait BodyReader: HeaderReader {
         })?;
 
         Ok(node)
-    }
-
-    /// Read a reference to a node.
-    fn node_ref<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
-        &mut self,
-    ) -> Result<NodeRef<Arc<T>>, Error>
-    where
-        Self: Sized,
-    {
-        let node_ref = self.node_ref_or_null::<T>()?;
-
-        match node_ref {
-            None => Err(Error::new("node reference is null")),
-            Some(node_ref) => Ok(node_ref),
-        }
-    }
-
-    /// Read a reference to a node.
-    fn node_ref_or_null<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
-        &mut self,
-    ) -> Result<Option<NodeRef<Arc<T>>>, Error>
-    where
-        Self: Sized,
-    {
-        let node_ref = self.node_ref_generic_or_null(|r, class_id| {
-            if class_id != T::CLASS_ID {
-                todo!()
-            }
-
-            let mut node = T::default();
-            node.read_body(r)?;
-
-            Ok(Arc::new(node))
-        })?;
-
-        match node_ref {
-            None => Ok(None),
-            Some(node_ref) => Ok(Some(node_ref)),
-        }
-    }
-
-    /// Read a reference to an internal node.
-    fn internal_node_ref<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
-        &mut self,
-    ) -> Result<Arc<T>, Error>
-    where
-        Self: Sized,
-    {
-        let node = self.internal_node_ref_or_null::<T>()?;
-
-        match node {
-            None => Err(Error::new("node reference is null")),
-            Some(node) => Ok(node),
-        }
-    }
-
-    /// Read a reference to an internal node.
-    fn internal_node_ref_or_null<T: Default + Send + Sync + ClassId + ReadBody + 'static>(
-        &mut self,
-    ) -> Result<Option<Arc<T>>, Error>
-    where
-        Self: Sized,
-    {
-        let node: Option<Arc<T>> = self.internal_node_ref_generic_or_null(|r, class_id| {
-            if class_id != T::CLASS_ID {
-                todo!()
-            }
-
-            let mut node = T::default();
-
-            node.read_body(r)?;
-
-            Ok(Arc::new(node))
-        })?;
-
-        match node {
-            None => Ok(None),
-            Some(node) => {
-                let ptr = Arc::into_raw(node);
-                unsafe { Ok(Some(Arc::from_raw(ptr.cast()))) }
-            }
-        }
-    }
-
-    /// Read a reference to an external node.
-    fn external_node_ref<T: SubExtensions>(&mut self) -> Result<ExternalNodeRef, Error> {
-        match self.external_node_ref_or_null::<T>()? {
-            None => todo!(),
-            Some(node_ref) => Ok(node_ref),
-        }
-    }
-
-    /// Read a reference to an external node.
-    fn external_node_ref_or_null<T: SubExtensions>(
-        &mut self,
-    ) -> Result<Option<ExternalNodeRef>, Error> {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return Ok(None);
-        }
-
-        let index = index
-            .checked_sub(1)
-            .ok_or_else(|| Error::new("node index is zero"))?;
-
-        let slot = self
-            .node_table()
-            .nodes
-            .get(index as usize)
-            .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
-
-        match slot {
-            Some(NodeRef::External(node_ref)) => {
-                let sub_extension = sub_extension(&node_ref.path).unwrap();
-
-                if !T::has_sub_extension(sub_extension) {
-                    todo!("{}, {}", node_ref.path.display(), sub_extension);
-                }
-
-                Ok(Some(node_ref.clone()))
-            }
-            _ => todo!(),
-        }
     }
 
     /// Read a node.
@@ -207,86 +169,6 @@ pub trait BodyReader: HeaderReader {
         let node = read_fn(self, class_id)?;
 
         Ok(Some(node))
-    }
-
-    /// Read a reference to a node.
-    fn node_ref_generic<T: Clone + Downcast>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
-    ) -> Result<NodeRef<T>, Error> {
-        let node_ref = self.node_ref_generic_or_null(read_fn)?;
-
-        match node_ref {
-            None => Err(Error::new("node reference is null")),
-            Some(node_ref) => Ok(node_ref),
-        }
-    }
-
-    /// Read a reference to a node.
-    fn node_ref_generic_or_null<T: Clone + Downcast>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
-    ) -> Result<Option<NodeRef<T>>, Error> {
-        let index = self.u32()?;
-
-        if index == 0xffffffff {
-            return Ok(None);
-        }
-
-        let index = index
-            .checked_sub(1)
-            .ok_or_else(|| Error::new("node index is zero"))?;
-
-        let slot = self
-            .node_table()
-            .nodes
-            .get_mut(index as usize)
-            .ok_or_else(|| Error::new("node index exceeds number of nodes"))?;
-
-        match slot {
-            None => {
-                let node = self.node_generic(read_fn)?;
-
-                let slot = self.node_table().nodes.get_mut(index as usize).unwrap();
-
-                *slot = Some(NodeRef::Internal(Arc::clone(&node)));
-
-                Ok(Some(NodeRef::Internal(T::downcast(node).unwrap())))
-            }
-            Some(node_ref) => match node_ref {
-                NodeRef::Internal(x) => {
-                    Ok(Some(NodeRef::Internal(T::downcast(x.clone()).unwrap())))
-                }
-                NodeRef::External(x) => Ok(Some(NodeRef::External(x.clone()))),
-            },
-        }
-    }
-
-    /// Read a reference to an internal node.
-    fn internal_node_ref_generic<T: Clone + Downcast>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
-    ) -> Result<T, Error> {
-        let node_ref = self.node_ref_generic(read_fn)?;
-
-        match node_ref {
-            NodeRef::Internal(node) => Ok(node),
-            NodeRef::External(_) => Err(Error::new("expected an internal node reference")),
-        }
-    }
-
-    /// Read a reference to an internal node.
-    fn internal_node_ref_generic_or_null<T: Clone + Downcast>(
-        &mut self,
-        read_fn: impl Fn(&mut Self, u32) -> Result<Arc<dyn Any + Send + Sync>, Error>,
-    ) -> Result<Option<T>, Error> {
-        let node_ref = self.node_ref_generic_or_null(read_fn)?;
-
-        match node_ref {
-            None => Ok(None),
-            Some(NodeRef::Internal(node)) => Ok(Some(node)),
-            Some(NodeRef::External(_)) => Err(Error::new("expected an internal node reference")),
-        }
     }
 }
 

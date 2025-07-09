@@ -11,6 +11,8 @@ impl ClassId for ChallengeParameters {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::game::ctn::{challenge_parameters::ChallengeParameters, ghost::Ghost},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
@@ -75,7 +77,7 @@ mod read {
         }
 
         fn read_chunk_13(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _race_validate_ghost = r.internal_node_ref_or_null::<Ghost>()?;
+            let _race_validate_ghost: Option<Arc<Ghost>> = r.node_ref()?;
 
             Ok(())
         }

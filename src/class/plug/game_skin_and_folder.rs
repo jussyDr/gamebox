@@ -19,6 +19,8 @@ impl SubExtensions for GameSkinAndFolder {
 }
 
 mod read {
+    use std::sync::Arc;
+
     use crate::{
         class::plug::{game_skin::GameSkin, game_skin_and_folder::GameSkinAndFolder},
         read::{BodyChunk, BodyChunks, Error, ReadBody, read_body_chunks, reader::BodyReader},
@@ -41,7 +43,7 @@ mod read {
 
     impl GameSkinAndFolder {
         fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _game_skin = r.internal_node_ref::<GameSkin>()?;
+            let _game_skin: Arc<GameSkin> = r.node_ref()?;
             let _folder = r.string()?;
 
             Ok(())

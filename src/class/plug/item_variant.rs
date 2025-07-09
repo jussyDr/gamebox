@@ -1,25 +1,29 @@
 //! Item variant.
 
-use crate::{ExternalNodeRef, SubExtensions};
+use crate::{
+    ExternalNodeRef, SubExtensions,
+    class::plug::{
+        prefab::Prefab, static_object_model::StaticObjectModel, veget_tree_model::VegetTreeModel,
+    },
+};
 
 /// Item variant.
 #[derive(Default)]
 pub struct ItemVariant;
 
 enum ItemVariantModel {
-    Prefab(ExternalNodeRef),
-    StaticObject(ExternalNodeRef),
-    VegetTree(ExternalNodeRef),
-}
-
-impl SubExtensions for ItemVariantModel {
-    const SUB_EXTENSIONS: &[&str] = &["Prefab", "StaticObject", "VegetTreeModel"];
+    Prefab(ExternalNodeRef<Prefab>),
+    StaticObject(ExternalNodeRef<StaticObjectModel>),
+    VegetTree(ExternalNodeRef<VegetTreeModel>),
 }
 
 mod read {
     use crate::{
         class::plug::item_variant::{ItemVariant, ItemVariantModel},
-        read::{Error, ReadBody, reader::BodyReader},
+        read::{
+            Error, ReadBody,
+            reader::{BodyReader, ClassIdOrSubExtension, ReadNodeRef},
+        },
     };
 
     impl ReadBody for ItemVariant {
@@ -31,10 +35,19 @@ mod read {
                 Ok(())
             })?;
 
-            let _entity_model = r.external_node_ref::<ItemVariantModel>()?;
+            let _entity_model: ItemVariantModel = r.node_ref()?;
             let _hidden_in_manual_cycle = r.bool32()?;
 
             Ok(())
+        }
+    }
+
+    impl ReadNodeRef for ItemVariantModel {
+        fn read_node_ref(
+            r: &mut impl BodyReader,
+            class_id: Option<ClassIdOrSubExtension>,
+        ) -> Result<Self, Error> {
+            todo!()
         }
     }
 }

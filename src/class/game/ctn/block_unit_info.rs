@@ -14,7 +14,7 @@ mod read {
     use std::sync::Arc;
 
     use crate::{
-        Delme,
+        Delme, ExternalNodeRef,
         class::game::ctn::{block_info_clip::BlockInfoClip, block_unit_info::BlockUnitInfo},
         read::{
             BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
@@ -49,7 +49,7 @@ mod read {
             r.bool32()?;
             r.bool32()?;
             let _relative_offset = r.repeat(3, |r| r.u32())?;
-            let _clips = r.list(|r| r.external_node_ref::<BlockInfoClip>())?;
+            let _clips: Vec<ExternalNodeRef<BlockInfoClip>> = r.list(|r| r.node_ref())?;
 
             Ok(())
         }
@@ -81,10 +81,10 @@ mod read {
         }
 
         fn read_chunk_7(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _pylon_north = r.external_node_ref_or_null::<Delme>()?;
-            let _pylon_south = r.external_node_ref_or_null::<Delme>()?;
-            let _pylon_east = r.external_node_ref_or_null::<Delme>()?;
-            let _pylon_west = r.external_node_ref_or_null::<Delme>()?;
+            let _pylon_north: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
+            let _pylon_south: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
+            let _pylon_east: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
+            let _pylon_west: Option<ExternalNodeRef<Delme>> = r.node_ref()?;
 
             Ok(())
         }
@@ -97,26 +97,28 @@ mod read {
             }
 
             let clip_count_bits = r.u32()?;
-            let _clips_north = r.repeat((clip_count_bits & 0x00000007) as usize, |r| {
-                r.external_node_ref::<BlockInfoClip>()
-            })?;
-            let _clips_east = r.repeat(((clip_count_bits >> 3) & 0x00000007) as usize, |r| {
-                r.external_node_ref::<BlockInfoClip>()
-            })?;
-            let _clips_south = r.repeat(((clip_count_bits >> 6) & 0x00000007) as usize, |r| {
-                r.external_node_ref::<BlockInfoClip>()
-            })?;
-            let _clips_west = r.repeat(((clip_count_bits >> 9) & 0x00000007) as usize, |r| {
-                r.external_node_ref::<BlockInfoClip>()
-            })?;
-
-            let _clips_top = r.repeat(((clip_count_bits >> 12) & 0x00000007) as usize, |r| {
-                r.external_node_ref::<BlockInfoClip>()
-            })?;
-            let _clips_bottom = r.repeat(((clip_count_bits >> 15) & 0x00000007) as usize, |r| {
-                r.external_node_ref::<BlockInfoClip>()
-            })?;
-
+            let _clips_north: Vec<ExternalNodeRef<BlockInfoClip>> =
+                r.repeat((clip_count_bits & 0x00000007) as usize, |r| r.node_ref())?;
+            let _clips_east: Vec<ExternalNodeRef<BlockInfoClip>> = r
+                .repeat(((clip_count_bits >> 3) & 0x00000007) as usize, |r| {
+                    r.node_ref()
+                })?;
+            let _clips_south: Vec<ExternalNodeRef<BlockInfoClip>> = r
+                .repeat(((clip_count_bits >> 6) & 0x00000007) as usize, |r| {
+                    r.node_ref()
+                })?;
+            let _clips_west: Vec<ExternalNodeRef<BlockInfoClip>> = r
+                .repeat(((clip_count_bits >> 9) & 0x00000007) as usize, |r| {
+                    r.node_ref()
+                })?;
+            let _clips_top: Vec<ExternalNodeRef<BlockInfoClip>> = r
+                .repeat(((clip_count_bits >> 12) & 0x00000007) as usize, |r| {
+                    r.node_ref()
+                })?;
+            let _clips_bottom: Vec<ExternalNodeRef<BlockInfoClip>> = r
+                .repeat(((clip_count_bits >> 15) & 0x00000007) as usize, |r| {
+                    r.node_ref()
+                })?;
             r.u16()?;
             r.u16()?;
 
