@@ -63,9 +63,10 @@ pub enum MediaBlock {
 }
 
 mod read {
-    use std::sync::Arc;
+    use std::{any::Any, sync::Arc};
 
     use crate::{
+        NodeRef,
         class::game::ctn::{
             media_block_camera_custom::MediaBlockCameraCustom,
             media_block_camera_game::MediaBlockCameraGame,
@@ -128,51 +129,70 @@ mod read {
     }
 
     impl ReadNodeRef for MediaBlock {
+        fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+            match node_ref {
+                Some(NodeRef::Internal(node_ref)) => node_ref
+                    .downcast()
+                    .map(Self::CameraGame)
+                    .or_else(|value| value.downcast().map(Self::Time))
+                    .or_else(|value| value.downcast().map(Self::CameraCustom))
+                    .or_else(|value| value.downcast().map(Self::Image))
+                    .or_else(|value| value.downcast().map(Self::Text))
+                    .or_else(|value| value.downcast().map(Self::TransitionFade))
+                    .or_else(|value| value.downcast().map(Self::DOF))
+                    .or_else(|value| value.downcast().map(Self::ColorGrading))
+                    .or_else(|value| value.downcast().map(Self::Fog))
+                    .or_else(|value| value.downcast().map(Self::Entity))
+                    .map_err(|_| Error::new("")),
+                _ => todo!(),
+            }
+        }
+
         fn read_node_ref(
             r: &mut impl BodyReader,
             class_id: Option<ClassIdOrSubExtension>,
-        ) -> Result<Self, Error> {
+        ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
             match class_id {
                 Some(ClassIdOrSubExtension::ClassId(class_id)) => match class_id {
                     0x03084000 => {
                         let node = read_node_from_body::<MediaBlockCameraGame>(r)?;
-                        Ok(Self::CameraGame(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x03085000 => {
                         let node = read_node_from_body::<MediaBlockTime>(r)?;
-                        Ok(Self::Time(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x030a2000 => {
                         let node = read_node_from_body::<MediaBlockCameraCustom>(r)?;
-                        Ok(Self::CameraCustom(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x030a5000 => {
                         let node = read_node_from_body::<MediaBlockImage>(r)?;
-                        Ok(Self::Image(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x030a8000 => {
                         let node = read_node_from_body::<MediaBlockText>(r)?;
-                        Ok(Self::Text(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x030ab000 => {
                         let node = read_node_from_body::<MediaBlockTransitionFade>(r)?;
-                        Ok(Self::TransitionFade(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x03126000 => {
                         let node = read_node_from_body::<MediaBlockDOF>(r)?;
-                        Ok(Self::DOF(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x03186000 => {
                         let node = read_node_from_body::<MediaBlockColorGrading>(r)?;
-                        Ok(Self::ColorGrading(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x03199000 => {
                         let node = read_node_from_body::<MediaBlockFog>(r)?;
-                        Ok(Self::Fog(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x0329f000 => {
                         let node = read_node_from_body::<MediaBlockEntity>(r)?;
-                        Ok(Self::Entity(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     _ => todo!("0x{class_id:08x?}"),
                 },

@@ -3,8 +3,9 @@
 use std::sync::Arc;
 
 use crate::{
-    ClassId, NodeRef, Quat, SubExtensions, Vec3,
+    ClassId, ExternalNodeRef, NodeRef, Quat, SubExtensions, Vec3,
     class::plug::{
+        dyna_object_model::DynaObjectModel,
         dyna_object_model_instance_params::DynaObjectModelInstanceParams,
         item_placement_placement::ItemPlacementPlacement,
         item_placement_placement_group::ItemPlacementPlacementGroup, path::Path,
@@ -49,7 +50,7 @@ impl SubExtensions for Prefab {
 
 /// An entity stored in a prefab.
 pub struct Entity {
-    model: Option<NodeRef<EntityModel>>,
+    model: Option<EntityModel>,
     rotation: Quat,
     position: Vec3,
     params: Option<EntityParams>,
@@ -57,7 +58,7 @@ pub struct Entity {
 
 impl Entity {
     /// Model of the entity.
-    pub fn model(&self) -> &Option<NodeRef<EntityModel>> {
+    pub fn model(&self) -> &Option<EntityModel> {
         &self.model
     }
 
@@ -80,10 +81,14 @@ impl Entity {
 /// Prefab entity model.
 #[derive(Clone)]
 pub enum EntityModel {
+    /// Dynamic object.
+    DynaObject(ExternalNodeRef<DynaObjectModel>),
     /// Path.
     Path(Arc<Path>),
+    /// Prefab.
+    Prefab(ExternalNodeRef<Prefab>),
     /// Static object model.
-    StaticObject(Arc<StaticObjectModel>),
+    StaticObject(NodeRef<StaticObjectModel>),
     /// Trigger special.
     TriggerSpecial(Arc<TriggerSpecial>),
 }
@@ -101,10 +106,12 @@ pub enum EntityParams {
 }
 
 mod read {
-    use std::sync::Arc;
+    use std::{any::Any, marker::PhantomData, sync::Arc};
 
     use crate::{
+        ExternalNodeRef, NodeRef, SubExtensions,
         class::plug::{
+            dyna_object_model::DynaObjectModel,
             path::Path,
             prefab::{Entity, EntityModel, EntityParams, Prefab},
             static_object_model::StaticObjectModel,
@@ -115,6 +122,7 @@ mod read {
             read_node_from_body,
             reader::{BodyReader, ClassIdOrSubExtension, HeaderReader, ReadNodeRef},
         },
+        sub_extension,
     };
 
     impl Readable for Prefab {}
@@ -165,27 +173,75 @@ mod read {
         }
     }
 
-    impl ReadNodeRef for EntityModel {
+    impl ReadNodeRef for Option<EntityModel> {
+        fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+            match node_ref {
+                Some(NodeRef::Internal(node_ref)) => {
+                    let node_ref = node_ref
+                        .downcast()
+                        .map(EntityModel::Path)
+                        .or_else(|value| {
+                            value.downcast().map(|node_ref| {
+                                EntityModel::StaticObject(NodeRef::Internal(node_ref))
+                            })
+                        })
+                        .or_else(|value| value.downcast().map(EntityModel::TriggerSpecial))
+                        .map_err(|_| Error::new(""))?;
+
+                    Ok(Some(node_ref))
+                }
+                Some(NodeRef::External(node_ref)) => {
+                    let sub_extension = sub_extension(&node_ref.path).unwrap();
+
+                    if DynaObjectModel::has_sub_extension(sub_extension) {
+                        Ok(Some(EntityModel::DynaObject(ExternalNodeRef {
+                            path: node_ref.path,
+                            ancestor_level: node_ref.ancestor_level,
+                            marker: PhantomData,
+                        })))
+                    } else if Prefab::has_sub_extension(sub_extension) {
+                        Ok(Some(EntityModel::Prefab(ExternalNodeRef {
+                            path: node_ref.path,
+                            ancestor_level: node_ref.ancestor_level,
+                            marker: PhantomData,
+                        })))
+                    } else if StaticObjectModel::has_sub_extension(sub_extension) {
+                        Ok(Some(EntityModel::StaticObject(NodeRef::External(
+                            ExternalNodeRef {
+                                path: node_ref.path,
+                                ancestor_level: node_ref.ancestor_level,
+                                marker: PhantomData,
+                            },
+                        ))))
+                    } else {
+                        todo!("{node_ref:?}")
+                    }
+                }
+                None => Ok(None),
+            }
+        }
+
         fn read_node_ref(
             r: &mut impl BodyReader,
             class_id: Option<ClassIdOrSubExtension>,
-        ) -> Result<Self, Error> {
+        ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
             match class_id {
                 Some(ClassIdOrSubExtension::ClassId(class_id)) => match class_id {
                     0x09119000 => {
                         let node = read_node_from_body::<Path>(r)?;
-                        Ok(EntityModel::Path(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x09159000 => {
                         let node = read_node_from_body::<StaticObjectModel>(r)?;
-                        Ok(EntityModel::StaticObject(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     0x09179000 => {
                         let node = read_node_from_body::<TriggerSpecial>(r)?;
-                        Ok(EntityModel::TriggerSpecial(Arc::new(node)))
+                        Ok(Some(NodeRef::Internal(Arc::new(node))))
                     }
                     _ => todo!("0x{class_id:08x?}"),
                 },
+                None => Ok(None),
                 _ => todo!(),
             }
         }

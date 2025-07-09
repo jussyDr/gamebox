@@ -20,7 +20,12 @@ pub use read::{read, read_file};
 
 use zerocopy::{FromBytes, Immutable, IntoBytes};
 
-use std::{fmt::Debug, marker::PhantomData, path::Path, sync::Arc};
+use std::{
+    fmt::{self, Debug},
+    marker::PhantomData,
+    path::Path,
+    sync::Arc,
+};
 
 use crate::read::byte_order::LeToNe;
 
@@ -53,7 +58,7 @@ impl SubExtensions for Delme {
 }
 
 /// Reference to a node.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum NodeRef<T: ?Sized> {
     /// Reference to a node in memory.
     Internal(Arc<T>),
@@ -79,6 +84,15 @@ impl<T> NodeRef<T> {
     }
 }
 
+impl<T: ?Sized> Clone for NodeRef<T> {
+    fn clone(&self) -> Self {
+        match *self {
+            Self::Internal(ref node_ref) => Self::Internal(Arc::clone(node_ref)),
+            Self::External(ref node_ref) => Self::External(ExternalNodeRef::clone(node_ref)),
+        }
+    }
+}
+
 impl<T: Default> Default for NodeRef<T> {
     fn default() -> Self {
         Self::Internal(Default::default())
@@ -94,15 +108,19 @@ pub struct ExternalNodeRef<T: ?Sized> {
     marker: PhantomData<T>,
 }
 
-impl<T> Clone for ExternalNodeRef<T> {
+impl<T: ?Sized> Clone for ExternalNodeRef<T> {
     fn clone(&self) -> Self {
-        todo!()
+        Self {
+            path: Arc::clone(&self.path),
+            ancestor_level: self.ancestor_level,
+            marker: PhantomData,
+        }
     }
 }
 
 impl<T: ?Sized> Debug for ExternalNodeRef<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.path, f)
     }
 }
 

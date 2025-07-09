@@ -10,19 +10,19 @@ use crate::{
 /// A model with a collidable hit shape.
 #[derive(Default)]
 pub struct StaticObjectModel {
-    model: NodeRef<Arc<Solid2Model>>,
-    hit_shape: Option<NodeRef<Arc<Surface>>>,
+    model: NodeRef<Solid2Model>,
+    hit_shape: Option<NodeRef<Surface>>,
 }
 
 impl StaticObjectModel {
     /// The model.
-    pub fn model(&self) -> &NodeRef<Arc<Solid2Model>> {
+    pub fn model(&self) -> &NodeRef<Solid2Model> {
         &self.model
     }
 
     /// Optional custom hit shape.
     /// If this returns `None` the hit shape is the same as the model.
-    pub fn hit_shape(&self) -> &Option<NodeRef<Arc<Surface>>> {
+    pub fn hit_shape(&self) -> &Option<NodeRef<Surface>> {
         &self.hit_shape
     }
 }

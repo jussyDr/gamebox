@@ -1,73 +1,217 @@
-use std::{io::Read, sync::Arc};
+use std::{
+    any::{Any, type_name, type_name_of_val},
+    io::Read,
+    marker::PhantomData,
+    sync::Arc,
+};
 
 use crate::{
     ClassId, ExternalNodeRef, NodeRef,
     read::{
-        Error, ReadBody,
+        Error, ReadBody, read_node_from_body,
         reader::{HeaderReader, IdTable, NodeTable},
     },
 };
 
 pub trait ReadNodeRef {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error>
+    where
+        Self: Sized;
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error>
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error>
     where
         Self: Sized;
 }
 
-impl<T> ReadNodeRef for Arc<T> {
+impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Arc<T> {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        match node_ref {
+            Some(NodeRef::Internal(node_ref)) => {
+                let node_ref = node_ref
+                    .downcast()
+                    .map_err(|_| Error::new("node reference type does not match"))?;
+
+                Ok(node_ref)
+            }
+            _ => todo!(),
+        }
+    }
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error> {
-        todo!()
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+        match class_id {
+            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
+                if class_id != T::CLASS_ID {
+                    todo!()
+                }
+
+                let node = read_node_from_body::<T>(r)?;
+
+                Ok(Some(NodeRef::Internal(Arc::new(node))))
+            }
+            _ => todo!(),
+        }
     }
 }
 
-impl<T> ReadNodeRef for Option<Arc<T>> {
+impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Option<Arc<T>> {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        match node_ref {
+            Some(NodeRef::Internal(node_ref)) => {
+                let node_ref = node_ref
+                    .downcast()
+                    .map_err(|_| Error::new("node reference type does not match"))?;
+
+                Ok(Some(node_ref))
+            }
+            None => Ok(None),
+            _ => todo!(),
+        }
+    }
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error> {
-        todo!()
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+        match class_id {
+            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
+                if class_id != T::CLASS_ID {
+                    todo!()
+                }
+
+                let node = read_node_from_body::<T>(r)?;
+
+                Ok(Some(NodeRef::Internal(Arc::new(node))))
+            }
+            None => Ok(None),
+            _ => todo!(),
+        }
     }
 }
 
 impl<T> ReadNodeRef for ExternalNodeRef<T> {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        match node_ref {
+            Some(NodeRef::External(node_ref)) => Ok(ExternalNodeRef {
+                path: Arc::clone(&node_ref.path),
+                ancestor_level: node_ref.ancestor_level,
+                marker: PhantomData,
+            }),
+            _ => todo!(),
+        }
+    }
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
         todo!()
     }
 }
 
 impl<T> ReadNodeRef for Option<ExternalNodeRef<T>> {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        match node_ref {
+            Some(NodeRef::External(node_ref)) => Ok(Some(ExternalNodeRef {
+                path: Arc::clone(&node_ref.path),
+                ancestor_level: node_ref.ancestor_level,
+                marker: PhantomData,
+            })),
+            None => Ok(None),
+            _ => todo!(),
+        }
+    }
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error> {
-        todo!()
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+        match class_id {
+            None => Ok(None),
+            _ => todo!(),
+        }
     }
 }
 
-impl<T> ReadNodeRef for NodeRef<T> {
+impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for NodeRef<T> {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        match node_ref {
+            Some(NodeRef::Internal(node_ref)) => {
+                let node_ref = node_ref
+                    .downcast()
+                    .map_err(|_| Error::new("node reference type does not match"))?;
+
+                Ok(NodeRef::Internal(node_ref))
+            }
+            Some(NodeRef::External(node_ref)) => Ok(NodeRef::External(ExternalNodeRef {
+                path: Arc::clone(&node_ref.path),
+                ancestor_level: node_ref.ancestor_level,
+                marker: PhantomData,
+            })),
+            _ => todo!(),
+        }
+    }
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error> {
-        todo!()
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+        match class_id {
+            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
+                if class_id != T::CLASS_ID {
+                    todo!()
+                }
+
+                let node = read_node_from_body::<T>(r)?;
+
+                Ok(Some(NodeRef::Internal(Arc::new(node))))
+            }
+            _ => todo!(),
+        }
     }
 }
 
-impl<T> ReadNodeRef for Option<NodeRef<T>> {
+impl<T: 'static + ClassId + Default + ReadBody + Send + Sync> ReadNodeRef for Option<NodeRef<T>> {
+    fn from_any(node_ref: Option<NodeRef<dyn Any + Send + Sync>>) -> Result<Self, Error> {
+        match node_ref {
+            Some(NodeRef::Internal(node_ref)) => {
+                let node_ref = node_ref
+                    .downcast()
+                    .map_err(|_| Error::new("node reference type does not match"))?;
+
+                Ok(Some(NodeRef::Internal(node_ref)))
+            }
+            Some(NodeRef::External(node_ref)) => Ok(Some(NodeRef::External(ExternalNodeRef {
+                path: Arc::clone(&node_ref.path),
+                ancestor_level: node_ref.ancestor_level,
+                marker: PhantomData,
+            }))),
+            None => Ok(None),
+        }
+    }
+
     fn read_node_ref(
         r: &mut impl BodyReader,
         class_id: Option<ClassIdOrSubExtension>,
-    ) -> Result<Self, Error> {
-        todo!()
+    ) -> Result<Option<NodeRef<dyn Any + Send + Sync>>, Error> {
+        match class_id {
+            Some(ClassIdOrSubExtension::ClassId(class_id)) => {
+                if class_id != T::CLASS_ID {
+                    todo!()
+                }
+
+                let node = read_node_from_body::<T>(r)?;
+
+                Ok(Some(NodeRef::Internal(Arc::new(node))))
+            }
+            None => Ok(None),
+            _ => todo!(),
+        }
     }
 }
 
@@ -89,7 +233,7 @@ pub trait BodyReader: HeaderReader {
         let index = self.u32()?;
 
         if index == 0xffffffff {
-            return T::read_node_ref(self, None);
+            return T::from_any(T::read_node_ref(self, None)?);
         }
 
         let index = index
@@ -109,17 +253,17 @@ pub trait BodyReader: HeaderReader {
                 let node_ref =
                     T::read_node_ref(self, Some(ClassIdOrSubExtension::ClassId(class_id)))?;
 
-                *self.node_table().nodes.get_mut(index as usize).unwrap() =
-                    Some(NodeRef::Internal(node_ref));
+                match node_ref {
+                    Some(NodeRef::Internal(node_ref)) => {
+                        *self.node_table().nodes.get_mut(index as usize).unwrap() =
+                            Some(NodeRef::Internal(Arc::clone(&node_ref)));
 
-                Ok(node_ref)
+                        T::from_any(Some(NodeRef::Internal(node_ref)))
+                    }
+                    _ => todo!(),
+                }
             }
-            Some(NodeRef::Internal(node_ref)) => {
-                todo!()
-            }
-            Some(NodeRef::External(node_ref)) => {
-                todo!()
-            }
+            Some(node_ref) => T::from_any(Some(NodeRef::clone(node_ref))),
         }
     }
 
