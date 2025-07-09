@@ -5,9 +5,13 @@ pub mod reader;
 
 mod body;
 mod header_data;
+mod id;
+mod node_ref;
 
 pub use body::{BodyChunk, BodyChunks, ReadBody, read_body_chunks, read_node_from_body};
 pub use header_data::{HeaderChunk, HeaderChunks};
+pub use id::IdTable;
+pub use node_ref::{NodeRefTable, ReadNodeRef};
 
 use std::{
     fmt::{self, Debug, Display, Formatter},
@@ -22,7 +26,7 @@ use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
     read::{
         header_data::read_header_data,
-        reader::{BodyReaderImpl, IdTable, NodeTable, Reader},
+        reader::{BodyReaderImpl, Reader},
     },
     sub_extension,
 };
@@ -124,7 +128,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     // Read the reference table.
     let num_external_nodes = r.u32()?;
 
-    let mut node_table = NodeTable::new(num_nodes as usize);
+    let node_table = NodeRefTable::new(num_nodes as usize);
 
     if num_external_nodes != 0 {
         let ancestor_level = r.u32()?;

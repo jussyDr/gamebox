@@ -81,9 +81,8 @@ mod read {
             media_track::{MediaBlock, MediaTrack},
         },
         read::{
-            BodyChunk, BodyChunks, Error, ReadBody, error_unknown_chunk_version, read_body_chunks,
-            read_node_from_body,
-            reader::{BodyReader, ReadNodeRef},
+            BodyChunk, BodyChunks, Error, ReadBody, ReadNodeRef, error_unknown_chunk_version,
+            read_body_chunks, read_node_from_body, reader::BodyReader,
         },
     };
 
@@ -148,7 +147,7 @@ mod read {
             }
         }
 
-        fn read_node_ref_internal(
+        fn read_internal_node_ref(
             r: &mut impl BodyReader,
             class_id: u32,
         ) -> Result<Arc<dyn Any + Send + Sync>, Error> {

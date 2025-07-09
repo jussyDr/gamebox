@@ -1,8 +1,8 @@
 use crate::{
     ClassId,
     read::{
-        Error,
-        reader::{HeaderReader, HeaderReaderImpl, IdTable, Reader},
+        Error, IdTable,
+        reader::{HeaderReader, HeaderReaderImpl, Reader},
     },
 };
 

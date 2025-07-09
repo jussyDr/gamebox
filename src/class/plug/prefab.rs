@@ -118,9 +118,9 @@ mod read {
             trigger_special::TriggerSpecial,
         },
         read::{
-            Error, HeaderChunk, HeaderChunks, ReadBody, Readable, error_unknown_version,
-            read_node_from_body,
-            reader::{BodyReader, HeaderReader, ReadNodeRef},
+            Error, HeaderChunk, HeaderChunks, ReadBody, ReadNodeRef, Readable,
+            error_unknown_version, read_node_from_body,
+            reader::{BodyReader, HeaderReader},
         },
         sub_extension,
     };
@@ -220,7 +220,7 @@ mod read {
             }
         }
 
-        fn read_node_ref_internal(
+        fn read_internal_node_ref(
             r: &mut impl BodyReader,
             class_id: u32,
         ) -> Result<Arc<dyn Any + Send + Sync>, Error> {

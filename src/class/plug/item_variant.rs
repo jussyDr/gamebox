@@ -28,10 +28,7 @@ mod read {
             static_object_model::StaticObjectModel,
             veget_tree_model::VegetTreeModel,
         },
-        read::{
-            Error, ReadBody,
-            reader::{BodyReader, ReadNodeRef},
-        },
+        read::{Error, ReadBody, ReadNodeRef, reader::BodyReader},
         sub_extension,
     };
 

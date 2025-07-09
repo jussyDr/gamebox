@@ -2,13 +2,9 @@
 
 mod body;
 mod header;
-mod id_table;
-mod node_table;
 
-pub use body::{BodyReader, BodyReaderImpl, ReadNodeRef};
+pub use body::{BodyReader, BodyReaderImpl};
 pub use header::{HeaderReader, HeaderReaderImpl};
-pub use id_table::IdTable;
-pub use node_table::NodeTable;
 
 use zerocopy::{FromBytes, FromZeros, IntoBytes};
 

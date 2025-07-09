@@ -68,10 +68,10 @@ mod read {
             script::traits_metadata::TraitsMetadata,
         },
         read::{
-            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, ReadBody, Readable,
-            error_unknown_chunk_version, error_unknown_version, read_body_chunks,
-            read_node_from_body,
-            reader::{BodyReader, BodyReaderImpl, HeaderReader, IdTable, NodeTable, Reader},
+            BodyChunk, BodyChunks, Error, HeaderChunk, HeaderChunks, IdTable, NodeRefTable,
+            ReadBody, Readable, error_unknown_chunk_version, error_unknown_version,
+            read_body_chunks, read_node_from_body,
+            reader::{BodyReader, BodyReaderImpl, HeaderReader, Reader},
         },
     };
 
@@ -746,7 +746,7 @@ mod read {
 
     fn read_encapsulation<R: BodyReader>(
         r: &mut R,
-        mut read_fn: impl FnMut(&mut BodyReaderImpl<R>) -> Result<(), Error>,
+        mut read_fn: impl FnMut(&mut BodyReaderImpl<&mut R>) -> Result<(), Error>,
     ) -> Result<(), Error> {
         let version = r.u32()?;
 
@@ -759,7 +759,7 @@ mod read {
         let mut r = BodyReaderImpl {
             reader: r,
             id_table: IdTable::new(),
-            node_table: &NodeTable::new(0),
+            node_table: &NodeRefTable::new(0),
         };
 
         read_fn(&mut r)
