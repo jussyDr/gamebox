@@ -7,6 +7,7 @@ pub mod block_info;
 pub mod block_info_classic;
 pub mod block_info_clip;
 pub mod block_info_clip_horizontal;
+pub mod block_info_clip_vertical;
 pub mod block_info_mobil;
 pub mod block_info_variant;
 pub mod block_info_variant_air;
@@ -25,7 +26,6 @@ pub mod media_block_dof;
 pub mod media_block_entity;
 pub mod media_block_fog;
 pub mod media_block_image;
-pub mod block_info_clip_vertical;
 pub mod media_block_text;
 pub mod media_block_time;
 pub mod media_block_transition_fade;
@@ -34,7 +34,7 @@ pub mod media_clip_group;
 pub mod media_track;
 pub mod zone_genealogy;
 
-use crate::read::{Error, error_unknown_version, reader::Reader};
+use crate::read::{Error, Reader, error_unknown_version};
 
 /// Reference to a file.
 pub enum FileRef {

@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::read::{Error, error_unknown_version, reader::Reader};
+use crate::{
+    ID_MARKER_BIT, NULL,
+    read::{Error, error_unknown_version, reader::Reader},
+};
 
 /// Identifier table.
 pub struct IdTable {
@@ -51,7 +54,7 @@ fn read_id_or_null(r: &mut impl Reader, id_table: &mut IdTable) -> Result<Option
 
     let index = r.u32()?;
 
-    if index == 0xffffffff {
+    if index == NULL {
         return Ok(None);
     }
 
@@ -65,7 +68,7 @@ fn read_id_or_null(r: &mut impl Reader, id_table: &mut IdTable) -> Result<Option
         return Ok(Some(Arc::from("")));
     }
 
-    if index & 0x40000000 == 0 {
+    if index & ID_MARKER_BIT == 0 {
         return Err(Error::new("expected an identifier"));
     }
 
@@ -82,7 +85,7 @@ fn read_id_or_null(r: &mut impl Reader, id_table: &mut IdTable) -> Result<Option
             let id = id_table
                 .ids
                 .get(index as usize)
-                .ok_or_else(|| Error::new(""))?;
+                .ok_or_else(|| Error::new("no identifier for the given index"))?;
 
             Ok(Some(Arc::clone(id)))
         }

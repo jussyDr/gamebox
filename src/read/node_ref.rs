@@ -1,7 +1,7 @@
 use std::{any::Any, cell::OnceCell, io::Read, marker::PhantomData, sync::Arc};
 
 use crate::{
-    ClassId, ExternalNodeRef, NodeRef,
+    ClassId, ExternalNodeRef, NULL, NodeRef,
     read::{BodyReader, BodyReaderImpl, Error, ReadBody, read_node_from_body, reader::Reader},
 };
 
@@ -69,7 +69,7 @@ pub fn read_node_ref<'n, T: ReadNodeRef, R: Read>(
 ) -> Result<T, Error> {
     let index = r.u32()?;
 
-    if index == 0xffffffff {
+    if index == NULL {
         return T::none();
     }
 

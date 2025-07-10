@@ -22,7 +22,7 @@ mod read {
             }
 
             let _layout = r.u32()?;
-            let options = r.list(|r| read_node_from_body::<ItemPlacementPlacementOption>(r))?;
+            let _options = r.list(|r| read_node_from_body::<ItemPlacementPlacementOption>(r))?;
 
             Ok(())
         }

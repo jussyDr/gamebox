@@ -1,25 +1,31 @@
 //! Reading GameBox files.
 
-pub mod byte_order;
-pub mod reader;
-
 mod body;
+mod byte_order;
+mod error;
 mod header_data;
 mod id;
 mod node_ref;
+mod reader;
 
 pub use body::{
     BodyChunk, BodyChunks, BodyReader, BodyReaderImpl, ReadBody, read_body_chunks,
     read_node_from_body,
 };
+pub use byte_order::LeToNe;
+pub use error::Error;
 pub use header_data::{HeaderChunk, HeaderChunks, HeaderReader};
 pub use id::IdTable;
 pub use node_ref::{NodeRefTable, ReadNodeRef};
+pub use reader::Reader;
+
+pub(crate) use error::{
+    error_unknown_chunk_version, error_unknown_enum_variant, error_unknown_version, map_io_error,
+};
 
 use std::{
-    fmt::{self, Debug, Display, Formatter},
     fs::File,
-    io::{self, BufReader, Read},
+    io::{BufReader, Read},
     marker::PhantomData,
     path::{Path, PathBuf},
     sync::Arc,
@@ -27,48 +33,28 @@ use std::{
 
 use crate::{
     ClassId, ExternalNodeRef, FILE_SIGNATURE, FILE_VERSION, SubExtensions,
-    read::{header_data::read_header_data, reader::Reader},
-    sub_extension,
+    read::header_data::read_header_data, sub_extension,
 };
-
-/// An error that occured while reading.
-#[derive(Debug)]
-pub struct Error {
-    message: String,
-    context: Option<Box<Error>>,
-}
-
-impl Error {
-    pub(crate) fn new(message: impl Into<String>) -> Error {
-        Error {
-            message: message.into(),
-            context: None,
-        }
-    }
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.message)?;
-
-        if let Some(ref context) = self.context {
-            Display::fmt(context, f)?;
-        }
-
-        Ok(())
-    }
-}
-
-impl std::error::Error for Error {}
-
-fn map_io_error(io_error: io::Error) -> Error {
-    Error::new(format!("IO error: {io_error}"))
-}
 
 /// Trait implemented by types that are readable from a GameBox file.
 pub trait Readable:
-    Default + Send + Sync + SubExtensions + ClassId + HeaderChunks + ReadBody
+    ClassId + Default + HeaderChunks + ReadBody + Send + SubExtensions + Sync
 {
+}
+
+/// Read an instance of type `T` from a file at the given `path`.
+pub fn read_file<T: Readable + SubExtensions>(path: impl AsRef<Path>) -> Result<T, Error> {
+    let path = path.as_ref();
+    let sub_extension = sub_extension(path).unwrap();
+
+    if !T::has_sub_extension(sub_extension) {
+        todo!("{}", sub_extension)
+    }
+
+    let file = File::open(path).map_err(map_io_error)?;
+    let reader = BufReader::new(file);
+
+    read(reader)
 }
 
 /// Read an instance of type `T` from the given `reader`.
@@ -173,7 +159,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
             .map_err(|_| Error::new("failed to decompress body"))?;
 
         let mut r = BodyReaderImpl {
-            reader: &mut body.as_slice(),
+            reader: body.as_slice(),
             id_table: IdTable::new(),
             node_table: &node_table,
         };
@@ -183,7 +169,7 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
         r.expect_eof()?;
     } else {
         let mut r = BodyReaderImpl {
-            reader: &mut r,
+            reader: r,
             id_table: IdTable::new(),
             node_table: &node_table,
         };
@@ -194,21 +180,6 @@ pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
     }
 
     Ok(node)
-}
-
-/// Read an instance of type `T` from a file at the given `path`.
-pub fn read_file<T: Readable + SubExtensions>(path: impl AsRef<Path>) -> Result<T, Error> {
-    let path = path.as_ref();
-    let sub_extension = sub_extension(path).unwrap();
-
-    if !T::has_sub_extension(sub_extension) {
-        todo!("{}", sub_extension)
-    }
-
-    let file = File::open(path).map_err(map_io_error)?;
-    let reader = BufReader::new(file);
-
-    read(reader)
 }
 
 fn read_folders(r: &mut impl Reader) -> Result<Vec<PathBuf>, Error> {
@@ -229,16 +200,4 @@ fn read_folders(r: &mut impl Reader) -> Result<Vec<PathBuf>, Error> {
     }
 
     Ok(folders)
-}
-
-pub(crate) fn error_unknown_version(name: &str, version: u32) -> Error {
-    Error::new(format!("unknown {name} version: {version}"))
-}
-
-pub(crate) fn error_unknown_chunk_version(version: u32) -> Error {
-    error_unknown_version("chunk", version)
-}
-
-pub(crate) fn error_unknown_enum_variant(name: &str, value: u32) -> Error {
-    Error::new(format!("unknown variant of enum `{name}`: {value}"))
 }

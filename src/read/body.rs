@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use crate::{
-    ClassId, END_OF_BODY_MARKER, SKIPPABLE_CHUNK_MARKER,
+    ClassId, END_OF_BODY_MARKER, NULL, SKIPPABLE_CHUNK_MARKER,
     read::{
         Error, HeaderReader, IdTable, NodeRefTable, ReadNodeRef,
         id::{TryFromId, read_id},
@@ -179,7 +179,7 @@ pub trait BodyReader: HeaderReader {
     ) -> Result<Option<T>, Error> {
         let class_id = self.u32()?;
 
-        if class_id == 0xffffffff {
+        if class_id == NULL {
             return Ok(None);
         }
 

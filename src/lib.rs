@@ -13,6 +13,7 @@
 
 pub mod class;
 pub mod read;
+pub mod write;
 
 // Re-export common class types.
 pub use class::game::{ctn::challenge::Challenge, item_model::ItemModel};
@@ -27,7 +28,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::read::byte_order::LeToNe;
+use crate::read::LeToNe;
 
 /// GameBox class ID.
 pub trait ClassId {
@@ -304,7 +305,9 @@ const FILE_SIGNATURE: [u8; 3] = [b'G', b'B', b'X'];
 const FILE_VERSION: u16 = 6;
 
 const END_OF_BODY_MARKER: u32 = 0xfacade01;
-const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950;
+const SKIPPABLE_CHUNK_MARKER: u32 = 0x534b4950; // SKIP
+const ID_MARKER_BIT: u32 = 0x40000000;
+const NULL: u32 = 0xffffffff;
 
 /// Returns the sub-extension for the given `path`.
 ///
