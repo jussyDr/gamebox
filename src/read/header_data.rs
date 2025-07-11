@@ -3,7 +3,7 @@ use std::io::Read;
 use crate::{
     ClassId,
     read::{
-        Error, IdTable,
+        ChunkId, Error, IdTable,
         id::{TryFromId, read_id},
         reader::Reader,
     },
@@ -25,13 +25,13 @@ pub trait HeaderChunks: ClassId {
 
 /// Header chunk.
 pub struct HeaderChunk<T: ?Sized, R> {
-    num: u8,
+    num: u16,
     read_fn: HeaderChunkReadFn<T, R>,
 }
 
 impl<T, R> HeaderChunk<T, R> {
     /// Create a new header chunk.
-    pub fn new(num: u8, read_fn: HeaderChunkReadFn<T, R>) -> Self {
+    pub fn new(num: u16, read_fn: HeaderChunkReadFn<T, R>) -> Self {
         Self { num, read_fn }
     }
 }
@@ -54,17 +54,17 @@ pub fn read_header_data<T: HeaderChunks>(node: &mut T, r: &mut impl Reader) -> R
     };
 
     for (chunk_id, _chunk_size) in header_chunk_entries {
-        let class_id = chunk_id & 0xffffff00;
+        let chunk_id = ChunkId(chunk_id);
 
-        if class_id != T::CLASS_ID {
-            todo!()
+        if chunk_id.class_id() != T::CLASS_ID {
+            return Err(Error::new("class id does not match"));
         }
 
-        let chunk_num = (chunk_id & 0x000000ff) as u8;
+        let chunk_num = chunk_id.num();
 
         let chunk = header_chunks
             .find(|chunk| chunk.num == chunk_num)
-            .ok_or_else(|| Error::new(format!("unknown header chunk: 0x{chunk_id:08x}")))?;
+            .ok_or_else(|| Error::new(format!("unknown header chunk number: {chunk_num}")))?;
 
         (chunk.read_fn)(node, &mut r)?;
     }

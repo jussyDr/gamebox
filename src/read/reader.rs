@@ -5,7 +5,7 @@ use zerocopy::{FromBytes, FromZeros, IntoBytes};
 use std::{io::Read, iter};
 
 use crate::{
-    Box3D, Iso4, Quat, UVec3, Vec2, Vec3,
+    Box3D, Iso4, Quat, U8Vec3, UVec3, Vec2, Vec3,
     read::{Error, byte_order::LeToNe, error_unknown_version, map_io_error},
 };
 
@@ -104,6 +104,11 @@ pub trait Reader: Read {
 
     /// Read a `UVec3`.
     fn uvec3(&mut self) -> Result<UVec3, Error> {
+        self.zerocopy()
+    }
+
+    /// Read a `U8Vec3`.
+    fn u8vec3(&mut self) -> Result<U8Vec3, Error> {
         self.zerocopy()
     }
 

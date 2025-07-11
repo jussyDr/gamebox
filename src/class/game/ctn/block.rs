@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::Vec3;
+use crate::{U8Vec3, Vec3};
 
 /// A block.
 #[derive(Default)]
@@ -26,7 +26,12 @@ impl Block {
 /// Block kind.
 pub enum BlockKind {
     /// Normal block.
-    Normal,
+    Normal {
+        /// Direction.
+        direction: u8,
+        /// Coordinate.
+        coord: U8Vec3,
+    },
     /// Free block.
     Free {
         /// Position.
@@ -38,7 +43,10 @@ pub enum BlockKind {
 
 impl Default for BlockKind {
     fn default() -> Self {
-        Self::Normal
+        Self::Normal {
+            direction: u8::default(),
+            coord: U8Vec3::default(),
+        }
     }
 }
 
@@ -58,10 +66,11 @@ mod read {
     };
 
     impl ReadBody for Block {
+        // Performance critical.
         fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             self.id = r.id()?;
-            let _direction = r.u8()?;
-            let _coord = r.repeat(3, |r| r.u8())?;
+            let direction = r.u8()?;
+            let coord = r.u8vec3()?;
             let flags = r.u32()?;
 
             if flags & 0x00008000 != 0 {
@@ -93,7 +102,7 @@ mod read {
                     yaw_pitch_roll: Vec3::default(),
                 };
             } else {
-                self.kind = BlockKind::Normal;
+                self.kind = BlockKind::Normal { direction, coord };
             }
 
             Ok(())

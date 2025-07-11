@@ -119,6 +119,7 @@ mod read {
     }
 
     impl VertexStream {
+        // Performance critical.
         fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 

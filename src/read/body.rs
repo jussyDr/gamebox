@@ -3,7 +3,7 @@ use std::io::Read;
 use crate::{
     ClassId, END_OF_BODY_MARKER, NULL, SKIPPABLE_CHUNK_MARKER,
     read::{
-        Error, HeaderReader, IdTable, NodeRefTable, ReadNodeRef,
+        ChunkId, Error, HeaderReader, IdTable, NodeRefTable, ReadNodeRef,
         id::{TryFromId, read_id},
         node_ref::read_node_ref,
     },
@@ -31,14 +31,14 @@ pub trait BodyChunks: ClassId {
 
 /// Body chunk.
 pub struct BodyChunk<T: ?Sized, R> {
-    num: u8,
+    num: u16,
     read_fn: BodyChunkReadFn<T, R>,
     skippable: bool,
 }
 
 impl<T, R> BodyChunk<T, R> {
     /// New.
-    pub fn new(num: u8, read_fn: BodyChunkReadFn<T, R>) -> Self {
+    pub fn new(num: u16, read_fn: BodyChunkReadFn<T, R>) -> Self {
         Self {
             num,
             read_fn,
@@ -47,7 +47,7 @@ impl<T, R> BodyChunk<T, R> {
     }
 
     /// Skippable.
-    pub fn skippable(num: u8, read_fn: BodyChunkReadFn<T, R>) -> Self {
+    pub fn skippable(num: u16, read_fn: BodyChunkReadFn<T, R>) -> Self {
         Self {
             num,
             read_fn,
@@ -74,7 +74,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
     node: &mut T,
 ) -> Result<Option<u32>, Error> {
     // Read parent chunks, if any.
-    let mut chunk_id = match node.parent() {
+    let mut chunk_id_or = match node.parent() {
         None => r.u32()?,
         Some(parent) => match read_body_chunks_inner(r, parent)? {
             None => return Ok(None),
@@ -86,17 +86,18 @@ fn read_body_chunks_inner<T: BodyChunks>(
     let mut chunks = T::body_chunks().into_iter();
 
     loop {
-        if chunk_id == END_OF_BODY_MARKER {
+        if chunk_id_or == END_OF_BODY_MARKER {
             break;
         }
 
-        let class_id = chunk_id & 0xffffff00;
+        let chunk_id = ChunkId(chunk_id_or);
+        let class_id = chunk_id.class_id();
 
         if class_id != T::CLASS_ID {
-            return Ok(Some(chunk_id));
+            return Ok(Some(chunk_id.0));
         }
 
-        let chunk_num = (chunk_id & 0x000000ff) as u8;
+        let chunk_num = chunk_id.num();
 
         let chunk = match chunks.find(|chunk| chunk.num == chunk_num) {
             None => {
@@ -119,7 +120,7 @@ fn read_body_chunks_inner<T: BodyChunks>(
             (chunk.read_fn)(node, r)?;
         }
 
-        chunk_id = r.u32()?;
+        chunk_id_or = r.u32()?;
     }
 
     Ok(None)

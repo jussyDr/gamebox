@@ -38,6 +38,7 @@ mod read {
     }
 
     impl AnchoredObject {
+        // Performance critical.
         fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
             let version = r.u32()?;
 
@@ -47,7 +48,7 @@ mod read {
 
             let _item_model: Vec<Arc<str>> = r.repeat(3, |r| r.id())?;
             let _yaw_pitch_roll = r.vec3()?;
-            let _block_unit_coord = r.repeat(3, |r| r.u8())?;
+            let _block_unit_coord = r.u8vec3()?;
             let _anchor_tree_id: Option<Arc<str>> = r.id()?;
             let _absolute_position_in_map = r.vec3()?;
             let _waypoint_special_property = r.u32()?;

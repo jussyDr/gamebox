@@ -211,6 +211,26 @@ impl LeToNe for UVec3 {
     }
 }
 
+/// A 3-dimensional vector.
+#[derive(Default, FromBytes)]
+#[repr(C)]
+pub struct U8Vec3 {
+    /// X component.
+    pub x: u8,
+    /// Y component.
+    pub y: u8,
+    /// Z component.
+    pub z: u8,
+}
+
+impl LeToNe for U8Vec3 {
+    fn le_to_ne(&mut self) {
+        self.x.le_to_ne();
+        self.y.le_to_ne();
+        self.z.le_to_ne();
+    }
+}
+
 /// A 4-dimensional vector.
 #[derive(FromBytes)]
 #[repr(C)]

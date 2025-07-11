@@ -201,3 +201,15 @@ fn read_folders(r: &mut impl Reader) -> Result<Vec<PathBuf>, Error> {
 
     Ok(folders)
 }
+
+struct ChunkId(u32);
+
+impl ChunkId {
+    fn class_id(&self) -> u32 {
+        self.0 & 0xfffff000
+    }
+
+    fn num(&self) -> u16 {
+        (self.0 & 0x00000fff) as u16
+    }
+}

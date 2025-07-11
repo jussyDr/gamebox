@@ -17,18 +17,22 @@ pub struct Solid2Model {
 }
 
 impl Solid2Model {
+    /// Shaded geometries.
     pub fn shaded_geoms(&self) -> &Vec<ShadedGeom> {
         &self.shaded_geoms
     }
 
+    /// Visuals.
     pub fn visuals(&self) -> &Vec<Arc<VisualIndexedTriangles>> {
         &self.visuals
     }
 
+    /// Materials.
     pub fn materials(&self) -> &Vec<ExternalNodeRef<Material>> {
         &self.materials
     }
 
+    /// Lights.
     pub fn lights(&self) -> &Vec<Solid2ModelLight> {
         &self.lights
     }
@@ -42,21 +46,25 @@ impl SubExtensions for Solid2Model {
     const SUB_EXTENSIONS: &[&str] = &["Mesh"];
 }
 
+/// Shaded geometry.
 pub struct ShadedGeom {
     visual_index: u32,
     material_index: u32,
 }
 
 impl ShadedGeom {
+    /// Visual index.
     pub fn visual_index(&self) -> u32 {
         self.visual_index
     }
 
+    /// Material index.
     pub fn material_index(&self) -> u32 {
         self.material_index
     }
 }
 
+/// Light.
 pub struct Solid2ModelLight {}
 
 mod read {

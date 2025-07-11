@@ -7,24 +7,24 @@ use std::{
 #[derive(Debug)]
 pub struct Error {
     message: String,
-    context: Option<Box<Error>>,
+    pub(crate) trace: Option<String>,
 }
 
 impl Error {
     pub(crate) fn new(message: impl Into<String>) -> Error {
         Error {
             message: message.into(),
-            context: None,
+            trace: None,
         }
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.message)?;
+        writeln!(f, "read error: {}", self.message)?;
 
-        if let Some(ref context) = self.context {
-            Display::fmt(context, f)?;
+        if let Some(ref trace) = self.trace {
+            writeln!(f, "  {trace}")?;
         }
 
         Ok(())
