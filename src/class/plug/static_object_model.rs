@@ -1,71 +1,36 @@
-//! Static object model.
+use std::{borrow::Cow, marker::PhantomData};
 
-use crate::{
-    ClassId, NodeRef, SubExtensions,
-    class::plug::{solid_2_model::Solid2Model, surface::Surface},
-};
+use ouroboros::self_referencing;
 
-/// A model with a collidable hit shape.
-#[derive(Default)]
-pub struct StaticObjectModel {
-    model: NodeRef<Solid2Model>,
-    hit_shape: Option<NodeRef<Surface>>,
+use crate::read::{Error, NodeRefs, Readable};
+
+pub struct StaticObjectModel<'a>(Inner<'a>);
+
+#[self_referencing]
+struct Inner<'a> {
+    node_refs: Cow<'a, NodeRefs>,
+    body_data: Cow<'a, [u8]>,
+    #[borrows(node_refs, body_data)]
+    #[covariant]
+    body: Body<'this>,
 }
 
-impl StaticObjectModel {
-    /// The model.
-    pub fn model(&self) -> &NodeRef<Solid2Model> {
-        &self.model
-    }
-
-    /// Optional custom hit shape.
-    /// If this returns `None` the hit shape is the same as the model.
-    pub fn hit_shape(&self) -> &Option<NodeRef<Surface>> {
-        &self.hit_shape
-    }
+struct Body<'a> {
+    marker: PhantomData<&'a ()>,
 }
 
-impl ClassId for StaticObjectModel {
-    const CLASS_ID: u32 = 0x09159000;
-}
+impl Readable for StaticObjectModel<'_> {
+    fn read(header_data: Vec<u8>, node_refs: NodeRefs, body_data: Vec<u8>) -> Result<Self, Error> {
+        let builder = InnerTryBuilder {
+            node_refs: Cow::Owned(node_refs),
+            body_data: Cow::Owned(body_data),
+            body_builder: |node_refs, body_data| {
+                Ok(Body {
+                    marker: PhantomData,
+                })
+            },
+        };
 
-impl SubExtensions for StaticObjectModel {
-    const SUB_EXTENSIONS: &[&str] = &["StaticObject"];
-}
-
-mod read {
-    use crate::{
-        class::plug::static_object_model::StaticObjectModel,
-        read::{
-            BodyReader, Error, HeaderChunk, HeaderChunks, HeaderReader, ReadBody, Readable,
-            error_unknown_version,
-        },
-    };
-
-    impl Readable for StaticObjectModel {}
-
-    impl HeaderChunks for StaticObjectModel {
-        fn header_chunks<R: HeaderReader>() -> impl IntoIterator<Item = HeaderChunk<Self, R>> {
-            []
-        }
-    }
-
-    impl ReadBody for StaticObjectModel {
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let version = r.u32()?;
-
-            if version != 3 {
-                return Err(error_unknown_version("static object model", version));
-            }
-
-            self.model = r.node_ref()?;
-            self.hit_shape = if r.bool8()? {
-                None
-            } else {
-                r.node_ref()? // Might be that there is no hit shape alltogether if this is `None`?
-            };
-
-            Ok(())
-        }
+        builder.try_build().map(Self)
     }
 }

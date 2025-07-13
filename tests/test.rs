@@ -1,15 +1,12 @@
 use gamebox::{
+    Challenge,
     class::{
-        game::{
-            ctn::{block_info_classic::BlockInfoClassic, challenge::Challenge},
-            item_model::ItemModel,
-        },
+        game::{ItemModel, ctn::BlockInfoClassic},
         plug::{
-            bitmap::Bitmap, dyna_object_model::DynaObjectModel, material::Material, prefab::Prefab,
-            solid_2_model::Solid2Model, static_object_model::StaticObjectModel, surface::Surface,
+            Bitmap, DynaObjectModel, Material, Prefab, Solid2Model, StaticObjectModel, Surface,
         },
     },
-    read::read_file,
+    read_file,
 };
 
 #[test]
