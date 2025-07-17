@@ -1,224 +1,127 @@
+mod body;
+mod error;
+
+pub use body::{BodyChunksReader, BodyReader, IdRefs};
+pub use error::Error;
+
 use std::{
-    error::Error as StdError,
-    fmt::{self, Debug, Display, Formatter},
     fs::File,
-    io::{self, Read},
-    path::{Path, PathBuf},
+    io::{BufReader, Read},
+    iter,
+    path::Path,
 };
 
-// ERROR //
+use crate::Challenge;
 
-pub struct Error(Box<dyn StdError>);
+pub fn read_file(path: impl AsRef<Path>) -> Result<Challenge, Error> {
+    let file = File::open(path).map_err(Error::new)?;
+    let reader = BufReader::new(file);
 
-impl Debug for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Debug::fmt(&self.0, f)
-    }
+    read(reader)
 }
 
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.0, f)
-    }
-}
+pub fn read(reader: impl Read) -> Result<Challenge, Error> {
+    let mut r = Reader { inner: reader };
 
-impl StdError for Error {}
-
-fn map_io_error(io_error: io::Error) -> Error {
-    Error(Box::new(io_error))
-}
-
-// READ //
-
-pub trait Readable {
-    fn read(header_data: Vec<u8>, node_refs: NodeRefs, body_data: Vec<u8>) -> Result<Self, Error>
-    where
-        Self: Sized;
-}
-
-pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
-    let file = File::open(path).map_err(map_io_error)?;
-
-    read(file)
-}
-
-pub fn read<T: Readable>(reader: impl Read) -> Result<T, Error> {
-    let mut r = reader;
-
-    // Read the header.
-
-    if r.byte_array()? != [b'G', b'B', b'X'] {
-        return Err(Error("unknown file signature".into()));
+    if r.u8_array()? != [b'G', b'B', b'X'] {
+        return Err(Error::unknown("file signature"));
     }
 
-    if r.u16()? != 6 {
-        return Err(Error("unknown file version".into()));
+    let version = r.u16()?;
+
+    if version != 6 {
+        return Err(Error::unknown_version("file", version as u32));
     }
 
     if r.u8()? != b'B' {
-        return Err(Error("unknown file format".into()));
+        return Err(Error::unknown_file_format());
     }
 
     if r.u8()? != b'U' {
-        return Err(Error("unknown refernce table compression".into()));
+        return Err(Error::unknown("node reference table compression"));
     }
 
     let body_compressed = match r.u8()? {
         b'C' => true,
         b'U' => false,
-        _ => return Err(Error("unknown body compression".into())),
+        _ => return Err(Error::unknown("body compression")),
     };
 
     if r.u8()? != b'R' {
-        return Err(Error("unknown file format".into()));
+        return Err(Error::unknown_file_format());
     }
 
-    let _class_id = r.u32()?;
-    let header_data = r.byte_buf()?;
+    if r.u32()? != Challenge::CLASS_ID {
+        return Err(Error::new("class id mismatch"));
+    }
 
-    // Read the external node references.
+    let header_data_size = r.u32()?;
+    let header_data = r.repeat_u8(header_data_size as usize)?;
 
     let num_node_refs = r
         .u32()?
         .checked_sub(1)
-        .ok_or_else(|| Error("number of node references is zero".into()))?;
+        .ok_or_else(|| Error::zero("number of node references"))?;
 
-    let node_refs = NodeRefs::new(num_node_refs as usize);
+    let node_refs = iter::repeat_with(|| None)
+        .take(num_node_refs as usize)
+        .collect::<Vec<_>>()
+        .into_boxed_slice();
+
     let num_external_node_refs = r.u32()?;
 
     if num_external_node_refs > 0 {
-        let _ancestor_level = r.u32()?;
-        let folders = read_folders(&mut r)?;
-
-        for _ in 0..num_external_node_refs {
-            let _flags = r.u32()?;
-            let file_name = r.string()?;
-
-            let node_index = r
-                .u32()?
-                .checked_sub(1)
-                .ok_or_else(|| Error("node reference index is zero".into()))?;
-
-            let _use_file = r.bool32()?;
-            let folder_index = r.u32()?;
-
-            let mut path = folders
-                .get(folder_index as usize)
-                .ok_or_else(|| Error("folder index exceeds number of folders".into()))?
-                .clone();
-
-            path.push(&file_name);
-        }
+        todo!()
     }
 
-    // Read the body.
-
-    let body_data = if body_compressed {
+    if body_compressed {
         let body_data_size = r.u32()?;
-        let compressed_body_data = r.byte_buf()?;
+        let compressed_body_data_size = r.u32()?;
+        let compressed_body_data = r.repeat_u8(compressed_body_data_size as usize)?;
 
-        let mut body_data = vec![0; body_data_size as usize];
-        lzo1x::decompress(&compressed_body_data, &mut body_data)
-            .map_err(|decompress_error| Error(Box::new(decompress_error)))?;
+        let mut body_data = vec![0; body_data_size as usize].into_boxed_slice();
+        lzo1x::decompress(&compressed_body_data, &mut body_data).map_err(Error::new)?;
 
-        body_data
+        Challenge::read_from_header_and_body(header_data, body_data, node_refs)
     } else {
-        let mut body_data = vec![];
-        r.read_to_end(&mut body_data).map_err(map_io_error)?;
-
-        body_data
-    };
-
-    // Read the node.
-
-    T::read(header_data, node_refs, body_data)
-}
-
-fn read_folders(r: &mut impl Reader) -> Result<Vec<PathBuf>, Error> {
-    let mut folders = vec![];
-    folders.push(PathBuf::new());
-
-    let num_folders = r.u32()?;
-
-    for _ in 0..num_folders {
-        let name = r.string()?;
-        let sub_folders = read_folders(r)?;
-
-        for sub_folder in sub_folders {
-            let mut folder = PathBuf::from(name.clone());
-            folder.push(sub_folder);
-            folders.push(folder);
-        }
+        todo!()
     }
-
-    Ok(folders)
 }
 
-// READER //
+struct Reader<R> {
+    inner: R,
+}
 
-trait Reader: Read {
-    fn bytes(&mut self, n: usize) -> Result<Vec<u8>, Error> {
-        let mut bytes = vec![0; n];
-        self.read_exact(&mut bytes).map_err(map_io_error)?;
+impl<R: Read> Reader<R> {
+    fn repeat_u8(&mut self, n: usize) -> Result<Box<[u8]>, Error> {
+        let mut bytes = vec![0; n].into_boxed_slice();
+        self.inner.read_exact(&mut bytes).map_err(Error::new)?;
 
         Ok(bytes)
     }
 
-    fn byte_array<const N: usize>(&mut self) -> Result<[u8; N], Error> {
-        let mut byte_array = [0; N];
-        self.read_exact(&mut byte_array).map_err(map_io_error)?;
+    fn u8_array<const N: usize>(&mut self) -> Result<[u8; N], Error> {
+        let mut bytes = [0; N];
+        self.inner.read_exact(&mut bytes).map_err(Error::new)?;
 
-        Ok(byte_array)
+        Ok(bytes)
     }
 
     fn u8(&mut self) -> Result<u8, Error> {
-        let bytes = self.byte_array()?;
+        let bytes = self.u8_array()?;
 
         Ok(u8::from_le_bytes(bytes))
     }
 
     fn u16(&mut self) -> Result<u16, Error> {
-        let bytes = self.byte_array()?;
+        let bytes = self.u8_array()?;
 
         Ok(u16::from_le_bytes(bytes))
     }
 
     fn u32(&mut self) -> Result<u32, Error> {
-        let bytes = self.byte_array()?;
+        let bytes = self.u8_array()?;
 
         Ok(u32::from_le_bytes(bytes))
-    }
-
-    fn bool32(&mut self) -> Result<bool, Error> {
-        match self.u32()? {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => Err(Error("expected a 32-bit boolean".into())),
-        }
-    }
-
-    fn byte_buf(&mut self) -> Result<Vec<u8>, Error> {
-        let size = self.u32()?;
-
-        Reader::bytes(self, size as usize)
-    }
-
-    fn string(&mut self) -> Result<String, Error> {
-        let bytes = self.byte_buf()?;
-
-        String::from_utf8(bytes).map_err(|utf8_error| Error(utf8_error.into()))
-    }
-}
-
-impl<T: Read> Reader for T {}
-
-// NODE REFS //
-
-#[derive(Clone)]
-pub struct NodeRefs;
-
-impl NodeRefs {
-    fn new(num: usize) -> Self {
-        Self
     }
 }
