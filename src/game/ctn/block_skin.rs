@@ -2,9 +2,12 @@ use std::{any::Any, cell::OnceCell, marker::PhantomData, sync::Arc};
 
 use ouroboros::self_referencing;
 
-use crate::read::{BodyChunksReader, BodyReader, ClassId, Error, ReadNode};
+use crate::{
+    game::ctn::FileRef,
+    read::{BodyChunksReader, BodyReader, ClassId, Error, ReadNode},
+};
 
-pub struct CollectorList(Inner);
+pub struct BlockSkin(Inner);
 
 #[self_referencing]
 struct Inner {
@@ -17,16 +20,19 @@ struct Inner {
 
 struct Chunks<'a> {
     delme: PhantomData<&'a ()>,
-    chunk_0: Chunk0,
+    chunk_2: Chunk2,
+    chunk_3: Chunk3,
 }
 
-struct Chunk0;
+struct Chunk2;
 
-impl ClassId for CollectorList {
-    const CLASS_ID: u32 = 0x0301b000;
+struct Chunk3;
+
+impl ClassId for BlockSkin {
+    const CLASS_ID: u32 = 0x03059000;
 }
 
-impl ReadNode for CollectorList {
+impl ReadNode for BlockSkin {
     fn read_from_body(
         body_data: Arc<[u8]>,
         body_data_offset: &mut usize,
@@ -41,24 +47,32 @@ impl ReadNode for CollectorList {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x0301b000, |r| {
-                    let _collector_stock = r.list(|r| {
-                        let _block_model = r.id()?;
-                        let _block_model_collection = r.id()?;
-                        let _block_model_author = r.id()?;
-                        let _count = r.u32()?;
+                let chunk_2 = r.chunk(0x03059002, |r| {
+                    let _text = r.string()?;
+                    let _file_ref = FileRef::read(r)?;
+                    let _parent_file_ref = FileRef::read(r)?;
 
-                        Ok(())
-                    })?;
+                    Ok(Chunk2)
+                })?;
 
-                    Ok(Chunk0)
+                let chunk_3 = r.chunk(0x03059003, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _foreground_file_ref = FileRef::read(r)?;
+
+                    Ok(Chunk3)
                 })?;
 
                 r.end()?;
 
                 Ok(Chunks {
                     delme: PhantomData,
-                    chunk_0,
+                    chunk_2,
+                    chunk_3,
                 })
             },
         };

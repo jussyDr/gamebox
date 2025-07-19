@@ -4,7 +4,7 @@ use ouroboros::self_referencing;
 
 use crate::read::{BodyChunksReader, BodyReader, ClassId, Error, ReadNode};
 
-pub struct CollectorList(Inner);
+pub struct ZoneGenealogy(Inner);
 
 #[self_referencing]
 struct Inner {
@@ -17,16 +17,16 @@ struct Inner {
 
 struct Chunks<'a> {
     delme: PhantomData<&'a ()>,
-    chunk_0: Chunk0,
+    chunk_2: Chunk2,
 }
 
-struct Chunk0;
+struct Chunk2;
 
-impl ClassId for CollectorList {
-    const CLASS_ID: u32 = 0x0301b000;
+impl ClassId for ZoneGenealogy {
+    const CLASS_ID: u32 = 0x0311d000;
 }
 
-impl ReadNode for CollectorList {
+impl ReadNode for ZoneGenealogy {
     fn read_from_body(
         body_data: Arc<[u8]>,
         body_data_offset: &mut usize,
@@ -41,24 +41,20 @@ impl ReadNode for CollectorList {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x0301b000, |r| {
-                    let _collector_stock = r.list(|r| {
-                        let _block_model = r.id()?;
-                        let _block_model_collection = r.id()?;
-                        let _block_model_author = r.id()?;
-                        let _count = r.u32()?;
+                let chunk_2 = r.chunk(0x0311d002, |r| {
+                    let _zone_ids = r.list(|r| r.id())?;
+                    let _current_index = r.u32()?;
+                    let _dir = r.u32()?;
+                    let _current_zone_id = r.id()?;
 
-                        Ok(())
-                    })?;
-
-                    Ok(Chunk0)
+                    Ok(Chunk2)
                 })?;
 
                 r.end()?;
 
                 Ok(Chunks {
                     delme: PhantomData,
-                    chunk_0,
+                    chunk_2,
                 })
             },
         };

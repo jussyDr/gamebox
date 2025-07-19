@@ -8,7 +8,7 @@ pub struct Error(Box<dyn StdError>);
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        todo!()
+        writeln!(f, "{}", self.0)
     }
 }
 

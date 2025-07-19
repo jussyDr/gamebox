@@ -4,7 +4,7 @@ use ouroboros::self_referencing;
 
 use crate::{
     game::ctn::Ghost,
-    read::{BodyChunksReader, BodyReader, Error, ReadNodeRef},
+    read::{BodyChunksReader, BodyReader, ClassId, Error, ReadNode},
 };
 
 pub struct ChallengeParameters(Inner);
@@ -40,23 +40,24 @@ struct Chunk13;
 
 struct Chunk14;
 
-impl ReadNodeRef for ChallengeParameters {
+impl ClassId for ChallengeParameters {
+    const CLASS_ID: u32 = 0x0305b000;
+}
+
+impl ReadNode for ChallengeParameters {
     fn read_from_body(
         body_data: Arc<[u8]>,
-        node_refs: Arc<[OnceCell<Box<dyn Any>>]>,
         body_data_offset: &mut usize,
+        node_refs: Arc<[OnceCell<Box<dyn Any>>]>,
+        seen_id: &mut bool,
+        ids: &mut Vec<(usize, usize)>,
     ) -> Result<Self, Error> {
         let builder = InnerTryBuilder {
             body_data,
             node_refs,
             chunks_builder: |body_data, node_refs| {
-                let mut r = BodyChunksReader(BodyReader::new(
-                    Arc::clone(body_data),
-                    Arc::clone(node_refs),
-                    body_data,
-                    node_refs,
-                    body_data_offset,
-                ));
+                let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
+                let mut r = BodyChunksReader(&mut br);
 
                 let chunk_1 = r.chunk(0x0305b001, |r| {
                     let _tip_1 = r.string()?;

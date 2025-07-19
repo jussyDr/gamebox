@@ -5,17 +5,40 @@ pub mod read;
 pub use read::{read, read_file};
 
 pub mod game {
-    pub mod ctn {
-        mod challenge;
-        mod challenge_parameters;
-        mod collector_list;
-        mod ghost;
+    pub mod ctn;
 
-        pub use challenge::Challenge;
-        pub use challenge_parameters::ChallengeParameters;
-        pub use collector_list::CollectorList;
-        pub use ghost::Ghost;
-    }
+    mod waypoint_special_property;
+
+    pub use waypoint_special_property::WaypointSpecialProperty;
+}
+
+pub mod script {
+    mod traits_metadata;
+
+    pub use traits_metadata::TraitsMetadata;
 }
 
 pub use game::ctn::Challenge;
+
+pub struct F32Vec2 {
+    x: f32,
+    y: f32,
+}
+
+pub struct U8Vec3 {
+    x: u8,
+    y: u8,
+    z: u8,
+}
+
+pub struct U32Vec3 {
+    x: u32,
+    y: u32,
+    z: u32,
+}
+
+pub struct F32Vec3 {
+    x: f32,
+    y: f32,
+    z: f32,
+}
