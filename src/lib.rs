@@ -2,25 +2,20 @@
 
 pub mod read;
 
+pub use read::{read, read_file};
+
 pub mod game {
     pub mod ctn {
-        mod block;
-        mod block_skin;
         mod challenge;
+        mod challenge_parameters;
+        mod collector_list;
+        mod ghost;
 
-        pub use block::Block;
-        pub use block_skin::BlockSkin;
         pub use challenge::Challenge;
+        pub use challenge_parameters::ChallengeParameters;
+        pub use collector_list::CollectorList;
+        pub use ghost::Ghost;
     }
-
-    mod waypoint_special_property;
-
-    pub use waypoint_special_property::WaypointSpecialProperty;
 }
 
 pub use game::ctn::Challenge;
-pub use read::{read, read_file};
-
-pub struct U8Vec3;
-
-pub struct U32Vec3;
