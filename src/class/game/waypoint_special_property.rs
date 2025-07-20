@@ -44,32 +44,8 @@ impl ReadNode for WaypointSpecialProperty {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x2e009000, |r| {
-                    let version = r.u32()?;
-
-                    if version != 2 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _tag = r.string()?;
-                    let _order = r.u32()?;
-
-                    Ok(Chunk0)
-                })?;
-
-                let chunk_1 = r.skippable_chunk(0x2e009001, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    if r.bool32()? {
-                        todo!();
-                    }
-
-                    Ok(Chunk1)
-                })?;
+                let chunk_0 = r.chunk(0x2e009000, Chunk0::read)?;
+                let chunk_1 = r.skippable_chunk(0x2e009001, Chunk1::read)?;
 
                 r.end()?;
 
@@ -82,5 +58,36 @@ impl ReadNode for WaypointSpecialProperty {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk0 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 2 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _tag = r.string()?;
+        let _order = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk1 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        if r.bool32()? {
+            todo!();
+        }
+
+        Ok(Self)
     }
 }

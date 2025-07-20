@@ -27,27 +27,7 @@ impl<'a> TraitsMetadata<'a> {
     pub fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
         let mut r = BodyChunksReader(r);
 
-        let chunk_0 = r.chunk(0x11002000, |r| {
-            let version = r.u32()?;
-
-            if version != 6 {
-                return Err(Error::new(format!("unknown chunk version: {version}")));
-            }
-
-            let num_types = read_packed_u32(r)?;
-            let types = r.repeat(num_types as usize, |r| read_type(r))?;
-            let num_traits = read_packed_u32(r)?;
-            r.repeat(num_traits as usize, |r| {
-                let name_len = read_packed_u32(r)?;
-                let _name = r.repeat_u8(name_len as usize)?;
-                let type_index = read_packed_u32(r)?;
-                read_value(r, &types[type_index as usize])?;
-
-                Ok(())
-            })?;
-
-            Ok(Chunk0)
-        })?;
+        let chunk_0 = r.chunk(0x11002000, Chunk0::read)?;
 
         r.end()?;
 
@@ -55,6 +35,30 @@ impl<'a> TraitsMetadata<'a> {
             delme: PhantomData,
             chunk_0,
         })
+    }
+}
+
+impl Chunk0 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 6 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let num_types = read_packed_u32(r)?;
+        let types = r.repeat(num_types as usize, |r| read_type(r))?;
+        let num_traits = read_packed_u32(r)?;
+        r.repeat(num_traits as usize, |r| {
+            let name_len = read_packed_u32(r)?;
+            let _name = r.repeat_u8(name_len as usize)?;
+            let type_index = read_packed_u32(r)?;
+            read_value(r, &types[type_index as usize])?;
+
+            Ok(())
+        })?;
+
+        Ok(Self)
     }
 }
 

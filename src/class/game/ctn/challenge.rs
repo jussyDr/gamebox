@@ -227,573 +227,48 @@ impl Readable for Challenge {
                 );
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_13 = r.chunk(0x0304300d, |r| {
-                    let _player_model = r.id_or_null()?;
-                    let _player_model_collection = r.id_or_null()?;
-                    let _player_model_author = r.id_or_null()?;
-
-                    Ok(Chunk13)
-                })?;
-
-                let chunk_17 = r.chunk(0x03043011, |r| {
-                    let _block_stock = r.node_ref::<CollectorList>()?;
-                    let parameters = r.node_ref::<ChallengeParameters>()?;
-                    let _kind = match r.u32()? {
-                        6 => MapKind::InProgress,
-                        index => {
-                            return Err(Error::new(format!(
-                                "unknown map kind enum variant index: {index}"
-                            )));
-                        }
-                    };
-
-                    Ok(Chunk17 { parameters })
-                })?;
-
-                let chunk_24 = r.skippable_chunk(0x03043018, |r| {
-                    let _is_lap_race = r.bool32()?;
-                    let _num_laps = r.u32()?;
-
-                    Ok(Chunk24)
-                })?;
-
-                let chunk_25 = r.skippable_chunk(0x03043019, |r| {
-                    let texture_mod = FileRef::read(r)?;
-
-                    Ok(Chunk25 { texture_mod })
-                })?;
-
-                let chunk_31 = r.chunk(0x0304301f, |r| {
-                    let _map_id = r.id()?;
-                    let _map_collection = r.id()?;
-                    let _map_author = r.id()?;
-                    let _map_name = r.string()?;
-                    let _decoration_id = r.id()?;
-                    let _decoration_collection = r.id()?;
-                    let _decoration_author = r.id()?;
-                    let _size = r.vec3_u32()?;
-                    let _need_unlock = r.bool32()?;
-                    let blocks_version = r.u32()?;
-
-                    if blocks_version != 6 {
-                        return Err(Error::new(format!(
-                            "unknown blocks version: {blocks_version}"
-                        )));
-                    }
-
-                    let blocks = r.list(|r| Block::read(r))?;
-
-                    Ok(Chunk31 { blocks })
-                })?;
-
-                let chunk_34 = r.chunk(0x03043022, |r| {
-                    r.u32()?;
-
-                    Ok(Chunk34)
-                })?;
-
-                let chunk_36 = r.chunk(0x03043024, |r| {
-                    let _music_file_ref = FileRef::read(r)?;
-
-                    Ok(Chunk36)
-                })?;
-
-                let chunk_37 = r.chunk(0x03043025, |r| {
-                    let _map_coord_origin = r.vec2_f32()?;
-                    let _map_coord_target = r.vec2_f32()?;
-
-                    Ok(Chunk37)
-                })?;
-
-                let chunk_38 = r.chunk(0x03043026, |r| {
-                    r.u32()?;
-
-                    Ok(Chunk38)
-                })?;
-
-                let chunk_40 = r.chunk(0x03043028, |r| {
-                    if r.bool32()? {
-                        todo!();
-                    }
-
-                    let _comments = r.string()?;
-
-                    Ok(Chunk40)
-                })?;
-
-                let chunk_41 = r.skippable_chunk(0x03043029, |r| {
-                    let _password_hash = r.u128()?;
-                    let _crc32 = r.u32()?;
-
-                    Ok(Chunk41)
-                })?;
-
-                let chunk_42 = r.chunk(0x0304302a, |r| {
-                    let _created_with_simple_editor = r.bool32()?;
-
-                    Ok(Chunk42)
-                })?;
-
-                let chunk_52 = r.skippable_chunk(0x03043034, |r| {
-                    r.list_u8()?;
-
-                    Ok(Chunk52)
-                })?;
-
-                let chunk_54 = r.skippable_chunk(0x03043036, |r| {
-                    let _thumbnail_position = r.vec3_f32()?;
-                    let _thumbnail_pitch_yaw_roll = r.vec3_f32()?;
-                    let _thumbnail_fov = r.f32()?;
-                    r.f32()?;
-                    r.f32()?;
-                    let _thumbnail_near_clip_plane = r.f32()?;
-                    let _thumbnail_far_clip_plane = r.f32()?;
-                    let _comments = r.string()?;
-
-                    Ok(Chunk54)
-                })?;
-
-                let chunk_56 = r.skippable_chunk(0x03043038, |r| {
-                    r.u32()?;
-
-                    Ok(Chunk56)
-                })?;
-
-                let chunk_62 = r.skippable_chunk(0x0304303e, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _car_marks_buffer: Box<[()]> = r.list_with_version(|_| todo!())?;
-
-                    Ok(Chunk62)
-                })?;
-
-                let chunk_64 = r.skippable_chunk(0x03043040, |r| {
-                    let version = r.u32()?;
-
-                    if version != 5 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let encapsulation_version = r.u32()?;
-
-                    if encapsulation_version != 0 {
-                        return Err(Error::new(format!(
-                            "unknown encapsulation version: {encapsulation_version}"
-                        )));
-                    }
-
-                    let _size = r.u32()?;
-
-                    let mut seen_id = false;
-                    let mut ids = vec![];
-                    let node_refs = Arc::from(vec![]);
-                    let mut r = BodyReader::new(
-                        body_data,
-                        r.data_offset,
-                        &node_refs,
-                        &mut seen_id,
-                        &mut ids,
-                    );
-
-                    let anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
-                    let _block_indices = r.list(|r| r.u32())?;
-                    let _snap_item_groups = r.list(|r| r.u32())?;
-                    r.list(|r| r.u32())?;
-                    let _snapped_indices = r.list(|r| r.u32())?;
-
-                    Ok(Chunk64 { anchored_objects })
-                })?;
-
-                let chunk_66 = r.skippable_chunk(0x03043042, |r| {
-                    let version = r.u32()?;
-
-                    if version != 1 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let author_version = r.u32()?;
-
-                    if author_version != 0 {
-                        return Err(Error::new(format!(
-                            "unknown author version: {author_version}"
-                        )));
-                    }
-
-                    let _author_login = r.string()?;
-                    let _author_nickname = r.string()?;
-                    let _author_zone = r.string()?;
-                    let _author_extra_info = r.string()?;
-
-                    Ok(Chunk66)
-                })?;
-
-                let chunk_67 = r.skippable_chunk(0x03043043, |r| {
-                    let encapsulation_version = r.u32()?;
-
-                    if encapsulation_version != 0 {
-                        return Err(Error::new(format!(
-                            "unknown encapsulation version: {encapsulation_version}"
-                        )));
-                    }
-
-                    let _size = r.u32()?;
-
-                    let mut seen_id = false;
-                    let mut ids = vec![];
-                    let node_refs = Arc::from(vec![]);
-                    let mut r = BodyReader::new(
-                        body_data,
-                        r.data_offset,
-                        &node_refs,
-                        &mut seen_id,
-                        &mut ids,
-                    );
-
-                    let _zone_genealogy = r.list(|r| r.node::<ZoneGenealogy>())?;
-
-                    Ok(Chunk67)
-                })?;
-
-                let chunk_68 = r.skippable_chunk(0x03043044, |r| {
-                    let encapsulation_version = r.u32()?;
-
-                    if encapsulation_version != 0 {
-                        return Err(Error::new(format!(
-                            "unknown encapsulation version: {encapsulation_version}"
-                        )));
-                    }
-
-                    let _size = r.u32()?;
-
-                    let mut seen_id = false;
-                    let mut ids = vec![];
-                    let node_refs = Arc::from(vec![]);
-                    let mut r = BodyReader::new(
-                        body_data,
-                        r.data_offset,
-                        &node_refs,
-                        &mut seen_id,
-                        &mut ids,
-                    );
-
-                    let _script_metadata = TraitsMetadata::read(&mut r)?;
-
-                    Ok(Chunk68)
-                })?;
-
-                let chunk_72 = r.skippable_chunk(0x03043048, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let blocks_version = r.u32()?;
-
-                    if blocks_version != 6 {
-                        return Err(Error::new(format!(
-                            "unknown blocks version: {blocks_version}"
-                        )));
-                    }
-
-                    let baked_blocks = r.list(|r| Block::read(r))?;
-                    r.u32()?;
-                    let _baked_clips_additional_data = r.u32()?;
-
-                    Ok(Chunk72 { baked_blocks })
-                })?;
-
-                let chunk_73 = r.chunk(0x03043049, |r| {
-                    let version = r.u32()?;
-
-                    if version != 2 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _intro_clip = r.node_ref::<MediaClip>()?;
-                    let _podium_clip = r.node_ref_or_null::<MediaClip>()?;
-                    let _in_game_clips = r.node_ref::<MediaClipGroup>()?;
-                    let _end_race_clips = r.node_ref_or_null::<MediaClipGroup>()?;
-                    let _ambiance_clip = r.node_ref::<MediaClip>()?;
-                    let _clip_trigger_size = r.vec3_u32()?;
-
-                    Ok(Chunk73)
-                })?;
-
-                let chunk_75 = r.skippable_chunk(0x0304304b, |r| {
-                    let _objective_text_author = r.string()?;
-                    let _objective_text_gold = r.string()?;
-                    let _objective_text_silver = r.string()?;
-                    let _objective_text_bronze = r.string()?;
-
-                    Ok(Chunk75)
-                })?;
-
-                let chunk_79 = r.skippable_chunk(0x0304304f, |r| {
-                    let version = r.u32()?;
-
-                    if version != 3 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    r.u8()?;
-
-                    Ok(Chunk79)
-                })?;
-
-                let chunk_80 = r.skippable_chunk(0x03043050, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _offzone_trigger_size = r.vec3_u32()?;
-                    let _offzones = r.list(|r| r.box3_u32())?;
-
-                    Ok(Chunk80)
-                })?;
-
-                let chunk_81 = r.skippable_chunk(0x03043051, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _title_id = r.id()?;
-                    let _build_version = r.string()?;
-
-                    Ok(Chunk81)
-                })?;
-
-                let chunk_82 = r.skippable_chunk(0x03043052, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _deco_base_height_offset = r.u32()?;
-
-                    Ok(Chunk82)
-                })?;
-
-                let chunk_83 = r.skippable_chunk(0x03043053, |r| {
-                    let version = r.u32()?;
-
-                    if version != 3 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _bot_paths: Box<[()]> = r.list(|_| todo!())?;
-
-                    Ok(Chunk83)
-                })?;
-
-                let chunk_84 = r.skippable_chunk(0x03043054, |r| {
-                    let version = r.u32()?;
-
-                    if version != 1 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let encapsulation_version = r.u32()?;
-
-                    if encapsulation_version != 0 {
-                        return Err(Error::new(format!(
-                            "unknown encapsulation version: {encapsulation_version}"
-                        )));
-                    }
-
-                    let _size = r.u32()?;
-
-                    let mut seen_id = false;
-                    let mut ids = vec![];
-                    let node_refs = Arc::from(vec![]);
-                    let mut r = BodyReader::new(
-                        body_data,
-                        r.data_offset,
-                        &node_refs,
-                        &mut seen_id,
-                        &mut ids,
-                    );
-
-                    let _embedded_model_ids = r.list(|r| {
-                        let _id = r.id()?;
-                        let _collection = r.id()?;
-                        let _author = r.id()?;
-
-                        Ok(())
-                    })?;
-                    let _zip = r.list_u8()?;
-                    let _textures = r.list(|r| r.string())?;
-
-                    Ok(Chunk84)
-                })?;
-
-                let chunk_85 = r.skippable_chunk(0x03043055, |r| Ok(Chunk85))?;
-
-                let chunk_86 = r.skippable_chunk(0x03043056, |r| {
-                    let version = r.u32()?;
-
-                    if version != 3 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    r.u32()?;
-                    let _day_time = r.u32()?;
-                    r.u32()?;
-                    let _dynamic_daylight = r.f32()?;
-                    let _day_duration = r.u32()?;
-
-                    Ok(Chunk86)
-                })?;
-
-                let chunk_87 = r.skippable_chunk(0x03043057, |r| {
-                    r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk87)
-                })?;
-
-                let chunk_88 = r.skippable_chunk(0x03043058, |r| {
-                    let version = r.u32()?;
-
-                    if version != 1 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    r.u32()?;
-
-                    Ok(Chunk88)
-                })?;
-
-                let chunk_89 = r.skippable_chunk(0x03043059, |r| {
-                    let version = r.u32()?;
-
-                    if version != 3 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _world_distortion = r.vec3_f32()?;
-
-                    if r.bool32()? {
-                        todo!()
-                    }
-
-                    r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk89)
-                })?;
-
-                let chunk_90 = r.skippable_chunk(0x0304305a, |r| {
-                    r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk90)
-                })?;
-
-                let chunk_91 = r.skippable_chunk(0x0304305b, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let has_lightmaps = r.bool32()?;
-                    r.bool32()?;
-                    r.bool32()?;
-
-                    if has_lightmaps {
-                        let lightmap_version = r.u32()?;
-
-                        if lightmap_version != 8 {
-                            return Err(Error::new(format!(
-                                "unknown lightmap version: {lightmap_version}"
-                            )));
-                        }
-
-                        let _lightmap_frames = r.list(|r| {
-                            r.list_u8()?;
-                            r.list_u8()?;
-                            r.list_u8()?;
-
-                            Ok(())
-                        })?;
-
-                        let _size = r.u32()?;
-                        r.list_u8()?;
-                    }
-
-                    Ok(Chunk91)
-                })?;
-
-                let chunk_92 = r.skippable_chunk(0x0304305c, |r| {
-                    r.u32()?;
-                    r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk92)
-                })?;
-
-                let chunk_93 = r.skippable_chunk(0x0304305d, |r| {
-                    r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk93)
-                })?;
-
-                let chunk_94 = r.skippable_chunk(0x0304305e, |r| {
-                    r.u32()?;
-                    r.u32()?;
-                    r.u32()?;
-                    r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk94)
-                })?;
-
-                let chunk_95 = r.skippable_chunk(0x0304305f, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    for block in &chunk_31.blocks {
-                        if block.is_free {
-                            let _position = r.vec3_f32()?;
-                            let _yaw_pitch_roll = r.vec3_f32()?;
-                        }
-                    }
-
-                    for block in &chunk_72.baked_blocks {
-                        if block.is_free {
-                            let _position = r.vec3_f32()?;
-                            let _yaw_pitch_roll = r.vec3_f32()?;
-                        }
-                    }
-
-                    Ok(Chunk95)
-                })?;
-
-                let chunk_96 = r.skippable_chunk(0x03043060, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    r.u32()?;
-
-                    Ok(Chunk96)
-                })?;
+                let chunk_13 = r.chunk(0x0304300d, Chunk13::read)?;
+                let chunk_17 = r.chunk(0x03043011, Chunk17::read)?;
+                let chunk_24 = r.skippable_chunk(0x03043018, Chunk24::read)?;
+                let chunk_25 = r.skippable_chunk(0x03043019, Chunk25::read)?;
+                let chunk_31 = r.chunk(0x0304301f, Chunk31::read)?;
+                let chunk_34 = r.chunk(0x03043022, Chunk34::read)?;
+                let chunk_36 = r.chunk(0x03043024, Chunk36::read)?;
+                let chunk_37 = r.chunk(0x03043025, Chunk37::read)?;
+                let chunk_38 = r.chunk(0x03043026, Chunk38::read)?;
+                let chunk_40 = r.chunk(0x03043028, Chunk40::read)?;
+                let chunk_41 = r.skippable_chunk(0x03043029, Chunk41::read)?;
+                let chunk_42 = r.chunk(0x0304302a, Chunk42::read)?;
+                let chunk_52 = r.skippable_chunk(0x03043034, Chunk52::read)?;
+                let chunk_54 = r.skippable_chunk(0x03043036, Chunk54::read)?;
+                let chunk_56 = r.skippable_chunk(0x03043038, Chunk56::read)?;
+                let chunk_62 = r.skippable_chunk(0x0304303e, Chunk62::read)?;
+                let chunk_64 = r.skippable_chunk(0x03043040, Chunk64::read)?;
+                let chunk_66 = r.skippable_chunk(0x03043042, Chunk66::read)?;
+                let chunk_67 = r.skippable_chunk(0x03043043, Chunk67::read)?;
+                let chunk_68 = r.skippable_chunk(0x03043044, Chunk68::read)?;
+                let chunk_72 = r.skippable_chunk(0x03043048, Chunk72::read)?;
+                let chunk_73 = r.chunk(0x03043049, Chunk73::read)?;
+                let chunk_75 = r.skippable_chunk(0x0304304b, Chunk75::read)?;
+                let chunk_79 = r.skippable_chunk(0x0304304f, Chunk79::read)?;
+                let chunk_80 = r.skippable_chunk(0x03043050, Chunk80::read)?;
+                let chunk_81 = r.skippable_chunk(0x03043051, Chunk81::read)?;
+                let chunk_82 = r.skippable_chunk(0x03043052, Chunk82::read)?;
+                let chunk_83 = r.skippable_chunk(0x03043053, Chunk83::read)?;
+                let chunk_84 = r.skippable_chunk(0x03043054, Chunk84::read)?;
+                let chunk_85 = r.skippable_chunk(0x03043055, Chunk85::read)?;
+                let chunk_86 = r.skippable_chunk(0x03043056, Chunk86::read)?;
+                let chunk_87 = r.skippable_chunk(0x03043057, Chunk87::read)?;
+                let chunk_88 = r.skippable_chunk(0x03043058, Chunk88::read)?;
+                let chunk_89 = r.skippable_chunk(0x03043059, Chunk89::read)?;
+                let chunk_90 = r.skippable_chunk(0x0304305a, Chunk90::read)?;
+                let chunk_91 = r.skippable_chunk(0x0304305b, Chunk91::read)?;
+                let chunk_92 = r.skippable_chunk(0x0304305c, Chunk92::read)?;
+                let chunk_93 = r.skippable_chunk(0x0304305d, Chunk93::read)?;
+                let chunk_94 = r.skippable_chunk(0x0304305e, Chunk94::read)?;
+                let chunk_95 =
+                    r.skippable_chunk(0x0304305f, |r| Chunk95::read(r, &chunk_31, &chunk_72))?;
+                let chunk_96 = r.skippable_chunk(0x03043060, Chunk96::read)?;
 
                 r.end()?;
 
@@ -850,5 +325,633 @@ impl Readable for Challenge {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk13 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _player_model = r.id_or_null()?;
+        let _player_model_collection = r.id_or_null()?;
+        let _player_model_author = r.id_or_null()?;
+
+        Ok(Self)
+    }
+}
+
+impl<'a> Chunk17<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let _block_stock = r.node_ref::<CollectorList>()?;
+        let parameters = r.node_ref::<ChallengeParameters>()?;
+        let _kind = match r.u32()? {
+            6 => MapKind::InProgress,
+            index => {
+                return Err(Error::new(format!(
+                    "unknown map kind enum variant index: {index}"
+                )));
+            }
+        };
+
+        Ok(Self { parameters })
+    }
+}
+
+impl Chunk24 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _is_lap_race = r.bool32()?;
+        let _num_laps = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl<'a> Chunk25<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let texture_mod = FileRef::read(r)?;
+
+        Ok(Self { texture_mod })
+    }
+}
+
+impl<'a> Chunk31<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let _map_id = r.id()?;
+        let _map_collection = r.id()?;
+        let _map_author = r.id()?;
+        let _map_name = r.string()?;
+        let _decoration_id = r.id()?;
+        let _decoration_collection = r.id()?;
+        let _decoration_author = r.id()?;
+        let _size = r.vec3_u32()?;
+        let _need_unlock = r.bool32()?;
+        let blocks_version = r.u32()?;
+
+        if blocks_version != 6 {
+            return Err(Error::new(format!(
+                "unknown blocks version: {blocks_version}"
+            )));
+        }
+
+        let blocks = r.list(|r| Block::read(r))?;
+
+        Ok(Self { blocks })
+    }
+}
+
+impl Chunk34 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk36 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _music_file_ref = FileRef::read(r)?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk37 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _map_coord_origin = r.vec2_f32()?;
+        let _map_coord_target = r.vec2_f32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk38 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk40 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        if r.bool32()? {
+            todo!();
+        }
+
+        let _comments = r.string()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk41 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _password_hash = r.u128()?;
+        let _crc32 = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk42 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _created_with_simple_editor = r.bool32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk52 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.list_u8()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk54 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _thumbnail_position = r.vec3_f32()?;
+        let _thumbnail_pitch_yaw_roll = r.vec3_f32()?;
+        let _thumbnail_fov = r.f32()?;
+        r.f32()?;
+        r.f32()?;
+        let _thumbnail_near_clip_plane = r.f32()?;
+        let _thumbnail_far_clip_plane = r.f32()?;
+        let _comments = r.string()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk56 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk62 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _car_marks_buffer: Box<[()]> = r.list_with_version(|_| todo!())?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk64 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 5 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let encapsulation_version = r.u32()?;
+
+        if encapsulation_version != 0 {
+            return Err(Error::new(format!(
+                "unknown encapsulation version: {encapsulation_version}"
+            )));
+        }
+
+        let _size = r.u32()?;
+
+        let mut seen_id = false;
+        let mut ids = vec![];
+        let node_refs = Arc::from(vec![]);
+        let mut r = BodyReader::new(r.data, r.data_offset, &node_refs, &mut seen_id, &mut ids);
+
+        let anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+        let _block_indices = r.list(|r| r.u32())?;
+        let _snap_item_groups = r.list(|r| r.u32())?;
+        r.list(|r| r.u32())?;
+        let _snapped_indices = r.list(|r| r.u32())?;
+
+        Ok(Self { anchored_objects })
+    }
+}
+
+impl Chunk66 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let author_version = r.u32()?;
+
+        if author_version != 0 {
+            return Err(Error::new(format!(
+                "unknown author version: {author_version}"
+            )));
+        }
+
+        let _author_login = r.string()?;
+        let _author_nickname = r.string()?;
+        let _author_zone = r.string()?;
+        let _author_extra_info = r.string()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk67 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let encapsulation_version = r.u32()?;
+
+        if encapsulation_version != 0 {
+            return Err(Error::new(format!(
+                "unknown encapsulation version: {encapsulation_version}"
+            )));
+        }
+
+        let _size = r.u32()?;
+
+        let mut seen_id = false;
+        let mut ids = vec![];
+        let node_refs = Arc::from(vec![]);
+        let mut r = BodyReader::new(r.data, r.data_offset, &node_refs, &mut seen_id, &mut ids);
+
+        let _zone_genealogy = r.list(|r| r.node::<ZoneGenealogy>())?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk68 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let encapsulation_version = r.u32()?;
+
+        if encapsulation_version != 0 {
+            return Err(Error::new(format!(
+                "unknown encapsulation version: {encapsulation_version}"
+            )));
+        }
+
+        let _size = r.u32()?;
+
+        let mut seen_id = false;
+        let mut ids = vec![];
+        let node_refs = Arc::from(vec![]);
+        let mut r = BodyReader::new(r.data, r.data_offset, &node_refs, &mut seen_id, &mut ids);
+
+        let _script_metadata = TraitsMetadata::read(&mut r)?;
+
+        Ok(Self)
+    }
+}
+
+impl<'a> Chunk72<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let blocks_version = r.u32()?;
+
+        if blocks_version != 6 {
+            return Err(Error::new(format!(
+                "unknown blocks version: {blocks_version}"
+            )));
+        }
+
+        let baked_blocks = r.list(|r| Block::read(r))?;
+        r.u32()?;
+        let _baked_clips_additional_data = r.u32()?;
+
+        Ok(Self { baked_blocks })
+    }
+}
+
+impl Chunk73 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 2 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _intro_clip = r.node_ref::<MediaClip>()?;
+        let _podium_clip = r.node_ref_or_null::<MediaClip>()?;
+        let _in_game_clips = r.node_ref::<MediaClipGroup>()?;
+        let _end_race_clips = r.node_ref_or_null::<MediaClipGroup>()?;
+        let _ambiance_clip = r.node_ref::<MediaClip>()?;
+        let _clip_trigger_size = r.vec3_u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk75 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _objective_text_author = r.string()?;
+        let _objective_text_gold = r.string()?;
+        let _objective_text_silver = r.string()?;
+        let _objective_text_bronze = r.string()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk79 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        r.u8()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk80 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _offzone_trigger_size = r.vec3_u32()?;
+        let _offzones = r.list(|r| r.box3_u32())?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk81 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _title_id = r.id()?;
+        let _build_version = r.string()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk82 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _deco_base_height_offset = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk83 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _bot_paths: Box<[()]> = r.list(|_| todo!())?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk84 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let encapsulation_version = r.u32()?;
+
+        if encapsulation_version != 0 {
+            return Err(Error::new(format!(
+                "unknown encapsulation version: {encapsulation_version}"
+            )));
+        }
+
+        let _size = r.u32()?;
+
+        let mut seen_id = false;
+        let mut ids = vec![];
+        let node_refs = Arc::from(vec![]);
+        let mut r = BodyReader::new(r.data, r.data_offset, &node_refs, &mut seen_id, &mut ids);
+
+        let _embedded_model_ids = r.list(|r| {
+            let _id = r.id()?;
+            let _collection = r.id()?;
+            let _author = r.id()?;
+
+            Ok(())
+        })?;
+        let _zip = r.list_u8()?;
+        let _textures = r.list(|r| r.string())?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk85 {
+    fn read(_: &mut BodyReader) -> Result<Self, Error> {
+        Ok(Self)
+    }
+}
+
+impl Chunk86 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        r.u32()?;
+        let _day_time = r.u32()?;
+        r.u32()?;
+        let _dynamic_daylight = r.f32()?;
+        let _day_duration = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk87 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk88 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk89 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _world_distortion = r.vec3_f32()?;
+
+        if r.bool32()? {
+            todo!()
+        }
+
+        r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk90 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk91 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let has_lightmaps = r.bool32()?;
+        r.bool32()?;
+        r.bool32()?;
+
+        if has_lightmaps {
+            let lightmap_version = r.u32()?;
+
+            if lightmap_version != 8 {
+                return Err(Error::new(format!(
+                    "unknown lightmap version: {lightmap_version}"
+                )));
+            }
+
+            let _lightmap_frames = r.list(|r| {
+                r.list_u8()?;
+                r.list_u8()?;
+                r.list_u8()?;
+
+                Ok(())
+            })?;
+
+            let _size = r.u32()?;
+            r.list_u8()?;
+        }
+
+        Ok(Self)
+    }
+}
+
+impl Chunk92 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk93 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk94 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk95 {
+    fn read(r: &mut BodyReader, chunk_31: &Chunk31, chunk_72: &Chunk72) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        for block in &chunk_31.blocks {
+            if block.is_free {
+                let _position = r.vec3_f32()?;
+                let _yaw_pitch_roll = r.vec3_f32()?;
+            }
+        }
+
+        for block in &chunk_72.baked_blocks {
+            if block.is_free {
+                let _position = r.vec3_f32()?;
+                let _yaw_pitch_roll = r.vec3_f32()?;
+            }
+        }
+
+        Ok(Self)
+    }
+}
+
+impl Chunk96 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        r.u32()?;
+
+        Ok(Self)
     }
 }

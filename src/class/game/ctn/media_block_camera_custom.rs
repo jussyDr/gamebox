@@ -20,7 +20,17 @@ struct Chunks<'a> {
     chunk_6: Chunk6,
 }
 
-struct Chunk6;
+struct Chunk6 {
+    keys: Box<[Key]>,
+}
+
+pub struct Key;
+
+impl MediaBlockCameraCustom {
+    pub fn keys(&self) -> &[Key] {
+        &self.0.borrow_chunks().chunk_6.keys
+    }
+}
 
 impl ClassId for MediaBlockCameraCustom {
     const CLASS_ID: u32 = 0x030a2000;
@@ -41,43 +51,7 @@ impl MediaBlockCameraCustom {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_6 = r.chunk(0x030a2006, |r| {
-                    let version = r.u32()?;
-
-                    if version != 3 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _keys = r.list(|r| {
-                        let _time = r.f32()?;
-                        let _interpolation = r.u32()?;
-                        let _anchor_rot = r.bool32()?;
-                        let _anchor = r.u32()?;
-                        let _anchor_vis = r.bool32()?;
-                        let _target = r.u32()?;
-                        let _position = r.vec3_f32()?;
-                        let _pitch_yaw_roll = r.vec3_f32()?;
-                        let _fov = r.f32()?;
-                        let _target_position = r.vec3_f32()?;
-                        let _near_z = r.f32()?;
-
-                        let _position = r.vec3_f32()?;
-                        let _pitch_yaw_roll = r.vec3_f32()?;
-                        let _fov = r.f32()?;
-                        let _target_position = r.vec3_f32()?;
-                        let _near_z = r.f32()?;
-
-                        let _position = r.vec3_f32()?;
-                        let _pitch_yaw_roll = r.vec3_f32()?;
-                        let _fov = r.f32()?;
-                        let _target_position = r.vec3_f32()?;
-                        let _near_z = r.f32()?;
-
-                        Ok(())
-                    })?;
-
-                    Ok(Chunk6)
-                })?;
+                let chunk_6 = r.chunk(0x030a2006, Chunk6::read)?;
 
                 r.end()?;
 
@@ -89,5 +63,45 @@ impl MediaBlockCameraCustom {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk6 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 3 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let keys = r.list(|r| {
+            let _time = r.f32()?;
+            let _interpolation = r.u32()?;
+            let _anchor_rot = r.bool32()?;
+            let _anchor = r.u32()?;
+            let _anchor_vis = r.bool32()?;
+            let _target = r.u32()?;
+            let _position = r.vec3_f32()?;
+            let _pitch_yaw_roll = r.vec3_f32()?;
+            let _fov = r.f32()?;
+            let _target_position = r.vec3_f32()?;
+            let _near_z = r.f32()?;
+
+            let _position = r.vec3_f32()?;
+            let _pitch_yaw_roll = r.vec3_f32()?;
+            let _fov = r.f32()?;
+            let _target_position = r.vec3_f32()?;
+            let _near_z = r.f32()?;
+
+            let _position = r.vec3_f32()?;
+            let _pitch_yaw_roll = r.vec3_f32()?;
+            let _fov = r.f32()?;
+            let _target_position = r.vec3_f32()?;
+            let _near_z = r.f32()?;
+
+            Ok(Key)
+        })?;
+
+        Ok(Self { keys })
     }
 }

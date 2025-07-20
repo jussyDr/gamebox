@@ -3,7 +3,7 @@ mod error;
 pub use error::Error;
 
 use std::{
-    any::{Any, TypeId},
+    any::Any,
     cell::OnceCell,
     fs::File,
     io::{BufReader, Read},
@@ -12,7 +12,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::{F32Vec2, F32Vec3, U8Vec3, U32Box3, U32Vec3, game::ctn::MediaBlockCameraCustom};
+use crate::{F32Vec2, F32Vec3, U8Vec3, U32Box3, U32Vec3};
 
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
     let file = File::open(path).map_err(Error::new)?;
@@ -138,7 +138,7 @@ pub trait ClassId {
 }
 
 pub struct BodyReader<'a, 'b> {
-    data: &'a Arc<[u8]>,
+    pub data: &'a Arc<[u8]>,
     pub data_offset: &'b mut usize,
     node_refs: &'a Arc<[OnceCell<Box<dyn Any>>]>,
     seen_id: &'b mut bool,

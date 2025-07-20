@@ -41,18 +41,7 @@ impl ReadNode for CollectorList {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x0301b000, |r| {
-                    let _collector_stock = r.list(|r| {
-                        let _block_model = r.id()?;
-                        let _block_model_collection = r.id()?;
-                        let _block_model_author = r.id()?;
-                        let _count = r.u32()?;
-
-                        Ok(())
-                    })?;
-
-                    Ok(Chunk0)
-                })?;
+                let chunk_0 = r.chunk(0x0301b000, Chunk0::read)?;
 
                 r.end()?;
 
@@ -64,5 +53,20 @@ impl ReadNode for CollectorList {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk0 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _collector_stock = r.list(|r| {
+            let _block_model = r.id()?;
+            let _block_model_collection = r.id()?;
+            let _block_model_author = r.id()?;
+            let _count = r.u32()?;
+
+            Ok(())
+        })?;
+
+        Ok(Self)
     }
 }

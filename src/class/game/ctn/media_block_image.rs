@@ -1,4 +1,4 @@
-use std::{any::Any, cell::OnceCell, marker::PhantomData, sync::Arc};
+use std::{any::Any, cell::OnceCell, sync::Arc};
 
 use ouroboros::self_referencing;
 
@@ -20,11 +20,23 @@ struct Inner {
 }
 
 struct Chunks<'a> {
-    delme: PhantomData<&'a ()>,
-    chunk_0: Chunk0,
+    chunk_0: Chunk0<'a>,
 }
 
-struct Chunk0;
+struct Chunk0<'a> {
+    effect: &'a EffectSimi,
+    image: FileRef<'a>,
+}
+
+impl MediaBlockImage {
+    pub fn effect(&self) -> &EffectSimi {
+        self.0.borrow_chunks().chunk_0.effect
+    }
+
+    pub fn image(&self) -> &FileRef {
+        &self.0.borrow_chunks().chunk_0.image
+    }
+}
 
 impl ClassId for MediaBlockImage {
     const CLASS_ID: u32 = 0x030a5000;
@@ -45,22 +57,23 @@ impl MediaBlockImage {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x030a5000, |r| {
-                    let _effect = r.node_ref::<EffectSimi>()?;
-                    let _image = FileRef::read(r)?;
-
-                    Ok(Chunk0)
-                })?;
+                let chunk_0 = r.chunk(0x030a5000, Chunk0::read)?;
 
                 r.end()?;
 
-                Ok(Chunks {
-                    delme: PhantomData,
-                    chunk_0,
-                })
+                Ok(Chunks { chunk_0 })
             },
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl<'a> Chunk0<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let effect = r.node_ref()?;
+        let image = FileRef::read(r)?.unwrap();
+
+        Ok(Self { effect, image })
     }
 }

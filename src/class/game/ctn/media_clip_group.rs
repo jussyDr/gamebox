@@ -44,22 +44,7 @@ impl ReadNode for MediaClipGroup {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_3 = r.chunk(0x0307a003, |r| {
-                    let _clips = r.list_with_version(|r| r.node_ref::<MediaClip>())?;
-                    let _triggers = r.list(|r| {
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-                        let _condition = r.u32()?;
-                        let _condition_value = r.f32()?;
-                        let _coords = r.list(|r| r.vec3_u32())?;
-
-                        Ok(())
-                    })?;
-
-                    Ok(Chunk3)
-                })?;
+                let chunk_3 = r.chunk(0x0307a003, Chunk3::read)?;
 
                 r.end()?;
 
@@ -71,5 +56,24 @@ impl ReadNode for MediaClipGroup {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk3 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _clips = r.list_with_version(|r| r.node_ref::<MediaClip>())?;
+        let _triggers = r.list(|r| {
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            r.u32()?;
+            let _condition = r.u32()?;
+            let _condition_value = r.f32()?;
+            let _coords = r.list(|r| r.vec3_u32())?;
+
+            Ok(())
+        })?;
+
+        Ok(Self)
     }
 }

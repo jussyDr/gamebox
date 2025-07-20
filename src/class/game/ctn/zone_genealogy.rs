@@ -41,14 +41,7 @@ impl ReadNode for ZoneGenealogy {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_2 = r.chunk(0x0311d002, |r| {
-                    let _zone_ids = r.list(|r| r.id())?;
-                    let _current_index = r.u32()?;
-                    let _dir = r.u32()?;
-                    let _current_zone_id = r.id()?;
-
-                    Ok(Chunk2)
-                })?;
+                let chunk_2 = r.chunk(0x0311d002, Chunk2::read)?;
 
                 r.end()?;
 
@@ -60,5 +53,16 @@ impl ReadNode for ZoneGenealogy {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk2 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _zone_ids = r.list(|r| r.id())?;
+        let _current_index = r.u32()?;
+        let _dir = r.u32()?;
+        let _current_zone_id = r.id()?;
+
+        Ok(Self)
     }
 }

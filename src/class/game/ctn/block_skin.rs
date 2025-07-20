@@ -47,25 +47,8 @@ impl ReadNode for BlockSkin {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_2 = r.chunk(0x03059002, |r| {
-                    let _text = r.string()?;
-                    let _file_ref = FileRef::read(r)?;
-                    let _parent_file_ref = FileRef::read(r)?;
-
-                    Ok(Chunk2)
-                })?;
-
-                let chunk_3 = r.chunk(0x03059003, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _foreground_file_ref = FileRef::read(r)?;
-
-                    Ok(Chunk3)
-                })?;
+                let chunk_2 = r.chunk(0x03059002, Chunk2::read)?;
+                let chunk_3 = r.chunk(0x03059003, Chunk3::read)?;
 
                 r.end()?;
 
@@ -78,5 +61,29 @@ impl ReadNode for BlockSkin {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk2 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _text = r.string()?;
+        let _file_ref = FileRef::read(r)?;
+        let _parent_file_ref = FileRef::read(r)?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk3 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _foreground_file_ref = FileRef::read(r)?;
+
+        Ok(Self)
     }
 }

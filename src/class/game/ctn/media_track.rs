@@ -47,29 +47,8 @@ impl ReadNode for MediaTrack {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_1 = r.chunk(0x03078001, |r| {
-                    let _name = r.string()?;
-                    let _blocks = r.list_with_version(|r| r.node_ref_generic::<MediaBlock>())?;
-                    r.u32()?;
-
-                    Ok(Chunk1)
-                })?;
-
-                let chunk_5 = r.chunk(0x03078005, |r| {
-                    let version = r.u32()?;
-
-                    if version != 1 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _is_keep_playing = r.bool32()?;
-                    let _is_read_only = r.bool32()?;
-                    let _is_cycling = r.bool32()?;
-                    let _repeating_segment_start = r.f32()?;
-                    let _repeating_segment_end = r.f32()?;
-
-                    Ok(Chunk5)
-                })?;
+                let chunk_1 = r.chunk(0x03078001, Chunk1::read)?;
+                let chunk_5 = r.chunk(0x03078005, Chunk5::read)?;
 
                 r.end()?;
 
@@ -82,5 +61,33 @@ impl ReadNode for MediaTrack {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk1 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _name = r.string()?;
+        let _blocks = r.list_with_version(|r| r.node_ref_generic::<MediaBlock>())?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk5 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 1 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _is_keep_playing = r.bool32()?;
+        let _is_read_only = r.bool32()?;
+        let _is_cycling = r.bool32()?;
+        let _repeating_segment_start = r.f32()?;
+        let _repeating_segment_end = r.f32()?;
+
+        Ok(Self)
     }
 }

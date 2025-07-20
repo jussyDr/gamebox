@@ -4,13 +4,19 @@ use crate::{
 };
 
 pub struct Block<'a> {
-    info_id: &'a str,
+    block_info_id: &'a str,
     pub is_free: bool,
+}
+
+impl Block<'_> {
+    pub fn block_info_id(&self) -> &str {
+        self.block_info_id
+    }
 }
 
 impl<'a> Block<'a> {
     pub fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
-        let info_id = r.id()?;
+        let block_info_id = r.id()?;
         let _direction = r.u8()?;
         let _coord = r.vec3_u8()?;
         let flags = r.u32()?;
@@ -40,6 +46,9 @@ impl<'a> Block<'a> {
 
         let is_free = flags & 0x20000000 != 0;
 
-        Ok(Self { info_id, is_free })
+        Ok(Self {
+            block_info_id,
+            is_free,
+        })
     }
 }

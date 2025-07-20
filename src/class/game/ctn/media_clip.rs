@@ -44,24 +44,7 @@ impl ReadNode for MediaClip {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_13 = r.chunk(0x0307900d, |r| {
-                    let version = r.u32()?;
-
-                    if version != 0 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _tracks = r.list_with_version(|r| r.node_ref::<MediaTrack>())?;
-                    let _name = r.string()?;
-                    let _stop_when_leave = r.bool32()?;
-                    r.bool32()?;
-                    let _step_when_respawn = r.bool32()?;
-                    r.string()?;
-                    r.f32()?;
-                    let _local_player_clip_ent_index = r.u32()?;
-
-                    Ok(Chunk13)
-                })?;
+                let chunk_13 = r.chunk(0x0307900d, Chunk13::read)?;
 
                 r.end()?;
 
@@ -73,5 +56,26 @@ impl ReadNode for MediaClip {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk13 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 0 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _tracks = r.list_with_version(|r| r.node_ref::<MediaTrack>())?;
+        let _name = r.string()?;
+        let _stop_when_leave = r.bool32()?;
+        r.bool32()?;
+        let _step_when_respawn = r.bool32()?;
+        r.string()?;
+        r.f32()?;
+        let _local_player_clip_ent_index = r.u32()?;
+
+        Ok(Self)
     }
 }

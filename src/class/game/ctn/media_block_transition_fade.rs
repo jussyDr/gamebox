@@ -20,7 +20,17 @@ struct Chunks<'a> {
     chunk_0: Chunk0,
 }
 
-struct Chunk0;
+struct Chunk0 {
+    keys: Box<[Key]>,
+}
+
+pub struct Key;
+
+impl MediaBlockTransitionFade {
+    pub fn keys(&self) -> &[Key] {
+        &self.0.borrow_chunks().chunk_0.keys
+    }
+}
 
 impl ClassId for MediaBlockTransitionFade {
     const CLASS_ID: u32 = 0x030ab000;
@@ -41,18 +51,7 @@ impl MediaBlockTransitionFade {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x030ab000, |r| {
-                    let _keys = r.list(|r| {
-                        let _time = r.f32()?;
-                        let _opacity = r.f32()?;
-
-                        Ok(())
-                    })?;
-                    let _color = r.vec3_f32()?;
-                    r.f32()?;
-
-                    Ok(Chunk0)
-                })?;
+                let chunk_0 = r.chunk(0x030ab000, Chunk0::read)?;
 
                 r.end()?;
 
@@ -64,5 +63,20 @@ impl MediaBlockTransitionFade {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk0 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let keys = r.list(|r| {
+            let _time = r.f32()?;
+            let _opacity = r.f32()?;
+
+            Ok(Key)
+        })?;
+        let _color = r.vec3_f32()?;
+        r.f32()?;
+
+        Ok(Self { keys })
     }
 }

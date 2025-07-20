@@ -1,4 +1,4 @@
-use std::{any::Any, cell::OnceCell, marker::PhantomData, sync::Arc};
+use std::{any::Any, cell::OnceCell, sync::Arc};
 
 use ouroboros::self_referencing;
 
@@ -19,14 +19,29 @@ struct Inner {
 }
 
 struct Chunks<'a> {
-    delme: PhantomData<&'a ()>,
-    chunk_0: Chunk0,
+    chunk_0: Chunk0<'a>,
     chunk_1: Chunk1,
 }
 
-struct Chunk0;
+struct Chunk0<'a> {
+    image: FileRef<'a>,
+}
 
-struct Chunk1;
+struct Chunk1 {
+    keys: Box<[Key]>,
+}
+
+pub struct Key;
+
+impl MediaBlockColorGrading {
+    pub fn image(&self) -> &FileRef {
+        &self.0.borrow_chunks().chunk_0.image
+    }
+
+    pub fn keys(&self) -> &[Key] {
+        &self.0.borrow_chunks().chunk_1.keys
+    }
+}
 
 impl ClassId for MediaBlockColorGrading {
     const CLASS_ID: u32 = 0x03186000;
@@ -47,33 +62,36 @@ impl MediaBlockColorGrading {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x03186000, |r| {
-                    let _image = FileRef::read(r)?;
-
-                    Ok(Chunk0)
-                })?;
-
-                let chunk_1 = r.chunk(0x03186001, |r| {
-                    let _keys = r.list(|r| {
-                        let _time = r.f32()?;
-                        let _intensity = r.f32()?;
-
-                        Ok(())
-                    })?;
-
-                    Ok(Chunk1)
-                })?;
+                let chunk_0 = r.chunk(0x03186000, Chunk0::read)?;
+                let chunk_1 = r.chunk(0x03186001, Chunk1::read)?;
 
                 r.end()?;
 
-                Ok(Chunks {
-                    delme: PhantomData,
-                    chunk_0,
-                    chunk_1,
-                })
+                Ok(Chunks { chunk_0, chunk_1 })
             },
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl<'a> Chunk0<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let image = FileRef::read(r)?.unwrap();
+
+        Ok(Self { image })
+    }
+}
+
+impl Chunk1 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let keys = r.list(|r| {
+            let _time = r.f32()?;
+            let _intensity = r.f32()?;
+
+            Ok(Key)
+        })?;
+
+        Ok(Self { keys })
     }
 }

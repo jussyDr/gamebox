@@ -59,57 +59,12 @@ impl ReadNode for ChallengeParameters {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_1 = r.chunk(0x0305b001, |r| {
-                    let _tip_1 = r.string()?;
-                    let _tip_2 = r.string()?;
-                    let _tip_3 = r.string()?;
-                    let _tip_4 = r.string()?;
-
-                    Ok(Chunk1)
-                })?;
-
-                let chunk_4 = r.chunk(0x0305b004, |r| {
-                    let _bronze_time = r.u32()?;
-                    let _silver_time = r.u32()?;
-                    let _gold_time = r.u32()?;
-                    let _author_time = r.u32()?;
-                    r.u32()?;
-
-                    Ok(Chunk4)
-                })?;
-
-                let chunk_8 = r.chunk(0x0305b008, |r| {
-                    let _time_limit = r.u32()?;
-                    let _author_score = r.u32()?;
-
-                    Ok(Chunk8)
-                })?;
-
-                let chunk_10 = r.skippable_chunk(0x0305b00a, |r| {
-                    let _tip = r.string()?;
-                    let _bronze_time = r.u32()?;
-                    let _silver_time = r.u32()?;
-                    let _gold_time = r.u32()?;
-                    let _author_time = r.u32()?;
-                    let _time_limit = r.u32()?;
-                    let _author_score = r.u32()?;
-
-                    Ok(Chunk10)
-                })?;
-
-                let chunk_13 = r.chunk(0x0305b00d, |r| {
-                    let _race_validate_ghost = r.node_ref_or_null::<Ghost>()?;
-
-                    Ok(Chunk13)
-                })?;
-
-                let chunk_14 = r.skippable_chunk(0x0305b00e, |r| {
-                    let _map_type = r.string()?;
-                    let _map_style = r.string()?;
-                    let _is_validated_for_script_modes = r.bool32()?;
-
-                    Ok(Chunk14)
-                })?;
+                let chunk_1 = r.chunk(0x0305b001, Chunk1::read)?;
+                let chunk_4 = r.chunk(0x0305b004, Chunk4::read)?;
+                let chunk_8 = r.chunk(0x0305b008, Chunk8::read)?;
+                let chunk_10 = r.skippable_chunk(0x0305b00a, Chunk10::read)?;
+                let chunk_13 = r.chunk(0x0305b00d, Chunk13::read)?;
+                let chunk_14 = r.skippable_chunk(0x0305b00e, Chunk14::read)?;
 
                 r.end()?;
 
@@ -126,5 +81,69 @@ impl ReadNode for ChallengeParameters {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk1 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _tip_1 = r.string()?;
+        let _tip_2 = r.string()?;
+        let _tip_3 = r.string()?;
+        let _tip_4 = r.string()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk4 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _bronze_time = r.u32()?;
+        let _silver_time = r.u32()?;
+        let _gold_time = r.u32()?;
+        let _author_time = r.u32()?;
+        r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk8 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _time_limit = r.u32()?;
+        let _author_score = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk10 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _tip = r.string()?;
+        let _bronze_time = r.u32()?;
+        let _silver_time = r.u32()?;
+        let _gold_time = r.u32()?;
+        let _author_time = r.u32()?;
+        let _time_limit = r.u32()?;
+        let _author_score = r.u32()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk13 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _race_validate_ghost = r.node_ref_or_null::<Ghost>()?;
+
+        Ok(Self)
+    }
+}
+
+impl Chunk14 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let _map_type = r.string()?;
+        let _map_style = r.string()?;
+        let _is_validated_for_script_modes = r.bool32()?;
+
+        Ok(Self)
     }
 }

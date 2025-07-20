@@ -41,18 +41,7 @@ impl ReadNode for EntRecordData {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_0 = r.chunk(0x0911f000, |r| {
-                    let version = r.u32()?;
-
-                    if version != 10 {
-                        return Err(Error::new(format!("unknown chunk version: {version}")));
-                    }
-
-                    let _uncompressed_size = r.u32()?;
-                    let _compressed_data = r.list_u8()?;
-
-                    Ok(Chunk0)
-                })?;
+                let chunk_0 = r.chunk(0x0911f000, Chunk0::read)?;
 
                 r.end()?;
 
@@ -64,5 +53,20 @@ impl ReadNode for EntRecordData {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk0 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let version = r.u32()?;
+
+        if version != 10 {
+            return Err(Error::new(format!("unknown chunk version: {version}")));
+        }
+
+        let _uncompressed_size = r.u32()?;
+        let _compressed_data = r.list_u8()?;
+
+        Ok(Self)
     }
 }
