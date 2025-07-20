@@ -3,6 +3,7 @@ use std::{any::Any, cell::OnceCell, sync::Arc};
 use ouroboros::self_referencing;
 
 use crate::{
+    F32Rgb,
     class::control::EffectSimi,
     read::{BodyChunksReader, BodyReader, ClassId, Error},
 };
@@ -28,7 +29,9 @@ struct Chunk1<'a> {
     effect: &'a EffectSimi,
 }
 
-struct Chunk2;
+struct Chunk2 {
+    color: F32Rgb,
+}
 
 impl MediaBlockText {
     pub fn text(&self) -> &str {
@@ -37,6 +40,10 @@ impl MediaBlockText {
 
     pub fn effect(&self) -> &EffectSimi {
         self.0.borrow_chunks().chunk_1.effect
+    }
+
+    pub fn color(&self) -> &F32Rgb {
+        &self.0.borrow_chunks().chunk_2.color
     }
 }
 
@@ -83,8 +90,8 @@ impl<'a> Chunk1<'a> {
 
 impl Chunk2 {
     fn read(r: &mut BodyReader) -> Result<Self, Error> {
-        let _color = r.vec3_f32()?;
+        let color = r.rgb_f32()?;
 
-        Ok(Self)
+        Ok(Self { color })
     }
 }

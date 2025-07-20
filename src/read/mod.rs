@@ -12,7 +12,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::{F32Vec2, F32Vec3, U8Vec3, U32Box3, U32Vec3};
+use crate::{F32Rgb, F32Vec2, F32Vec3, U8Vec3, U32Box3, U32Vec3};
 
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
     let file = File::open(path).map_err(Error::new)?;
@@ -246,6 +246,14 @@ impl<'a, 'b> BodyReader<'a, 'b> {
         let z = self.f32()?;
 
         Ok(F32Vec3 { x, y, z })
+    }
+
+    pub fn rgb_f32(&mut self) -> Result<F32Rgb, Error> {
+        let r = self.f32()?;
+        let g = self.f32()?;
+        let b = self.f32()?;
+
+        Ok(F32Rgb { r, g, b })
     }
 
     pub fn box3_u32(&mut self) -> Result<U32Box3, Error> {

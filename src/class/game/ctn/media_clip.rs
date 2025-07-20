@@ -1,4 +1,4 @@
-use std::{any::Any, cell::OnceCell, marker::PhantomData, sync::Arc};
+use std::{any::Any, cell::OnceCell, sync::Arc};
 
 use ouroboros::self_referencing;
 
@@ -19,11 +19,23 @@ struct Inner {
 }
 
 struct Chunks<'a> {
-    delme: PhantomData<&'a ()>,
-    chunk_13: Chunk13,
+    chunk_13: Chunk13<'a>,
 }
 
-struct Chunk13;
+struct Chunk13<'a> {
+    tracks: Box<[&'a MediaTrack]>,
+    name: &'a str,
+}
+
+impl MediaClip {
+    pub fn tracks(&self) -> &[&MediaTrack] {
+        &self.0.borrow_chunks().chunk_13.tracks
+    }
+
+    pub fn name(&self) -> &str {
+        self.0.borrow_chunks().chunk_13.name
+    }
+}
 
 impl ClassId for MediaClip {
     const CLASS_ID: u32 = 0x03079000;
@@ -48,10 +60,7 @@ impl ReadNode for MediaClip {
 
                 r.end()?;
 
-                Ok(Chunks {
-                    delme: PhantomData,
-                    chunk_13,
-                })
+                Ok(Chunks { chunk_13 })
             },
         };
 
@@ -59,16 +68,16 @@ impl ReadNode for MediaClip {
     }
 }
 
-impl Chunk13 {
-    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+impl<'a> Chunk13<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
         let version = r.u32()?;
 
         if version != 0 {
             return Err(Error::new(format!("unknown chunk version: {version}")));
         }
 
-        let _tracks = r.list_with_version(|r| r.node_ref::<MediaTrack>())?;
-        let _name = r.string()?;
+        let tracks = r.list_with_version(|r| r.node_ref())?;
+        let name = r.string()?;
         let _stop_when_leave = r.bool32()?;
         r.bool32()?;
         let _step_when_respawn = r.bool32()?;
@@ -76,6 +85,6 @@ impl Chunk13 {
         r.f32()?;
         let _local_player_clip_ent_index = r.u32()?;
 
-        Ok(Self)
+        Ok(Self { tracks, name })
     }
 }

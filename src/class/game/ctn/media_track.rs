@@ -1,4 +1,4 @@
-use std::{any::Any, cell::OnceCell, marker::PhantomData, sync::Arc};
+use std::{any::Any, cell::OnceCell, sync::Arc};
 
 use ouroboros::self_referencing;
 
@@ -19,14 +19,26 @@ struct Inner {
 }
 
 struct Chunks<'a> {
-    delme: PhantomData<&'a ()>,
-    chunk_1: Chunk1,
+    chunk_1: Chunk1<'a>,
     chunk_5: Chunk5,
 }
 
-struct Chunk1;
+struct Chunk1<'a> {
+    name: &'a str,
+    blocks: Box<[MediaBlock<'a>]>,
+}
 
 struct Chunk5;
+
+impl MediaTrack {
+    pub fn name(&self) -> &str {
+        self.0.borrow_chunks().chunk_1.name
+    }
+
+    pub fn blocks(&self) -> &[MediaBlock] {
+        &self.0.borrow_chunks().chunk_1.blocks
+    }
+}
 
 impl ClassId for MediaTrack {
     const CLASS_ID: u32 = 0x03078000;
@@ -52,11 +64,7 @@ impl ReadNode for MediaTrack {
 
                 r.end()?;
 
-                Ok(Chunks {
-                    delme: PhantomData,
-                    chunk_1,
-                    chunk_5,
-                })
+                Ok(Chunks { chunk_1, chunk_5 })
             },
         };
 
@@ -64,13 +72,13 @@ impl ReadNode for MediaTrack {
     }
 }
 
-impl Chunk1 {
-    fn read(r: &mut BodyReader) -> Result<Self, Error> {
-        let _name = r.string()?;
-        let _blocks = r.list_with_version(|r| r.node_ref_generic::<MediaBlock>())?;
+impl<'a> Chunk1<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let name = r.string()?;
+        let blocks = r.list_with_version(|r| r.node_ref_generic())?;
         r.u32()?;
 
-        Ok(Self)
+        Ok(Self { name, blocks })
     }
 }
 
