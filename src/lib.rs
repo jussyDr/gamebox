@@ -57,3 +57,8 @@ pub struct F32Vec3 {
     y: f32,
     z: f32,
 }
+
+pub struct U32Box3 {
+    a: U32Vec3,
+    b: U32Vec3,
+}

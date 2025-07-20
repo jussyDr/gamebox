@@ -5,6 +5,7 @@ use crate::{
 
 pub struct Block<'a> {
     info_id: &'a str,
+    pub is_free: bool,
 }
 
 impl<'a> Block<'a> {
@@ -37,10 +38,8 @@ impl<'a> Block<'a> {
             let _decal_variant = r.u32()?;
         }
 
-        if flags & 0x20000000 != 0 {
-            let _is_free = true;
-        }
+        let is_free = flags & 0x20000000 != 0;
 
-        Ok(Self { info_id })
+        Ok(Self { info_id, is_free })
     }
 }

@@ -524,6 +524,277 @@ impl Readable for Challenge {
                     Ok(Chunk73)
                 })?;
 
+                let chunk_75 = r.skippable_chunk(0x0304304b, |r| {
+                    let _objective_text_author = r.string()?;
+                    let _objective_text_gold = r.string()?;
+                    let _objective_text_silver = r.string()?;
+                    let _objective_text_bronze = r.string()?;
+
+                    Ok(Chunk75)
+                })?;
+
+                let chunk_79 = r.skippable_chunk(0x0304304f, |r| {
+                    let version = r.u32()?;
+
+                    if version != 3 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    r.u8()?;
+
+                    Ok(Chunk79)
+                })?;
+
+                let chunk_80 = r.skippable_chunk(0x03043050, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _offzone_trigger_size = r.vec3_u32()?;
+                    let _offzones = r.list(|r| r.box3_u32())?;
+
+                    Ok(Chunk80)
+                })?;
+
+                let chunk_81 = r.skippable_chunk(0x03043051, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _title_id = r.id()?;
+                    let _build_version = r.string()?;
+
+                    Ok(Chunk81)
+                })?;
+
+                let chunk_82 = r.skippable_chunk(0x03043052, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _deco_base_height_offset = r.u32()?;
+
+                    Ok(Chunk82)
+                })?;
+
+                let chunk_83 = r.skippable_chunk(0x03043053, |r| {
+                    let version = r.u32()?;
+
+                    if version != 3 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _bot_paths: Box<[()]> = r.list(|_| todo!())?;
+
+                    Ok(Chunk83)
+                })?;
+
+                let chunk_84 = r.skippable_chunk(0x03043054, |r| {
+                    let version = r.u32()?;
+
+                    if version != 1 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let encapsulation_version = r.u32()?;
+
+                    if encapsulation_version != 0 {
+                        return Err(Error::new(format!(
+                            "unknown encapsulation version: {encapsulation_version}"
+                        )));
+                    }
+
+                    let _size = r.u32()?;
+
+                    let mut seen_id = false;
+                    let mut ids = vec![];
+                    let node_refs = Arc::from(vec![]);
+                    let mut r = BodyReader::new(
+                        body_data,
+                        r.data_offset,
+                        &node_refs,
+                        &mut seen_id,
+                        &mut ids,
+                    );
+
+                    let _embedded_model_ids = r.list(|r| {
+                        let _id = r.id()?;
+                        let _collection = r.id()?;
+                        let _author = r.id()?;
+
+                        Ok(())
+                    })?;
+                    let _zip = r.list_u8()?;
+                    let _textures = r.list(|r| r.string())?;
+
+                    Ok(Chunk84)
+                })?;
+
+                let chunk_85 = r.skippable_chunk(0x03043055, |r| Ok(Chunk85))?;
+
+                let chunk_86 = r.skippable_chunk(0x03043056, |r| {
+                    let version = r.u32()?;
+
+                    if version != 3 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    r.u32()?;
+                    let _day_time = r.u32()?;
+                    r.u32()?;
+                    let _dynamic_daylight = r.f32()?;
+                    let _day_duration = r.u32()?;
+
+                    Ok(Chunk86)
+                })?;
+
+                let chunk_87 = r.skippable_chunk(0x03043057, |r| {
+                    r.u32()?;
+                    r.u32()?;
+
+                    Ok(Chunk87)
+                })?;
+
+                let chunk_88 = r.skippable_chunk(0x03043058, |r| {
+                    let version = r.u32()?;
+
+                    if version != 1 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    r.u32()?;
+
+                    Ok(Chunk88)
+                })?;
+
+                let chunk_89 = r.skippable_chunk(0x03043059, |r| {
+                    let version = r.u32()?;
+
+                    if version != 3 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _world_distortion = r.vec3_f32()?;
+
+                    if r.bool32()? {
+                        todo!()
+                    }
+
+                    r.u32()?;
+                    r.u32()?;
+
+                    Ok(Chunk89)
+                })?;
+
+                let chunk_90 = r.skippable_chunk(0x0304305a, |r| {
+                    r.u32()?;
+                    r.u32()?;
+
+                    Ok(Chunk90)
+                })?;
+
+                let chunk_91 = r.skippable_chunk(0x0304305b, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let has_lightmaps = r.bool32()?;
+                    r.bool32()?;
+                    r.bool32()?;
+
+                    if has_lightmaps {
+                        let lightmap_version = r.u32()?;
+
+                        if lightmap_version != 8 {
+                            return Err(Error::new(format!(
+                                "unknown lightmap version: {lightmap_version}"
+                            )));
+                        }
+
+                        let _lightmap_frames = r.list(|r| {
+                            r.list_u8()?;
+                            r.list_u8()?;
+                            r.list_u8()?;
+
+                            Ok(())
+                        })?;
+
+                        let _size = r.u32()?;
+                        r.list_u8()?;
+                    }
+
+                    Ok(Chunk91)
+                })?;
+
+                let chunk_92 = r.skippable_chunk(0x0304305c, |r| {
+                    r.u32()?;
+                    r.u32()?;
+                    r.u32()?;
+
+                    Ok(Chunk92)
+                })?;
+
+                let chunk_93 = r.skippable_chunk(0x0304305d, |r| {
+                    r.u32()?;
+                    r.u32()?;
+
+                    Ok(Chunk93)
+                })?;
+
+                let chunk_94 = r.skippable_chunk(0x0304305e, |r| {
+                    r.u32()?;
+                    r.u32()?;
+                    r.u32()?;
+                    r.u32()?;
+                    r.u32()?;
+
+                    Ok(Chunk94)
+                })?;
+
+                let chunk_95 = r.skippable_chunk(0x0304305f, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    for block in &chunk_31.blocks {
+                        if block.is_free {
+                            let _position = r.vec3_f32()?;
+                            let _yaw_pitch_roll = r.vec3_f32()?;
+                        }
+                    }
+
+                    for block in &chunk_72.baked_blocks {
+                        if block.is_free {
+                            let _position = r.vec3_f32()?;
+                            let _yaw_pitch_roll = r.vec3_f32()?;
+                        }
+                    }
+
+                    Ok(Chunk95)
+                })?;
+
+                let chunk_96 = r.skippable_chunk(0x03043060, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    r.u32()?;
+
+                    Ok(Chunk96)
+                })?;
+
                 r.end()?;
 
                 Ok(Chunks {
@@ -555,25 +826,25 @@ impl Readable for Challenge {
                     chunk_68,
                     chunk_72,
                     chunk_73,
-                    chunk_75: Chunk75,
-                    chunk_79: Chunk79,
-                    chunk_80: Chunk80,
-                    chunk_81: Chunk81,
-                    chunk_82: Chunk82,
-                    chunk_83: Chunk83,
-                    chunk_84: Chunk84,
-                    chunk_85: Chunk85,
-                    chunk_86: Chunk86,
-                    chunk_87: Chunk87,
-                    chunk_88: Chunk88,
-                    chunk_89: Chunk89,
-                    chunk_90: Chunk90,
-                    chunk_91: Chunk91,
-                    chunk_92: Chunk92,
-                    chunk_93: Chunk93,
-                    chunk_94: Chunk94,
-                    chunk_95: Chunk95,
-                    chunk_96: Chunk96,
+                    chunk_75,
+                    chunk_79,
+                    chunk_80,
+                    chunk_81,
+                    chunk_82,
+                    chunk_83,
+                    chunk_84,
+                    chunk_85,
+                    chunk_86,
+                    chunk_87,
+                    chunk_88,
+                    chunk_89,
+                    chunk_90,
+                    chunk_91,
+                    chunk_92,
+                    chunk_93,
+                    chunk_94,
+                    chunk_95,
+                    chunk_96,
                 })
             },
         };

@@ -12,7 +12,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::{F32Vec2, F32Vec3, U8Vec3, U32Vec3, game::ctn::MediaBlockCameraCustom};
+use crate::{F32Vec2, F32Vec3, U8Vec3, U32Box3, U32Vec3, game::ctn::MediaBlockCameraCustom};
 
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
     let file = File::open(path).map_err(Error::new)?;
@@ -246,6 +246,13 @@ impl<'a, 'b> BodyReader<'a, 'b> {
         let z = self.f32()?;
 
         Ok(F32Vec3 { x, y, z })
+    }
+
+    pub fn box3_u32(&mut self) -> Result<U32Box3, Error> {
+        let a = self.vec3_u32()?;
+        let b = self.vec3_u32()?;
+
+        Ok(U32Box3 { a, b })
     }
 
     pub fn bool32(&mut self) -> Result<bool, Error> {
