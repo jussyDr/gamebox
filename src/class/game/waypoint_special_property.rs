@@ -25,6 +25,12 @@ struct Chunk0;
 
 struct Chunk1;
 
+pub enum Property {
+    Checkpoint,
+    Goal,
+    Spawn,
+}
+
 impl ClassId for WaypointSpecialProperty {
     const CLASS_ID: u32 = 0x2e009000;
 }
@@ -69,8 +75,14 @@ impl Chunk0 {
             return Err(Error::new(format!("unknown chunk version: {version}")));
         }
 
-        let _tag = r.string()?;
-        let _order = r.u32()?;
+        let _property = match r.string()? {
+            "Checkpoint" => Property::Checkpoint,
+            "Goal" => Property::Goal,
+            "Spawn" => Property::Spawn,
+            tag => todo!("{tag}"),
+        };
+
+        let _value = r.u32()?;
 
         Ok(Self)
     }

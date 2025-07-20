@@ -3,9 +3,10 @@ use std::{any::Any, cell::OnceCell, sync::Arc};
 use ouroboros::self_referencing;
 
 use crate::{
+    U32Vec3,
     game::ctn::{
         AnchoredObject, Block, ChallengeParameters, CollectorList, FileRef, MediaClip,
-        MediaClipGroup, ZoneGenealogy,
+        MediaClipGroup, ZoneGenealogy, block,
     },
     read::{BodyChunksReader, BodyReader, ClassId, Error, Readable},
     script::TraitsMetadata,
@@ -36,7 +37,7 @@ struct Chunks<'a> {
     chunk_25: Chunk25<'a>,
     chunk_31: Chunk31<'a>,
     chunk_34: Chunk34,
-    chunk_36: Chunk36,
+    chunk_36: Chunk36<'a>,
     chunk_37: Chunk37,
     chunk_38: Chunk38,
     chunk_40: Chunk40,
@@ -51,14 +52,14 @@ struct Chunks<'a> {
     chunk_67: Chunk67,
     chunk_68: Chunk68,
     chunk_72: Chunk72<'a>,
-    chunk_73: Chunk73,
+    chunk_73: Chunk73<'a>,
     chunk_75: Chunk75,
     chunk_79: Chunk79,
     chunk_80: Chunk80,
     chunk_81: Chunk81,
     chunk_82: Chunk82,
     chunk_83: Chunk83,
-    chunk_84: Chunk84,
+    chunk_84: Chunk84<'a>,
     chunk_85: Chunk85,
     chunk_86: Chunk86,
     chunk_87: Chunk87,
@@ -103,7 +104,9 @@ struct Chunk31<'a> {
 
 struct Chunk34;
 
-struct Chunk36;
+struct Chunk36<'a> {
+    music: Option<FileRef<'a>>,
+}
 
 struct Chunk37;
 
@@ -137,7 +140,14 @@ struct Chunk72<'a> {
     baked_blocks: Box<[Block<'a>]>,
 }
 
-struct Chunk73;
+struct Chunk73<'a> {
+    intro_media_clip: &'a MediaClip,
+    podium_media_clip: Option<&'a MediaClip>,
+    in_game_media_clips: &'a MediaClipGroup,
+    end_race_media_clips: Option<&'a MediaClipGroup>,
+    ambiance_media_clip: &'a MediaClip,
+    media_clip_trigger_size: U32Vec3,
+}
 
 struct Chunk75;
 
@@ -147,11 +157,15 @@ struct Chunk80;
 
 struct Chunk81;
 
-struct Chunk82;
+struct Chunk82 {
+    deco_base_height_offset: u32,
+}
 
 struct Chunk83;
 
-struct Chunk84;
+struct Chunk84<'a> {
+    embedded_objects: Option<EmbeddedObjects<'a>>,
+}
 
 struct Chunk85;
 
@@ -181,6 +195,11 @@ enum MapKind {
     InProgress,
 }
 
+pub struct EmbeddedObjects<'a> {
+    ids: Box<[&'a str]>,
+    files: &'a [u8],
+}
+
 impl Challenge {
     pub fn parameters(&self) -> &ChallengeParameters {
         self.0.borrow_chunks().chunk_17.parameters
@@ -194,8 +213,54 @@ impl Challenge {
         &self.0.borrow_chunks().chunk_31.blocks
     }
 
+    pub fn music(&self) -> Option<&FileRef> {
+        self.0.borrow_chunks().chunk_36.music.as_ref()
+    }
+
     pub fn anchored_objects(&self) -> &[AnchoredObject] {
         &self.0.borrow_chunks().chunk_64.anchored_objects
+    }
+
+    pub fn intro_media_clip(&self) -> &MediaClip {
+        self.0.borrow_chunks().chunk_73.intro_media_clip
+    }
+
+    pub fn podium_media_clip(&self) -> Option<&MediaClip> {
+        self.0.borrow_chunks().chunk_73.podium_media_clip
+    }
+
+    pub fn in_game_media_clips(&self) -> &MediaClipGroup {
+        self.0.borrow_chunks().chunk_73.in_game_media_clips
+    }
+
+    pub fn end_race_media_clips(&self) -> Option<&MediaClipGroup> {
+        self.0.borrow_chunks().chunk_73.end_race_media_clips
+    }
+
+    pub fn ambiance_media_clip(&self) -> &MediaClip {
+        self.0.borrow_chunks().chunk_73.ambiance_media_clip
+    }
+
+    pub fn media_clip_trigger_size(&self) -> &U32Vec3 {
+        &self.0.borrow_chunks().chunk_73.media_clip_trigger_size
+    }
+
+    pub fn deco_base_height_offset(&self) -> u32 {
+        self.0.borrow_chunks().chunk_82.deco_base_height_offset
+    }
+
+    pub fn embedded_objects(&self) -> Option<&EmbeddedObjects> {
+        self.0.borrow_chunks().chunk_84.embedded_objects.as_ref()
+    }
+}
+
+impl EmbeddedObjects<'_> {
+    pub fn ids(&self) -> &[&str] {
+        &self.ids
+    }
+
+    pub fn files(&self) -> &[u8] {
+        self.files
     }
 }
 
@@ -231,7 +296,7 @@ impl Readable for Challenge {
                 let chunk_17 = r.chunk(0x03043011, Chunk17::read)?;
                 let chunk_24 = r.skippable_chunk(0x03043018, Chunk24::read)?;
                 let chunk_25 = r.skippable_chunk(0x03043019, Chunk25::read)?;
-                let chunk_31 = r.chunk(0x0304301f, Chunk31::read)?;
+                let mut chunk_31 = r.chunk(0x0304301f, Chunk31::read)?;
                 let chunk_34 = r.chunk(0x03043022, Chunk34::read)?;
                 let chunk_36 = r.chunk(0x03043024, Chunk36::read)?;
                 let chunk_37 = r.chunk(0x03043025, Chunk37::read)?;
@@ -247,7 +312,7 @@ impl Readable for Challenge {
                 let chunk_66 = r.skippable_chunk(0x03043042, Chunk66::read)?;
                 let chunk_67 = r.skippable_chunk(0x03043043, Chunk67::read)?;
                 let chunk_68 = r.skippable_chunk(0x03043044, Chunk68::read)?;
-                let chunk_72 = r.skippable_chunk(0x03043048, Chunk72::read)?;
+                let mut chunk_72 = r.skippable_chunk(0x03043048, Chunk72::read)?;
                 let chunk_73 = r.chunk(0x03043049, Chunk73::read)?;
                 let chunk_75 = r.skippable_chunk(0x0304304b, Chunk75::read)?;
                 let chunk_79 = r.skippable_chunk(0x0304304f, Chunk79::read)?;
@@ -266,8 +331,9 @@ impl Readable for Challenge {
                 let chunk_92 = r.skippable_chunk(0x0304305c, Chunk92::read)?;
                 let chunk_93 = r.skippable_chunk(0x0304305d, Chunk93::read)?;
                 let chunk_94 = r.skippable_chunk(0x0304305e, Chunk94::read)?;
-                let chunk_95 =
-                    r.skippable_chunk(0x0304305f, |r| Chunk95::read(r, &chunk_31, &chunk_72))?;
+                let chunk_95 = r.skippable_chunk(0x0304305f, |r| {
+                    Chunk95::read(r, &mut chunk_31, &mut chunk_72)
+                })?;
                 let chunk_96 = r.skippable_chunk(0x03043060, Chunk96::read)?;
 
                 r.end()?;
@@ -405,11 +471,11 @@ impl Chunk34 {
     }
 }
 
-impl Chunk36 {
-    fn read(r: &mut BodyReader) -> Result<Self, Error> {
-        let _music_file_ref = FileRef::read(r)?;
+impl<'a> Chunk36<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let music = FileRef::read(r)?;
 
-        Ok(Self)
+        Ok(Self { music })
     }
 }
 
@@ -632,22 +698,29 @@ impl<'a> Chunk72<'a> {
     }
 }
 
-impl Chunk73 {
-    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+impl<'a> Chunk73<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
         let version = r.u32()?;
 
         if version != 2 {
             return Err(Error::new(format!("unknown chunk version: {version}")));
         }
 
-        let _intro_clip = r.node_ref::<MediaClip>()?;
-        let _podium_clip = r.node_ref_or_null::<MediaClip>()?;
-        let _in_game_clips = r.node_ref::<MediaClipGroup>()?;
-        let _end_race_clips = r.node_ref_or_null::<MediaClipGroup>()?;
-        let _ambiance_clip = r.node_ref::<MediaClip>()?;
-        let _clip_trigger_size = r.vec3_u32()?;
+        let intro_media_clip = r.node_ref::<MediaClip>()?;
+        let podium_media_clip = r.node_ref_or_null::<MediaClip>()?;
+        let in_game_media_clips = r.node_ref::<MediaClipGroup>()?;
+        let end_race_media_clips = r.node_ref_or_null::<MediaClipGroup>()?;
+        let ambiance_media_clip = r.node_ref::<MediaClip>()?;
+        let media_clip_trigger_size = r.vec3_u32()?;
 
-        Ok(Self)
+        Ok(Self {
+            intro_media_clip,
+            podium_media_clip,
+            in_game_media_clips,
+            end_race_media_clips,
+            ambiance_media_clip,
+            media_clip_trigger_size,
+        })
     }
 }
 
@@ -714,9 +787,11 @@ impl Chunk82 {
             return Err(Error::new(format!("unknown chunk version: {version}")));
         }
 
-        let _deco_base_height_offset = r.u32()?;
+        let deco_base_height_offset = r.u32()?;
 
-        Ok(Self)
+        Ok(Self {
+            deco_base_height_offset,
+        })
     }
 }
 
@@ -734,8 +809,8 @@ impl Chunk83 {
     }
 }
 
-impl Chunk84 {
-    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+impl<'a> Chunk84<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
         let version = r.u32()?;
 
         if version != 1 {
@@ -754,20 +829,25 @@ impl Chunk84 {
 
         let mut seen_id = false;
         let mut ids = vec![];
-        let node_refs = Arc::from(vec![]);
-        let mut r = BodyReader::new(r.data, r.data_offset, &node_refs, &mut seen_id, &mut ids);
+        let mut r = BodyReader::new(r.data, r.data_offset, r.node_refs, &mut seen_id, &mut ids);
 
-        let _embedded_model_ids = r.list(|r| {
-            let _id = r.id()?;
+        let ids = r.list(|r| {
+            let id = r.id()?;
             let _collection = r.id()?;
             let _author = r.id()?;
 
-            Ok(())
+            Ok(id)
         })?;
-        let _zip = r.list_u8()?;
+        let files = r.list_u8()?;
         let _textures = r.list(|r| r.string())?;
 
-        Ok(Self)
+        let embedded_objects = if ids.is_empty() || files.is_empty() {
+            None
+        } else {
+            Some(EmbeddedObjects { ids, files })
+        };
+
+        Ok(Self { embedded_objects })
     }
 }
 
@@ -917,24 +997,28 @@ impl Chunk94 {
 }
 
 impl Chunk95 {
-    fn read(r: &mut BodyReader, chunk_31: &Chunk31, chunk_72: &Chunk72) -> Result<Self, Error> {
+    fn read(
+        r: &mut BodyReader,
+        chunk_31: &mut Chunk31,
+        chunk_72: &mut Chunk72,
+    ) -> Result<Self, Error> {
         let version = r.u32()?;
 
         if version != 0 {
             return Err(Error::new(format!("unknown chunk version: {version}")));
         }
 
-        for block in &chunk_31.blocks {
-            if block.is_free {
-                let _position = r.vec3_f32()?;
-                let _yaw_pitch_roll = r.vec3_f32()?;
+        for block in &mut chunk_31.blocks {
+            if let block::Transform::Free { position, rotation } = &mut block.transform {
+                *position = r.vec3_f32()?;
+                *rotation = r.vec3_f32()?;
             }
         }
 
-        for block in &chunk_72.baked_blocks {
-            if block.is_free {
-                let _position = r.vec3_f32()?;
-                let _yaw_pitch_roll = r.vec3_f32()?;
+        for block in &mut chunk_72.baked_blocks {
+            if let block::Transform::Free { position, rotation } = &mut block.transform {
+                *position = r.vec3_f32()?;
+                *rotation = r.vec3_f32()?;
             }
         }
 

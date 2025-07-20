@@ -3,6 +3,7 @@ use std::{any::Any, cell::OnceCell, sync::Arc};
 use ouroboros::self_referencing;
 
 use crate::{
+    F32Vec3, U8Vec3,
     game::WaypointSpecialProperty,
     read::{BodyChunksReader, BodyReader, ClassId, Error, ReadNode},
 };
@@ -26,6 +27,12 @@ struct Chunks<'a> {
 
 struct Chunk2<'a> {
     item_model_id: &'a str,
+    rotation: F32Vec3,
+    coord: U8Vec3,
+    position: F32Vec3,
+    waypoint_property: Option<&'a WaypointSpecialProperty>,
+    pivot_position: F32Vec3,
+    scale: f32,
 }
 
 struct Chunk4;
@@ -35,6 +42,30 @@ struct Chunk5;
 impl AnchoredObject {
     pub fn item_model_id(&self) -> &str {
         self.0.borrow_chunks().chunk_2.item_model_id
+    }
+
+    pub fn rotation(&self) -> &F32Vec3 {
+        &self.0.borrow_chunks().chunk_2.rotation
+    }
+
+    pub fn coord(&self) -> &U8Vec3 {
+        &self.0.borrow_chunks().chunk_2.coord
+    }
+
+    pub fn position(&self) -> &F32Vec3 {
+        &self.0.borrow_chunks().chunk_2.position
+    }
+
+    pub fn waypoint_property(&self) -> Option<&WaypointSpecialProperty> {
+        self.0.borrow_chunks().chunk_2.waypoint_property
+    }
+
+    pub fn pivot_position(&self) -> &F32Vec3 {
+        &self.0.borrow_chunks().chunk_2.pivot_position
+    }
+
+    pub fn scale(&self) -> f32 {
+        self.0.borrow_chunks().chunk_2.scale
     }
 }
 
@@ -85,14 +116,14 @@ impl<'a> Chunk2<'a> {
         let item_model_id = r.id()?;
         let _item_model_collection = r.id()?;
         let _item_model_author = r.id()?;
-        let _yaw_pitch_roll = r.vec3_f32()?;
-        let _block_unit_coord = r.vec3_u8()?;
+        let rotation = r.vec3_f32()?;
+        let coord = r.vec3_u8()?;
         let _anchor_tree_id = r.id_or_null()?;
-        let _absolute_position_in_map = r.vec3_f32()?;
-        let _waypoint_special_property = r.node_ref_or_null::<WaypointSpecialProperty>()?;
+        let position = r.vec3_f32()?;
+        let waypoint_property = r.node_ref_or_null()?;
         let flags = r.u16()?;
-        let _pivot_position = r.vec3_f32()?;
-        let _scale = r.f32()?;
+        let pivot_position = r.vec3_f32()?;
+        let scale = r.f32()?;
 
         if flags & 0x0004 != 0 {
             todo!()
@@ -101,7 +132,15 @@ impl<'a> Chunk2<'a> {
         r.vec3_f32()?;
         r.vec3_f32()?;
 
-        Ok(Self { item_model_id })
+        Ok(Self {
+            item_model_id,
+            rotation,
+            coord,
+            position,
+            waypoint_property,
+            pivot_position,
+            scale,
+        })
     }
 }
 

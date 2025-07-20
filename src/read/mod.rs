@@ -140,7 +140,7 @@ pub trait ClassId {
 pub struct BodyReader<'a, 'b> {
     pub data: &'a Arc<[u8]>,
     pub data_offset: &'b mut usize,
-    node_refs: &'a Arc<[OnceCell<Box<dyn Any>>]>,
+    pub node_refs: &'a Arc<[OnceCell<Box<dyn Any>>]>,
     seen_id: &'b mut bool,
     ids: &'b mut Vec<(usize, usize)>,
 }

@@ -1,4 +1,4 @@
-use std::{any::Any, cell::OnceCell, marker::PhantomData, sync::Arc};
+use std::{any::Any, cell::OnceCell, sync::Arc};
 
 use ouroboros::self_referencing;
 
@@ -16,11 +16,33 @@ struct Inner {
 }
 
 struct Chunks<'a> {
-    delme: PhantomData<&'a ()>,
-    chunk_0: Chunk0,
+    chunk_0: Chunk0<'a>,
 }
 
-struct Chunk0;
+struct Chunk0<'a> {
+    collectors: Box<[Collector<'a>]>,
+}
+
+pub struct Collector<'a> {
+    id: &'a str,
+    count: u32,
+}
+
+impl CollectorList {
+    pub fn collectors(&self) -> &[Collector] {
+        &self.0.borrow_chunks().chunk_0.collectors
+    }
+}
+
+impl Collector<'_> {
+    pub fn id(&self) -> &str {
+        self.id
+    }
+
+    pub fn count(&self) -> u32 {
+        self.count
+    }
+}
 
 impl ClassId for CollectorList {
     const CLASS_ID: u32 = 0x0301b000;
@@ -45,10 +67,7 @@ impl ReadNode for CollectorList {
 
                 r.end()?;
 
-                Ok(Chunks {
-                    delme: PhantomData,
-                    chunk_0,
-                })
+                Ok(Chunks { chunk_0 })
             },
         };
 
@@ -56,17 +75,17 @@ impl ReadNode for CollectorList {
     }
 }
 
-impl Chunk0 {
-    fn read(r: &mut BodyReader) -> Result<Self, Error> {
-        let _collector_stock = r.list(|r| {
-            let _block_model = r.id()?;
+impl<'a> Chunk0<'a> {
+    fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
+        let collectors = r.list(|r| {
+            let id = r.id()?;
             let _block_model_collection = r.id()?;
             let _block_model_author = r.id()?;
-            let _count = r.u32()?;
+            let count = r.u32()?;
 
-            Ok(())
+            Ok(Collector { id, count })
         })?;
 
-        Ok(Self)
+        Ok(Self { collectors })
     }
 }

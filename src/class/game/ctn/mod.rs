@@ -46,6 +46,13 @@ pub use zone_genealogy::ZoneGenealogy;
 
 use crate::read::{BodyReader, Error};
 
+pub enum Direction {
+    North,
+    East,
+    South,
+    West,
+}
+
 pub enum FileRef<'a> {
     Internal {
         path: &'a str,

@@ -20,7 +20,17 @@ struct Chunks<'a> {
     chunk_5: Chunk5,
 }
 
-struct Chunk5;
+struct Chunk5 {
+    keys: Box<[Key]>,
+}
+
+pub struct Key;
+
+impl EffectSimi {
+    pub fn keys(&self) -> &[Key] {
+        &self.0.borrow_chunks().chunk_5.keys
+    }
+}
 
 impl ClassId for EffectSimi {
     const CLASS_ID: u32 = 0x07010000;
@@ -41,28 +51,7 @@ impl ReadNode for EffectSimi {
                 let mut br = BodyReader::new(body_data, body_data_offset, node_refs, seen_id, ids);
                 let mut r = BodyChunksReader(&mut br);
 
-                let chunk_5 = r.chunk(0x07010005, |r| {
-                    let _keys = r.list(|r| {
-                        let _time = r.f32()?;
-                        let _position = r.vec2_f32()?;
-                        let _rotation = r.f32()?;
-                        let _scale = r.vec2_f32()?;
-                        let _opacity = r.f32()?;
-                        let _depth = r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
-
-                        Ok(())
-                    })?;
-                    let _centered = r.bool32()?;
-                    let _color_blend_mode = r.u32()?;
-                    let _is_continuous_effect = r.bool32()?;
-                    let _is_interpolated = r.bool32()?;
-
-                    Ok(Chunk5)
-                })?;
+                let chunk_5 = r.chunk(0x07010005, Chunk5::read)?;
 
                 r.end()?;
 
@@ -74,5 +63,30 @@ impl ReadNode for EffectSimi {
         };
 
         builder.try_build().map(Self)
+    }
+}
+
+impl Chunk5 {
+    fn read(r: &mut BodyReader) -> Result<Self, Error> {
+        let keys = r.list(|r| {
+            let _time = r.f32()?;
+            let _position = r.vec2_f32()?;
+            let _rotation = r.f32()?;
+            let _scale = r.vec2_f32()?;
+            let _opacity = r.f32()?;
+            let _depth = r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+            r.f32()?;
+
+            Ok(Key)
+        })?;
+        let _centered = r.bool32()?;
+        let _color_blend_mode = r.u32()?;
+        let _is_continuous_effect = r.bool32()?;
+        let _is_interpolated = r.bool32()?;
+
+        Ok(Self { keys })
     }
 }
