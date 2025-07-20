@@ -3,7 +3,7 @@ mod error;
 pub use error::Error;
 
 use std::{
-    any::Any,
+    any::{Any, TypeId},
     cell::OnceCell,
     fs::File,
     io::{BufReader, Read},
@@ -12,7 +12,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::{F32Vec2, F32Vec3, U8Vec3, U32Vec3};
+use crate::{F32Vec2, F32Vec3, U8Vec3, U32Vec3, game::ctn::MediaBlockCameraCustom};
 
 pub fn read_file<T: Readable>(path: impl AsRef<Path>) -> Result<T, Error> {
     let file = File::open(path).map_err(Error::new)?;
@@ -321,6 +321,10 @@ impl<'a, 'b> BodyReader<'a, 'b> {
             return Ok(Some("")); // What is this?
         }
 
+        if index == 0x00002713 {
+            return Ok(Some("")); // What is this?
+        }
+
         if index & 0xc0000000 != 0x40000000 {
             return Err(Error::new("expected an identifier"));
         }
@@ -402,6 +406,53 @@ impl<'a, 'b> BodyReader<'a, 'b> {
             Some(node_ref) => Ok(Some(node_ref.downcast_ref().unwrap())),
         }
     }
+
+    pub fn node_ref_generic<T: ReadNodeRef<'a>>(&mut self) -> Result<T, Error> {
+        match self.node_ref_generic_or_null()? {
+            None => todo!(),
+            Some(node_ref) => Ok(node_ref),
+        }
+    }
+
+    pub fn node_ref_generic_or_null<T: ReadNodeRef<'a>>(&mut self) -> Result<Option<T>, Error> {
+        let index = self.u32()?;
+
+        if index == 0xffffffff {
+            return Ok(None);
+        }
+
+        let index = index
+            .checked_sub(1)
+            .ok_or_else(|| Error::new("node reference index is zero"))?;
+
+        let slot = self
+            .node_refs
+            .get(index as usize)
+            .ok_or_else(|| Error::new("node reference index is out of bounds"))?;
+
+        let node_ref = match slot.get() {
+            None => {
+                let class_id = self.u32()?;
+
+                let node = T::read(
+                    Arc::clone(self.data),
+                    self.data_offset,
+                    Arc::clone(self.node_refs),
+                    self.seen_id,
+                    self.ids,
+                    class_id,
+                )?;
+
+                slot.set(node)
+                    .map_err(|_| Error::new("reentrant node reference init"))?;
+
+                slot.get().expect("slot is initialized above")
+            }
+            Some(node_ref) => node_ref,
+        };
+
+        Ok(Some(T::upcast(node_ref.as_ref())?))
+    }
 }
 
 pub trait ReadNode: ClassId {
@@ -412,6 +463,21 @@ pub trait ReadNode: ClassId {
         seen_id: &mut bool,
         ids: &mut Vec<(usize, usize)>,
     ) -> Result<Self, Error>
+    where
+        Self: Sized;
+}
+
+pub trait ReadNodeRef<'a> {
+    fn read(
+        body_data: Arc<[u8]>,
+        body_data_offset: &mut usize,
+        node_refs: Arc<[OnceCell<Box<dyn Any>>]>,
+        seen_id: &mut bool,
+        ids: &mut Vec<(usize, usize)>,
+        class_id: u32,
+    ) -> Result<Box<dyn Any>, Error>;
+
+    fn upcast(node_ref: &'a dyn Any) -> Result<Self, Error>
     where
         Self: Sized;
 }
@@ -428,7 +494,7 @@ impl<'a, 'b, 'c> BodyChunksReader<'a, 'b, 'c> {
             return Err(Error::new("chunk id mismatch"));
         }
 
-        read_fn(&mut self.0)
+        read_fn(self.0)
     }
 
     pub fn skippable_chunk<T>(
@@ -446,7 +512,7 @@ impl<'a, 'b, 'c> BodyChunksReader<'a, 'b, 'c> {
 
         let _size = self.0.u32()?;
 
-        read_fn(&mut self.0)
+        read_fn(self.0)
     }
 
     pub fn end(&mut self) -> Result<(), Error> {

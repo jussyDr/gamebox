@@ -10,8 +10,8 @@ pub struct Block<'a> {
 impl<'a> Block<'a> {
     pub fn read(r: &mut BodyReader<'a, '_>) -> Result<Self, Error> {
         let info_id = r.id()?;
-        let direction = r.u8()?;
-        let coord = r.vec3_u8()?;
+        let _direction = r.u8()?;
+        let _coord = r.vec3_u8()?;
         let flags = r.u32()?;
 
         if flags & 0x00008000 != 0 {

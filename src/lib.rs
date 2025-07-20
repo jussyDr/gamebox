@@ -4,20 +4,35 @@ pub mod read;
 
 pub use read::{read, read_file};
 
-pub mod game {
-    pub mod ctn;
+mod class {
+    pub mod control {
+        mod effect_simi;
 
-    mod waypoint_special_property;
+        pub use effect_simi::EffectSimi;
+    }
 
-    pub use waypoint_special_property::WaypointSpecialProperty;
+    pub mod game {
+        pub mod ctn;
+
+        mod waypoint_special_property;
+
+        pub use waypoint_special_property::WaypointSpecialProperty;
+    }
+
+    pub mod plug {
+        mod ent_record_data;
+
+        pub use ent_record_data::EntRecordData;
+    }
+
+    pub mod script {
+        mod traits_metadata;
+
+        pub use traits_metadata::TraitsMetadata;
+    }
 }
 
-pub mod script {
-    mod traits_metadata;
-
-    pub use traits_metadata::TraitsMetadata;
-}
-
+pub use class::{game, script};
 pub use game::ctn::Challenge;
 
 pub struct F32Vec2 {

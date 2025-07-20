@@ -10,11 +10,11 @@ impl ClassId for Ghost {
 
 impl ReadNode for Ghost {
     fn read_from_body(
-        body_data: Arc<[u8]>,
-        body_data_offset: &mut usize,
-        node_refs: Arc<[OnceCell<Box<dyn Any>>]>,
-        seen_id: &mut bool,
-        ids: &mut Vec<(usize, usize)>,
+        _body_data: Arc<[u8]>,
+        _body_data_offset: &mut usize,
+        _node_refs: Arc<[OnceCell<Box<dyn Any>>]>,
+        _seen_id: &mut bool,
+        _ids: &mut Vec<(usize, usize)>,
     ) -> Result<Self, Error> {
         todo!()
     }

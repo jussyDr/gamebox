@@ -4,7 +4,8 @@ use ouroboros::self_referencing;
 
 use crate::{
     game::ctn::{
-        AnchoredObject, Block, ChallengeParameters, CollectorList, FileRef, ZoneGenealogy,
+        AnchoredObject, Block, ChallengeParameters, CollectorList, FileRef, MediaClip,
+        MediaClipGroup, ZoneGenealogy,
     },
     read::{BodyChunksReader, BodyReader, ClassId, Error, Readable},
     script::TraitsMetadata,
@@ -49,7 +50,7 @@ struct Chunks<'a> {
     chunk_66: Chunk66,
     chunk_67: Chunk67,
     chunk_68: Chunk68,
-    chunk_72: Chunk72,
+    chunk_72: Chunk72<'a>,
     chunk_73: Chunk73,
     chunk_75: Chunk75,
     chunk_79: Chunk79,
@@ -122,7 +123,9 @@ struct Chunk56;
 
 struct Chunk62;
 
-struct Chunk64;
+struct Chunk64 {
+    anchored_objects: Box<[AnchoredObject]>,
+}
 
 struct Chunk66;
 
@@ -130,7 +133,9 @@ struct Chunk67;
 
 struct Chunk68;
 
-struct Chunk72;
+struct Chunk72<'a> {
+    baked_blocks: Box<[Block<'a>]>,
+}
 
 struct Chunk73;
 
@@ -188,6 +193,10 @@ impl Challenge {
     pub fn blocks(&self) -> &[Block] {
         &self.0.borrow_chunks().chunk_31.blocks
     }
+
+    pub fn anchored_objects(&self) -> &[AnchoredObject] {
+        &self.0.borrow_chunks().chunk_64.anchored_objects
+    }
 }
 
 impl ClassId for Challenge {
@@ -204,7 +213,7 @@ impl Readable for Challenge {
             header_data,
             body_data,
             node_refs,
-            chunks_builder: |header_data, body_data, node_refs| {
+            chunks_builder: |_header_data, body_data, node_refs| {
                 let mut body_data_offset = 0;
                 let mut seen_id = false;
                 let mut ids = vec![];
@@ -357,7 +366,7 @@ impl Readable for Challenge {
                         return Err(Error::new(format!("unknown chunk version: {version}")));
                     }
 
-                    let _car_marks_buffer: Box<[()]> = r.list_with_version(|r| todo!())?;
+                    let _car_marks_buffer: Box<[()]> = r.list_with_version(|_| todo!())?;
 
                     Ok(Chunk62)
                 })?;
@@ -390,13 +399,13 @@ impl Readable for Challenge {
                         &mut ids,
                     );
 
-                    let _anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
+                    let anchored_objects = r.list_with_version(|r| r.node::<AnchoredObject>())?;
                     let _block_indices = r.list(|r| r.u32())?;
                     let _snap_item_groups = r.list(|r| r.u32())?;
                     r.list(|r| r.u32())?;
                     let _snapped_indices = r.list(|r| r.u32())?;
 
-                    Ok(Chunk64)
+                    Ok(Chunk64 { anchored_objects })
                 })?;
 
                 let chunk_66 = r.skippable_chunk(0x03043042, |r| {
@@ -476,6 +485,45 @@ impl Readable for Challenge {
                     Ok(Chunk68)
                 })?;
 
+                let chunk_72 = r.skippable_chunk(0x03043048, |r| {
+                    let version = r.u32()?;
+
+                    if version != 0 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let blocks_version = r.u32()?;
+
+                    if blocks_version != 6 {
+                        return Err(Error::new(format!(
+                            "unknown blocks version: {blocks_version}"
+                        )));
+                    }
+
+                    let baked_blocks = r.list(|r| Block::read(r))?;
+                    r.u32()?;
+                    let _baked_clips_additional_data = r.u32()?;
+
+                    Ok(Chunk72 { baked_blocks })
+                })?;
+
+                let chunk_73 = r.chunk(0x03043049, |r| {
+                    let version = r.u32()?;
+
+                    if version != 2 {
+                        return Err(Error::new(format!("unknown chunk version: {version}")));
+                    }
+
+                    let _intro_clip = r.node_ref::<MediaClip>()?;
+                    let _podium_clip = r.node_ref_or_null::<MediaClip>()?;
+                    let _in_game_clips = r.node_ref::<MediaClipGroup>()?;
+                    let _end_race_clips = r.node_ref_or_null::<MediaClipGroup>()?;
+                    let _ambiance_clip = r.node_ref::<MediaClip>()?;
+                    let _clip_trigger_size = r.vec3_u32()?;
+
+                    Ok(Chunk73)
+                })?;
+
                 r.end()?;
 
                 Ok(Chunks {
@@ -497,16 +545,16 @@ impl Readable for Challenge {
                     chunk_40,
                     chunk_41,
                     chunk_42,
-                    chunk_52: Chunk52,
-                    chunk_54: Chunk54,
-                    chunk_56: Chunk56,
-                    chunk_62: Chunk62,
-                    chunk_64: Chunk64,
-                    chunk_66: Chunk66,
-                    chunk_67: Chunk67,
-                    chunk_68: Chunk68,
-                    chunk_72: Chunk72,
-                    chunk_73: Chunk73,
+                    chunk_52,
+                    chunk_54,
+                    chunk_56,
+                    chunk_62,
+                    chunk_64,
+                    chunk_66,
+                    chunk_67,
+                    chunk_68,
+                    chunk_72,
+                    chunk_73,
                     chunk_75: Chunk75,
                     chunk_79: Chunk79,
                     chunk_80: Chunk80,
