@@ -1,93 +1,58 @@
-//! CTN.
+mod block;
+pub use block::Block;
 
-pub mod anchored_object;
-pub mod auto_terrain;
-pub mod block;
-pub mod block_info;
-pub mod block_info_classic;
-pub mod block_info_clip;
-pub mod block_info_clip_horizontal;
-pub mod block_info_clip_vertical;
-pub mod block_info_mobil;
-pub mod block_info_variant;
-pub mod block_info_variant_air;
-pub mod block_info_variant_ground;
-pub mod block_skin;
-pub mod block_unit_info;
-pub mod challenge;
-pub mod challenge_parameters;
-pub mod collector;
-pub mod collector_list;
-pub mod ghost;
-pub mod media_block_camera_custom;
-pub mod media_block_camera_game;
-pub mod media_block_color_grading;
-pub mod media_block_dof;
-pub mod media_block_entity;
-pub mod media_block_fog;
-pub mod media_block_image;
-pub mod media_block_text;
-pub mod media_block_time;
-pub mod media_block_transition_fade;
-pub mod media_clip;
-pub mod media_clip_group;
-pub mod media_track;
-pub mod zone_genealogy;
+mod block_skin;
+pub use block_skin::BlockSkin;
 
-use crate::read::{Error, Reader, error_unknown_version};
+mod challenge;
+pub use challenge::Challenge;
 
-/// Reference to a file.
-pub enum FileRef {
-    /// Reference to an internal game file.
+mod challenge_parameters;
+pub use challenge_parameters::ChallengeParameters;
+
+mod collector_list;
+pub use collector_list::CollectorList;
+
+mod ghost;
+pub use ghost::Ghost;
+
+use crate::read::{Error, Reader, Result};
+
+enum FileRef {
     Internal {
-        /// Path.
         path: String,
     },
-    /// Reference to an external file.
     External {
-        /// Checksum.
-        checksum: [u8; 32],
-        /// Path.
         path: String,
-        /// Locator URL.
-        locator_url: String,
+        url: String,
+        checksum: [u8; 32],
     },
 }
 
-fn read_file_ref(r: &mut impl Reader) -> Result<Option<FileRef>, Error> {
-    let version = r.u8()?;
+impl FileRef {
+    fn read(r: &mut impl Reader) -> Result<Option<Self>> {
+        let version = r.u8()?;
 
-    if version != 3 {
-        return Err(error_unknown_version("file reference", version as u32));
+        if version != 3 {
+            return Err(Error::Internal("unknown file reference version".into()));
+        }
+
+        let checksum = r.array_u8::<32>()?;
+        let path = r.string()?;
+        let url = r.string()?;
+
+        if path.is_empty() {
+            return Ok(None);
+        }
+
+        if url.is_empty() {
+            return Ok(Some(FileRef::Internal { path }));
+        }
+
+        Ok(Some(FileRef::External {
+            path,
+            url,
+            checksum,
+        }))
     }
-
-    let checksum: [u8; 32] = r.byte_array()?;
-    let path = r.string()?;
-    let locator_url = r.string()?;
-
-    if checksum.iter().all(|&byte| byte == 0) && path.is_empty() && locator_url.is_empty() {
-        return Ok(None);
-    }
-
-    if checksum[0] == 2 && checksum[1..].iter().all(|&byte| byte == 0) && locator_url.is_empty() {
-        return Ok(Some(FileRef::Internal { path }));
-    }
-
-    Ok(Some(FileRef::External {
-        checksum,
-        path,
-        locator_url,
-    }))
-}
-
-/// Cardinal direction.
-pub enum Direction {
-    /// North.
-    North,
-    /// East.
-    East,
-    /// South.
-    South,
-    /// West.
-    West,
 }

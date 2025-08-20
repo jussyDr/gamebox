@@ -1,58 +1,40 @@
-//! Block skin.
+use crate::{
+    game::ctn::FileRef,
+    read::{BodyReader, Error, ReadNode, Result, read_body_chunks},
+};
 
-use crate::ClassId;
-
-/// Block skin.
-#[derive(Default)]
-pub struct BlockSkin;
-
-impl ClassId for BlockSkin {
-    const CLASS_ID: u32 = 0x03059000;
+pub struct BlockSkin {
+    chunk_2: Chunk2,
+    chunk_3: Chunk3,
 }
 
-mod read {
-    use crate::{
-        class::game::ctn::{block_skin::BlockSkin, read_file_ref},
-        read::{
-            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
-            read_body_chunks,
-        },
-    };
+struct Chunk2;
 
-    impl ReadBody for BlockSkin {
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            read_body_chunks(r, self)
-        }
-    }
+struct Chunk3;
 
-    impl BodyChunks for BlockSkin {
-        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            [
-                BodyChunk::new(2, Self::read_chunk_2),
-                BodyChunk::new(3, Self::read_chunk_3),
-            ]
-        }
-    }
+impl ReadNode for BlockSkin {
+    const CLASS_ID: u32 = 0x03059000;
 
-    impl BlockSkin {
-        fn read_chunk_2(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _text = r.string()?;
-            let _file_ref = read_file_ref(r)?;
-            let _parent_file_ref = read_file_ref(r)?;
+    fn read_node(r: &mut impl BodyReader) -> Result<Self> {
+        read_body_chunks(r, |r| {
+            Ok(Self {
+                chunk_2: r.chunk(0x03059002, |r| {
+                    let _text = r.string()?;
+                    let _file_ref = FileRef::read(r)?;
+                    let _parent_file_ref = FileRef::read(r)?;
 
-            Ok(())
-        }
+                    Ok(Chunk2)
+                })?,
+                chunk_3: r.chunk(0x03059003, |r| {
+                    if r.u32()? != 0 {
+                        return Err(Error::Internal("unknown chunk version".into()));
+                    }
 
-        fn read_chunk_3(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let version = r.u32()?;
+                    let _foreground_file_ref = FileRef::read(r)?;
 
-            if version != 0 {
-                return Err(error_unknown_chunk_version(version));
-            }
-
-            let _foreground_file_ref = read_file_ref(r)?;
-
-            Ok(())
-        }
+                    Ok(Chunk3)
+                })?,
+            })
+        })
     }
 }

@@ -1,65 +1,50 @@
-//! Waypoint special property.
+use crate::{
+    game::read_encapsulation,
+    read::{BodyReader, Error, ReadNode, Result, read_body_chunks},
+    script::TraitsMetadata,
+};
 
-use crate::ClassId;
-
-/// Waypoint special property.
-#[derive(Default)]
-pub struct WaypointSpecialProperty;
-
-impl ClassId for WaypointSpecialProperty {
-    const CLASS_ID: u32 = 0x2e009000;
+pub struct WaypointSpecialProperty {
+    chunk_0: Chunk0,
+    chunk_1: Chunk1,
 }
 
-mod read {
-    use crate::{
-        class::game::waypoint_special_property::WaypointSpecialProperty,
-        read::{
-            BodyChunk, BodyChunks, BodyReader, Error, ReadBody, error_unknown_chunk_version,
-            read_body_chunks,
-        },
-    };
+struct Chunk0;
 
-    impl ReadBody for WaypointSpecialProperty {
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            read_body_chunks(r, self)
-        }
-    }
+struct Chunk1;
 
-    impl BodyChunks for WaypointSpecialProperty {
-        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            [
-                BodyChunk::new(0, Self::read_chunk_0),
-                BodyChunk::skippable(1, Self::read_chunk_1),
-            ]
-        }
-    }
+impl ReadNode for WaypointSpecialProperty {
+    const CLASS_ID: u32 = 0x2e009000;
 
-    impl WaypointSpecialProperty {
-        fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let version = r.u32()?;
+    fn read_node(r: &mut impl BodyReader) -> Result<Self> {
+        read_body_chunks(r, |r| {
+            Ok(Self {
+                chunk_0: r.chunk(0x2e009000, |r| {
+                    if r.u32()? != 2 {
+                        return Err(Error::Internal("unknown chunk version".into()));
+                    }
 
-            if version != 2 {
-                return Err(error_unknown_chunk_version(version));
-            }
+                    let _tag = r.string()?;
+                    let _order = r.u32()?;
 
-            let _tag = r.string()?;
-            let _order = r.u32()?;
+                    Ok(Chunk0)
+                })?,
+                chunk_1: r.chunk_skippable(0x2e009001, |r| {
+                    if r.u32()? != 0 {
+                        return Err(Error::Internal("unknown chunk version".into()));
+                    }
 
-            Ok(())
-        }
+                    if r.bool32()? {
+                        read_encapsulation(r, |r| {
+                            let _script_metadata = r.node::<TraitsMetadata>()?;
 
-        fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let version = r.u32()?;
+                            Ok(())
+                        })?;
+                    }
 
-            if version != 0 {
-                return Err(error_unknown_chunk_version(version));
-            }
-
-            if r.bool32()? {
-                todo!();
-            }
-
-            Ok(())
-        }
+                    Ok(Chunk1)
+                })?,
+            })
+        })
     }
 }

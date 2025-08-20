@@ -1,9 +1,9 @@
 use crate::read::{BodyReader, ReadNode, Result};
 
-pub struct TraitsMetadata;
+pub struct CharPhySpecialProperty;
 
-impl ReadNode for TraitsMetadata {
-    const CLASS_ID: u32 = 0x11002000;
+impl ReadNode for CharPhySpecialProperty {
+    const CLASS_ID: u32 = 0x090f2000;
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
         todo!()

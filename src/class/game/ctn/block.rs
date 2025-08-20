@@ -1,111 +1,70 @@
-//! Block.
-
 use std::sync::Arc;
 
-use crate::{U8Vec3, Vec3};
+use crate::{
+    game::{WaypointSpecialProperty, ctn::BlockSkin},
+    plug::CharPhySpecialProperty,
+    read::{BodyReader, Error, ReadEnum, Result},
+};
 
-/// A block.
-#[derive(Default)]
-pub struct Block {
-    id: Arc<str>,
-    pub(crate) kind: BlockKind,
+pub struct Block;
+
+enum Direction {
+    North,
+    East,
+    South,
+    West,
+}
+
+impl ReadEnum for Direction {
+    fn from_u32(index: u32) -> Result<Self> {
+        match index {
+            0 => Ok(Self::North),
+            1 => Ok(Self::East),
+            2 => Ok(Self::South),
+            3 => Ok(Self::West),
+            _ => Err(Error::Internal(
+                "unknown variant index for enum Direction".into(),
+            )),
+        }
+    }
 }
 
 impl Block {
-    /// Identifier.
-    pub fn id(&self) -> &Arc<str> {
-        &self.id
-    }
+    pub(crate) fn read(r: &mut impl BodyReader) -> Result<Self> {
+        let _block_info_id = r.string_ref()?;
+        let _direction = r.enum8::<Direction>()?;
+        let _coord = r.vec3_u8()?;
+        let flags = r.u32()?;
 
-    /// Kind.
-    pub fn kind(&self) -> &BlockKind {
-        &self.kind
-    }
-}
-
-/// Block kind.
-pub enum BlockKind {
-    /// Normal block.
-    Normal {
-        /// Direction.
-        direction: u8,
-        /// Coordinate.
-        coord: U8Vec3,
-    },
-    /// Free block.
-    Free {
-        /// Position.
-        position: Vec3,
-        /// Rotation.
-        yaw_pitch_roll: Vec3,
-    },
-}
-
-impl Default for BlockKind {
-    fn default() -> Self {
-        Self::Normal {
-            direction: u8::default(),
-            coord: U8Vec3::default(),
+        if flags & 0x00008000 != 0 {
+            let _author = r.string_ref()?;
+            let _skin = r.node_ref::<Arc<BlockSkin>>()?;
         }
-    }
-}
 
-mod read {
-    use std::sync::Arc;
-
-    use crate::{
-        Vec3,
-        class::game::{
-            ctn::{
-                block::{Block, BlockKind},
-                block_skin::BlockSkin,
-            },
-            waypoint_special_property::WaypointSpecialProperty,
-        },
-        read::{BodyReader, Error, ReadBody},
-    };
-
-    impl ReadBody for Block {
-        // Performance critical.
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            self.id = r.id()?;
-            let direction = r.u8()?;
-            let coord = r.u8vec3()?;
-            let flags = r.u32()?;
-
-            if flags & 0x00008000 != 0 {
-                let _author: Arc<str> = r.id()?;
-                let _skin: Arc<BlockSkin> = r.node_ref()?;
-            }
-
-            if flags & 0x00080000 != 0 {
-                todo!();
-            }
-
-            if flags & 0x00100000 != 0 {
-                let _waypoint_special_property: Arc<WaypointSpecialProperty> = r.node_ref()?;
-            }
-
-            if flags & 0x00040000 != 0 {
-                todo!();
-            }
-
-            if flags & 0x00020000 != 0 {
-                let _decal_id: Arc<str> = r.id()?;
-                let _decal_intensity = r.u32()?;
-                let _decal_variant = r.u32()?;
-            }
-
-            if (flags & 0x20000000) != 0 {
-                self.kind = BlockKind::Free {
-                    position: Vec3::default(),
-                    yaw_pitch_roll: Vec3::default(),
-                };
-            } else {
-                self.kind = BlockKind::Normal { direction, coord };
-            }
-
-            Ok(())
+        if flags & 0x00080000 != 0 {
+            let _phy_char_special_property = r.node_ref::<Arc<CharPhySpecialProperty>>()?;
         }
+
+        if flags & 0x00100000 != 0 {
+            let _waypoint_special_property = r.node_ref::<Arc<WaypointSpecialProperty>>()?;
+        }
+
+        if flags & 0x00040000 != 0 {
+            let _square_card_event_ids = r.list(|r| {
+                r.u32()?;
+                r.u32()?;
+                r.list(|r| r.string_ref())?;
+
+                Ok(())
+            })?;
+        }
+
+        if flags & 0x00020000 != 0 {
+            let _decal_id = r.string_ref()?;
+            let _decal_intensity = r.u32()?;
+            let _decal_variant = r.u32()?;
+        }
+
+        Ok(Self)
     }
 }

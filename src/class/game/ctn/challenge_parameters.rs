@@ -1,93 +1,84 @@
-//! Challenge parameters.
+use std::sync::Arc;
 
-use crate::ClassId;
+use crate::{
+    game::ctn::Ghost,
+    read::{BodyReader, ReadNode, Result, read_body_chunks},
+};
 
-/// Challenge parameters.
-#[derive(Default)]
-pub struct ChallengeParameters;
-
-impl ClassId for ChallengeParameters {
-    const CLASS_ID: u32 = 0x0305b000;
+pub struct ChallengeParameters {
+    chunk_1: Chunk1,
+    chunk_4: Chunk4,
+    chunk_8: Chunk8,
+    chunk_10: Chunk10,
+    chunk_13: Chunk13,
+    chunk_14: Chunk14,
 }
 
-mod read {
-    use std::sync::Arc;
+struct Chunk1;
 
-    use crate::{
-        class::game::ctn::{challenge_parameters::ChallengeParameters, ghost::Ghost},
-        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
-    };
+struct Chunk4;
 
-    impl ReadBody for ChallengeParameters {
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            read_body_chunks(r, self)
-        }
-    }
+struct Chunk8;
 
-    impl BodyChunks for ChallengeParameters {
-        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            [
-                BodyChunk::new(1, Self::read_chunk_1),
-                BodyChunk::new(4, Self::read_chunk_4),
-                BodyChunk::new(8, Self::read_chunk_8),
-                BodyChunk::skippable(10, Self::read_chunk_10),
-                BodyChunk::new(13, Self::read_chunk_13),
-                BodyChunk::skippable(14, Self::read_chunk_14),
-            ]
-        }
-    }
+struct Chunk10;
 
-    impl ChallengeParameters {
-        fn read_chunk_1(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _tip_1 = r.string()?;
-            let _tip_2 = r.string()?;
-            let _tip_3 = r.string()?;
-            let _tip_4 = r.string()?;
+struct Chunk13;
 
-            Ok(())
-        }
+struct Chunk14;
 
-        fn read_chunk_4(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _bronze_time = r.u32()?;
-            let _silver_time = r.u32()?;
-            let _gold_time = r.u32()?;
-            let _author_time = r.u32()?;
-            r.u32()?;
+impl ReadNode for ChallengeParameters {
+    const CLASS_ID: u32 = 0x0305b000;
 
-            Ok(())
-        }
+    fn read_node(r: &mut impl BodyReader) -> Result<Self> {
+        read_body_chunks(r, |r| {
+            Ok(Self {
+                chunk_1: r.chunk(0x0305b001, |r| {
+                    let _tip_1 = r.string()?;
+                    let _tip_2 = r.string()?;
+                    let _tip_3 = r.string()?;
+                    let _tip_4 = r.string()?;
 
-        fn read_chunk_8(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _time_limit = r.u32()?;
-            let _author_score = r.u32()?;
+                    Ok(Chunk1)
+                })?,
+                chunk_4: r.chunk(0x0305b004, |r| {
+                    let _bronze_time = r.u32()?;
+                    let _silver_time = r.u32()?;
+                    let _gold_time = r.u32()?;
+                    let _author_time = r.u32()?;
+                    r.u32()?;
 
-            Ok(())
-        }
+                    Ok(Chunk4)
+                })?,
+                chunk_8: r.chunk(0x0305b008, |r| {
+                    let _time_limit = r.u32()?;
+                    let _author_score = r.u32()?;
 
-        fn read_chunk_10(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _tip = r.string()?;
-            let _bronze_time = r.u32()?;
-            let _silver_time = r.u32()?;
-            let _gold_time = r.u32()?;
-            let _author_time = r.u32()?;
-            let _time_limit = r.u32()?;
-            let _author_score = r.u32()?;
+                    Ok(Chunk8)
+                })?,
+                chunk_10: r.chunk_skippable(0x0305b00a, |r| {
+                    let _tip = r.string()?;
+                    let _bronze_time = r.u32()?;
+                    let _silver_time = r.u32()?;
+                    let _gold_time = r.u32()?;
+                    let _author_time = r.u32()?;
+                    let _time_limit = r.u32()?;
+                    let _author_score = r.u32()?;
 
-            Ok(())
-        }
+                    Ok(Chunk10)
+                })?,
+                chunk_13: r.chunk(0x0305b00d, |r| {
+                    let _race_validate_ghost = r.node_ref::<Arc<Ghost>>()?;
 
-        fn read_chunk_13(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _race_validate_ghost: Option<Arc<Ghost>> = r.node_ref()?;
+                    Ok(Chunk13)
+                })?,
+                chunk_14: r.chunk_skippable(0x0305b00e, |r| {
+                    let _map_type = r.string()?;
+                    let _map_style = r.string()?;
+                    let _is_validated_for_script_modes = r.bool32()?;
 
-            Ok(())
-        }
-
-        fn read_chunk_14(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _map_type = r.string()?;
-            let _map_style = r.string()?;
-            let _is_validated_for_script_modes = r.bool32()?;
-
-            Ok(())
-        }
+                    Ok(Chunk14)
+                })?,
+            })
+        })
     }
 }

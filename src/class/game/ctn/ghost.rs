@@ -1,24 +1,11 @@
-//! Ghost.
+use crate::read::{BodyReader, ReadNode, Result};
 
-use crate::ClassId;
-
-/// Ghost.
-#[derive(Default)]
 pub struct Ghost;
 
-impl ClassId for Ghost {
+impl ReadNode for Ghost {
     const CLASS_ID: u32 = 0x03092000;
-}
 
-mod read {
-    use crate::{
-        class::game::ctn::ghost::Ghost,
-        read::{BodyReader, Error, ReadBody},
-    };
-
-    impl ReadBody for Ghost {
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            todo!()
-        }
+    fn read_node(r: &mut impl BodyReader) -> Result<Self> {
+        todo!()
     }
 }

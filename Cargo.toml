@@ -4,5 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-lzo1x = "0.2.0"
-zerocopy = { version = "0.8.26", features = ["derive", "std"] }
+lzo1x = "0.2.2"
+
+[[test]]
+name = "test"
+harness = false
+
+[dev-dependencies]
+proef = { path = "../proef" }

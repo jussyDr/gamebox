@@ -1,45 +1,30 @@
-//! Collector list.
+use crate::read::{BodyReader, ReadNode, Result, read_body_chunks};
 
-use crate::ClassId;
-
-/// Collector list.
-#[derive(Default)]
-pub struct CollectorList;
-
-impl ClassId for CollectorList {
-    const CLASS_ID: u32 = 0x0301b000;
+pub struct CollectorList {
+    chunk_0: Chunk0,
 }
 
-mod read {
-    use std::sync::Arc;
+struct Chunk0;
 
-    use crate::{
-        class::game::ctn::collector_list::CollectorList,
-        read::{BodyChunk, BodyChunks, BodyReader, Error, ReadBody, read_body_chunks},
-    };
+impl ReadNode for CollectorList {
+    const CLASS_ID: u32 = 0x0301b000;
 
-    impl ReadBody for CollectorList {
-        fn read_body(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            read_body_chunks(r, self)
-        }
-    }
+    fn read_node(r: &mut impl BodyReader) -> Result<Self> {
+        read_body_chunks(r, |r| {
+            Ok(Self {
+                chunk_0: r.chunk(0x0301b000, |r| {
+                    let _collector_stock = r.list(|r| {
+                        let _block_model_id = r.string_ref()?;
+                        let _block_model_collection = r.string_ref()?;
+                        let _block_model_author = r.string_ref()?;
+                        let _count = r.u32()?;
 
-    impl BodyChunks for CollectorList {
-        fn body_chunks<R: BodyReader>() -> impl IntoIterator<Item = BodyChunk<Self, R>> {
-            [BodyChunk::new(0, Self::read_chunk_0)]
-        }
-    }
+                        Ok(())
+                    })?;
 
-    impl CollectorList {
-        fn read_chunk_0(&mut self, r: &mut impl BodyReader) -> Result<(), Error> {
-            let _collector_stock = r.list(|r| {
-                let _block_model: Vec<Option<Arc<str>>> = r.repeat(3, |r| r.id())?;
-                let _count = r.u32()?;
-
-                Ok(())
-            })?;
-
-            Ok(())
-        }
+                    Ok(Chunk0)
+                })?,
+            })
+        })
     }
 }
