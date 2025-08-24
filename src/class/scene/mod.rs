@@ -1,0 +1,2 @@
+mod vehicle_car_marks_samples;
+pub use vehicle_car_marks_samples::VehicleCarMarksSamples;

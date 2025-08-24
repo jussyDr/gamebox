@@ -8,6 +8,8 @@ use crate::read::{
 pub trait BodyReader: HeaderReader {
     fn node<T: ReadNode>(&mut self) -> Result<T>;
 
+    fn node_with_id<T: ReadNode>(&mut self, class_id: u32) -> Result<T>;
+
     fn node_ref<T: ReadNodeRef>(&mut self) -> Result<Option<T>>;
 }
 
@@ -56,6 +58,11 @@ impl<R: io::Read> HeaderReader for BodyReaderImpl<R> {
             return Ok(Some(Arc::default()));
         }
 
+        if index == 0x00002713 {
+            // TODO: what is this?
+            return Ok(Some(Arc::default()));
+        }
+
         if index & 0xc0000000 != 0x40000000 {
             return Err(Error::Internal("expected a string reference".into()));
         }
@@ -82,7 +89,17 @@ impl<R: io::Read> HeaderReader for BodyReaderImpl<R> {
 
 impl<R: io::Read> BodyReader for BodyReaderImpl<R> {
     fn node<T: ReadNode>(&mut self) -> Result<T> {
-        todo!()
+        let class_id = self.u32()?;
+
+        self.node_with_id(class_id)
+    }
+
+    fn node_with_id<T: ReadNode>(&mut self, class_id: u32) -> Result<T> {
+        if class_id != T::CLASS_ID {
+            return Err(Error::Internal("class id mismatch".into()));
+        }
+
+        T::read_node(self)
     }
 
     fn node_ref<T: ReadNodeRef>(&mut self) -> Result<Option<T>> {
@@ -103,11 +120,9 @@ impl<R: io::Read> BodyReader for BodyReaderImpl<R> {
 
         let node_ref = match entry {
             None => {
-                if self.u32()? != T::CLASS_ID {
-                    return Err(Error::Internal("class id mismatch".into()));
-                }
+                let class_id = self.u32()?;
 
-                T::read_node_ref(self)?
+                T::read_node_ref(self, class_id)?
             }
             Some(node_ref) => Arc::clone(node_ref),
         };
@@ -119,18 +134,16 @@ impl<R: io::Read> BodyReader for BodyReaderImpl<R> {
 }
 
 pub trait ReadNodeRef: Sized {
-    const CLASS_ID: u32;
-
-    fn read_node_ref(r: &mut impl BodyReader) -> Result<Arc<dyn Any + Send + Sync>>;
+    fn read_node_ref(r: &mut impl BodyReader, class_id: u32) -> Result<Arc<dyn Any + Send + Sync>>;
 
     fn from_any(node_ref: Arc<dyn Any + Send + Sync>) -> Result<Self>;
 }
 
 impl<T: 'static + Send + Sync + ReadNode> ReadNodeRef for Arc<T> {
-    const CLASS_ID: u32 = T::CLASS_ID;
+    fn read_node_ref(r: &mut impl BodyReader, class_id: u32) -> Result<Arc<dyn Any + Send + Sync>> {
+        let node = r.node_with_id::<T>(class_id)?;
 
-    fn read_node_ref(r: &mut impl BodyReader) -> Result<Arc<dyn Any + Send + Sync>> {
-        Ok(Arc::new(T::read_node(r)?))
+        Ok(Arc::new(node))
     }
 
     fn from_any(node_ref: Arc<dyn Any + Send + Sync>) -> Result<Self> {

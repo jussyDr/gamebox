@@ -2,7 +2,7 @@ mod header;
 pub use header::HeaderReader;
 
 mod body;
-pub use body::{BodyReader, BodyReaderImpl, ReadNode};
+pub use body::{BodyReader, BodyReaderImpl, ReadNode, ReadNodeRef};
 
 mod body_chunks;
 pub use body_chunks::read_body_chunks;
@@ -52,6 +52,24 @@ pub trait Reader: io::Read {
         Ok(u32::from_le_bytes(bytes))
     }
 
+    fn u128(&mut self) -> Result<u128> {
+        let bytes = self.array_u8()?;
+
+        Ok(u128::from_le_bytes(bytes))
+    }
+
+    fn i32(&mut self) -> Result<i32> {
+        let bytes = self.array_u8()?;
+
+        Ok(i32::from_le_bytes(bytes))
+    }
+
+    fn f32(&mut self) -> Result<f32> {
+        let bytes = self.array_u8()?;
+
+        Ok(f32::from_le_bytes(bytes))
+    }
+
     fn bool32(&mut self) -> Result<bool> {
         match self.u32()? {
             0 => Ok(false),
@@ -72,6 +90,13 @@ pub trait Reader: io::Read {
         T::from_u32(index)
     }
 
+    fn vec2_f32(&mut self) -> Result<[f32; 2]> {
+        let x = self.f32()?;
+        let y = self.f32()?;
+
+        Ok([x, y])
+    }
+
     fn vec3_u8(&mut self) -> Result<[u8; 3]> {
         let x = self.u8()?;
         let y = self.u8()?;
@@ -88,18 +113,84 @@ pub trait Reader: io::Read {
         Ok([x, y, z])
     }
 
+    fn vec3_f32(&mut self) -> Result<[f32; 3]> {
+        let x = self.f32()?;
+        let y = self.f32()?;
+        let z = self.f32()?;
+
+        Ok([x, y, z])
+    }
+
+    fn rgb_f32(&mut self) -> Result<[f32; 3]> {
+        let x = self.f32()?;
+        let y = self.f32()?;
+        let z = self.f32()?;
+
+        Ok([x, y, z])
+    }
+
+    fn yaw_pitch_roll(&mut self) -> Result<[f32; 3]> {
+        let x = self.f32()?;
+        let y = self.f32()?;
+        let z = self.f32()?;
+
+        Ok([x, y, z])
+    }
+
+    fn box3_u32(&mut self) -> Result<[u32; 6]> {
+        Ok([
+            self.u32()?,
+            self.u32()?,
+            self.u32()?,
+            self.u32()?,
+            self.u32()?,
+            self.u32()?,
+        ])
+    }
+
+    fn iso4(&mut self) -> Result<[f32; 12]> {
+        Ok([
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+            self.f32()?,
+        ])
+    }
+
     fn string(&mut self) -> Result<String> {
         let bytes = self.list_u8()?;
 
         String::from_utf8(bytes.into_vec()).map_err(|err| Error::Internal(err.into()))
     }
 
+    fn repeat<T>(
+        &mut self,
+        n: usize,
+        read_fn: impl Fn(&mut Self) -> Result<T>,
+    ) -> Result<Box<[T]>> {
+        iter::repeat_with(|| read_fn(self)).take(n).collect()
+    }
+
     fn list<T>(&mut self, read_fn: impl Fn(&mut Self) -> Result<T>) -> Result<Box<[T]>> {
         let len = self.u32()?;
 
-        iter::repeat_with(|| read_fn(self))
-            .take(len as usize)
-            .collect()
+        self.repeat(len as usize, read_fn)
+    }
+
+    fn list_versioned<T>(&mut self, read_fn: impl Fn(&mut Self) -> Result<T>) -> Result<Box<[T]>> {
+        if self.u32()? != 10 {
+            return Err(Error::Internal("unknown list version".into()));
+        }
+
+        self.list(read_fn)
     }
 
     fn skip(&mut self, n: usize) -> Result<()> {

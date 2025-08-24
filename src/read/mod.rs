@@ -2,7 +2,10 @@ mod error;
 pub use error::{Error, Result};
 
 mod reader;
-pub(crate) use reader::{BodyReader, BodyReaderImpl, ReadEnum, ReadNode, Reader, read_body_chunks};
+pub(crate) use reader::{
+    BodyReader, BodyReaderImpl, HeaderReader, ReadEnum, ReadNode, ReadNodeRef, Reader,
+    read_body_chunks,
+};
 
 use std::{
     fs::File,

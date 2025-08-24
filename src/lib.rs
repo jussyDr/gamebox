@@ -1,5 +1,5 @@
 mod class;
-pub use class::{game, plug, script};
+pub use class::{control, game, plug, scene, script};
 
 pub mod read;
 pub use read::{read, read_file};

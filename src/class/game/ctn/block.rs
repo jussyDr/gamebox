@@ -1,32 +1,16 @@
 use std::sync::Arc;
 
 use crate::{
-    game::{WaypointSpecialProperty, ctn::BlockSkin},
+    game::{
+        WaypointSpecialProperty,
+        ctn::{BlockSkin, Direction},
+    },
     plug::CharPhySpecialProperty,
-    read::{BodyReader, Error, ReadEnum, Result},
+    read::{BodyReader, Result},
 };
 
-pub struct Block;
-
-enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl ReadEnum for Direction {
-    fn from_u32(index: u32) -> Result<Self> {
-        match index {
-            0 => Ok(Self::North),
-            1 => Ok(Self::East),
-            2 => Ok(Self::South),
-            3 => Ok(Self::West),
-            _ => Err(Error::Internal(
-                "unknown variant index for enum Direction".into(),
-            )),
-        }
-    }
+pub struct Block {
+    pub(crate) is_free: bool,
 }
 
 impl Block {
@@ -65,6 +49,8 @@ impl Block {
             let _decal_variant = r.u32()?;
         }
 
-        Ok(Self)
+        let is_free = flags & 0x20000000 != 0;
+
+        Ok(Self { is_free })
     }
 }
