@@ -67,7 +67,7 @@ impl ReadNode for ChallengeParameters {
                     Ok(Chunk10)
                 })?,
                 chunk_13: r.chunk(0x0305b00d, |r| {
-                    let _race_validate_ghost = r.node_ref::<Arc<Ghost>>()?;
+                    let _race_validate_ghost = r.node_ref::<Option<Arc<Ghost>>>()?;
 
                     Ok(Chunk13)
                 })?,

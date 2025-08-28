@@ -37,12 +37,18 @@ impl<'a, R: BodyReader> BodyChunksReader<'a, R> {
     fn chunk_id(&mut self) -> Result<u32> {
         match self.chunk_id {
             None => self.inner.u32(),
-            Some(chunk_id) => Ok(chunk_id),
+            Some(chunk_id) => {
+                self.chunk_id = None;
+
+                Ok(chunk_id)
+            }
         }
     }
 
     pub fn chunk<T>(&mut self, id: u32, read_fn: impl FnOnce(&mut R) -> Result<T>) -> Result<T> {
         let chunk_id = self.chunk_id()?;
+
+        println!("{:08x?}", chunk_id);
 
         if chunk_id != id {
             return Err(Error::Internal(
@@ -60,6 +66,8 @@ impl<'a, R: BodyReader> BodyChunksReader<'a, R> {
     ) -> Result<T> {
         let chunk_id = self.chunk_id()?;
 
+        println!("{:08x?}", chunk_id);
+
         if chunk_id != id {
             return Err(Error::Internal(
                 format!("expected chunk with id {id:08x}, got {chunk_id:08x}").into(),
@@ -73,5 +81,51 @@ impl<'a, R: BodyReader> BodyChunksReader<'a, R> {
         let size = self.inner.u32()?;
 
         read_fn(self.inner)
+    }
+
+    pub fn chunk_optional<T>(
+        &mut self,
+        id: u32,
+        read_fn: impl FnOnce(&mut R) -> Result<T>,
+    ) -> Result<Option<T>> {
+        let chunk_id = self.chunk_id()?;
+
+        println!("{:08x?}", chunk_id);
+
+        if chunk_id != id {
+            self.chunk_id = Some(chunk_id);
+
+            return Ok(None);
+        }
+
+        let chunk = read_fn(self.inner)?;
+
+        Ok(Some(chunk))
+    }
+
+    pub fn chunk_skippable_optional<T>(
+        &mut self,
+        id: u32,
+        read_fn: impl FnOnce(&mut R) -> Result<T>,
+    ) -> Result<Option<T>> {
+        let chunk_id = self.chunk_id()?;
+
+        println!("{:08x?}", chunk_id);
+
+        if chunk_id != id {
+            self.chunk_id = Some(chunk_id);
+
+            return Ok(None);
+        }
+
+        if self.inner.u32()? != 0x534b4950 {
+            return Err(Error::Internal("expected a skippable chunk".into()));
+        }
+
+        let size = self.inner.u32()?;
+
+        let chunk = read_fn(self.inner)?;
+
+        Ok(Some(chunk))
     }
 }

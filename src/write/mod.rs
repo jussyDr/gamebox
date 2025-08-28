@@ -1,3 +1,5 @@
+//! Writing GameBox files.
+
 mod writer;
 pub(crate) use writer::{BodyWriter, HeaderWriter};
 use writer::{BodyWriterImpl, Writer};

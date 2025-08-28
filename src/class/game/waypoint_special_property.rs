@@ -18,33 +18,33 @@ impl ReadNode for WaypointSpecialProperty {
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
         read_body_chunks(r, |r| {
-            Ok(Self {
-                chunk_0: r.chunk(0x2e009000, |r| {
-                    if r.u32()? != 2 {
-                        return Err(Error::Internal("unknown chunk version".into()));
-                    }
+            let chunk_0 = r.chunk(0x2e009000, |r| {
+                if r.u32()? != 2 {
+                    return Err(Error::Internal("unknown chunk version".into()));
+                }
 
-                    let _tag = r.string()?;
-                    let _order = r.u32()?;
+                let _tag = r.string()?;
+                let _order = r.u32()?;
 
-                    Ok(Chunk0)
-                })?,
-                chunk_1: r.chunk_skippable(0x2e009001, |r| {
-                    if r.u32()? != 0 {
-                        return Err(Error::Internal("unknown chunk version".into()));
-                    }
+                Ok(Chunk0)
+            })?;
+            let chunk_1 = r.chunk_skippable(0x2e009001, |r| {
+                if r.u32()? != 0 {
+                    return Err(Error::Internal("unknown chunk version".into()));
+                }
 
-                    if r.bool32()? {
-                        read_encapsulation(r, |r| {
-                            let _script_metadata = r.node::<TraitsMetadata>()?;
+                if r.bool32()? {
+                    read_encapsulation(r, |r| {
+                        let _script_metadata = r.node::<TraitsMetadata>()?;
 
-                            Ok(())
-                        })?;
-                    }
+                        Ok(())
+                    })?;
+                }
 
-                    Ok(Chunk1)
-                })?,
-            })
+                Ok(Chunk1)
+            })?;
+
+            Ok(Self { chunk_0, chunk_1 })
         })
     }
 }

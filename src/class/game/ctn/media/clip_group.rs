@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    game::ctn::MediaClip,
+    game::ctn::media::Clip,
     read::{BodyReader, ReadEnum, ReadNode, Result, read_body_chunks},
 };
 
-pub struct MediaClipGroup {
+pub struct ClipGroup {
     chunk_3: Chunk3,
 }
 
@@ -42,29 +42,29 @@ impl ReadEnum for Condition {
     }
 }
 
-impl ReadNode for MediaClipGroup {
+impl ReadNode for ClipGroup {
     const CLASS_ID: u32 = 0x0307a000;
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
         read_body_chunks(r, |r| {
-            Ok(Self {
-                chunk_3: r.chunk(0x0307a003, |r| {
-                    let _clips = r.list_versioned(|r| r.node_ref::<Arc<MediaClip>>())?;
-                    let _triggers = r.list(|r| {
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-                        r.u32()?;
-                        let _condition = r.enum32::<Condition>()?;
-                        let _condition_value = r.f32()?;
-                        let _coords = r.list(|r| r.vec3_u32())?;
+            let chunk_3 = r.chunk(0x0307a003, |r| {
+                let _clips = r.list_versioned(|r| r.node_ref::<Arc<Clip>>())?;
+                let _triggers = r.list(|r| {
+                    r.u32()?;
+                    r.u32()?;
+                    r.u32()?;
+                    r.u32()?;
+                    let _condition = r.enum32::<Condition>()?;
+                    let _condition_value = r.f32()?;
+                    let _coords = r.list(|r| r.vec3_u32())?;
 
-                        Ok(())
-                    })?;
+                    Ok(())
+                })?;
 
-                    Ok(Chunk3)
-                })?,
-            })
+                Ok(Chunk3)
+            })?;
+
+            Ok(Self { chunk_3 })
         })
     }
 }

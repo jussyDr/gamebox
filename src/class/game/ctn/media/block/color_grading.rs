@@ -3,16 +3,20 @@ use crate::{
     read::{BodyReader, ReadNode, Result, read_body_chunks},
 };
 
-pub struct MediaBlockColorGrading {
+pub struct ColorGrading {
     chunk_0: Chunk0,
     chunk_1: Chunk1,
 }
 
 struct Chunk0;
 
-struct Chunk1;
+struct Chunk1 {
+    keys: Box<[Key]>,
+}
 
-impl ReadNode for MediaBlockColorGrading {
+struct Key;
+
+impl ReadNode for ColorGrading {
     const CLASS_ID: u32 = 0x03186000;
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
@@ -24,14 +28,14 @@ impl ReadNode for MediaBlockColorGrading {
                     Ok(Chunk0)
                 })?,
                 chunk_1: r.chunk(0x03186001, |r| {
-                    let _keys = r.list(|r| {
+                    let keys = r.list(|r| {
                         let _time = r.f32()?;
                         let _intensity = r.f32()?;
 
-                        Ok(())
+                        Ok(Key)
                     })?;
 
-                    Ok(Chunk1)
+                    Ok(Chunk1 { keys })
                 })?,
             })
         })

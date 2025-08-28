@@ -1,9 +1,9 @@
 use crate::{
-    game::ctn::MediaBlock,
+    game::ctn::media::Block,
     read::{BodyReader, Error, ReadNode, Result, read_body_chunks},
 };
 
-pub struct MediaTrack {
+pub struct Track {
     chunk_1: Chunk1,
     chunk_5: Chunk5,
 }
@@ -12,7 +12,7 @@ struct Chunk1;
 
 struct Chunk5;
 
-impl ReadNode for MediaTrack {
+impl ReadNode for Track {
     const CLASS_ID: u32 = 0x03078000;
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
@@ -20,7 +20,7 @@ impl ReadNode for MediaTrack {
             Ok(Self {
                 chunk_1: r.chunk(0x03078001, |r| {
                     let _name = r.string()?;
-                    let _blocks = r.list_versioned(|r| r.node_ref::<MediaBlock>())?;
+                    let _blocks = r.list_versioned(|r| r.node_ref::<Block>())?;
                     r.u32()?;
 
                     Ok(Chunk1)

@@ -9,7 +9,7 @@ pub use body_chunks::read_body_chunks;
 
 use std::{io, iter};
 
-use crate::read::Result;
+use crate::{Rgb, Vec3, YawPitchRoll, read::Result};
 
 use super::Error;
 
@@ -70,6 +70,14 @@ pub trait Reader: io::Read {
         Ok(f32::from_le_bytes(bytes))
     }
 
+    fn bool8(&mut self) -> Result<bool> {
+        match self.u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(Error::Internal("expected a boolean".into())),
+        }
+    }
+
     fn bool32(&mut self) -> Result<bool> {
         match self.u32()? {
             0 => Ok(false),
@@ -97,44 +105,44 @@ pub trait Reader: io::Read {
         Ok([x, y])
     }
 
-    fn vec3_u8(&mut self) -> Result<[u8; 3]> {
+    fn vec3_u8(&mut self) -> Result<Vec3<u8>> {
         let x = self.u8()?;
         let y = self.u8()?;
         let z = self.u8()?;
 
-        Ok([x, y, z])
+        Ok(Vec3 { x, y, z })
     }
 
-    fn vec3_u32(&mut self) -> Result<[u32; 3]> {
+    fn vec3_u32(&mut self) -> Result<Vec3<u32>> {
         let x = self.u32()?;
         let y = self.u32()?;
         let z = self.u32()?;
 
-        Ok([x, y, z])
+        Ok(Vec3 { x, y, z })
     }
 
-    fn vec3_f32(&mut self) -> Result<[f32; 3]> {
+    fn vec3_f32(&mut self) -> Result<Vec3<f32>> {
         let x = self.f32()?;
         let y = self.f32()?;
         let z = self.f32()?;
 
-        Ok([x, y, z])
+        Ok(Vec3 { x, y, z })
     }
 
-    fn rgb_f32(&mut self) -> Result<[f32; 3]> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
+    fn rgb(&mut self) -> Result<Rgb> {
+        let red = self.f32()?;
+        let green = self.f32()?;
+        let blue = self.f32()?;
 
-        Ok([x, y, z])
+        Ok(Rgb { red, green, blue })
     }
 
-    fn yaw_pitch_roll(&mut self) -> Result<[f32; 3]> {
-        let x = self.f32()?;
-        let y = self.f32()?;
-        let z = self.f32()?;
+    fn yaw_pitch_roll(&mut self) -> Result<YawPitchRoll> {
+        let yaw = self.f32()?;
+        let pitch = self.f32()?;
+        let roll = self.f32()?;
 
-        Ok([x, y, z])
+        Ok(YawPitchRoll { yaw, pitch, roll })
     }
 
     fn box3_u32(&mut self) -> Result<[u32; 6]> {
@@ -166,7 +174,13 @@ pub trait Reader: io::Read {
     }
 
     fn string(&mut self) -> Result<String> {
-        let bytes = self.list_u8()?;
+        let len = self.u32()?;
+
+        self.string_of_len(len as usize)
+    }
+
+    fn string_of_len(&mut self, len: usize) -> Result<String> {
+        let bytes = self.repeat_u8(len)?;
 
         String::from_utf8(bytes.into_vec()).map_err(|err| Error::Internal(err.into()))
     }

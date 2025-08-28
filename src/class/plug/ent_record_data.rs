@@ -11,18 +11,18 @@ impl ReadNode for EntRecordData {
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
         read_body_chunks(r, |r| {
-            Ok(Self {
-                chunk_0: r.chunk(0x0911f000, |r| {
-                    if r.u32()? != 10 {
-                        return Err(Error::Internal("unknown chunk version".into()));
-                    }
+            let chunk_0 = r.chunk(0x0911f000, |r| {
+                if r.u32()? != 10 {
+                    return Err(Error::Internal("unknown chunk version".into()));
+                }
 
-                    let _data_size = r.u32()?;
-                    let _compressed_data = r.list_u8()?;
+                let _data_size = r.u32()?;
+                let _compressed_data = r.list_u8()?;
 
-                    Ok(Chunk0)
-                })?,
-            })
+                Ok(Chunk0)
+            })?;
+
+            Ok(Self { chunk_0 })
         })
     }
 }

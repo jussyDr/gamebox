@@ -4,7 +4,17 @@ pub struct EffectSimi {
     chunk_5: Chunk5,
 }
 
-struct Chunk5;
+struct Chunk5 {
+    keys: Box<[Key]>,
+}
+
+impl EffectSimi {
+    pub fn keys(&self) -> &[Key] {
+        &self.chunk_5.keys
+    }
+}
+
+pub struct Key;
 
 enum ColorBlendMode {
     Set,
@@ -26,30 +36,30 @@ impl ReadNode for EffectSimi {
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
         read_body_chunks(r, |r| {
-            Ok(Self {
-                chunk_5: r.chunk(0x07010005, |r| {
-                    let _keys = r.list(|r| {
-                        let _time = r.f32()?;
-                        let _position = r.vec2_f32()?;
-                        let _rotation = r.f32()?;
-                        let _scale = r.vec2_f32()?;
-                        let _opacity = r.f32()?;
-                        let _depth = r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
-                        r.f32()?;
+            let chunk_5 = r.chunk(0x07010005, |r| {
+                let keys = r.list(|r| {
+                    let _time = r.f32()?;
+                    let _position = r.vec2_f32()?;
+                    let _rotation = r.f32()?;
+                    let _scale = r.vec2_f32()?;
+                    let _opacity = r.f32()?;
+                    let _depth = r.f32()?;
+                    r.f32()?;
+                    r.f32()?;
+                    r.f32()?;
+                    r.f32()?;
 
-                        Ok(())
-                    })?;
-                    let _centered = r.bool32()?;
-                    let _color_blend_mode = r.enum32::<ColorBlendMode>()?;
-                    let _is_continuous_effect = r.bool32()?;
-                    let _is_interpolated = r.bool32()?;
+                    Ok(Key)
+                })?;
+                let _centered = r.bool32()?;
+                let _color_blend_mode = r.enum32::<ColorBlendMode>()?;
+                let _is_continuous_effect = r.bool32()?;
+                let _is_interpolated = r.bool32()?;
 
-                    Ok(Chunk5)
-                })?,
-            })
+                Ok(Chunk5 { keys })
+            })?;
+
+            Ok(Self { chunk_5 })
         })
     }
 }

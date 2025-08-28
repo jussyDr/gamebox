@@ -1,4 +1,7 @@
-use crate::read::{BodyReader, ReadNode, Result, read_body_chunks};
+use crate::{
+    game::ctn::Ident,
+    read::{BodyReader, ReadNode, Result, read_body_chunks},
+};
 
 pub struct CollectorList {
     chunk_0: Chunk0,
@@ -11,20 +14,18 @@ impl ReadNode for CollectorList {
 
     fn read_node(r: &mut impl BodyReader) -> Result<Self> {
         read_body_chunks(r, |r| {
-            Ok(Self {
-                chunk_0: r.chunk(0x0301b000, |r| {
-                    let _collector_stock = r.list(|r| {
-                        let _block_model_id = r.string_ref()?;
-                        let _block_model_collection = r.string_ref()?;
-                        let _block_model_author = r.string_ref()?;
-                        let _count = r.u32()?;
+            let chunk_0 = r.chunk(0x0301b000, |r| {
+                let _collector_stock = r.list(|r| {
+                    let _block_model = Ident::read(r)?;
+                    let _count = r.u32()?;
 
-                        Ok(())
-                    })?;
+                    Ok(())
+                })?;
 
-                    Ok(Chunk0)
-                })?,
-            })
+                Ok(Chunk0)
+            })?;
+
+            Ok(Self { chunk_0 })
         })
     }
 }
