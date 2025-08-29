@@ -1,11 +1,14 @@
-mod header;
-pub use header::HeaderReader;
-
 mod body;
 pub use body::{BodyReader, BodyReaderImpl, ReadNode, ReadNodeRef};
 
 mod body_chunks;
 pub use body_chunks::read_body_chunks;
+
+mod header;
+pub use header::HeaderReader;
+
+mod header_chunks;
+pub use header_chunks::read_header_chunks;
 
 use std::{io, iter};
 
@@ -50,6 +53,12 @@ pub trait Reader: io::Read {
         let bytes = self.array_u8()?;
 
         Ok(u32::from_le_bytes(bytes))
+    }
+
+    fn u64(&mut self) -> Result<u64> {
+        let bytes = self.array_u8()?;
+
+        Ok(u64::from_le_bytes(bytes))
     }
 
     fn u128(&mut self) -> Result<u128> {

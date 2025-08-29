@@ -6,7 +6,7 @@ pub use error::{Error, Result};
 mod reader;
 pub(crate) use reader::{
     BodyReader, BodyReaderImpl, HeaderReader, ReadEnum, ReadNode, ReadNodeRef, Reader,
-    read_body_chunks,
+    read_body_chunks, read_header_chunks,
 };
 
 use std::{
@@ -57,8 +57,7 @@ pub fn read<T: Read>(reader: impl io::Read) -> Result<T> {
         return Err(Error::ClassMismatch);
     }
 
-    let header_data_size = r.u32()?;
-    r.skip(header_data_size as usize)?;
+    let header_data = r.list_u8()?;
 
     let num_node_refs = r
         .u32()?
@@ -81,7 +80,7 @@ pub fn read<T: Read>(reader: impl io::Read) -> Result<T> {
 
     let mut body_reader = BodyReaderImpl::new(body.as_ref(), node_refs);
 
-    T::read_body(&mut body_reader)
+    T::read(&header_data, &mut body_reader)
 }
 
 pub trait Read: sealed::Read {}
@@ -92,6 +91,6 @@ pub(crate) mod sealed {
     pub trait Read: Sized {
         const CLASS_ID: u32;
 
-        fn read_body(r: &mut impl BodyReader) -> Result<Self, Error>;
+        fn read(header_data: &[u8], r: &mut impl BodyReader) -> Result<Self, Error>;
     }
 }
